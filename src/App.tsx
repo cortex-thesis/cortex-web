@@ -1,4 +1,4 @@
-import { StateBadge, Button } from './components/atoms'
+import { StateBadge, Button, Avatar } from './components/atoms'
 
 function App() {
   return (
@@ -10,38 +10,18 @@ function App() {
         gap: '24px',
       }}
     >
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-        <Button variant="primary">Primary</Button>
-        <Button variant="coral">Let's go</Button>
-        <Button variant="secondary">Secondary</Button>
-        <Button variant="ghost">Ghost</Button>
-        <Button variant="danger">Delete</Button>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <Avatar name="Daniel M." size="xs" />
+        <Avatar name="Kyla Reyes" size="sm" />
+        <Avatar name="Marco T." size="md" />
+        <Avatar name="Sofia L." size="lg" />
+        <Avatar name="Ms Santos" size="xl" />
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <Button size="sm" variant="primary">
-          Small
-        </Button>
-        <Button size="md" variant="primary">
-          Medium
-        </Button>
-        <Button size="lg" variant="coral">
-          Large
-        </Button>
-      </div>
-
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <Button disabled>Disabled</Button>
-        <Button loading>Loading</Button>
-      </div>
-
-      <Button fullWidth variant="coral" size="lg">
-        Full width — Let's go
-      </Button>
-
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <StateBadge state="focused" />
-        <StateBadge state="distracted" />
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <Avatar name="Daniel M." showStatus isOnline />
+        <Avatar name="Kyla Reyes" showStatus isOnline={false} />
+        <Avatar name="Marco T." color="coral" showStatus isOnline />
       </div>
     </div>
   )
