@@ -1,0 +1,120 @@
+import {
+  type CognitiveState,
+  type CurriculumPackage,
+} from '../constants/states'
+
+// auth
+
+export type UserRole = 'student' | 'teacher' | 'admin'
+
+export interface User {
+  id: string
+  name: string
+  role: UserRole
+  avatar: string | null
+  classIds: string[]
+}
+
+// EEG
+
+export interface BandPowers {
+  theta: number
+  alpha: number
+  beta: number
+  gamma: number
+  tbr: number
+}
+
+export interface EEGUpdate {
+  type: 'eeg_update'
+  studentId: string
+  state: CognitiveState
+  bandPowers: BandPowers
+  signalStrength: 0 | 1 | 2 | 3 | 4
+  timestamp: string
+}
+
+export interface ModeChangeEvent {
+  type: 'mode_change'
+  fromMode: 'focus' | 'relax'
+  toMode: 'focus' | 'relax'
+  reason: 'eeg_triggered' | 'teacher_override'
+  timestamp: string
+}
+
+// session
+
+export interface Session {
+  id: string
+  studentId: string
+  classId: string
+  startedAt: string
+  endedAt: string | null
+  focusScore: number | null
+  mode: 'focus' | 'relax'
+}
+
+export interface Task {
+  id: string
+  index: number
+  total: number
+  title: string
+  imageUrl: string | null
+  question: string
+  choices: string[]
+  answer: string
+  package: CurriculumPackage
+}
+
+// class
+
+export interface ClassRoom {
+  id: string
+  name: string
+  code: string
+  teacherId: string
+  studentIds: string[]
+  package: CurriculumPackage
+  iconEmoji: string
+  iconBg: string
+}
+
+// content
+
+export interface ContentItem {
+  id: string
+  title: string
+  type: 'image' | 'audio' | 'video' | 'interactive'
+  package: CurriculumPackage
+  mode: 'focus' | 'relax' | 'both'
+  cognitiveStateTarget: CognitiveState
+  fileUrl: string
+  thumbnailUrl: string | null
+  durationSeconds: number
+  createdBy: string
+  createdAt: string
+}
+
+// student from teacher view
+
+export interface StudentLive {
+  id: string
+  name: string
+  avatar: string | null
+  currentState: CognitiveState | null
+  signalStrength: 0 | 1 | 2 | 3 | 4
+  focusScore: number
+  sessionDuration: number
+  isConnected: boolean
+}
+
+// analytics
+
+export interface SessionSummary {
+  sessionId: string
+  duration: number
+  focusScore: number
+  stateDistribution: Record<CognitiveState, number>
+  taskCompleted: number
+  taskTotal: number
+}
