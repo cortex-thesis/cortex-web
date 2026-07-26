@@ -1,0 +1,115 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Lexend', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  transition:
+    opacity 0.15s ease,
+    transform 0.1s ease;
+  text-decoration: none;
+  outline: none;
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible {
+  outline: 2px solid #534ab7;
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.loading {
+  cursor: wait;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* variants */
+
+.primary {
+  background-color: #534ab7;
+  color: #ffffff;
+  border: none;
+}
+
+.coral {
+  background-color: #d4537e;
+  color: #ffffff;
+  border: none;
+}
+
+.secondary {
+  background-color: transparent;
+  color: #534ab7;
+  border: 1.5px solid #534ab7;
+}
+
+.ghost {
+  background-color: transparent;
+  color: #534ab7;
+  border: none;
+}
+
+.ghost:hover:not(:disabled) {
+  background-color: #eeedfe;
+  opacity: 1;
+}
+
+.danger {
+  background-color: #d85a30;
+  color: #ffffff;
+  border: none;
+}
+
+/* sizes */
+
+.sm {
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: 8px;
+}
+
+.md {
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 10px;
+}
+
+.lg {
+  font-size: 16px;
+  padding: 13px 28px;
+  border-radius: 12px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
