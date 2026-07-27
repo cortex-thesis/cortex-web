@@ -1,0 +1,92 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* rings */
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: pulseRing 2s ease-out infinite;
+}
+
+.ring2 {
+  animation-delay: 0.65s;
+}
+.ring3 {
+  animation-delay: 1.3s;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* core dot */
+
+.core {
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.teal {
+  background-color: #1d9e75;
+}
+.purple {
+  background-color: #534ab7;
+}
+.inactive {
+  background-color: #e4e4ee;
+}
+
+.sm {
+  width: 80px;
+  height: 80px;
+}
+.sm .core {
+  width: 28px;
+  height: 28px;
+}
+.sm .ring {
+  width: 28px;
+  height: 28px;
+}
+
+.md {
+  width: 120px;
+  height: 120px;
+}
+.md .core {
+  width: 44px;
+  height: 44px;
+}
+.md .ring {
+  width: 44px;
+  height: 44px;
+}
+
+.lg {
+  width: 180px;
+  height: 180px;
+}
+.lg .core {
+  width: 64px;
+  height: 64px;
+}
+.lg .ring {
+  width: 64px;
+  height: 64px;
+}

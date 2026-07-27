@@ -1,5 +1,4 @@
-import ProgressBar from './components/atoms/ProgressBar/ProgressBar'
-import SignalBar from './components/atoms/SignalBar/SignalBar'
+import { Skeleton, Dot, Divider } from './components/atoms'
 
 function App() {
   return (
@@ -9,28 +8,52 @@ function App() {
         display: 'flex',
         flexDirection: 'column',
         gap: '32px',
+        maxWidth: '400px',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          maxWidth: '400px',
-        }}
-      >
-        <ProgressBar value={65} state="focused" showLabel />
-        <ProgressBar value={40} state="relaxed" showLabel />
-        <ProgressBar value={80} color="purple" size="md" showLabel />
-        <ProgressBar value={25} state="overstimulated" size="lg" showLabel />
+      {/* Skeleton — card placeholder */}
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <Skeleton circle width={40} height={40} />
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}
+        >
+          <Skeleton width="60%" height={14} />
+          <Skeleton width="40%" height={14} />
+        </div>
+      </div>
+      <Skeleton height={80} borderRadius={12} />
+
+      <Divider />
+
+      {/* Dot — pagination */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <Dot size="sm" color="active" />
+        <Dot size="sm" color="inactive" />
+        <Dot size="sm" color="inactive" />
       </div>
 
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-end' }}>
-        <SignalBar strength={0} />
-        <SignalBar strength={1} />
-        <SignalBar strength={2} />
-        <SignalBar strength={3} />
-        <SignalBar strength={4} />
+      {/* Dot — state colors */}
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <Dot size="md" color="focused" />
+        <Dot size="md" color="relaxed" />
+        <Dot size="md" color="distracted" />
+        <Dot size="md" color="overstimulated" />
+      </div>
+
+      <Divider label="or" />
+
+      {/* Divider — vertical */}
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <span style={{ fontSize: '13px' }}>Home</span>
+        <Divider orientation="vertical" />
+        <span style={{ fontSize: '13px' }}>Classes</span>
+        <Divider orientation="vertical" />
+        <span style={{ fontSize: '13px' }}>Profile</span>
       </div>
     </div>
   )
