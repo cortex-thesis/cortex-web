@@ -1,4 +1,5 @@
-import { StateBadge, Button, Avatar } from './components/atoms'
+import ProgressBar from './components/atoms/ProgressBar/ProgressBar'
+import SignalBar from './components/atoms/SignalBar/SignalBar'
 
 function App() {
   return (
@@ -7,21 +8,29 @@ function App() {
         padding: '40px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '24px',
+        gap: '32px',
       }}
     >
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <Avatar name="Daniel M." size="xs" />
-        <Avatar name="Kyla Reyes" size="sm" />
-        <Avatar name="Marco T." size="md" />
-        <Avatar name="Sofia L." size="lg" />
-        <Avatar name="Ms Santos" size="xl" />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          maxWidth: '400px',
+        }}
+      >
+        <ProgressBar value={65} state="focused" showLabel />
+        <ProgressBar value={40} state="relaxed" showLabel />
+        <ProgressBar value={80} color="purple" size="md" showLabel />
+        <ProgressBar value={25} state="overstimulated" size="lg" showLabel />
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <Avatar name="Daniel M." showStatus isOnline />
-        <Avatar name="Kyla Reyes" showStatus isOnline={false} />
-        <Avatar name="Marco T." color="coral" showStatus isOnline />
+      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-end' }}>
+        <SignalBar strength={0} />
+        <SignalBar strength={1} />
+        <SignalBar strength={2} />
+        <SignalBar strength={3} />
+        <SignalBar strength={4} />
       </div>
     </div>
   )

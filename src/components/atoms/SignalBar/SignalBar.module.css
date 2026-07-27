@@ -1,0 +1,65 @@
+.signal {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.bar {
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.active {
+  background: #1d9e75;
+}
+.inactive {
+  background: #e4e4ee;
+}
+
+.xs .bar {
+  width: 4px;
+}
+.xs .bar1 {
+  height: 6px;
+}
+.xs .bar2 {
+  height: 9px;
+}
+.xs .bar3 {
+  height: 12px;
+}
+.xs .bar4 {
+  height: 15px;
+}
+
+.sm .bar {
+  width: 5px;
+}
+.sm .bar1 {
+  height: 8px;
+}
+.sm .bar2 {
+  height: 12px;
+}
+.sm .bar3 {
+  height: 16px;
+}
+.sm .bar4 {
+  height: 20px;
+}
+
+.md .bar {
+  width: 6px;
+}
+.md .bar1 {
+  height: 10px;
+}
+.md .bar2 {
+  height: 15px;
+}
+.md .bar3 {
+  height: 20px;
+}
+.md .bar4 {
+  height: 25px;
+}
