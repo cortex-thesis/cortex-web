@@ -1,48 +1,49 @@
-import { InputField } from './components/molecules'
+import { useState } from 'react'
+import { CodeInput } from './components/molecules'
 
 function App() {
+  const [code, setCode] = useState('')
+  const [codeState, setCodeState] = useState<'default' | 'error' | 'success'>(
+    'default'
+  )
+
+  function handleComplete(value: string) {
+    if (value === 'K79F') {
+      setCodeState('success')
+    } else {
+      setCodeState('error')
+    }
+  }
+
+  function handleChange(value: string) {
+    setCode(value)
+    if (codeState !== 'default') setCodeState('default')
+  }
+
   return (
     <div
       style={{
-        padding: '40px',
+        padding: '60px 40px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px',
-        maxWidth: '340px',
+        alignItems: 'center',
+        gap: '32px',
+        background: '#FBF7EE',
+        minHeight: '100vh',
       }}
     >
-      <InputField
-        label="Full name"
-        placeholder="Enter your name"
-        helperText="As it appears on your school record"
+      <CodeInput
+        value={code}
+        onChange={handleChange}
+        onComplete={handleComplete}
+        fieldState={codeState}
+        errorText="Class code not found. Please try again."
+        successText="Joining Life Skills..."
       />
 
-      <InputField
-        label="Email"
-        type="email"
-        placeholder="you@school.edu"
-        fieldState="error"
-        errorText="Please enter a valid email address"
-        required
-      />
-
-      <InputField
-        label="Email"
-        type="email"
-        placeholder="you@school.edu"
-        fieldState="success"
-        successText="Looks good!"
-        defaultValue="sofia@cortex.edu"
-      />
-
-      <InputField
-        label="Password"
-        type="password"
-        placeholder="Enter password"
-        required
-      />
-
-      <InputField label="School" defaultValue="Cannot change this" disabled />
+      <p style={{ fontSize: '13px', color: '#5F5E5A' }}>
+        Try typing: K79F (correct) or anything else (error)
+      </p>
     </div>
   )
 }

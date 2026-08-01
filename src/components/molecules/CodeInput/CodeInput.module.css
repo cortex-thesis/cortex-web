@@ -1,0 +1,89 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.box {
+  width: 56px;
+  height: 64px;
+  border: 1.5px solid #e4e4ee;
+  border-radius: 12px;
+  background: #ffffff;
+  font-family: 'Lexend', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a2e;
+  text-align: center;
+  outline: none;
+  cursor: text;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+  caret-color: transparent;
+}
+
+/* states */
+
+.active {
+  border-color: #534ab7;
+  box-shadow: 0 0 0 3px rgba(83, 74, 183, 0.12);
+}
+
+.filled {
+  border-color: #534ab7;
+  background: #eeedfe;
+  color: #2d2a7a;
+}
+
+.error {
+  border-color: #d85a30;
+  box-shadow: 0 0 0 3px rgba(216, 90, 48, 0.1);
+  background: #faece7;
+  color: #712b13;
+}
+
+.success {
+  border-color: #1d9e75;
+  background: #e1f5ee;
+  color: #085041;
+}
+
+.disabled {
+  background: #f8f8fc;
+  color: #b4b2a9;
+  cursor: not-allowed;
+  border-color: #e4e4ee;
+}
+
+.hint {
+  font-family: 'Lexend', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #5f5e5a;
+  text-align: center;
+}
+
+.errorText {
+  font-family: 'Lexend', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #d85a30;
+  text-align: center;
+}
+
+.successText {
+  font-family: 'Lexend', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #1d9e75;
+  text-align: center;
+}
