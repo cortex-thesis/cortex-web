@@ -1,4 +1,4 @@
-import { Skeleton, Dot, Divider } from './components/atoms'
+import { InputField } from './components/molecules'
 
 function App() {
   return (
@@ -7,54 +7,42 @@ function App() {
         padding: '40px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '32px',
-        maxWidth: '400px',
+        gap: '20px',
+        maxWidth: '340px',
       }}
     >
-      {/* Skeleton — card placeholder */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <Skeleton circle width={40} height={40} />
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
-          }}
-        >
-          <Skeleton width="60%" height={14} />
-          <Skeleton width="40%" height={14} />
-        </div>
-      </div>
-      <Skeleton height={80} borderRadius={12} />
+      <InputField
+        label="Full name"
+        placeholder="Enter your name"
+        helperText="As it appears on your school record"
+      />
 
-      <Divider />
+      <InputField
+        label="Email"
+        type="email"
+        placeholder="you@school.edu"
+        fieldState="error"
+        errorText="Please enter a valid email address"
+        required
+      />
 
-      {/* Dot — pagination */}
-      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-        <Dot size="sm" color="active" />
-        <Dot size="sm" color="inactive" />
-        <Dot size="sm" color="inactive" />
-      </div>
+      <InputField
+        label="Email"
+        type="email"
+        placeholder="you@school.edu"
+        fieldState="success"
+        successText="Looks good!"
+        defaultValue="sofia@cortex.edu"
+      />
 
-      {/* Dot — state colors */}
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <Dot size="md" color="focused" />
-        <Dot size="md" color="relaxed" />
-        <Dot size="md" color="distracted" />
-        <Dot size="md" color="overstimulated" />
-      </div>
+      <InputField
+        label="Password"
+        type="password"
+        placeholder="Enter password"
+        required
+      />
 
-      <Divider label="or" />
-
-      {/* Divider — vertical */}
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <span style={{ fontSize: '13px' }}>Home</span>
-        <Divider orientation="vertical" />
-        <span style={{ fontSize: '13px' }}>Classes</span>
-        <Divider orientation="vertical" />
-        <span style={{ fontSize: '13px' }}>Profile</span>
-      </div>
+      <InputField label="School" defaultValue="Cannot change this" disabled />
     </div>
   )
 }
