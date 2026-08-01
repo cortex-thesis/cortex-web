@@ -1,49 +1,26 @@
-import { useState } from 'react'
-import { CodeInput } from './components/molecules'
+import { NavBarStudent, NavBarTeacher } from './components/molecules'
+import { mockTeacher } from './mocks'
 
 function App() {
-  const [code, setCode] = useState('')
-  const [codeState, setCodeState] = useState<'default' | 'error' | 'success'>(
-    'default'
-  )
-
-  function handleComplete(value: string) {
-    if (value === 'K79F') {
-      setCodeState('success')
-    } else {
-      setCodeState('error')
-    }
-  }
-
-  function handleChange(value: string) {
-    setCode(value)
-    if (codeState !== 'default') setCodeState('default')
-  }
-
   return (
-    <div
-      style={{
-        padding: '60px 40px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '32px',
-        background: '#FBF7EE',
-        minHeight: '100vh',
-      }}
-    >
-      <CodeInput
-        value={code}
-        onChange={handleChange}
-        onComplete={handleComplete}
-        fieldState={codeState}
-        errorText="Class code not found. Please try again."
-        successText="Joining Life Skills..."
-      />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+      {/* Student — bottom nav on cream background */}
+      <div
+        style={{
+          background: '#FBF7EE',
+          height: '200px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+        }}
+      >
+        <NavBarStudent />
+      </div>
 
-      <p style={{ fontSize: '13px', color: '#5F5E5A' }}>
-        Try typing: K79F (correct) or anything else (error)
-      </p>
+      {/* Teacher — top nav on cool surface */}
+      <div style={{ background: '#F8F8FC', minHeight: '200px' }}>
+        <NavBarTeacher user={mockTeacher} hasNotification />
+      </div>
     </div>
   )
 }

@@ -1,0 +1,64 @@
+.nav {
+  width: 100%;
+  background: #ffffff;
+  border-top: 1px solid #e4e4ee;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px 0 14px;
+  flex-shrink: 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  min-width: 64px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.iconWrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.iconWrapActive {
+  background: #eeedfe;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconActive {
+  color: #534ab7;
+}
+.iconInactive {
+  color: #5f5e5a;
+}
+
+.label {
+  font-family: 'Lexend', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  color: #5f5e5a;
+  line-height: 1;
+}
+
+.labelActive {
+  color: #534ab7;
+  font-weight: 500;
+}
