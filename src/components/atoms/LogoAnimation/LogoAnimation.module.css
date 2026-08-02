@@ -1,0 +1,74 @@
+.stage {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fbf7ee;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.blob1 {
+  position: absolute;
+  width: 180px;
+  height: 155px;
+  background: #fac775;
+  opacity: 0.7;
+  border-radius: 50%;
+  top: -30px;
+  left: -40px;
+  pointer-events: none;
+}
+
+.blob2 {
+  position: absolute;
+  width: 120px;
+  height: 112px;
+  background: #1d9e75;
+  opacity: 0.7;
+  border-radius: 50%;
+  bottom: -20px;
+  right: -20px;
+  pointer-events: none;
+}
+
+.canvas {
+  position: relative;
+  width: 640px;
+  height: 400px;
+  flex-shrink: 0;
+  transform: scale(0.72);
+  transform-origin: center center;
+}
+
+.brainWrap {
+  position: absolute;
+  left: 320px;
+  top: 200px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.brainScale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brainSpin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.letter {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
