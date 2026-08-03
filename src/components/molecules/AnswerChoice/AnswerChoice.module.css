@@ -1,0 +1,78 @@
+.choice {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1.5px solid #e4e4ee;
+  background: #ffffff;
+  font-family: 'Lexend', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #1a1a2e;
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+  line-height: 1.4;
+}
+
+/* States */
+
+.default:hover:not(:disabled) {
+  border-color: #534ab7;
+  background: #eeedfe;
+  color: #2d2a7a;
+}
+
+.selected {
+  border-color: #534ab7;
+  background: #eeedfe;
+  color: #2d2a7a;
+  font-weight: 500;
+}
+
+.correct {
+  border-color: #1d9e75;
+  background: #e1f5ee;
+  color: #085041;
+  font-weight: 500;
+  cursor: default;
+}
+
+.incorrect {
+  border-color: #d85a30;
+  background: #faece7;
+  color: #712b13;
+  font-weight: 500;
+  cursor: default;
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconCorrect {
+  background: #1d9e75;
+  color: #ffffff;
+}
+
+.iconIncorrect {
+  background: #d85a30;
+  color: #ffffff;
+}
