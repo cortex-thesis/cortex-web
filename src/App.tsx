@@ -1,43 +1,35 @@
-import { StudentStateCard } from './components/molecules'
-import { mockStudentsLive } from './mocks'
+import { SessionCard } from './components/molecules'
 
 function App() {
   return (
     <div
       style={{
-        background: '#F8F8FC',
+        background: '#FBF7EE',
         minHeight: '100vh',
         padding: '40px',
         display: 'flex',
-        gap: '12px',
-        flexWrap: 'wrap',
-        alignItems: 'flex-start',
+        flexDirection: 'column',
+        gap: '16px',
+        maxWidth: '480px',
       }}
     >
-      {mockStudentsLive.map((student) => (
-        <div key={student.id} style={{ width: '200px' }}>
-          <StudentStateCard
-            student={student}
-            onOverride={(id) => console.log('Override:', id)}
-          />
-        </div>
-      ))}
+      <SessionCard
+        session={{
+          classId: 'class-001',
+          className: 'Life Skills — Getting Ready for School',
+          iconEmoji: '🍳',
+          iconBg: '#E1F5EE',
+          taskIndex: 3,
+          taskTotal: 5,
+          progress: 65,
+        }}
+        onResume={() => console.log('Resuming...')}
+      />
 
-      <div style={{ width: '200px' }}>
-        <StudentStateCard
-          student={{
-            id: 'student-004',
-            name: 'Jana L.',
-            avatar: null,
-            currentState: null,
-            signalStrength: 0,
-            focusScore: 0,
-            sessionDuration: 0,
-            isConnected: false,
-          }}
-          onOverride={(id) => console.log('Override:', id)}
-        />
-      </div>
+      <SessionCard
+        session={null}
+        onStart={() => console.log('Starting new session...')}
+      />
     </div>
   )
 }
