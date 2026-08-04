@@ -1,0 +1,73 @@
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #1a1a2e;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  animation: slideUp 0.3s ease forwards;
+  max-width: 400px;
+  width: 100%;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+.icon_success {
+  background: #1d9e75;
+}
+.icon_error {
+  background: #d85a30;
+}
+.icon_warning {
+  background: #ef9f27;
+}
+.icon_info {
+  background: #534ab7;
+}
+
+.message {
+  font-family: 'Lexend', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #ffffff;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9999aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.closeBtn:hover {
+  color: #ffffff;
+}

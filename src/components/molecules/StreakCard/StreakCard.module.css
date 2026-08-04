@@ -1,0 +1,45 @@
+.card {
+  background: #fff0f5;
+  border: 1px solid #f4c0d1;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty {
+  background: #f8f8fc;
+  border-color: #e4e4ee;
+}
+
+.icon {
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.count {
+  font-family: 'Lexend', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.label {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.sub {
+  font-family: 'Lexend', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+}
