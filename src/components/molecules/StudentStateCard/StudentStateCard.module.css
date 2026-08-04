@@ -1,0 +1,109 @@
+.card {
+  background: #ffffff;
+  border: 1.5px solid #e4e4ee;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
+}
+
+.focused {
+  border-color: #1d9e75;
+  background: #fafffd;
+}
+
+.relaxed {
+  border-color: #378add;
+  background: #fafcff;
+}
+
+.distracted {
+  border-color: #ef9f27;
+  background: #fffcf7;
+}
+
+.overstimulated {
+  border-color: #d85a30;
+  background: #fffaf8;
+}
+
+.offline {
+  border-color: #e4e4ee;
+  background: #f8f8fc;
+  opacity: 0.75;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  font-family: 'Lexend', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a2e;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.statVal {
+  font-family: 'Lexend', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1;
+}
+
+.statLabel {
+  font-family: 'Lexend', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  color: #5f5e5a;
+}
+
+.overrideBtn {
+  width: 100%;
+  padding: 7px;
+  border-radius: 8px;
+  border: 1.5px solid #534ab7;
+  background: transparent;
+  color: #534ab7;
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.overrideBtn:hover {
+  background: #eeedfe;
+}
+
+.offlineMsg {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #b4b2a9;
+  text-align: center;
+  padding: 8px 0;
+}

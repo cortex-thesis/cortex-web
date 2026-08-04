@@ -1,33 +1,7 @@
-import { useState, useEffect } from 'react'
-import { EEGWaveDisplay } from './components/molecules'
-import { createMockEEGStream } from './mocks'
-import type { CognitiveState } from './constants/states'
-import type { BandPowers } from './types'
+import { StudentStateCard } from './components/molecules'
+import { mockStudentsLive } from './mocks'
 
 function App() {
-  const [state, setState] = useState<CognitiveState>('focused')
-  const [bands, setBands] = useState<BandPowers>({
-    theta: 3.2,
-    alpha: 5.1,
-    beta: 8.4,
-    gamma: 2.1,
-    tbr: 0.38,
-  })
-
-  useEffect(() => {
-    const stop = createMockEEGStream((newState) => {
-      setState(newState)
-      setBands({
-        theta: Math.random() * 10 + 1,
-        alpha: Math.random() * 8 + 1,
-        beta: Math.random() * 12 + 2,
-        gamma: Math.random() * 5 + 0.5,
-        tbr: Math.random() * 3 + 0.3,
-      })
-    }, 3000)
-    return stop
-  }, [])
-
   return (
     <div
       style={{
@@ -35,16 +9,34 @@ function App() {
         minHeight: '100vh',
         padding: '40px',
         display: 'flex',
-        gap: '20px',
+        gap: '12px',
         flexWrap: 'wrap',
         alignItems: 'flex-start',
       }}
     >
-      <div style={{ width: '300px' }}>
-        <EEGWaveDisplay state={state} bandPowers={bands} />
-      </div>
-      <div style={{ width: '300px' }}>
-        <EEGWaveDisplay state={null} bandPowers={null} />
+      {mockStudentsLive.map((student) => (
+        <div key={student.id} style={{ width: '200px' }}>
+          <StudentStateCard
+            student={student}
+            onOverride={(id) => console.log('Override:', id)}
+          />
+        </div>
+      ))}
+
+      <div style={{ width: '200px' }}>
+        <StudentStateCard
+          student={{
+            id: 'student-004',
+            name: 'Jana L.',
+            avatar: null,
+            currentState: null,
+            signalStrength: 0,
+            focusScore: 0,
+            sessionDuration: 0,
+            isConnected: false,
+          }}
+          onOverride={(id) => console.log('Override:', id)}
+        />
       </div>
     </div>
   )
