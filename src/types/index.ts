@@ -118,3 +118,5 @@ export interface SessionSummary {
   taskCompleted: number
   taskTotal: number
 }
+
+export type { CognitiveState }
