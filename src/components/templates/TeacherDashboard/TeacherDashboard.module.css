@@ -1,0 +1,13 @@
+.root {
+  width: 100%;
+  min-height: 100vh;
+  background: #f8f8fc;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  padding: 24px 32px;
+  overflow-y: auto;
+}
