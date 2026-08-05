@@ -1,0 +1,41 @@
+.taskCard {
+  max-width: 560px;
+  width: 100%;
+}
+
+.alert {
+  max-width: 560px;
+  width: 100%;
+}
+
+.nudge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nudgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1d9e75;
+  flex-shrink: 0;
+  animation: nudgePulse 1.4s ease-in-out infinite;
+}
+
+@keyframes nudgePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.nudgeText {
+  font-family: 'Lexend', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #1d9e75;
+}
