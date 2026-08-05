@@ -108,6 +108,28 @@ export interface StudentLive {
   isConnected: boolean
 }
 
+// ─── JOURNAL ──────────────────────────────────────────────────
+
+export type JournalResponseType = 'text' | 'drawing' | 'audio'
+
+export type MoodOption = 'happy' | 'okay' | 'tired' | 'confused' | 'proud'
+
+export interface JournalResponse {
+  type: JournalResponseType
+  content: string
+}
+
+export interface JournalEntry {
+  id: string
+  sessionId: string
+  studentId: string
+  createdAt: string
+  prompt: string
+  response: JournalResponse
+  mood: MoodOption | null
+  tasksDone: string[]
+}
+
 // analytics
 
 export interface SessionSummary {

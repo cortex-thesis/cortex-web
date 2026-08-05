@@ -254,6 +254,33 @@ codebase.
 }
 ```
 
+### Journal Entry
+
+```typescript
+{
+  id:          string
+  sessionId:   string
+  studentId:   string
+  createdAt:   string
+  prompt:      string
+  response: {
+    type:      'text' | 'drawing' | 'audio'
+    content:   string        // text content OR base64 data URL for drawing/audio
+  }
+  mood:        'happy' | 'okay' | 'tired' | 'confused' | 'proud' | null
+  tasksDone:   string[]      // list of task titles completed this session
+}
+```
+
+### REST Endpoints (add to existing list)
+
+```
+POST   /api/journal/entries/
+GET    /api/journal/entries/?studentId={id}
+GET    /api/journal/entries/?sessionId={id}
+GET    /api/journal/entries/{entryId}/
+```
+
 ---
 
 ## Development Without Backend

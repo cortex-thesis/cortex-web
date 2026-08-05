@@ -108,3 +108,17 @@ export function createMockEEGStream(
 
   return () => clearInterval(id)
 }
+
+export const mockJournalEntry = {
+  id: 'journal-001',
+  sessionId: 'session-001',
+  studentId: 'student-001',
+  createdAt: new Date().toISOString(),
+  prompt: 'What did you learn today?',
+  response: {
+    type: 'text' as const,
+    content: '',
+  },
+  mood: null as null,
+  tasksDone: ['Getting Ready for School', 'Morning Routine', 'Packing My Bag'],
+}
