@@ -3,10 +3,11 @@ import { ProgressBar } from '../../atoms'
 import styles from './SessionCard.module.css'
 import clsx from 'clsx'
 
-interface ActiveSession {
+export interface ActiveSession {
   classId: string
   className: string
-  iconEmoji: string
+  icon?: React.ReactNode
+  iconEmoji?: string
   iconBg: string
   taskIndex: number
   taskTotal: number
@@ -49,6 +50,7 @@ function SessionCard({
 
   const {
     className: name,
+    icon,
     iconEmoji,
     iconBg,
     taskIndex,
@@ -63,7 +65,7 @@ function SessionCard({
         style={{ background: iconBg }}
         aria-hidden="true"
       >
-        <span className={styles.iconEmoji}>{iconEmoji}</span>
+        {icon ? icon : <span className={styles.iconEmoji}>{iconEmoji}</span>}
       </div>
 
       <div className={styles.info}>

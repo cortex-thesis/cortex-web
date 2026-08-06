@@ -1,5 +1,13 @@
 import { useNavigate } from 'react-router-dom'
-import { Bell, Settings, Plus, Brain, BarChart2, Star } from 'lucide-react'
+import {
+  Bell,
+  Settings,
+  Plus,
+  Brain,
+  BarChart2,
+  Star,
+  UtensilsCrossed,
+} from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import {
   SessionCard,
@@ -8,7 +16,7 @@ import {
   QuickActionCard,
 } from '../../components/molecules'
 import { Avatar, Logo } from '../../components/atoms'
-import { mockStudent, mockClasses, mockStudentsLive } from '../../mocks'
+import { mockStudent, mockClasses } from '../../mocks'
 import styles from './Home.module.css'
 
 function getGreeting(): string {
@@ -23,14 +31,13 @@ export default function Home() {
 
   const student = mockStudent
   const classes = mockClasses
-  const liveData = mockStudentsLive.find((s) => s.id === student.id)
   const streakCount = 7
 
   // Mock active session — replace with real API call later
   const activeSession = {
     classId: 'class-001',
     className: 'Life Skills — Getting Ready for School',
-    iconEmoji: '🍳',
+    icon: <UtensilsCrossed size={20} color="#1D9E75" />,
     iconBg: '#E1F5EE',
     taskIndex: 3,
     taskTotal: 5,
@@ -65,7 +72,7 @@ export default function Home() {
             <h1 className={styles.greetingName}>
               Welcome back,{' '}
               <span className={styles.greetingAccent}>
-                {student.name.split(' ')[0]}! 👋
+                {student.name.split(' ')[0]}!
               </span>
             </h1>
           </div>

@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { PartyPopper } from 'lucide-react'
 import { OverlayTemplate } from '../../components/templates'
 import { COGNITIVE_STATES } from '../../constants/states'
 import type { CognitiveState } from '../../constants/states'
@@ -70,9 +71,9 @@ export default function SessionSummary() {
         aria-modal="true"
       >
         <div className={styles.header}>
-          <span className={styles.trophy} aria-hidden="true">
-            🎉
-          </span>
+          <div className={styles.trophy} aria-hidden="true">
+            <PartyPopper size={36} color="#EF9F27" />
+          </div>
           <h2 className={styles.title}>Session Complete!</h2>
           <p className={styles.sub}>Life Skills · Getting Ready for School</p>
         </div>

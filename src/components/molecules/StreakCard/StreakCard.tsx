@@ -1,3 +1,4 @@
+import { Flame, Moon } from 'lucide-react'
 import styles from './StreakCard.module.css'
 import clsx from 'clsx'
 
@@ -7,17 +8,39 @@ interface StreakCardProps {
 }
 
 function getStreakMeta(count: number): {
-  icon: string
+  icon: React.ReactNode
   sub: string
   subColor: string
 } {
   if (count === 0)
-    return { icon: '💤', sub: 'Start today!', subColor: '#5F5E5A' }
+    return {
+      icon: <Moon size={28} color="#5F5E5A" />,
+      sub: 'Start today!',
+      subColor: '#5F5E5A',
+    }
   if (count >= 30)
-    return { icon: '🔥', sub: 'Amazing! 🎉', subColor: '#D4537E' }
-  if (count >= 14) return { icon: '🔥', sub: 'On fire!', subColor: '#D4537E' }
-  if (count >= 7) return { icon: '🔥', sub: 'Keep it up!', subColor: '#993556' }
-  return { icon: '🔥', sub: 'Good start!', subColor: '#993556' }
+    return {
+      icon: <Flame size={28} color="#D4537E" />,
+      sub: 'Amazing!',
+      subColor: '#D4537E',
+    }
+  if (count >= 14)
+    return {
+      icon: <Flame size={28} color="#D4537E" />,
+      sub: 'On fire!',
+      subColor: '#D4537E',
+    }
+  if (count >= 7)
+    return {
+      icon: <Flame size={28} color="#D4537E" />,
+      sub: 'Keep it up!',
+      subColor: '#993556',
+    }
+  return {
+    icon: <Flame size={28} color="#D4537E" />,
+    sub: 'Good start!',
+    subColor: '#993556',
+  }
 }
 
 function StreakCard({ count, className }: StreakCardProps) {
@@ -29,9 +52,9 @@ function StreakCard({ count, className }: StreakCardProps) {
       className={clsx(styles.card, isEmpty && styles.empty, className)}
       aria-label={`${count} day streak`}
     >
-      <span className={styles.icon} aria-hidden="true">
+      <div className={styles.icon} aria-hidden="true">
         {icon}
-      </span>
+      </div>
       <div className={styles.info}>
         <span
           className={styles.count}

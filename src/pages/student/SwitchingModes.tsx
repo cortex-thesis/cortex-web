@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { Waves, Zap, ArrowRight } from 'lucide-react'
 import { OverlayTemplate } from '../../components/templates'
 import { StateBadge } from '../../components/atoms'
 import type { CognitiveState } from '../../constants/states'
@@ -14,26 +15,29 @@ interface SwitchingState {
   reason?: 'eeg_triggered' | 'teacher_override'
 }
 
-const MESSAGES: Record<string, { title: string; sub: string; icon: string }> = {
+const MESSAGES: Record<
+  string,
+  { title: string; sub: string; icon: React.ReactNode }
+> = {
   'focus-to-relax': {
     title: 'Your brain needs a break.',
     sub: "Switching to Relax Mode. Let's slow things down.",
-    icon: '🌊',
+    icon: <Waves size={36} color="#378ADD" />,
   },
   'relax-to-focus': {
     title: "You're ready to focus again.",
     sub: 'Switching back to Focus Mode. You got this.',
-    icon: '⚡',
+    icon: <Zap size={36} color="#1D9E75" />,
   },
   'focus-to-relax-override': {
     title: 'Your teacher switched your mode.',
     sub: "Time for a short break. Let's slow things down.",
-    icon: '🌊',
+    icon: <Waves size={36} color="#378ADD" />,
   },
   'relax-to-focus-override': {
     title: 'Your teacher switched your mode.',
     sub: "Back to Focus Mode. Let's keep going.",
-    icon: '⚡',
+    icon: <Zap size={36} color="#1D9E75" />,
   },
 }
 
@@ -102,7 +106,7 @@ export default function SwitchingModes() {
       })
     }, TRANSITION_DURATION)
 
-    return () => clearTimeout(id)
+    return () => clearInterval(id)
   }, [to, navigate])
 
   return (
@@ -124,7 +128,7 @@ export default function SwitchingModes() {
         <div className={styles.transitionRow}>
           <StateBadge state={fromState} size="sm" />
           <span className={styles.arrow} aria-hidden="true">
-            →
+            <ArrowRight size={16} />
           </span>
           <StateBadge state={targetState} size="sm" />
         </div>

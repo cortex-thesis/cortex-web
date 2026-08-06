@@ -10,7 +10,7 @@ import LetterT from '../../../assets/icons/logo/t.svg?react'
 import LetterE from '../../../assets/icons/logo/e.svg?react'
 import LetterX from '../../../assets/icons/logo/x.svg?react'
 
-// ── Timing ──────────────────────────────────────────────────
+// Timing
 const SPRING_SETTLE = 0.7
 const SPIN_DELAY = SPRING_SETTLE
 const LTR_START = 1.15
@@ -31,7 +31,7 @@ interface LetterConfig {
   rotate: number
 }
 
-// ── Radial Layout Coordinates & Angles Matching Logo Reference ──
+// Radial Layout Coordinates & Angles Matching Logo Reference
 const LETTERS: LetterConfig[] = [
   {
     id: 'c',
