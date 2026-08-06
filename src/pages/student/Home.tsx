@@ -1,0 +1,139 @@
+import { useNavigate } from 'react-router-dom'
+import { Bell, Settings, Plus, Brain, BarChart2, Star } from 'lucide-react'
+import { PlayfulZoneTemplate } from '../../components/templates'
+import {
+  SessionCard,
+  ClassTile,
+  StreakCard,
+  QuickActionCard,
+} from '../../components/molecules'
+import { Avatar, Logo } from '../../components/atoms'
+import { mockStudent, mockClasses, mockStudentsLive } from '../../mocks'
+import styles from './Home.module.css'
+
+function getGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+export default function Home() {
+  const navigate = useNavigate()
+
+  const student = mockStudent
+  const classes = mockClasses
+  const liveData = mockStudentsLive.find((s) => s.id === student.id)
+  const streakCount = 7
+
+  // Mock active session — replace with real API call later
+  const activeSession = {
+    classId: 'class-001',
+    className: 'Life Skills — Getting Ready for School',
+    iconEmoji: '🍳',
+    iconBg: '#E1F5EE',
+    taskIndex: 3,
+    taskTotal: 5,
+    progress: 65,
+  }
+
+  return (
+    <PlayfulZoneTemplate>
+      <div className={styles.topBar}>
+        <Logo variant="horizontal" height={24} />
+        <div className={styles.topBarRight}>
+          <button className={styles.iconBtn} aria-label="Notifications">
+            <Bell size={18} strokeWidth={1.75} />
+          </button>
+          <button className={styles.iconBtn} aria-label="Settings">
+            <Settings size={18} strokeWidth={1.75} />
+          </button>
+          <button
+            className={styles.avatarBtn}
+            onClick={() => navigate('/student/profile')}
+            aria-label="View profile"
+          >
+            <Avatar name={student.name} imageUrl={student.avatar} size="sm" />
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.body}>
+        <div className={styles.left}>
+          <div className={styles.greeting}>
+            <span className={styles.greetingSub}>{getGreeting()}</span>
+            <h1 className={styles.greetingName}>
+              Welcome back,{' '}
+              <span className={styles.greetingAccent}>
+                {student.name.split(' ')[0]}! 👋
+              </span>
+            </h1>
+          </div>
+
+          <SessionCard
+            session={activeSession}
+            onResume={() => navigate('/student/eeg-pairing')}
+            onStart={() => navigate('/student/join-class')}
+          />
+
+          <div className={styles.classesHeader}>
+            <span className={styles.classesLabel}>My Classes</span>
+            <button
+              className={styles.seeAllBtn}
+              onClick={() => navigate('/student/classes')}
+            >
+              See all
+            </button>
+          </div>
+
+          <div className={styles.classesGrid}>
+            {classes.map((cls) => (
+              <ClassTile
+                key={cls.id}
+                name={cls.name}
+                iconEmoji={cls.iconEmoji}
+                iconBg={cls.iconBg}
+                onClick={() => navigate(`/student/class/${cls.id}`)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.right}>
+          <StreakCard count={streakCount} />
+
+          <div className={styles.qaGrid}>
+            <QuickActionCard
+              icon={<Plus size={14} strokeWidth={1.75} color="#534AB7" />}
+              iconBg="#EEEDFE"
+              label="Join a class"
+              sub="Enter code"
+              onClick={() => navigate('/student/join-class')}
+            />
+            <QuickActionCard
+              icon={<Brain size={14} strokeWidth={1.75} color="#1D9E75" />}
+              iconBg="#E1F5EE"
+              label="New session"
+              sub="Pair headband"
+              onClick={() => navigate('/student/eeg-pairing')}
+            />
+            <QuickActionCard
+              icon={<BarChart2 size={14} strokeWidth={1.75} color="#D4537E" />}
+              iconBg="#FBEAF0"
+              label="My progress"
+              sub="Focus scores"
+              onClick={() => navigate('/student/profile')}
+            />
+            <QuickActionCard
+              icon={<Star size={14} strokeWidth={1.75} color="#EF9F27" />}
+              iconBg="#FAEEDA"
+              label="Achievements"
+              sub="Badges earned"
+              onClick={() => navigate('/student/profile')}
+            />
+          </div>
+        </div>
+      </div>
+    </PlayfulZoneTemplate>
+  )
+}
