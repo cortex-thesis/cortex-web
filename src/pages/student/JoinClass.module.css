@@ -1,0 +1,147 @@
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1.5px solid #e4e4ee;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f5e5a;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.backBtn:hover {
+  background: #f0f0f6;
+}
+
+.title {
+  font-family: 'Lexend', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.emoji {
+  font-size: 52px;
+  line-height: 1;
+  animation: emojiIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes emojiIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.textBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.heading {
+  font-family: 'Lexend', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2d2a7a;
+}
+
+.sub {
+  font-family: 'Lexend', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #5f5e5a;
+  line-height: 1.5;
+}
+
+.alert {
+  max-width: 300px;
+  width: 100%;
+}
+
+.loadingText {
+  font-family: 'Lexend', sans-serif;
+  font-size: 12px;
+  color: #5f5e5a;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 240px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #e4e4ee;
+}
+
+.dividerText {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  color: #b4b2a9;
+}
+
+.qrBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 240px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid #534ab7;
+  background: transparent;
+  color: #534ab7;
+  font-family: 'Lexend', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.qrBtn:hover {
+  background: #eeedfe;
+}
+
+.hint {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  color: #b4b2a9;
+  text-align: center;
+}

@@ -1,0 +1,198 @@
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e4e4ee;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1.5px solid #e4e4ee;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f5e5a;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.backBtn:hover {
+  background: #f0f0f6;
+}
+
+.topTitle {
+  font-family: 'Lexend', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 20px;
+}
+
+.textBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  max-width: 340px;
+}
+
+.heading {
+  font-family: 'Lexend', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1.3;
+}
+
+.sub {
+  font-family: 'Lexend', sans-serif;
+  font-size: 13px;
+  color: #5f5e5a;
+  line-height: 1.5;
+}
+
+.modeCards {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.card {
+  flex: 1;
+  background: #ffffff;
+  border: 2px solid #e4e4ee;
+  border-radius: 16px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+  position: relative;
+  font-family: 'Lexend', sans-serif;
+}
+
+.card:hover {
+  border-color: #534ab7;
+}
+
+.cardSelected {
+  border-color: #534ab7;
+  background: #fafaff;
+}
+
+.cardRecommended.cardSelected {
+  border-color: #d4537e;
+  background: #fff8fa;
+}
+
+.cardRecommended:hover {
+  border-color: #d4537e;
+}
+
+.cardIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.cardName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  text-align: center;
+}
+
+.cardDesc {
+  font-size: 11px;
+  color: #5f5e5a;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.cardBadge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 9999px;
+}
+
+.badgeTeacher {
+  background: #fbeaf0;
+  color: #d4537e;
+}
+
+.badgeFree {
+  background: #eeedfe;
+  color: #534ab7;
+}
+
+.checkmark {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #534ab7;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardRecommended .checkmark {
+  background: #d4537e;
+}
+
+.startBtn {
+  width: 100%;
+  max-width: 420px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #534ab7;
+  color: #ffffff;
+  border: none;
+  font-family: 'Lexend', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.startBtn:hover {
+  opacity: 0.88;
+}
+
+.hint {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  color: #b4b2a9;
+  text-align: center;
+  max-width: 280px;
+}
