@@ -16,6 +16,7 @@ import ClassOverview from '../pages/teacher/ClassOverview'
 import ClassStudents from '../pages/teacher/ClassStudents'
 import ClassContent from '../pages/teacher/ClassContent'
 import ClassAnalytics from '../pages/teacher/ClassAnalytics'
+import Login from '../pages/teacher/Login'
 
 export default function AppRouter() {
   return (
@@ -50,6 +51,8 @@ export default function AppRouter() {
         path="/teacher/class/:classId/analytics"
         element={<ClassAnalytics />}
       />
+
+      <Route path="/teacher/login" element={<Login />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
