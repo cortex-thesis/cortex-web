@@ -8,6 +8,10 @@ import SessionSummary from '../pages/student/SessionSummary'
 import LearningJournal from '../pages/student/LearningJournal'
 import EEGPairing from '../pages/student/EEGPairing'
 import Dashboard from '../pages/teacher/Dashboard'
+import ClassOverview from '../pages/teacher/ClassOverview'
+import ClassStudents from '../pages/teacher/ClassStudents'
+import ClassContent from '../pages/teacher/ClassContent'
+import ClassAnalytics from '../pages/teacher/ClassAnalytics'
 
 export default function AppRouter() {
   return (
@@ -22,6 +26,22 @@ export default function AppRouter() {
       <Route path="/student/journal" element={<LearningJournal />} />
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route path="/teacher/dashboard" element={<Dashboard />} />
+      <Route
+        path="/teacher/class/:classId/overview"
+        element={<ClassOverview />}
+      />
+      <Route
+        path="/teacher/class/:classId/students"
+        element={<ClassStudents />}
+      />
+      <Route
+        path="/teacher/class/:classId/content"
+        element={<ClassContent />}
+      />
+      <Route
+        path="/teacher/class/:classId/analytics"
+        element={<ClassAnalytics />}
+      />
     </Routes>
   )
 }

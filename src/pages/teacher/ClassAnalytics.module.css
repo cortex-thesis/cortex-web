@@ -1,0 +1,207 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 12px;
+}
+
+/* ── Bar chart ──────────────────────────────── */
+
+.chartCard {
+  background: #ffffff;
+  border: 1px solid #e4e4ee;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chartTitle {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #5f5e5a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 120px;
+  padding-bottom: 4px;
+}
+
+.barGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.barScore {
+  font-family: 'Lexend', sans-serif;
+  font-size: 9px;
+  color: #5f5e5a;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.4s ease;
+  min-height: 4px;
+}
+
+.barLabel {
+  font-family: 'Lexend', sans-serif;
+  font-size: 10px;
+  color: #5f5e5a;
+}
+
+/* ── Donut chart ────────────────────────────── */
+
+.donutCard {
+  background: #ffffff;
+  border: 1px solid #e4e4ee;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.donutWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.donut {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.donutHole {
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donutPct {
+  font-family: 'Lexend', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1;
+}
+
+.donutLbl {
+  font-family: 'Lexend', sans-serif;
+  font-size: 9px;
+  color: #5f5e5a;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legendLabel {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  color: #1a1a2e;
+  flex: 1;
+}
+
+.legendPct {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #5f5e5a;
+}
+
+/* ── State bars ─────────────────────────────── */
+
+.stateCard {
+  background: #ffffff;
+  border: 1px solid #e4e4ee;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stateBars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stateRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stateTrack {
+  flex: 1;
+  height: 8px;
+  background: #f0f0f6;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.stateFill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s ease;
+}
+
+.statePct {
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #5f5e5a;
+  min-width: 32px;
+  text-align: right;
+}
