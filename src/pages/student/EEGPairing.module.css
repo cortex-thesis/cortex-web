@@ -1,0 +1,170 @@
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e4e4ee;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1.5px solid #e4e4ee;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f5e5a;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.backBtn:hover {
+  background: #f0f0f6;
+}
+
+.topBarTitle {
+  font-family: 'Lexend', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 24px;
+}
+
+.pairingSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.textBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  max-width: 300px;
+}
+
+.title {
+  font-family: 'Lexend', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.sub {
+  font-family: 'Lexend', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #5f5e5a;
+  line-height: 1.5;
+}
+
+.signalRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.signalLabel {
+  font-family: 'Lexend', sans-serif;
+  font-size: 12px;
+  color: #5f5e5a;
+}
+
+.errorBanner {
+  max-width: 340px;
+  width: 100%;
+}
+
+.tips {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 320px;
+  width: 100%;
+}
+
+.tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: 'Lexend', sans-serif;
+  font-size: 12px;
+  color: #5f5e5a;
+  line-height: 1.5;
+}
+
+.tipDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #534ab7;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.successMsg {
+  font-family: 'Lexend', sans-serif;
+  font-size: 12px;
+  color: #1d9e75;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.retryBtn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  background: transparent;
+  color: #534ab7;
+  border: 1.5px solid #534ab7;
+  font-family: 'Lexend', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.retryBtn:hover {
+  background: #eeedfe;
+}
+
+.startBtn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  background: #534ab7;
+  color: #ffffff;
+  border: none;
+  font-family: 'Lexend', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.startBtn:hover {
+  opacity: 0.88;
+}
