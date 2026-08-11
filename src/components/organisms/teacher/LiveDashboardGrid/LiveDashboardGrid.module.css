@@ -1,0 +1,95 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summaryBar {
+  display: flex;
+  gap: 10px;
+}
+.summaryCard {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #e4e4ee;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.summaryDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.summaryInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.summaryNum {
+  font-family: 'Lexend', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1;
+}
+.summaryLabel {
+  font-family: 'Lexend', sans-serif;
+  font-size: 10px;
+  color: #5f5e5a;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sectionTitle {
+  font-family: 'Lexend', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #5f5e5a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.livePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #e1f5ee;
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-family: 'Lexend', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #085041;
+}
+.liveDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #1d9e75;
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.cardSelected {
+  outline: 2px solid #534ab7;
+  border-radius: 16px;
+}

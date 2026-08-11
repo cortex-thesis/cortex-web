@@ -1,26 +1,14 @@
 import { useState, useEffect } from 'react'
 import { TeacherDashboardTemplate } from '../../components/templates'
-import { StudentStateCard, EEGWaveDisplay } from '../../components/molecules'
+import { EEGWaveDisplay } from '../../components/molecules'
+import {
+  LiveDashboardGrid,
+  OverrideModal,
+} from '../../components/organisms/teacher'
 import type { StudentLive } from '../../types'
 import type { CognitiveState } from '../../constants/states'
 import { mockTeacher, mockStudentsLive, createMockEEGStream } from '../../mocks'
 import styles from './Dashboard.module.css'
-
-type StateCount = Record<CognitiveState | 'offline', number>
-
-function countStates(students: StudentLive[]): StateCount {
-  return students.reduce(
-    (acc, s) => {
-      if (!s.isConnected || !s.currentState) {
-        acc.offline += 1
-      } else {
-        acc[s.currentState] += 1
-      }
-      return acc
-    },
-    { focused: 0, relaxed: 0, distracted: 0, overstimulated: 0, offline: 0 }
-  )
-}
 
 function getBandPowers(state: CognitiveState | null | undefined) {
   if (!state) return null
@@ -38,27 +26,15 @@ function getBandPowers(state: CognitiveState | null | undefined) {
   }
 }
 
-const SUMMARY_STATES: {
-  key: CognitiveState | 'offline'
-  label: string
-  color: string
-}[] = [
-  { key: 'focused', label: 'Focused', color: '#1D9E75' },
-  { key: 'distracted', label: 'Distracted', color: '#EF9F27' },
-  { key: 'relaxed', label: 'Relaxed', color: '#378ADD' },
-  { key: 'overstimulated', label: 'Overstimulated', color: '#D85A30' },
-  { key: 'offline', label: 'Offline', color: '#B4B2A9' },
-]
-
 export default function Dashboard() {
   const [students, setStudents] = useState<StudentLive[]>(mockStudentsLive)
   const [selectedId, setSelectedId] = useState<string | null>(
     mockStudentsLive[0]?.id ?? null
   )
-  const [overrideTarget, setOverrideTarget] = useState<string | null>(null)
+  const [showOverride, setShowOverride] = useState(false)
+  const [overrideTarget, setOverrideTarget] = useState<StudentLive | null>(null)
 
   const selectedStudent = students.find((s) => s.id === selectedId)
-  const counts = countStates(students)
 
   // Simulate live EEG state updates for all students
   useEffect(() => {
@@ -78,11 +54,15 @@ export default function Dashboard() {
   }, [])
 
   function handleOverride(studentId: string) {
-    setOverrideTarget(studentId)
+    const student = students.find((s) => s.id === studentId)
+    if (student) {
+      setOverrideTarget(student)
+      setShowOverride(true)
+    }
   }
 
   function handleOverrideConfirm(targetMode: 'focus' | 'relax') {
-    const targetId = overrideTarget || selectedStudent?.id
+    const targetId = overrideTarget?.id || selectedStudent?.id
     if (!targetId) return
 
     setStudents((prev) =>
@@ -95,55 +75,19 @@ export default function Dashboard() {
           : s
       )
     )
-    setOverrideTarget(null)
   }
 
   return (
     <TeacherDashboardTemplate user={mockTeacher} hasNotification>
       <div className={styles.layout}>
         <div className={styles.main}>
-          <div className={styles.summaryBar}>
-            {SUMMARY_STATES.map(({ key, label, color }) => (
-              <div key={key} className={styles.summaryCard}>
-                <span
-                  className={styles.summaryDot}
-                  style={{ background: color }}
-                  aria-hidden="true"
-                />
-                <div className={styles.summaryInfo}>
-                  <span className={styles.summaryNum}>
-                    {counts[key as keyof StateCount]}
-                  </span>
-                  <span className={styles.summaryLabel}>{label}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>
-              Life Skills — Session in progress
-            </span>
-            <span className={styles.livePill}>
-              <span className={styles.liveDot} aria-hidden="true" />
-              Live
-            </span>
-          </div>
-
-          <div className={styles.grid}>
-            {students.map((student) => (
-              <div
-                key={student.id}
-                onClick={() => setSelectedId(student.id)}
-                className={selectedId === student.id ? styles.cardSelected : ''}
-              >
-                <StudentStateCard
-                  student={student}
-                  onOverride={handleOverride}
-                />
-              </div>
-            ))}
-          </div>
+          <LiveDashboardGrid
+            students={students}
+            sessionLabel="Life Skills — Session in progress"
+            selectedId={selectedId}
+            onSelectStudent={setSelectedId}
+            onOverride={handleOverride}
+          />
         </div>
 
         <div className={styles.sidebar}>
@@ -163,20 +107,12 @@ export default function Dashboard() {
 
               <div className={styles.selectedInfo}>
                 <span className={styles.sidebarTitle}>Quick override</span>
-                <div className={styles.overrideButtons}>
-                  <button
-                    className={styles.overrideBtn}
-                    onClick={() => handleOverrideConfirm('focus')}
-                  >
-                    Switch to Focus
-                  </button>
-                  <button
-                    className={styles.overrideBtn}
-                    onClick={() => handleOverrideConfirm('relax')}
-                  >
-                    Switch to Relax
-                  </button>
-                </div>
+                <button
+                  className={styles.overrideBtn}
+                  onClick={() => handleOverride(selectedStudent.id)}
+                >
+                  Override State
+                </button>
               </div>
             </>
           ) : (
@@ -186,6 +122,21 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {showOverride && overrideTarget && (
+        <OverrideModal
+          student={overrideTarget}
+          onConfirm={(targetMode) => {
+            handleOverrideConfirm(targetMode)
+            setShowOverride(false)
+            setOverrideTarget(null)
+          }}
+          onClose={() => {
+            setShowOverride(false)
+            setOverrideTarget(null)
+          }}
+        />
+      )}
     </TeacherDashboardTemplate>
   )
 }

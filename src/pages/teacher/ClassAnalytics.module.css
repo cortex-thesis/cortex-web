@@ -16,8 +16,6 @@
   gap: 12px;
 }
 
-/* ── Bar chart ──────────────────────────────── */
-
 .chartCard {
   background: #ffffff;
   border: 1px solid #e4e4ee;
@@ -73,8 +71,6 @@
   font-size: 10px;
   color: #5f5e5a;
 }
-
-/* ── Donut chart ────────────────────────────── */
 
 .donutCard {
   background: #ffffff;
@@ -158,8 +154,6 @@
   font-weight: 500;
   color: #5f5e5a;
 }
-
-/* ── State bars ─────────────────────────────── */
 
 .stateCard {
   background: #ffffff;

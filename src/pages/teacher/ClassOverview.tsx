@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { TeacherTabTemplate } from '../../components/templates'
-import { StudentStateCard, StatSummaryCard } from '../../components/molecules'
+import { StatSummaryCard } from '../../components/molecules'
+import { LiveDashboardGrid } from '../../components/organisms/teacher'
 import { Users, Zap, Flame, ClipboardList } from 'lucide-react'
 import type { StudentLive } from '../../types'
 import type { CognitiveState } from '../../constants/states'
@@ -93,27 +94,11 @@ export default function ClassOverview() {
           />
         </div>
 
-        <div className={styles.liveSection}>
-          <div className={styles.liveHeader}>
-            <span className={styles.liveTitle}>Students in session</span>
-            <span className={styles.livePill}>
-              <span className={styles.liveDot} aria-hidden="true" />
-              Live
-            </span>
-          </div>
-
-          <div className={styles.grid}>
-            {students.map((student) => (
-              <StudentStateCard
-                key={student.id}
-                student={student}
-                onOverride={(id) => {
-                  console.log('Override:', id)
-                }}
-              />
-            ))}
-          </div>
-        </div>
+        <LiveDashboardGrid
+          students={students}
+          sessionLabel={`${classData.name} — Session in progress`}
+          onOverride={(id) => console.log('Override:', id)}
+        />
       </div>
     </TeacherTabTemplate>
   )
