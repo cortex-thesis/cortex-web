@@ -1,11 +1,11 @@
 import { useParams } from 'react-router-dom'
-import { TeacherTabTemplate } from '../../components/templates'
-import { StatSummaryCard } from '../../components/molecules'
-import { StateBadge } from '../../components/atoms'
-import { COGNITIVE_STATES } from '../../constants/states'
-import type { CognitiveState } from '../../constants/states'
+import { TeacherTabTemplate } from '../../../components/templates'
+import { StatSummaryCard } from '../../../components/molecules'
+import { StateBadge } from '../../../components/atoms'
+import { COGNITIVE_STATES } from '../../../constants/states'
+import type { CognitiveState } from '../../../constants/states'
 import { TrendingUp, Clock, Target, Award } from 'lucide-react'
-import { mockTeacher, mockClasses } from '../../mocks'
+import { mockTeacher, mockClasses } from '../../../mocks'
 import styles from './ClassAnalytics.module.css'
 
 const CLASS_TABS = (classId: string) => [

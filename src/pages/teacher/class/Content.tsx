@@ -10,11 +10,11 @@ import {
   Gamepad2,
   FileText,
 } from 'lucide-react'
-import { TeacherTabTemplate } from '../../components/templates'
-import { AlertBanner } from '../../components/molecules'
-import { AddContentModal } from '../../components/organisms/teacher'
-import type { ContentItem } from '../../types'
-import { mockTeacher, mockClasses } from '../../mocks'
+import { TeacherTabTemplate } from '../../../components/templates'
+import { AlertBanner } from '../../../components/molecules'
+import { AddContentModal } from '../../../components/organisms/teacher'
+import type { ContentItem } from '../../../types'
+import { mockTeacher, mockClasses } from '../../../mocks'
 import styles from './ClassContent.module.css'
 
 const CLASS_TABS = (classId: string) => [

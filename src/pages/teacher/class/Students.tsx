@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
-import { TeacherTabTemplate } from '../../components/templates'
-import { Avatar, StateBadge } from '../../components/atoms'
-import type { CognitiveState } from '../../constants/states'
-import { mockTeacher, mockClasses, mockStudentsLive } from '../../mocks'
+import { TeacherTabTemplate } from '../../../components/templates'
+import { Avatar, StateBadge } from '../../../components/atoms'
+import type { CognitiveState } from '../../../constants/states'
+import { mockTeacher, mockClasses, mockStudentsLive } from '../../../mocks'
 import styles from './ClassStudents.module.css'
 
 const CLASS_TABS = (classId: string) => [
