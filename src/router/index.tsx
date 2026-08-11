@@ -12,10 +12,10 @@ import SessionSummary from '../pages/student/SessionSummary'
 import LearningJournal from '../pages/student/LearningJournal'
 
 import Dashboard from '../pages/teacher/Dashboard'
-import ClassOverview from '../pages/teacher/class/ClassOverview'
-import ClassStudents from '../pages/teacher/class/ClassStudents'
-import ClassContent from '../pages/teacher/class/ClassContent'
-import ClassAnalytics from '../pages/teacher/class/ClassAnalytics'
+import ClassOverview from '../pages/teacher/ClassOverview'
+import ClassStudents from '../pages/teacher/ClassStudents'
+import ClassContent from '../pages/teacher/ClassContent'
+import ClassAnalytics from '../pages/teacher/ClassAnalytics'
 import Login from '../pages/teacher/Login'
 
 export default function AppRouter() {

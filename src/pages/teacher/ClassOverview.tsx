@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { TeacherTabTemplate } from '../../../components/templates'
-import { StatSummaryCard } from '../../../components/molecules'
-import { LiveDashboardGrid } from '../../../components/organisms/teacher'
+import { TeacherTabTemplate } from '../../components/templates'
+import { StatSummaryCard } from '../../components/molecules'
+import { LiveDashboardGrid } from '../../components/organisms/teacher'
 import { Users, Zap, Flame, ClipboardList } from 'lucide-react'
-import type { StudentLive } from '../../../types'
-import type { CognitiveState } from '../../../constants/states'
+import type { StudentLive } from '../../types'
+import type { CognitiveState } from '../../constants/states'
 import {
   mockTeacher,
   mockClasses,
   mockStudentsLive,
   createMockEEGStream,
-} from '../../../mocks'
+} from '../../mocks'
 import styles from './ClassOverview.module.css'
 
 const CLASS_TABS = (classId: string) => [
