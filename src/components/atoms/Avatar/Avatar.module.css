@@ -5,12 +5,12 @@
 }
 
 .avatar {
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Lexend', sans-serif;
-  font-weight: 500;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
   flex-shrink: 0;
   overflow: hidden;
   user-select: none;
@@ -22,66 +22,78 @@
   object-fit: cover;
 }
 
+/* Avatar Sizes */
 .xs {
-  width: 24px;
-  height: 24px;
-  font-size: 9px;
+  width: var(--space-6); /* 24px */
+  height: var(--space-6);
+  font-size: var(--text-tiny-d); /* 10px fallback/closest token */
 }
+
 .sm {
-  width: 32px;
-  height: 32px;
-  font-size: 12px;
+  width: var(--space-8); /* 32px */
+  height: var(--space-8);
+  font-size: var(--text-caption); /* 12px */
 }
+
 .md {
-  width: 40px;
-  height: 40px;
-  font-size: 15px;
+  width: var(--space-10); /* 40px */
+  height: var(--space-10);
+  font-size: var(--text-label); /* 14px */
 }
+
 .lg {
-  width: 56px;
+  width: 56px; /* Custom avatar size - maps to --nav-height-student */
   height: 56px;
-  font-size: 20px;
+  font-size: var(--text-subheading-d); /* 18px */
 }
+
 .xl {
-  width: 72px;
-  height: 72px;
-  font-size: 26px;
+  width: var(--space-16); /* 64px scale or custom 72px */
+  height: var(--space-16);
+  font-size: var(--text-subheading); /* 24px */
 }
 
+/* Color Variants (Mapped to State & Token Fills/Texts) */
 .purple {
-  background: #eeedfe;
-  color: #2d2a7a;
-}
-.teal {
-  background: #e1f5ee;
-  color: #085041;
-}
-.coral {
-  background: #fbeaf0;
-  color: #712b13;
-}
-.amber {
-  background: #faeeda;
-  color: #633806;
-}
-.blue {
-  background: #e6f1fb;
-  color: #0c447c;
+  background: var(--color-surface-1);
+  color: var(--color-deep-purple);
 }
 
+.teal {
+  background: var(--state-focused-fill);
+  color: var(--state-focused-text);
+}
+
+.coral {
+  background: var(--state-overstimulated-fill);
+  color: var(--state-overstimulated-text);
+}
+
+.amber {
+  background: var(--state-distracted-fill);
+  color: var(--state-distracted-text);
+}
+
+.blue {
+  background: var(--state-relaxed-fill);
+  color: var(--state-relaxed-text);
+}
+
+/* Status Indicator */
 .statusDot {
   position: absolute;
   bottom: 1px;
   right: 1px;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  border: 2px solid #fbf7ee;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-cream);
 }
 
 .online {
-  background: #1d9e75;
+  background: var(--state-focused);
 }
+
 .offline {
-  background: #b4b2a9;
+  background: var(--color-text-muted);
 }

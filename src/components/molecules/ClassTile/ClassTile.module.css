@@ -5,10 +5,10 @@
 }
 
 .tile {
-  background: #ffffff;
-  border: 1px solid #e4e4ee;
-  border-radius: 14px;
-  padding: 12px 10px 10px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) 10px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,20 +16,20 @@
   width: 90px;
   cursor: pointer;
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-  font-family: 'Lexend', sans-serif;
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+  font-family: var(--font-family);
 }
 
 .tile:hover {
-  border-color: #534ab7;
-  box-shadow: 0 2px 8px rgba(83, 74, 183, 0.12);
+  border-color: var(--color-interface-purple);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(83, 74, 183, 0.12));
 }
 
 .iconWrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,41 +37,41 @@
 }
 
 .iconEmoji {
-  font-size: 20px;
+  font-size: var(--space-5);
   line-height: 1;
 }
 
 .name {
-  font-size: 10px;
-  font-weight: 500;
-  color: #1a1a2e;
+  font-size: var(--text-micro, 10px);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
   text-align: center;
-  line-height: 1.3;
+  line-height: var(--leading-snug);
   word-break: break-word;
 }
 
 .count {
   font-size: 9px;
-  font-weight: 400;
-  color: #5f5e5a;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
 }
 
 .badge {
   position: absolute;
   top: -4px;
   right: -4px;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 9999px;
-  background: #d4537e;
-  color: #ffffff;
-  font-family: 'Lexend', sans-serif;
+  min-width: var(--space-4);
+  height: var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--color-accent-pink, #d4537e);
+  color: var(--color-white);
+  font-family: var(--font-family);
   font-size: 9px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 3px;
-  border: 2px solid #fbf7ee;
+  border: 2px solid var(--color-cream);
   pointer-events: none;
 }

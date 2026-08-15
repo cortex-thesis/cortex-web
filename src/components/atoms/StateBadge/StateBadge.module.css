@@ -2,40 +2,43 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 9999px;
-  font-family: 'Lexend', sans-serif;
-  font-weight: 500;
+  border-radius: var(--radius-full);
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
   white-space: nowrap;
   line-height: 1;
 }
 
 .dot {
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
 .sm {
-  font-size: 11px;
-  padding: 3px 8px;
+  font-size: var(--text-caption-d);
+  padding: 3px var(--space-2);
 }
+
 .sm .dot {
   width: 6px;
   height: 6px;
 }
 
 .md {
-  font-size: 13px;
-  padding: 5px 12px;
+  font-size: var(--text-label-d, 13px);
+  padding: 5px var(--space-3);
 }
+
 .md .dot {
-  width: 8px;
-  height: 8px;
+  width: var(--space-2);
+  height: var(--space-2);
 }
 
 .lg {
   font-size: 15px;
-  padding: 7px 16px;
+  padding: 7px var(--space-4);
 }
+
 .lg .dot {
   width: 10px;
   height: 10px;

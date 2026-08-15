@@ -2,11 +2,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #1a1a2e;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-  animation: slideUp 0.3s ease forwards;
+  padding: var(--space-3) 14px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-surface-dark, #1a1a2e);
+  box-shadow: var(--shadow-lg, 0 4px 16px rgba(0, 0, 0, 0.18));
+  animation: slideUp var(--transition-slow, 0.3s ease) forwards;
   max-width: 400px;
   width: 100%;
 }
@@ -23,34 +23,37 @@
 }
 
 .icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  width: var(--space-5, 20px);
+  height: var(--space-5, 20px);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .icon_success {
-  background: #1d9e75;
+  background: var(--state-focused);
 }
+
 .icon_error {
-  background: #d85a30;
+  background: var(--state-overstimulated);
 }
+
 .icon_warning {
-  background: #ef9f27;
+  background: var(--state-distracted);
 }
+
 .icon_info {
-  background: #534ab7;
+  background: var(--color-interface-purple);
 }
 
 .message {
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  color: #ffffff;
+  font-family: var(--font-family);
+  font-size: var(--text-body-xs, 13px);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-white);
   flex: 1;
   line-height: 1.4;
 }
@@ -59,15 +62,15 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #9999aa;
+  color: var(--color-text-muted, #9999aa);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2px;
   flex-shrink: 0;
-  transition: color 0.15s ease;
+  transition: color var(--transition-base);
 }
 
 .closeBtn:hover {
-  color: #ffffff;
+  color: var(--color-white);
 }

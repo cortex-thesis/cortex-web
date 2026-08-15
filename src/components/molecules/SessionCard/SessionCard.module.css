@@ -1,24 +1,24 @@
 .card {
-  background: #ffffff;
-  border: 1px solid #e4e4ee;
-  border-radius: 14px;
-  padding: 14px 16px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 14px);
+  padding: 14px var(--space-4);
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow: 0 2px 8px rgba(45, 42, 122, 0.06);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(45, 42, 122, 0.06));
   width: 100%;
-  transition: box-shadow 0.15s ease;
+  transition: box-shadow var(--transition-base);
 }
 
 .card:hover {
-  box-shadow: 0 4px 14px rgba(45, 42, 122, 0.1);
+  box-shadow: var(--shadow-md, 0 4px 14px rgba(45, 42, 122, 0.1));
 }
 
 .iconWrap {
   width: 44px;
   height: 44px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,19 +39,19 @@
 }
 
 .label {
-  font-family: 'Lexend', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-micro, 10px);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .title {
-  font-family: 'Lexend', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-body-sm, 14px);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -64,25 +64,25 @@
 }
 
 .progPct {
-  font-family: 'Lexend', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  color: #1d9e75;
+  font-family: var(--font-family);
+  font-size: var(--text-micro, 10px);
+  font-weight: var(--font-weight-medium);
+  color: var(--state-focused);
 }
 
 .resumeBtn {
-  padding: 8px 16px;
-  border-radius: 10px;
-  background: #534ab7;
-  color: #ffffff;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-interface-purple);
+  color: var(--color-white);
   border: none;
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--transition-base);
 }
 
 .resumeBtn:hover {
@@ -90,10 +90,10 @@
 }
 
 .empty {
-  background: #f8f8fc;
-  border: 1.5px dashed #e4e4ee;
-  border-radius: 14px;
-  padding: 20px 16px;
+  background: var(--color-surface-1);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-lg, 14px);
+  padding: var(--space-5, 20px) var(--space-4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -107,32 +107,32 @@
 }
 
 .emptyTitle {
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-body-xs, 13px);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 .emptySub {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
   line-height: 1.5;
 }
 
 .startBtn {
   margin-top: 6px;
-  padding: 8px 20px;
-  border-radius: 10px;
-  background: #d4537e;
-  color: #ffffff;
+  padding: var(--space-2) 20px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-pink, #d4537e);
+  color: var(--color-white);
   border: none;
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--transition-base);
 }
 
 .startBtn:hover {

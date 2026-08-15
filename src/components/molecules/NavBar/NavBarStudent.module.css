@@ -1,7 +1,7 @@
 .nav {
   width: 100%;
-  background: #ffffff;
-  border-top: 1px solid #e4e4ee;
+  background: var(--color-white);
+  border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -13,12 +13,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  min-width: 64px;
+  min-width: var(--space-16);
   min-height: 44px;
   justify-content: center;
 }
@@ -26,15 +26,15 @@
 .iconWrap {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease;
+  transition: background var(--transition-base);
 }
 
 .iconWrapActive {
-  background: #eeedfe;
+  background: var(--color-surface-1);
 }
 
 .icon {
@@ -44,21 +44,22 @@
 }
 
 .iconActive {
-  color: #534ab7;
+  color: var(--color-interface-purple);
 }
+
 .iconInactive {
-  color: #5f5e5a;
+  color: var(--color-text-secondary);
 }
 
 .label {
-  font-family: 'Lexend', sans-serif;
-  font-size: 10px;
-  font-weight: 400;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-micro, 10px);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
   line-height: 1;
 }
 
 .labelActive {
-  color: #534ab7;
-  font-weight: 500;
+  color: var(--color-interface-purple);
+  font-weight: var(--font-weight-medium);
 }

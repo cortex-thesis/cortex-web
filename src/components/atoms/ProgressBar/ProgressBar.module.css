@@ -1,41 +1,45 @@
 .wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
 }
 
 .track {
   flex: 1;
-  background: #e4e4ee;
-  border-radius: 9999px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .fill {
-  border-radius: 9999px;
-  transition: width 0.4s ease;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
 }
 
 .label {
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   white-space: nowrap;
-  min-width: 32px;
+  min-width: var(--space-8);
   text-align: right;
 }
 
+/* Track Height Sizes */
 .xs {
-  height: 4px;
+  height: var(--space-1);
 }
+
 .sm {
   height: 6px;
 }
+
 .md {
   height: 10px;
 }
+
 .lg {
   height: 14px;
 }

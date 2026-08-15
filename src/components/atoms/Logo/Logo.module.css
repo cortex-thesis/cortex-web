@@ -13,3 +13,9 @@
   object-fit: contain;
   user-select: none;
 }
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-interface-purple);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}

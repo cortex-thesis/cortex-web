@@ -1,41 +1,41 @@
 .bar {
   width: 100%;
-  background: #f8f8fc;
-  border-bottom: 1px solid #e4e4ee;
+  background: var(--color-surface-1);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 20px;
+  padding: 10px var(--space-5);
   flex-shrink: 0;
 }
 
 .backBtn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1.5px solid #e4e4ee;
-  background: #ffffff;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5f5e5a;
+  color: var(--color-text-secondary);
   cursor: pointer;
   flex-shrink: 0;
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease;
+    background var(--transition-base),
+    border-color var(--transition-base);
 }
 
 .backBtn:hover {
-  background: #f0f0f6;
-  border-color: #534ab7;
+  background: var(--color-surface-1);
+  border-color: var(--color-interface-purple);
 }
 
 .className {
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 15px;
-  font-weight: 500;
-  color: #1a1a2e;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -47,10 +47,10 @@
 }
 
 .noSignal {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #d85a30;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--state-overstimulated);
   flex-shrink: 0;
 }
 
@@ -58,36 +58,36 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #ffffff;
-  border: 1px solid #e4e4ee;
-  border-radius: 9999px;
-  padding: 4px 10px;
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #5f5e5a;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) 10px;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
 .livePillOffline {
-  border-color: #faece7;
-  color: #d85a30;
+  border-color: var(--state-overstimulated-fill);
+  color: var(--state-overstimulated);
 }
 
 .liveDot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
 .liveDotActive {
-  background: #1d9e75;
+  background: var(--state-focused);
   animation: pulseLive 1.4s ease-in-out infinite;
 }
 
 .liveDotOffline {
-  background: #d85a30;
+  background: var(--state-overstimulated);
 }
 
 @keyframes pulseLive {
@@ -101,10 +101,10 @@
 }
 
 .taskInfo {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
 }

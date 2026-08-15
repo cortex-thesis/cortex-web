@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .row {
@@ -13,77 +13,79 @@
 
 .box {
   width: 56px;
-  height: 64px;
-  border: 1.5px solid #e4e4ee;
-  border-radius: 12px;
-  background: #ffffff;
-  font-family: 'Lexend', sans-serif;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1a1a2e;
+  height: var(--space-16);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  font-family: var(--font-family);
+  font-size: var(--text-heading-sm, 24px);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   text-align: center;
   outline: none;
   cursor: text;
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease;
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base);
   caret-color: transparent;
 }
 
-/* states */
-
+/* States */
 .active {
-  border-color: #534ab7;
-  box-shadow: 0 0 0 3px rgba(83, 74, 183, 0.12);
+  border-color: var(--color-interface-purple);
+  box-shadow: 0 0 0 3px
+    var(--color-interface-purple-focus-ring, rgba(83, 74, 183, 0.12));
 }
 
 .filled {
-  border-color: #534ab7;
-  background: #eeedfe;
-  color: #2d2a7a;
+  border-color: var(--color-interface-purple);
+  background: var(--color-surface-1);
+  color: var(--color-deep-purple);
 }
 
 .error {
-  border-color: #d85a30;
-  box-shadow: 0 0 0 3px rgba(216, 90, 48, 0.1);
-  background: #faece7;
-  color: #712b13;
+  border-color: var(--state-overstimulated);
+  box-shadow: 0 0 0 3px
+    var(--state-overstimulated-focus-ring, rgba(216, 90, 48, 0.1));
+  background: var(--state-overstimulated-fill);
+  color: var(--state-overstimulated-text);
 }
 
 .success {
-  border-color: #1d9e75;
-  background: #e1f5ee;
-  color: #085041;
+  border-color: var(--state-focused);
+  background: var(--state-focused-fill);
+  color: var(--state-focused-text);
 }
 
 .disabled {
-  background: #f8f8fc;
-  color: #b4b2a9;
+  background: var(--color-surface-1);
+  color: var(--color-text-disabled, #b4b2a9);
   cursor: not-allowed;
-  border-color: #e4e4ee;
+  border-color: var(--color-border);
 }
 
+/* Message & Hint Text */
 .hint {
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
   text-align: center;
 }
 
 .errorText {
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  color: #d85a30;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-regular);
+  color: var(--state-overstimulated);
   text-align: center;
 }
 
 .successText {
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  color: #1d9e75;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-regular);
+  color: var(--state-focused);
   text-align: center;
 }

@@ -1,47 +1,64 @@
 .dot {
   display: inline-block;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
+/* Sizes */
 .xs {
-  width: 4px;
-  height: 4px;
-}
-.sm {
-  width: 6px;
-  height: 6px;
-}
-.md {
-  width: 8px;
-  height: 8px;
-}
-.lg {
-  width: 12px;
-  height: 12px;
+  width: var(--space-1);
+  height: var(--space-1);
 }
 
+.sm {
+  width: 6px; /* Intermediate size between --space-1 (4px) and --space-2 (8px) */
+  height: 6px;
+}
+
+.md {
+  width: var(--space-2);
+  height: var(--space-2);
+}
+
+.lg {
+  width: var(--space-3);
+  height: var(--space-3);
+}
+
+/* Base & UI States */
+
 .active {
-  background: #534ab7;
+  background: var(--color-interface-purple);
 }
+
 .inactive {
-  background: #e4e4ee;
+  background: var(--color-border);
 }
+
+/* Cognitive States */
+
 .focused {
-  background: #1d9e75;
+  background: var(--state-focused);
 }
+
 .relaxed {
-  background: #378add;
+  background: var(--state-relaxed);
 }
+
 .distracted {
-  background: #ef9f27;
+  background: var(--state-distracted);
 }
+
 .overstimulated {
-  background: #d85a30;
+  background: var(--state-overstimulated);
 }
+
+/* Availability States */
+
 .online {
-  background: #1d9e75;
+  background: var(--state-focused);
 }
+
 .offline {
-  background: #b4b2a9;
+  background: var(--color-text-muted);
 }

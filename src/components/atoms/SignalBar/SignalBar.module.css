@@ -10,14 +10,16 @@
 }
 
 .active {
-  background: #1d9e75;
-}
-.inactive {
-  background: #e4e4ee;
+  background: var(--color-teal);
 }
 
+.inactive {
+  background: var(--color-border);
+}
+
+/* Extra Small (XS) */
 .xs .bar {
-  width: 4px;
+  width: var(--space-1);
 }
 .xs .bar1 {
   height: 6px;
@@ -26,28 +28,30 @@
   height: 9px;
 }
 .xs .bar3 {
-  height: 12px;
+  height: var(--space-3);
 }
 .xs .bar4 {
   height: 15px;
 }
 
+/* Small (SM) */
 .sm .bar {
   width: 5px;
 }
 .sm .bar1 {
-  height: 8px;
+  height: var(--space-2);
 }
 .sm .bar2 {
-  height: 12px;
+  height: var(--space-3);
 }
 .sm .bar3 {
-  height: 16px;
+  height: var(--space-4);
 }
 .sm .bar4 {
-  height: 20px;
+  height: var(--space-5);
 }
 
+/* Medium (MD) */
 .md .bar {
   width: 6px;
 }
@@ -58,7 +62,7 @@
   height: 15px;
 }
 .md .bar3 {
-  height: 20px;
+  height: var(--space-5);
 }
 .md .bar4 {
   height: 25px;

@@ -1,0 +1,186 @@
+/* Breakpoints reference
+   --bp-sm:   480px   (large phone)
+   --bp-md:   768px   (tablet portrait)
+   --bp-lg:   1024px  (tablet landscape / small laptop)
+   --bp-xl:   1280px  (student tablet target)
+   --bp-2xl:  1440px  (teacher desktop target)
+   --bp-3xl:  1920px  (large desktop)
+──────────────────────────────────────────── */
+
+/* Phone up to 480px */
+
+@media (max-width: 480px) {
+  :root {
+    --text-display: 26px;
+    --text-heading: 22px;
+    --text-subheading: 18px;
+    --text-body-lg: 16px;
+  }
+
+  .container {
+    padding-inline: var(--space-4);
+  }
+  .content-area {
+    padding: var(--space-4);
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hide-phone {
+    display: none !important;
+  }
+}
+
+/* Large phone */
+
+@media (min-width: 481px) and (max-width: 767px) {
+  :root {
+    --text-display: 28px;
+    --text-heading: 24px;
+  }
+
+  .container {
+    padding-inline: var(--space-5);
+  }
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .hide-phone {
+    display: none !important;
+  }
+}
+
+/* Tablet portrait */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container {
+    padding-inline: var(--space-6);
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+/* Tablet landscape / student target */
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  :root {
+    --text-display: 28px;
+    --text-heading: 24px;
+    --text-subheading: 20px;
+  }
+
+  .container {
+    padding-inline: var(--space-6);
+  }
+  .grid-5 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Student tablet target */
+
+@media (min-width: 1280px) and (max-width: 1439px) {
+  :root {
+    /* Student-facing sizes at their intended spec */
+    --text-display: 32px;
+    --text-heading: 28px;
+    --text-subheading: 24px;
+    --text-body-lg: 18px;
+  }
+
+  .container {
+    padding-inline: var(--space-8);
+  }
+}
+
+/* Teacher desktop target */
+
+@media (min-width: 1440px) {
+  :root {
+    --sidebar-width: 280px;
+    --content-max-width: 1300px;
+  }
+
+  .container {
+    padding-inline: var(--space-10);
+  }
+}
+
+/* Large desktop - 1920px+ */
+
+@media (min-width: 1920px) {
+  :root {
+    --content-max-width: 1600px;
+    --sidebar-width: 320px;
+  }
+
+  .container {
+    padding-inline: var(--space-12);
+  }
+}
+
+/* Responsive show/hide helpers */
+
+.show-phone-only {
+  display: none;
+}
+.show-tablet-only {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .show-phone-only {
+    display: block;
+  }
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .show-tablet-only {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hide-desktop-up {
+    display: none !important;
+  }
+}
+
+/* Touch targets */
+
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

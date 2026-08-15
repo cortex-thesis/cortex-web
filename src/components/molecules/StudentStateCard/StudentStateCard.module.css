@@ -1,53 +1,55 @@
 .card {
-  background: #ffffff;
-  border: 1.5px solid #e4e4ee;
-  border-radius: 14px;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg, 14px);
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   transition:
-    border-color 0.3s ease,
-    background 0.3s ease;
+    border-color var(--transition-slow, 0.3s ease),
+    background var(--transition-slow, 0.3s ease);
 }
 
+/* Cognitive State Variants */
 .focused {
-  border-color: #1d9e75;
-  background: #fafffd;
+  border-color: var(--state-focused);
+  background: var(--state-focused-subtle, #fafffd);
 }
 
 .relaxed {
-  border-color: #378add;
-  background: #fafcff;
+  border-color: var(--state-relaxed, var(--color-interface-blue));
+  background: var(--state-relaxed-subtle, #fafcff);
 }
 
 .distracted {
-  border-color: #ef9f27;
-  background: #fffcf7;
+  border-color: var(--state-distracted);
+  background: var(--state-distracted-subtle, #fffcf7);
 }
 
 .overstimulated {
-  border-color: #d85a30;
-  background: #fffaf8;
+  border-color: var(--state-overstimulated);
+  background: var(--state-overstimulated-subtle, #fffaf8);
 }
 
 .offline {
-  border-color: #e4e4ee;
-  background: #f8f8fc;
+  border-color: var(--color-border);
+  background: var(--color-surface-1);
   opacity: 0.75;
 }
 
+/* Card Header & Content Layout */
 .top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .name {
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-body-xs, 13px);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -67,43 +69,44 @@
 }
 
 .statVal {
-  font-family: 'Lexend', sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-body, 16px);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   line-height: 1;
 }
 
 .statLabel {
-  font-family: 'Lexend', sans-serif;
-  font-size: 10px;
-  font-weight: 400;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-micro, 10px);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
 }
 
+/* Actions & Messaging */
 .overrideBtn {
   width: 100%;
   padding: 7px;
-  border-radius: 8px;
-  border: 1.5px solid #534ab7;
+  border-radius: var(--radius-sm, 8px);
+  border: 1.5px solid var(--color-interface-purple);
   background: transparent;
-  color: #534ab7;
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
+  color: var(--color-interface-purple);
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--transition-base);
 }
 
 .overrideBtn:hover {
-  background: #eeedfe;
+  background: var(--color-surface-1);
 }
 
 .offlineMsg {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  color: #b4b2a9;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-disabled, #b4b2a9);
   text-align: center;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
 }
