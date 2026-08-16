@@ -19,13 +19,12 @@ function countStates(students: StudentLive[]): StateCount {
 const SUMMARY_STATES: {
   key: CognitiveState | 'offline'
   label: string
-  color: string
 }[] = [
-  { key: 'focused', label: 'Focused', color: '#1D9E75' },
-  { key: 'distracted', label: 'Distracted', color: '#EF9F27' },
-  { key: 'relaxed', label: 'Relaxed', color: '#378ADD' },
-  { key: 'overstimulated', label: 'Overstimulated', color: '#D85A30' },
-  { key: 'offline', label: 'Offline', color: '#B4B2A9' },
+  { key: 'focused', label: 'Focused' },
+  { key: 'distracted', label: 'Distracted' },
+  { key: 'relaxed', label: 'Relaxed' },
+  { key: 'overstimulated', label: 'Overstimulated' },
+  { key: 'offline', label: 'Offline' },
 ]
 
 interface LiveDashboardGridProps {
@@ -37,7 +36,7 @@ interface LiveDashboardGridProps {
   className?: string
 }
 
-function LiveDashboardGrid({
+export function LiveDashboardGrid({
   students,
   sessionLabel = 'Session in progress',
   selectedId,
@@ -50,13 +49,9 @@ function LiveDashboardGrid({
   return (
     <div className={`${styles.wrapper} ${className ?? ''}`}>
       <div className={styles.summaryBar}>
-        {SUMMARY_STATES.map(({ key, label, color }) => (
-          <div key={key} className={styles.summaryCard}>
-            <span
-              className={styles.summaryDot}
-              style={{ background: color }}
-              aria-hidden="true"
-            />
+        {SUMMARY_STATES.map(({ key, label }) => (
+          <div key={key} className={`${styles.summaryCard} ${styles[key]}`}>
+            <span className={styles.summaryDot} aria-hidden="true" />
             <div className={styles.summaryInfo}>
               <span className={styles.summaryNum}>
                 {counts[key as keyof StateCount]}

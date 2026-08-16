@@ -1,46 +1,110 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .statsRow {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .chartsRow {
   display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 12px;
+  grid-template-columns: 1fr var(--sidebar-width);
+  gap: var(--space-3);
 }
 
 .chartCard {
-  background: #ffffff;
-  border: 1px solid #e4e4ee;
-  border-radius: 14px;
-  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .chartTitle {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wider);
+}
+
+.chartSub {
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-muted);
+}
+
+.chartArea {
+  display: flex;
+  gap: var(--space-3);
+  align-items: stretch;
+  height: 200px;
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.yAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: var(--space-8);
+}
+
+.yTick {
+  font-family: var(--font-family);
+  font-size: var(--text-tiny-d);
+  color: var(--color-text-muted);
+  text-align: right;
+  min-width: var(--space-8);
+}
+
+.chartCanvas {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.gridLines {
+  position: absolute;
+  top: var(--space-2);
+  bottom: var(--space-8);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.gridLine {
+  border-top: 1px dashed var(--color-border);
+  width: 100%;
 }
 
 .barChart {
+  position: relative;
+  z-index: var(--z-raised);
   display: flex;
   align-items: flex-end;
-  gap: 12px;
-  height: 120px;
-  padding-bottom: 4px;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
 }
 
 .barGroup {
@@ -48,59 +112,79 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   height: 100%;
-  justify-content: flex-end;
+  padding: 0 var(--space-2);
 }
 
 .barScore {
-  font-family: 'Lexend', sans-serif;
-  font-size: 9px;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-tiny-d);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.barTrack {
+  flex: 1;
+  width: 100%;
+  background: var(--color-surface-1);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
 }
 
 .bar {
   width: 100%;
-  border-radius: 4px 4px 0 0;
-  transition: height 0.4s ease;
-  min-height: 4px;
+  border-radius: var(--radius-md);
+  transition: height var(--transition-base);
+  min-height: var(--space-1);
 }
 
 .barLabel {
-  font-family: 'Lexend', sans-serif;
-  font-size: 10px;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+  width: var(--space-6);
+  height: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-1);
+  margin-top: var(--space-1);
 }
 
 .donutCard {
-  background: #ffffff;
-  border: 1px solid #e4e4ee;
-  border-radius: 14px;
-  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .donutWrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-3);
 }
 
 .donut {
   width: 110px;
   height: 110px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   position: relative;
 }
 
 .donutHole {
   position: absolute;
   inset: 18px;
-  border-radius: 50%;
-  background: #ffffff;
+  border-radius: var(--radius-full);
+  background: var(--color-white);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -108,94 +192,94 @@
 }
 
 .donutPct {
-  font-family: 'Lexend', sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a2e;
-  line-height: 1;
+  font-family: var(--font-family);
+  font-size: var(--text-heading-d);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--leading-tight);
 }
 
 .donutLbl {
-  font-family: 'Lexend', sans-serif;
-  font-size: 9px;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-secondary);
 }
 
 .legend {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
   width: 100%;
 }
 
 .legendItem {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .legendDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
 .legendLabel {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  color: var(--color-text-primary);
   flex: 1;
 }
 
 .legendPct {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 .stateCard {
-  background: #ffffff;
-  border: 1px solid #e4e4ee;
-  border-radius: 14px;
-  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .stateBars {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .stateRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .stateTrack {
   flex: 1;
-  height: 8px;
-  background: #f0f0f6;
-  border-radius: 9999px;
+  height: var(--space-2);
+  background: var(--color-surface-1);
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .stateFill {
   height: 100%;
-  border-radius: 9999px;
-  transition: width 0.6s ease;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-base);
 }
 
 .statePct {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #5f5e5a;
-  min-width: 32px;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  min-width: var(--space-8);
   text-align: right;
 }

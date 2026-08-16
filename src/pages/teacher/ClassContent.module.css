@@ -1,7 +1,7 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .toolbar {
@@ -17,21 +17,21 @@
 
 .filterBtn {
   padding: 6px 14px;
-  border-radius: 8px;
-  border: 1.5px solid #e4e4ee;
-  background: #ffffff;
-  font-family: 'Lexend', sans-serif;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  font-family: var(--font-family);
   font-size: 12px;
-  color: #5f5e5a;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-base);
 }
 
 .filterActive {
-  border-color: #534ab7;
-  background: #eeedfe;
-  color: #534ab7;
-  font-weight: 500;
+  border-color: var(--color-interface-purple);
+  background: var(--state-relaxed-fill);
+  color: var(--color-interface-purple);
+  font-weight: var(--font-weight-medium);
 }
 
 .addBtn {
@@ -39,15 +39,15 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: 10px;
-  background: #534ab7;
-  color: #ffffff;
+  border-radius: var(--radius-md);
+  background: var(--color-interface-purple);
+  color: var(--color-white);
   border: none;
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--transition-base);
 }
 
 .addBtn:hover {
@@ -61,9 +61,9 @@
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e4e4ee;
-  border-radius: 12px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -86,26 +86,26 @@
 }
 
 .contentType {
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 9px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .contentTitle {
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 12px;
-  font-weight: 500;
-  color: #1a1a2e;
-  line-height: 1.3;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  line-height: var(--leading-snug);
 }
 
 .contentPkg {
-  font-family: 'Lexend', sans-serif;
-  font-size: 10px;
-  color: #534ab7;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-interface-purple);
   text-transform: capitalize;
 }
 
@@ -113,7 +113,7 @@
   display: flex;
   gap: 6px;
   padding: 8px 12px;
-  border-top: 1px solid #f0f0f6;
+  border-top: 1px solid var(--color-surface-1);
 }
 
 .editBtn,
@@ -125,26 +125,26 @@
   gap: 4px;
   padding: 5px;
   border-radius: 7px;
-  font-family: 'Lexend', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--transition-base);
 }
 
 .editBtn {
-  border: 1px solid #e4e4ee;
-  background: #ffffff;
-  color: #5f5e5a;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-secondary);
 }
 
 .editBtn:hover {
-  background: #f8f8fc;
+  background: var(--color-cool-surface);
 }
 
 .deleteBtn {
   border: 1px solid #faece7;
-  background: #ffffff;
+  background: var(--color-white);
   color: #d85a30;
 }
 
@@ -152,28 +152,51 @@
   background: #faece7;
 }
 
-.addCard {
-  height: 100%;
-  min-height: 160px;
-  border: 1.5px dashed #e4e4ee;
-  border-radius: 12px;
-  background: transparent;
+/* Empty State Container */
+.emptyState {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  color: #b4b2a9;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
+  padding: 48px 24px;
+  background: var(--color-white);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  gap: 12px;
 }
 
-.addCard:hover {
-  border-color: #534ab7;
-  background: #fafaff;
-  color: #534ab7;
+.emptyText h3 {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  margin: 0 0 4px 0;
+}
+
+.emptyText p {
+  font-family: var(--font-family);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.emptyAddBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--state-relaxed-fill);
+  color: var(--color-interface-purple);
+  border: 1px solid var(--color-interface-purple);
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.emptyAddBtn:hover {
+  background: #e2e0fd;
 }

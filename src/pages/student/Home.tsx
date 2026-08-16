@@ -47,7 +47,7 @@ export default function Home() {
   return (
     <PlayfulZoneTemplate>
       <div className={styles.topBar}>
-        <Logo variant="horizontal" height={24} />
+        <Logo variant="icon" height={36} />
         <div className={styles.topBarRight}>
           <button className={styles.iconBtn} aria-label="Notifications">
             <Bell size={18} strokeWidth={1.75} />

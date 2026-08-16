@@ -8,35 +8,44 @@
   overflow: hidden;
 }
 
+/* Converted to soft ambient auras to eliminate visual distraction */
 .blob1 {
   position: absolute;
-  width: 315px;
-  height: 270px;
-  background: var(--state-distracted, #fac775);
-  opacity: 0.45;
-  border-radius: var(--radius-full);
-  top: -80px;
-  left: -80px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(
+    circle,
+    var(--state-distracted, #fac775) 0%,
+    rgba(250, 199, 117, 0) 70%
+  );
+  opacity: 0.35;
+  filter: blur(50px);
+  top: -120px;
+  left: -120px;
   pointer-events: none;
-  z-index: var(--z-base, 0);
+  z-index: 0;
 }
 
 .blob2 {
   position: absolute;
-  width: 229px;
-  height: 215px;
-  background: var(--state-focused);
-  opacity: 0.35;
-  border-radius: var(--radius-full);
-  bottom: -60px;
-  right: -60px;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(
+    circle,
+    var(--state-focused, #1d9e75) 0%,
+    rgba(29, 158, 117, 0) 70%
+  );
+  opacity: 0.25;
+  filter: blur(60px);
+  bottom: -100px;
+  right: -100px;
   pointer-events: none;
-  z-index: var(--z-base, 0);
+  z-index: 0;
 }
 
 .content {
   position: relative;
-  z-index: var(--z-above, 1);
+  z-index: 1;
   flex: 1;
   overflow-y: auto;
   display: flex;

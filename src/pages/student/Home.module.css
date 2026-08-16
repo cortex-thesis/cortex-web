@@ -1,31 +1,36 @@
+/* ── Main Layout Canvas ───────────────────────── */
+
 .topBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 18px;
+  padding: var(--space-3) var(--space-6);
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
   flex-shrink: 0;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .topBarRight {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .iconBtn {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
   background: transparent;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5f5e5a;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--transition-base);
 }
 
 .iconBtn:hover {
@@ -35,30 +40,34 @@
 .body {
   flex: 1;
   display: flex;
-  gap: 14px;
-  padding: 0 18px 8px;
-  overflow: hidden;
+  gap: var(--space-6);
+  padding: var(--space-2) var(--space-6) var(--space-4);
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
   min-height: 0;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .left {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-4);
   min-width: 0;
   overflow-y: auto;
 }
 
 .right {
-  width: 210px;
+  width: 240px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
   flex-shrink: 0;
 }
+
+/* ── Greeting Header ──────────────────────────── */
 
 .greeting {
   display: flex;
@@ -67,58 +76,68 @@
 }
 
 .greetingSub {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
 }
 
 .greetingName {
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 22px;
-  font-weight: 600;
-  color: #2d2a7a;
-  line-height: 1.2;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-deep-purple);
+  line-height: var(--leading-tight);
 }
 
 .greetingAccent {
-  color: #d4537e;
+  color: var(--color-coral);
 }
+
+/* ── Classes Section ─────────────────────────── */
 
 .classesHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 2px;
+  margin-top: var(--space-1);
 }
 
 .classesLabel {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--tracking-wider);
 }
 
 .seeAllBtn {
   background: none;
   border: none;
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  color: #534ab7;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-interface-purple);
   cursor: pointer;
   padding: 0;
+  font-weight: var(--font-weight-medium);
 }
 
+.seeAllBtn:hover {
+  text-decoration: underline;
+}
+
+/* Dynamic grid: cards stay proportioned between 140px and 180px */
 .classesGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 180px));
+  gap: var(--space-3);
 }
+
+/* ── Quick Actions ───────────────────────────── */
 
 .qaGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: var(--space-2);
 }

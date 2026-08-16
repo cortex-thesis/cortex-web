@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { X, Upload } from 'lucide-react'
 import { InputField } from '../../../molecules'
-import type { JournalResponseType } from '../../../../types'
 import type { CurriculumPackage } from '../../../../constants/states'
 import { CURRICULUM_PACKAGES } from '../../../../constants/states'
+import type { ContentItem } from '../../../../types'
 import styles from './AddContentModal.module.css'
 
 type ContentType = 'image' | 'audio' | 'video' | 'interactive'
 type ContentMode = 'focus' | 'relax' | 'both'
 
 interface AddContentModalProps {
+  initialData?: ContentItem | null
   onSave: (data: {
     title: string
     type: ContentType
@@ -19,11 +20,19 @@ interface AddContentModalProps {
   onClose: () => void
 }
 
-function AddContentModal({ onSave, onClose }: AddContentModalProps) {
-  const [title, setTitle] = useState('')
-  const [type, setType] = useState<ContentType>('image')
-  const [pkg, setPkg] = useState<CurriculumPackage>('life')
-  const [mode, setMode] = useState<ContentMode>('focus')
+function AddContentModal({
+  initialData,
+  onSave,
+  onClose,
+}: AddContentModalProps) {
+  const isEditing = Boolean(initialData)
+
+  const [title, setTitle] = useState(initialData?.title ?? '')
+  const [type, setType] = useState<ContentType>(initialData?.type ?? 'image')
+  const [pkg, setPkg] = useState<CurriculumPackage>(
+    initialData?.package ?? 'life'
+  )
+  const [mode, setMode] = useState<ContentMode>(initialData?.mode ?? 'focus')
   const [titleError, setTitleError] = useState('')
 
   function handleSave() {
@@ -61,11 +70,13 @@ function AddContentModal({ onSave, onClose }: AddContentModalProps) {
       className={styles.backdrop}
       role="dialog"
       aria-modal="true"
-      aria-label="Add content"
+      aria-label={isEditing ? 'Edit content' : 'Add content'}
     >
       <div className={styles.modal}>
         <div className={styles.header}>
-          <h2 className={styles.title}>Add content</h2>
+          <h2 className={styles.title}>
+            {isEditing ? 'Edit content' : 'Add content'}
+          </h2>
           <button
             className={styles.closeBtn}
             onClick={onClose}
@@ -95,6 +106,7 @@ function AddContentModal({ onSave, onClose }: AddContentModalProps) {
               {CONTENT_TYPES.map(({ value, emoji, label }) => (
                 <button
                   key={value}
+                  type="button"
                   className={`${styles.typeBtn} ${type === value ? styles.typeBtnActive : ''}`}
                   onClick={() => setType(value)}
                   aria-pressed={type === value}
@@ -128,6 +140,7 @@ function AddContentModal({ onSave, onClose }: AddContentModalProps) {
               {MODES.map(({ value, label, desc }) => (
                 <button
                   key={value}
+                  type="button"
                   className={`${styles.modeBtn} ${mode === value ? styles.modeBtnActive : ''}`}
                   onClick={() => setMode(value)}
                   aria-pressed={mode === value}
@@ -141,7 +154,9 @@ function AddContentModal({ onSave, onClose }: AddContentModalProps) {
 
           <div className={styles.uploadArea}>
             <Upload size={24} strokeWidth={1.5} color="#B4B2A9" />
-            <span className={styles.uploadText}>Click to upload file</span>
+            <span className={styles.uploadText}>
+              {isEditing ? 'Replace current file' : 'Click to upload file'}
+            </span>
             <span className={styles.uploadSub}>
               PNG, JPG, MP3, MP4 up to 50MB
             </span>
@@ -153,7 +168,7 @@ function AddContentModal({ onSave, onClose }: AddContentModalProps) {
             Cancel
           </button>
           <button className={styles.saveBtn} onClick={handleSave}>
-            Add content
+            {isEditing ? 'Save changes' : 'Add content'}
           </button>
         </div>
       </div>

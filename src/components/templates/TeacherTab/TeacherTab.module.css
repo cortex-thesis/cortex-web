@@ -6,58 +6,66 @@
   flex-direction: column;
 }
 
+/* Inline Header Row: Aligns Title & Sub-Tabs on the Same Line */
 .subHeader {
   background: var(--color-white);
   border-bottom: 1px solid var(--color-border);
-  padding: 0 var(--space-8, 32px);
+  padding: var(--space-3) var(--space-8);
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
 }
 
 .title {
   font-family: var(--font-family);
-  font-size: var(--text-heading-sm, 18px);
+  font-size: var(--text-subheading-d);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  padding: var(--space-4, 16px) 0 0;
+  margin: 0;
+  white-space: nowrap;
 }
 
+/* Pill Navigation Container */
 .tabBar {
   display: flex;
-  gap: 2px;
-  margin-top: var(--space-3, 12px);
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--color-surface-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
 }
 
+/* Sub-Tab Buttons */
 .tab {
-  padding: var(--space-2, 8px) var(--space-4, 16px);
-  border-radius: var(--radius-sm, 8px) var(--radius-sm, 8px) 0 0;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
   border: none;
   background: transparent;
   font-family: var(--font-family);
-  font-size: var(--text-body-xs, 13px);
+  font-size: var(--text-label-d);
   font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition:
-    background var(--transition-base),
-    color var(--transition-base);
+    background var(--transition-fast),
+    color var(--transition-fast);
   white-space: nowrap;
 }
 
 .tab:hover {
-  background: var(--color-surface-1);
   color: var(--color-text-primary);
 }
 
 .tabActive {
-  background: var(--color-surface-1);
+  background: var(--color-white);
   color: var(--color-interface-purple);
   font-weight: var(--font-weight-medium);
+  box-shadow: var(--shadow-xs);
 }
 
 .content {
   flex: 1;
-  padding: var(--space-6, 24px) var(--space-8, 32px);
+  padding: var(--space-6) var(--space-8);
   overflow-y: auto;
 }

@@ -1,7 +1,7 @@
 .screen {
   width: 100%;
   min-height: 100vh;
-  background: #f8f8fc;
+  background: var(--color-cool-surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,9 +14,9 @@
   position: absolute;
   width: 400px;
   height: 360px;
-  background: #534ab7;
+  background: var(--color-interface-purple);
   opacity: 0.05;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   top: -100px;
   right: -80px;
   pointer-events: none;
@@ -26,18 +26,18 @@
   position: absolute;
   width: 280px;
   height: 260px;
-  background: #1d9e75;
+  background: var(--color-teal);
   opacity: 0.05;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   bottom: -60px;
   left: -50px;
   pointer-events: none;
 }
 
 .card {
-  background: #ffffff;
+  background: var(--color-white);
   border-radius: 20px;
-  border: 1px solid #e4e4ee;
+  border: 1px solid var(--color-border);
   padding: 32px 28px;
   width: 100%;
   max-width: 400px;
@@ -46,7 +46,7 @@
   gap: 20px;
   box-shadow: 0 4px 24px rgba(45, 42, 122, 0.08);
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
 }
 
 .header {
@@ -61,40 +61,40 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #eeedfe;
-  border-radius: 9999px;
+  background: var(--color-surface-1);
+  border-radius: var(--radius-full);
   padding: 4px 12px;
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #534ab7;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-interface-purple);
 }
 
 .title {
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 22px;
-  font-weight: 600;
-  color: #1a1a2e;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin-top: 4px;
 }
 
 .sub {
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 13px;
-  font-weight: 400;
-  color: #5f5e5a;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
   line-height: 1.5;
   max-width: 280px;
 }
 
 .authError {
-  background: #faece7;
-  border: 1px solid #d85a30;
-  border-radius: 10px;
+  background: var(--color-coral-light);
+  border: 1px solid var(--color-coral-border);
+  border-radius: var(--radius-md);
   padding: 10px 14px;
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  color: #712b13;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  color: var(--color-coral-text);
   text-align: center;
 }
 
@@ -113,9 +113,9 @@
 .forgotBtn {
   background: none;
   border: none;
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  color: #534ab7;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-interface-purple);
   cursor: pointer;
   text-align: right;
   padding: 0;
@@ -130,14 +130,14 @@
   width: 100%;
   padding: 13px;
   border-radius: 12px;
-  background: #534ab7;
-  color: #ffffff;
+  background: var(--color-interface-purple);
+  color: var(--color-white);
   border: none;
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--transition-base);
 }
 
 .loginBtn:hover:not(:disabled) {
@@ -157,31 +157,31 @@
 .divLine {
   flex: 1;
   height: 1px;
-  background: #e4e4ee;
+  background: var(--color-border);
 }
 
 .divText {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  color: #b4b2a9;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
 /* ── Hint ───────────────────────────────────── */
 
 .hint {
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
   text-align: center;
 }
 
 .hintLink {
   background: none;
   border: none;
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  color: #534ab7;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  color: var(--color-interface-purple);
   cursor: pointer;
   padding: 0;
 }
@@ -191,11 +191,11 @@
 }
 
 .testHint {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  color: #b4b2a9;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-muted);
   text-align: center;
-  background: #f8f8fc;
-  border-radius: 8px;
+  background: var(--color-cool-surface);
+  border-radius: var(--radius-sm);
   padding: 8px;
 }

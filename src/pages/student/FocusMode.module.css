@@ -1,10 +1,10 @@
 .taskCard {
-  max-width: 560px;
+  max-width: var(--card-max-width);
   width: 100%;
 }
 
 .alert {
-  max-width: 560px;
+  max-width: var(--card-max-width);
   width: 100%;
 }
 
@@ -17,8 +17,8 @@
 .nudgeDot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
-  background: #1d9e75;
+  border-radius: var(--radius-full);
+  background: var(--state-focused);
   flex-shrink: 0;
   animation: nudgePulse 1.4s ease-in-out infinite;
 }
@@ -34,8 +34,8 @@
 }
 
 .nudgeText {
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  color: #1d9e75;
+  font-family: var(--font-family);
+  font-size: var(--text-label-d);
+  font-weight: var(--font-weight-regular);
+  color: var(--state-focused);
 }

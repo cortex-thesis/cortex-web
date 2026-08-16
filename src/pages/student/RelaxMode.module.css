@@ -15,8 +15,8 @@
 .footerDot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
-  background: #378add;
+  border-radius: var(--radius-full);
+  background: var(--state-relaxed);
   flex-shrink: 0;
   animation: footerPulse 1.4s ease-in-out infinite;
 }
@@ -32,8 +32,8 @@
 }
 
 .footerText {
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  color: #378add;
+  font-family: var(--font-family);
+  font-size: var(--text-label-d);
+  font-weight: var(--font-weight-regular);
+  color: var(--state-relaxed);
 }

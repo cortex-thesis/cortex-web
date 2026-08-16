@@ -2,49 +2,49 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
   flex-shrink: 0;
 }
 
 .backBtn {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
-  border: 1.5px solid #e4e4ee;
-  background: #ffffff;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5f5e5a;
+  color: var(--color-text-secondary);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s ease;
+  transition: background var(--transition-base);
 }
 
 .backBtn:hover {
-  background: #f0f0f6;
+  background: var(--color-surface-1);
 }
 
 .title {
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 15px;
-  font-weight: 600;
-  color: #2d2a7a;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-deep-purple);
   flex: 1;
 }
 
 .skipBtn {
   background: none;
   border: none;
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 8px;
-  transition: background 0.15s ease;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-base);
 }
 
 .skipBtn:hover {
@@ -54,27 +54,27 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 0 16px 24px;
+  padding: 0 var(--space-4) var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
 }
 
 .sectionTitle {
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 8px;
+  letter-spacing: var(--tracking-wider);
+  margin-bottom: var(--space-2);
 }
 
 .moodRow {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -83,26 +83,26 @@
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1.5px solid #e4e4ee;
-  background: #ffffff;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
   cursor: pointer;
   min-width: 52px;
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
-  font-family: 'Lexend', sans-serif;
+    border-color var(--transition-base),
+    background var(--transition-base);
+  font-family: var(--font-family);
 }
 
 .moodBtn:hover {
-  border-color: #534ab7;
-  background: #f8f8ff;
+  border-color: var(--color-interface-purple);
+  background: var(--color-cool-surface);
 }
 
 .moodActive {
-  border-color: #534ab7;
-  background: #eeedfe;
+  border-color: var(--color-interface-purple);
+  background: var(--state-relaxed-fill);
 }
 
 .moodEmoji {
@@ -111,30 +111,30 @@
 }
 
 .moodLabel {
-  font-size: 9px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-size: var(--text-tiny);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 .moodActive .moodLabel {
-  color: #534ab7;
+  color: var(--color-interface-purple);
 }
 
 .promptCard {
-  background: #ffffff;
+  background: var(--color-white);
   border-radius: 14px;
-  border: 1px solid #e4e4ee;
-  padding: 16px;
+  border: 1px solid var(--color-border);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 .promptQ {
-  font-family: 'Lexend', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
   line-height: 1.4;
 }
 
@@ -147,57 +147,57 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 12px;
-  border-radius: 8px;
-  border: 1.5px solid #e4e4ee;
-  background: #ffffff;
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #5f5e5a;
+  padding: 5px var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
+    border-color var(--transition-base),
+    background var(--transition-base);
 }
 
 .rTypeBtn:hover {
-  border-color: #534ab7;
-  color: #534ab7;
+  border-color: var(--color-interface-purple);
+  color: var(--color-interface-purple);
 }
 
 .rTypeActive {
-  border-color: #534ab7;
-  background: #eeedfe;
-  color: #534ab7;
+  border-color: var(--color-interface-purple);
+  background: var(--state-relaxed-fill);
+  color: var(--color-interface-purple);
 }
 
 .textArea {
   width: 100%;
   min-height: 90px;
-  border: 1.5px solid #e4e4ee;
+  border: 1.5px solid var(--color-border);
   border-radius: 10px;
-  padding: 10px 12px;
-  font-family: 'Lexend', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  color: #1a1a2e;
-  background: #f8f8fc;
+  padding: 10px var(--space-3);
+  font-family: var(--font-family);
+  font-size: var(--text-body-d);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+  background: var(--color-cool-surface);
   outline: none;
   resize: none;
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
-  line-height: 1.5;
+    border-color var(--transition-base),
+    background var(--transition-base);
+  line-height: var(--leading-normal);
 }
 
 .textArea:focus {
-  border-color: #534ab7;
-  background: #ffffff;
+  border-color: var(--color-interface-purple);
+  background: var(--color-white);
 }
 
 .textArea::placeholder {
-  color: #b4b2a9;
+  color: var(--color-text-muted);
 }
 
 .drawingPlaceholder,
@@ -206,14 +206,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   height: 100px;
-  background: #f8f8fc;
-  border: 1.5px dashed #e4e4ee;
+  background: var(--color-cool-surface);
+  border: 1.5px dashed var(--color-border);
   border-radius: 10px;
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  color: #b4b2a9;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-muted);
 }
 
 .drawingPlaceholder span:first-child,
@@ -231,46 +231,46 @@
 .taskItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  background: #ffffff;
+  gap: var(--space-2);
+  padding: 9px var(--space-3);
+  background: var(--color-white);
   border-radius: 10px;
-  border: 1px solid #e4e4ee;
+  border: 1px solid var(--color-border);
 }
 
 .taskCheck {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
-  background: #1d9e75;
+  border-radius: var(--radius-full);
+  background: var(--state-focused);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  color: #ffffff;
+  font-size: var(--text-tiny);
+  color: var(--color-white);
   flex-shrink: 0;
 }
 
 .taskName {
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-label-d);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
 }
 
 .saveBtn {
   width: 100%;
   padding: 14px;
   border-radius: 14px;
-  background: #d4537e;
-  color: #ffffff;
+  background: var(--color-coral);
+  color: var(--color-white);
   border: none;
-  font-family: 'Lexend', sans-serif;
+  font-family: var(--font-family);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: opacity 0.15s ease;
-  margin-top: 4px;
+  transition: opacity var(--transition-base);
+  margin-top: var(--space-1);
 }
 
 .saveBtn:hover:not(:disabled) {

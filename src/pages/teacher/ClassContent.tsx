@@ -9,6 +9,7 @@ import {
   Video,
   Gamepad2,
   FileText,
+  FolderOpen,
 } from 'lucide-react'
 import { TeacherTabTemplate } from '../../components/templates'
 import { AlertBanner } from '../../components/molecules'
@@ -103,6 +104,7 @@ export default function ClassContent() {
   const [items, setItems] = useState<ContentItem[]>(MOCK_CONTENT)
   const [deleted, setDeleted] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [editingItem, setEditingItem] = useState<ContentItem | null>(null)
 
   const classData = mockClasses.find((c) => c.id === classId) ?? mockClasses[0]
 
@@ -114,6 +116,35 @@ export default function ClassContent() {
     setItems((prev) => prev.filter((i) => i.id !== id))
     setDeleted(id)
     setTimeout(() => setDeleted(null), 3000)
+  }
+
+  function handleSaveContent(data: {
+    title: string
+    type: ContentItem['type']
+    package: ContentItem['package']
+    mode: ContentItem['mode']
+  }) {
+    if (editingItem) {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === editingItem.id ? { ...item, ...data } : item
+        )
+      )
+    } else {
+      const newItem: ContentItem = {
+        id: `c-${Date.now()}`,
+        ...data,
+        cognitiveStateTarget: data.mode === 'relax' ? 'relaxed' : 'focused',
+        fileUrl: '',
+        thumbnailUrl: null,
+        durationSeconds: 0,
+        createdBy: 'teacher-001',
+        createdAt: new Date().toISOString(),
+      }
+      setItems((prev) => [...prev, newItem])
+    }
+    setShowAdd(false)
+    setEditingItem(null)
   }
 
   return (
@@ -152,67 +183,88 @@ export default function ClassContent() {
           </button>
         </div>
 
-        <div className={styles.grid}>
-          {filtered.map((item) => {
-            const config = TYPE_CONFIG[item.type] ?? {
-              icon: FileText,
-              bg: '#F8F8FC',
-              color: '#5F5E5A',
-            }
-            const IconComponent = config.icon
+        {filtered.length > 0 ? (
+          <div className={styles.grid}>
+            {filtered.map((item) => {
+              const config = TYPE_CONFIG[item.type] ?? {
+                icon: FileText,
+                bg: '#F8F8FC',
+                color: '#5F5E5A',
+              }
+              const IconComponent = config.icon
 
-            return (
-              <div key={item.id} className={styles.card}>
-                <div className={styles.thumb} style={{ background: config.bg }}>
-                  <IconComponent
-                    size={24}
-                    strokeWidth={1.75}
-                    color={config.color}
-                  />
-                </div>
-                <div className={styles.cardBody}>
-                  <span className={styles.contentType}>{item.type}</span>
-                  <span className={styles.contentTitle}>{item.title}</span>
-                  <span className={styles.contentPkg}>
-                    {item.package.replace('_', ' ')} ·{' '}
-                    {item.mode === 'focus'
-                      ? 'Focus Mode'
-                      : item.mode === 'relax'
-                        ? 'Relax Mode'
-                        : 'Both modes'}
-                  </span>
-                </div>
-                <div className={styles.cardActions}>
-                  <button className={styles.editBtn}>
-                    <Pencil size={12} strokeWidth={1.75} />
-                    Edit
-                  </button>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={() => handleDelete(item.id)}
+              return (
+                <div key={item.id} className={styles.card}>
+                  <div
+                    className={styles.thumb}
+                    style={{ background: config.bg }}
                   >
-                    <Trash2 size={12} strokeWidth={1.75} />
-                    Delete
-                  </button>
+                    <IconComponent
+                      size={24}
+                      strokeWidth={1.75}
+                      color={config.color}
+                    />
+                  </div>
+                  <div className={styles.cardBody}>
+                    <span className={styles.contentType}>{item.type}</span>
+                    <span className={styles.contentTitle}>{item.title}</span>
+                    <span className={styles.contentPkg}>
+                      {item.package.replace('_', ' ')} ·{' '}
+                      {item.mode === 'focus'
+                        ? 'Focus Mode'
+                        : item.mode === 'relax'
+                          ? 'Relax Mode'
+                          : 'Both modes'}
+                    </span>
+                  </div>
+                  <div className={styles.cardActions}>
+                    <button
+                      className={styles.editBtn}
+                      onClick={() => setEditingItem(item)}
+                    >
+                      <Pencil size={12} strokeWidth={1.75} />
+                      Edit
+                    </button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      <Trash2 size={12} strokeWidth={1.75} />
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-
-          <button className={styles.addCard} onClick={() => setShowAdd(true)}>
-            <Plus size={24} strokeWidth={1.5} color="#B4B2A9" />
-            <span>Add new content</span>
-          </button>
-        </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <FolderOpen size={36} strokeWidth={1.5} color="#B4B2A9" />
+            <div className={styles.emptyText}>
+              <h3>No content items found</h3>
+              <p>
+                Add content to make resources available for this class mode.
+              </p>
+            </div>
+            <button
+              className={styles.emptyAddBtn}
+              onClick={() => setShowAdd(true)}
+            >
+              <Plus size={14} strokeWidth={2} />
+              Add content
+            </button>
+          </div>
+        )}
       </div>
 
-      {showAdd && (
+      {(showAdd || editingItem) && (
         <AddContentModal
-          onSave={(data) => {
-            console.log('New content:', data)
+          initialData={editingItem}
+          onSave={handleSaveContent}
+          onClose={() => {
             setShowAdd(false)
+            setEditingItem(null)
           }}
-          onClose={() => setShowAdd(false)}
         />
       )}
     </TeacherTabTemplate>

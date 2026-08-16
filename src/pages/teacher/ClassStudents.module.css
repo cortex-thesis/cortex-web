@@ -1,14 +1,14 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .searchWrap {
@@ -22,28 +22,29 @@
 .searchIcon {
   position: absolute;
   left: 10px;
-  color: #5f5e5a;
+  color: var(--color-text-secondary);
   pointer-events: none;
 }
 
 .searchInput {
   width: 100%;
   padding: 8px 12px 8px 32px;
-  border: 1.5px solid #e4e4ee;
-  border-radius: 10px;
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  color: #1a1a2e;
-  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--text-label-d);
+  color: var(--color-text-primary);
+  background: var(--color-white);
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color var(--transition-fast);
 }
 
 .searchInput:focus {
-  border-color: #534ab7;
+  border-color: var(--color-interface-purple);
 }
+
 .searchInput::placeholder {
-  color: #b4b2a9;
+  color: var(--color-text-muted);
 }
 
 .sortRow {
@@ -53,34 +54,34 @@
 }
 
 .sortLabel {
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-secondary);
 }
 
 .sortBtn {
   padding: 5px 10px;
-  border-radius: 8px;
-  border: 1.5px solid #e4e4ee;
-  background: #ffffff;
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  color: #5f5e5a;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  font-family: var(--font-family);
+  font-size: var(--text-tiny-d);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .sortActive {
-  border-color: #534ab7;
-  background: #eeedfe;
-  color: #534ab7;
-  font-weight: 500;
+  border-color: var(--color-interface-purple);
+  background: var(--color-surface-purple-subtle);
+  color: var(--color-interface-purple);
+  font-weight: var(--font-weight-medium);
 }
 
 .table {
-  background: #ffffff;
-  border: 1px solid #e4e4ee;
-  border-radius: 12px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
@@ -88,74 +89,75 @@
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr 100px;
   padding: 10px 16px;
-  border-bottom: 1px solid #e4e4ee;
-  background: #f8f8fc;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-subtle);
 }
 
 .th {
-  font-family: 'Lexend', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-tiny-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-wider);
 }
 
 .tableRow {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr 100px;
   padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f6;
+  border-bottom: 1px solid var(--color-border-subtle);
   align-items: center;
-  transition: background 0.1s ease;
+  transition: background var(--transition-fast);
 }
 
 .tableRow:last-child {
   border-bottom: none;
 }
+
 .tableRow:hover {
-  background: #fafafa;
+  background: var(--color-surface-1);
 }
 
 .studentInfo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .studentName {
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-label-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 .td {
-  font-family: 'Lexend', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: #1a1a2e;
+  font-family: var(--font-family);
+  font-size: var(--text-label-d);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 .tdMuted {
-  font-family: 'Lexend', sans-serif;
-  font-size: 12px;
-  color: #5f5e5a;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-secondary);
 }
 
 .viewBtn {
   padding: 5px 12px;
-  border-radius: 8px;
-  border: 1.5px solid #534ab7;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-interface-purple);
   background: transparent;
-  color: #534ab7;
-  font-family: 'Lexend', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
+  color: var(--color-interface-purple);
+  font-family: var(--font-family);
+  font-size: var(--text-tiny-d);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast);
 }
 
 .viewBtn:hover {
-  background: #eeedfe;
+  background: var(--color-surface-purple-subtle);
 }

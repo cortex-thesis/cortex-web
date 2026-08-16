@@ -15,9 +15,9 @@ const CLASS_TABS = (classId: string) => [
 ]
 
 function getFocusColor(score: number): string {
-  if (score >= 75) return '#1D9E75'
-  if (score >= 50) return '#EF9F27'
-  return '#D85A30'
+  if (score >= 75) return 'var(--state-focused)'
+  if (score >= 50) return 'var(--state-distracted)'
+  return 'var(--color-coral)'
 }
 
 export default function ClassStudents() {
@@ -103,18 +103,22 @@ export default function ClassStudents() {
 
               <span className={styles.tdMuted}>12</span>
 
-              {student.currentState ? (
-                <StateBadge
-                  state={student.currentState as CognitiveState}
-                  size="sm"
-                />
-              ) : (
-                <span className={styles.tdMuted}>Offline</span>
-              )}
+              <div>
+                {student.currentState ? (
+                  <StateBadge
+                    state={student.currentState as CognitiveState}
+                    size="sm"
+                  />
+                ) : (
+                  <span className={styles.tdMuted}>Offline</span>
+                )}
+              </div>
 
               <span className={styles.tdMuted}>3 entries</span>
 
-              <button className={styles.viewBtn}>View profile</button>
+              <div>
+                <button className={styles.viewBtn}>View profile</button>
+              </div>
             </div>
           ))}
         </div>

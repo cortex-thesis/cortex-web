@@ -1,28 +1,36 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 16px);
+  gap: var(--space-5);
 }
 
+/* 5-Card Grid with Generous Spacing */
 .summaryBar {
-  display: flex;
-  gap: var(--space-2.5, 10px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-3);
+  width: 100%;
 }
 
+/* Base Summary Card */
 .summaryCard {
-  flex: 1;
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 12px);
-  padding: var(--space-2.5, 10px) var(--space-3, 12px);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
   display: flex;
   align-items: center;
-  gap: var(--space-2, 8px);
+  gap: var(--space-3);
+  box-shadow: var(--shadow-xs);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
+/* State-colored dot indicator */
 .summaryDot {
-  width: var(--space-2.5, 10px);
-  height: var(--space-2.5, 10px);
+  width: 10px;
+  height: 10px;
   border-radius: var(--radius-full);
   flex-shrink: 0;
 }
@@ -30,23 +38,76 @@
 .summaryInfo {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .summaryNum {
   font-family: var(--font-family);
-  font-size: var(--text-heading-md, 20px);
+  font-size: var(--text-heading-d);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .summaryLabel {
   font-family: var(--font-family);
-  font-size: var(--text-micro, 10px);
+  font-size: var(--text-caption-d);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
 }
 
+/* --- STATE COLOR MODIFIERS --- */
+
+/* Focused State (Teal/Green) */
+.focused {
+  border-color: rgba(29, 158, 117, 0.3);
+  background: linear-gradient(180deg, #ffffff 0%, #e1f5ee 100%);
+}
+.focused .summaryDot {
+  background: var(--color-teal);
+  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.2);
+}
+
+/* Distracted State (Amber/Yellow) */
+.distracted {
+  border-color: rgba(239, 159, 39, 0.3);
+  background: linear-gradient(180deg, #ffffff 0%, #faeeda 100%);
+}
+.distracted .summaryDot {
+  background: #ef9f27;
+  box-shadow: 0 0 0 3px rgba(239, 159, 39, 0.2);
+}
+
+/* Relaxed State (Blue) */
+.relaxed {
+  border-color: rgba(55, 138, 221, 0.3);
+  background: linear-gradient(180deg, #ffffff 0%, #e6f1fc 100%);
+}
+.relaxed .summaryDot {
+  background: #378add;
+  box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.2);
+}
+
+/* Overstimulated State (Coral/Red) */
+.overstimulated {
+  border-color: rgba(212, 83, 126, 0.3);
+  background: linear-gradient(180deg, #ffffff 0%, #fbeaf0 100%);
+}
+.overstimulated .summaryDot {
+  background: var(--color-coral);
+  box-shadow: 0 0 0 3px rgba(212, 83, 126, 0.2);
+}
+
+/* Offline State (Neutral Gray) */
+.offline {
+  border-color: var(--color-border);
+  background: var(--color-white);
+}
+.offline .summaryDot {
+  background: var(--color-text-muted);
+}
+
+/* Section Header & Grid Styles */
 .sectionHeader {
   display: flex;
   align-items: center;
@@ -55,31 +116,31 @@
 
 .sectionTitle {
   font-family: var(--font-family);
-  font-size: var(--text-caption);
+  font-size: var(--text-caption-d);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wider);
 }
 
 .livePill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: var(--state-focused-subtle, #e1f5ee);
+  gap: var(--space-1);
+  background: #e1f5ee;
   border-radius: var(--radius-full);
-  padding: var(--space-1, 4px) var(--space-2.5, 10px);
+  padding: var(--space-1) var(--space-2.5);
   font-family: var(--font-family);
-  font-size: var(--text-caption-d); /* 11px */
+  font-size: var(--text-caption-d);
   font-weight: var(--font-weight-medium);
-  color: var(--state-focused-dark, #085041);
+  color: #085041;
 }
 
 .liveDot {
   width: 5px;
   height: 5px;
   border-radius: var(--radius-full);
-  background: var(--state-focused);
+  background: var(--color-teal);
   animation: livePulse 1.4s ease-in-out infinite;
 }
 
@@ -96,10 +157,10 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-3, 12px);
+  gap: var(--space-3);
 }
 
 .cardSelected {
   outline: 2px solid var(--color-interface-purple);
-  border-radius: var(--radius-xl, 16px);
+  border-radius: var(--radius-xl);
 }

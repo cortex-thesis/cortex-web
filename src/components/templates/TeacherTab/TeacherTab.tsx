@@ -18,7 +18,7 @@ interface TeacherTabTemplateProps {
   title?: string
 }
 
-function TeacherTabTemplate({
+export function TeacherTabTemplate({
   children,
   user,
   tabs,
@@ -32,13 +32,19 @@ function TeacherTabTemplate({
     <div className={styles.root}>
       <NavBarTeacher user={user} hasNotification={hasNotification} />
 
-      <div className={styles.subHeader}>
+      <header className={styles.subHeader}>
         {title && <h1 className={styles.title}>{title}</h1>}
-        <div className={styles.tabBar} role="tablist">
+
+        <nav
+          className={styles.tabBar}
+          role="tablist"
+          aria-label="Class navigation"
+        >
           {tabs.map((tab) => {
             const isActive =
               location.pathname === tab.path ||
               location.pathname.endsWith(tab.path.split('/').pop() ?? '')
+
             return (
               <button
                 key={tab.path}
@@ -51,8 +57,8 @@ function TeacherTabTemplate({
               </button>
             )
           })}
-        </div>
-      </div>
+        </nav>
+      </header>
 
       <main className={styles.content} role="tabpanel">
         {children}
