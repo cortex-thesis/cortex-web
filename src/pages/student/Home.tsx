@@ -49,10 +49,18 @@ export default function Home() {
       <div className={styles.topBar}>
         <Logo variant="icon" height={36} />
         <div className={styles.topBarRight}>
-          <button className={styles.iconBtn} aria-label="Notifications">
+          <button
+            className={styles.iconBtn}
+            aria-label="Notifications"
+            onClick={() => navigate('/student/notifications')}
+          >
             <Bell size={18} strokeWidth={1.75} />
           </button>
-          <button className={styles.iconBtn} aria-label="Settings">
+          <button
+            className={styles.iconBtn}
+            aria-label="Settings"
+            onClick={() => navigate('/student/settings')}
+          >
             <Settings size={18} strokeWidth={1.75} />
           </button>
           <button

@@ -64,6 +64,7 @@ function NavBarTeacher({ user, hasNotification = false }: NavBarTeacherProps) {
       <div className={styles.right}>
         <button
           className={styles.notifBtn}
+          onClick={() => navigate('/teacher/notifications')}
           aria-label={
             hasNotification
               ? 'Notifications — you have unread notifications'
@@ -76,6 +77,9 @@ function NavBarTeacher({ user, hasNotification = false }: NavBarTeacherProps) {
             fill={hasNotification ? '#D4537E' : 'none'}
             color={hasNotification ? '#D4537E' : '#5F5E5A'}
           />
+          {hasNotification && (
+            <span className={styles.notifDot} aria-hidden="true" />
+          )}
         </button>
 
         <button
