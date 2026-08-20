@@ -35,67 +35,81 @@ export default function ClassDetail() {
         >
           <ChevronLeft size={18} strokeWidth={1.75} />
         </button>
+        <span
+          className={styles.classIconSm}
+          style={{ background: classData.iconBg }}
+        >
+          {classData.iconEmoji}
+        </span>
+        <h1 className={styles.className}>{classData.name}</h1>
+        <span
+          className={styles.packagePill}
+          style={{ background: PACKAGE_META[classData.package].bg }}
+        >
+          {PACKAGE_META[classData.package].label}
+        </span>
       </div>
 
       <div className={styles.body}>
-        <div className={styles.header}>
-          <span
-            className={styles.classIcon}
-            style={{ background: classData.iconBg }}
-          >
-            {classData.iconEmoji}
-          </span>
-          <h1 className={styles.className}>{classData.name}</h1>
-          <span
-            className={styles.packagePill}
-            style={{ background: PACKAGE_META[classData.package].bg }}
-          >
-            {PACKAGE_META[classData.package].label}
-          </span>
-          <span className={styles.teacherLine}>
-            {mockTeacher.name} · Code {classData.code}
-          </span>
+        <div className={styles.main}>
+          <span className={styles.sectionLabel}>Activities</span>
+          <ul className={styles.activityList}>
+            {MOCK_ACTIVITIES.map((a) => (
+              <li key={a.id} className={styles.activityRow}>
+                {a.done ? (
+                  <CheckCircle2
+                    size={18}
+                    strokeWidth={1.75}
+                    color="#1D9E75"
+                    className={styles.activityIcon}
+                  />
+                ) : (
+                  <Circle
+                    size={18}
+                    strokeWidth={1.75}
+                    className={styles.activityIconMuted}
+                  />
+                )}
+                <span
+                  className={a.done ? styles.activityDone : styles.activityText}
+                >
+                  {a.title}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className={styles.sessionCard}>
-          <div className={styles.sessionText}>
+        <aside className={styles.sidebar}>
+          <div className={styles.sessionCard}>
             <span className={styles.sessionLabel}>Today's session</span>
             <span className={styles.sessionSub}>
               {completedCount} of {MOCK_ACTIVITIES.length} activities done
             </span>
+            <Button fullWidth onClick={() => navigate('/student/eeg-pairing')}>
+              <Play size={14} strokeWidth={2} />
+              Start session
+            </Button>
           </div>
-          <Button onClick={() => navigate('/student/eeg-pairing')}>
-            <Play size={14} strokeWidth={2} />
-            Start session
-          </Button>
-        </div>
 
-        <span className={styles.sectionLabel}>Activities</span>
-        <ul className={styles.activityList}>
-          {MOCK_ACTIVITIES.map((a) => (
-            <li key={a.id} className={styles.activityRow}>
-              {a.done ? (
-                <CheckCircle2
-                  size={18}
-                  strokeWidth={1.75}
-                  color="#1D9E75"
-                  className={styles.activityIcon}
-                />
-              ) : (
-                <Circle
-                  size={18}
-                  strokeWidth={1.75}
-                  className={styles.activityIconMuted}
-                />
-              )}
-              <span
-                className={a.done ? styles.activityDone : styles.activityText}
-              >
-                {a.title}
+          <div className={styles.infoCard}>
+            <span className={styles.infoLabel}>Class info</span>
+            <div className={styles.infoRow}>
+              <span className={styles.infoKey}>Teacher</span>
+              <span className={styles.infoVal}>{mockTeacher.name}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoKey}>Class code</span>
+              <span className={styles.infoVal}>{classData.code}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoKey}>Category</span>
+              <span className={styles.infoVal}>
+                {PACKAGE_META[classData.package].label}
               </span>
-            </li>
-          ))}
-        </ul>
+            </div>
+          </div>
+        </aside>
       </div>
     </PlayfulZoneTemplate>
   )

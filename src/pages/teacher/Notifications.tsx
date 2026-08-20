@@ -1,18 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft,
-  ShieldAlert,
-  WifiOff,
-  BarChart2,
-  Bell,
-  CheckCheck,
-} from 'lucide-react'
+import { ShieldAlert, WifiOff, BarChart2, Bell, CheckCheck } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { mockTeacher } from '../../mocks'
 import styles from './Notifications.module.css'
 
 type NotificationKind = 'overstim' | 'disconnect' | 'digest' | 'system'
+type KindFilter = 'all' | NotificationKind
 
 interface AppNotification {
   id: string
@@ -74,6 +67,14 @@ const kindColor: Record<NotificationKind, string> = {
   system: '#534AB7',
 }
 
+const FILTER_LABEL: Record<KindFilter, string> = {
+  all: 'All',
+  overstim: 'Overstimulation',
+  disconnect: 'Disconnects',
+  digest: 'Digests',
+  system: 'System',
+}
+
 function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime()
   const hours = Math.floor(diffMs / (1000 * 60 * 60))
@@ -84,10 +85,13 @@ function timeAgo(iso: string): string {
 }
 
 export default function Notifications() {
-  const navigate = useNavigate()
   const [notifications, setNotifications] = useState(initialNotifications)
+  const [filter, setFilter] = useState<KindFilter>('all')
 
   const unreadCount = notifications.filter((n) => !n.read).length
+  const filtered = notifications.filter(
+    (n) => filter === 'all' || n.kind === filter
+  )
 
   function markAllRead() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
@@ -104,57 +108,71 @@ export default function Notifications() {
       user={mockTeacher}
       hasNotification={unreadCount > 0}
     >
-      <div className={styles.wrap}>
-        <button className={styles.backLink} onClick={() => navigate(-1)}>
-          <ArrowLeft size={14} strokeWidth={1.75} />
-          Back
-        </button>
+      <div className={styles.content}>
+        <h1 className={styles.title}>Notifications</h1>
 
-        <div className={styles.header}>
-          <h1 className={styles.title}>Notifications</h1>
-          {unreadCount > 0 && (
-            <button className={styles.markAllBtn} onClick={markAllRead}>
-              <CheckCheck size={14} strokeWidth={1.75} />
-              Mark all read
-            </button>
-          )}
-        </div>
+        <div className={styles.layout}>
+          <aside className={styles.sidebar}>
+            <span className={styles.sidebarTitle}>Overview</span>
+            <span className={styles.unreadSummary}>{unreadCount} unread</span>
 
-        {notifications.length === 0 ? (
-          <div className={styles.empty}>
-            <Bell size={28} strokeWidth={1.5} />
-            <p>
-              No notifications yet. Alerts from your classes will show up here.
-            </p>
-          </div>
-        ) : (
-          <ul className={styles.list}>
-            {notifications.map((n) => (
-              <li key={n.id}>
+            <nav className={styles.filterNav}>
+              {(Object.keys(FILTER_LABEL) as KindFilter[]).map((f) => (
                 <button
-                  className={styles.item}
-                  data-unread={!n.read}
-                  onClick={() => markRead(n.id)}
+                  key={f}
+                  className={styles.filterItem}
+                  data-active={filter === f}
+                  onClick={() => setFilter(f)}
                 >
-                  <span
-                    className={styles.icon}
-                    style={{ color: kindColor[n.kind] }}
-                  >
-                    {kindIcon[n.kind]}
-                  </span>
-                  <span className={styles.itemBody}>
-                    <span className={styles.itemTitle}>{n.title}</span>
-                    <span className={styles.itemText}>{n.body}</span>
-                    <span className={styles.itemTime}>
-                      {timeAgo(n.createdAt)}
-                    </span>
-                  </span>
-                  {!n.read && <span className={styles.dot} aria-hidden />}
+                  {FILTER_LABEL[f]}
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
+              ))}
+            </nav>
+
+            {unreadCount > 0 && (
+              <button className={styles.markAllBtn} onClick={markAllRead}>
+                <CheckCheck size={14} strokeWidth={1.75} />
+                Mark all read
+              </button>
+            )}
+          </aside>
+
+          <div className={styles.main}>
+            {filtered.length === 0 ? (
+              <div className={styles.empty}>
+                <Bell size={28} strokeWidth={1.5} />
+                <p>No notifications in this category.</p>
+              </div>
+            ) : (
+              <ul className={styles.list}>
+                {filtered.map((n) => (
+                  <li key={n.id}>
+                    <button
+                      className={styles.item}
+                      data-unread={!n.read}
+                      onClick={() => markRead(n.id)}
+                    >
+                      <span
+                        className={styles.icon}
+                        style={{ color: kindColor[n.kind] }}
+                      >
+                        {kindIcon[n.kind]}
+                      </span>
+                      <span className={styles.itemBody}>
+                        <span className={styles.itemTitle}>{n.title}</span>
+                        <span className={styles.itemText}>{n.body}</span>
+                      </span>
+                      <span className={styles.itemTime}>
+                        {timeAgo(n.createdAt)}
+                      </span>
+                      {!n.read && <span className={styles.dot} aria-hidden />}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
     </TeacherDashboardTemplate>
   )

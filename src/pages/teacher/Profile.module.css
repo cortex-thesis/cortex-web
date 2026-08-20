@@ -1,47 +1,43 @@
-.wrap {
-  max-width: 640px;
+.content {
+  max-width: var(--content-max-width, 1300px);
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
-.backLink {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  background: none;
-  border: none;
-  padding: 0;
+.title {
   font-family: var(--font-family);
-  font-size: var(--text-body-xs, 13px);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  cursor: pointer;
+  font-size: 22px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-deep-purple);
 }
 
-.backLink:hover {
-  color: var(--color-text-primary);
+.layout {
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+}
+
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .identity {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  text-align: center;
   background: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 12px);
-  padding: var(--space-4);
-}
-
-.identityText {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  padding: var(--space-5) var(--space-4);
 }
 
 .name {
@@ -56,23 +52,23 @@
   font-size: 12px;
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
 }
 
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.statsStack {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2);
 }
 
 .statCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   background: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 12px);
   padding: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
 }
 
 .statIcon {
@@ -83,11 +79,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.statText {
+  display: flex;
+  flex-direction: column;
 }
 
 .statValue {
   font-family: var(--font-family);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: var(--font-weight-semibold);
   color: var(--color-deep-purple);
 }
@@ -98,6 +100,14 @@
   color: var(--color-text-secondary);
 }
 
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
 .sectionLabel {
   font-family: var(--font-family);
   font-size: var(--text-body-xs, 13px);
@@ -105,16 +115,15 @@
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wider);
-  margin-top: var(--space-2);
 }
 
-.classList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+.classGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3);
 }
 
-.classRow {
+.classCard {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -126,18 +135,18 @@
   cursor: pointer;
 }
 
-.classRow:hover {
+.classCard:hover {
   background: var(--color-surface-1);
 }
 
 .classIcon {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm, 8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 

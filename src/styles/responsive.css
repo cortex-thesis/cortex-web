@@ -89,6 +89,12 @@
     --text-display: 28px;
     --text-heading: 24px;
     --text-subheading: 20px;
+
+    /* Teacher pages read this below the 1440px desktop target too —
+       without it they fall back to each page's own hardcoded default
+       instead of stepping down with the rest of the layout. */
+    --content-max-width: 960px;
+    --sidebar-width: 240px;
   }
 
   .container {
@@ -108,6 +114,12 @@
     --text-heading: 28px;
     --text-subheading: 24px;
     --text-body-lg: 18px;
+
+    /* Same reasoning as the 1024–1279px band above — teacher content
+       still needs a sane max-width before it hits its own 1440px
+       breakpoint. */
+    --content-max-width: 1120px;
+    --sidebar-width: 260px;
   }
 
   .container {
