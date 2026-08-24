@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Music } from 'lucide-react'
 import styles from './BreathingGuide.module.css'
 import clsx from 'clsx'
@@ -11,15 +11,20 @@ interface BreathStep {
   counts: number
 }
 
-const BREATH_STEPS: BreathStep[] = [
+const BASE_BREATH_STEPS: BreathStep[] = [
   { phase: 'in', label: 'Breathe in', counts: 4 },
   { phase: 'hold', label: 'Hold', counts: 2 },
   { phase: 'out', label: 'Breathe out', counts: 6 },
 ]
 
+const SLOW_PACE_MULTIPLIER = 1.5
+
+type BreathingPace = 'normal' | 'slow'
+
 interface BreathingGuideProps {
   audioLabel?: string
   showAudio?: boolean
+  pace?: BreathingPace
   onCycleComplete?: () => void
   className?: string
 }
@@ -27,13 +32,33 @@ interface BreathingGuideProps {
 function BreathingGuide({
   audioLabel = 'Calming sounds playing softly',
   showAudio = true,
+  pace = 'normal',
   onCycleComplete,
   className,
 }: BreathingGuideProps) {
-  const [stepIndex, setStepIndex] = useState(0)
-  const [count, setCount] = useState(BREATH_STEPS[0].counts)
+  const breathSteps = useMemo(() => {
+    if (pace === 'normal') return BASE_BREATH_STEPS
+    return BASE_BREATH_STEPS.map((step) => ({
+      ...step,
+      counts: Math.round(step.counts * SLOW_PACE_MULTIPLIER),
+    }))
+  }, [pace])
 
-  const currentStep = BREATH_STEPS[stepIndex]
+  const [stepIndex, setStepIndex] = useState(0)
+  const [count, setCount] = useState(breathSteps[0].counts)
+
+  // If pace changes mid-session (e.g. delivery intensity shifts),
+  // restart the count for whichever step is active so it doesn't
+  // finish out the old, faster count.
+  useEffect(() => {
+    const resetId = setTimeout(() => {
+      setCount(breathSteps[stepIndex].counts)
+    }, 0)
+
+    return () => clearTimeout(resetId)
+  }, [breathSteps, stepIndex])
+
+  const currentStep = breathSteps[stepIndex]
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -44,7 +69,7 @@ function BreathingGuide({
 
         // Advance step when countdown reaches zero
         setStepIndex((prevIndex) => {
-          const nextIndex = (prevIndex + 1) % BREATH_STEPS.length
+          const nextIndex = (prevIndex + 1) % breathSteps.length
           if (nextIndex === 0) {
             onCycleComplete?.()
           }
@@ -52,13 +77,13 @@ function BreathingGuide({
         })
 
         // Return initial count for the next step
-        const nextStepIndex = (stepIndex + 1) % BREATH_STEPS.length
-        return BREATH_STEPS[nextStepIndex].counts
+        const nextStepIndex = (stepIndex + 1) % breathSteps.length
+        return breathSteps[nextStepIndex].counts
       })
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [stepIndex, onCycleComplete])
+  }, [stepIndex, breathSteps, onCycleComplete])
 
   return (
     <div className={clsx(styles.wrapper, className)}>
@@ -101,7 +126,7 @@ function BreathingGuide({
       </div>
 
       <div className={styles.steps}>
-        {BREATH_STEPS.map((step, i) => (
+        {breathSteps.map((step, i) => (
           <div
             key={step.phase}
             className={clsx(styles.step, i === stepIndex && styles.stepActive)}

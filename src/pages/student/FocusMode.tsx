@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { SessionTemplate } from '../../components/templates'
 import { TaskCard, AlertBanner } from '../../components/molecules'
 import { useEEG } from '../../hooks/useEEG'
+import { getDeliveryConfig, getDeliveryMode } from '../../constants/delivery'
 
 // Note: Un-comment useSession if/when needed in your page logic
 // import { useSession } from '../../hooks/useSession'
@@ -34,17 +35,19 @@ export function FocusMode() {
   const isLive = connectionStatus === 'connected'
   const signalStrength = eegData.signalStrength ?? 0
 
-  // Rotate nudge messages every 30 seconds
+  const deliveryConfig = getDeliveryConfig(currentState)
+  const isElevated = deliveryConfig.intensity === 'elevated'
+
   useEffect(() => {
     const id = setInterval(() => {
       setNudgeIndex((i) => (i + 1) % NUDGE_MESSAGES.length)
-    }, 30000)
+    }, deliveryConfig.nudgeIntervalMs)
     return () => clearInterval(id)
-  }, [])
+  }, [deliveryConfig.nudgeIntervalMs])
 
-  // Show alert when mode switches away from focus
+  // Show a re-engagement banner while distracted
   useEffect(() => {
-    if (eegData.state === 'distracted' || eegData.state === 'overstimulated') {
+    if (currentState === 'distracted') {
       const showId = setTimeout(() => setShowModeAlert(true), 0)
       const hideId = setTimeout(() => setShowModeAlert(false), 3000)
 
@@ -53,7 +56,18 @@ export function FocusMode() {
         clearTimeout(hideId)
       }
     }
-  }, [eegData.state])
+  }, [currentState])
+
+  useEffect(() => {
+    if (getDeliveryMode(eegData.state) === 'relax') {
+      const id = setTimeout(() => {
+        navigate('/student/switching', {
+          state: { from: 'focus', to: 'relax' },
+        })
+      }, 5000)
+      return () => clearTimeout(id)
+    }
+  }, [eegData.state, navigate])
 
   function handleAnswered(correct: boolean) {
     if (correct && task.index < task.total) {
@@ -66,7 +80,7 @@ export function FocusMode() {
     }
   }
 
-  const nudgeFooter = (
+  const nudgeFooter = isElevated ? undefined : (
     <div className={styles.nudge}>
       <span className={styles.nudgeDot} aria-hidden="true" />
       <span className={styles.nudgeText}>{NUDGE_MESSAGES[nudgeIndex]}</span>
@@ -84,7 +98,7 @@ export function FocusMode() {
       onBack={() => navigate('/student/home')}
       footer={nudgeFooter}
     >
-      {showModeAlert && (
+      {showModeAlert && currentState === 'distracted' && isElevated && (
         <AlertBanner
           variant="warning"
           message="Your focus seems to be drifting. Adjusting content..."
@@ -94,7 +108,8 @@ export function FocusMode() {
 
       <TaskCard
         task={task}
-        showNudge={false}
+        showNudge={isElevated}
+        nudgeText={NUDGE_MESSAGES[nudgeIndex]}
         onAnswered={handleAnswered}
         className={styles.taskCard}
       />
