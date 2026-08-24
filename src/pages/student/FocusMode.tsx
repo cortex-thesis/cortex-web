@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { SessionTemplate } from '../../components/templates'
 import { TaskCard, AlertBanner } from '../../components/molecules'
 import { useEEG } from '../../hooks/useEEG'
+import DevEEGPanel from '../../components/dev/DevEEGPanel/DevEEGPanel'
 import { getDeliveryConfig, getDeliveryMode } from '../../constants/delivery'
 
 // Note: Un-comment useSession if/when needed in your page logic
@@ -29,15 +30,28 @@ export function FocusMode() {
   const [showModeAlert, setShowModeAlert] = useState(false)
 
   // EEG hook - reads from mock stream in dev, real WebSocket in prod
-  const { eegData, connectionStatus } = useEEG('session-001')
+  const {
+    eegData,
+    connectionStatus,
+    isManualOverride,
+    setMockState,
+    resumeAutoCycle,
+  } = useEEG('session-001')
 
   const currentState: CognitiveState = eegData.state ?? 'focused'
   const isLive = connectionStatus === 'connected'
   const signalStrength = eegData.signalStrength ?? 0
 
+  // How hard Focus Mode should lean into its adaptations right now.
+  // 'focused' -> normal, 'distracted' -> elevated. Nothing here reads
+  // the raw state string directly — it all comes from the config, so
+  // tuning nudge frequency or adding a new adaptation is a one-file
+  // change in constants/delivery.ts, not a page-by-page edit.
   const deliveryConfig = getDeliveryConfig(currentState)
   const isElevated = deliveryConfig.intensity === 'elevated'
 
+  // Rotate nudge messages — interval speeds up under elevated
+  // intensity (distracted) instead of staying fixed at 30s.
   useEffect(() => {
     const id = setInterval(() => {
       setNudgeIndex((i) => (i + 1) % NUDGE_MESSAGES.length)
@@ -45,7 +59,10 @@ export function FocusMode() {
     return () => clearInterval(id)
   }, [deliveryConfig.nudgeIntervalMs])
 
-  // Show a re-engagement banner while distracted
+  // Show a re-engagement banner while distracted (elevated intensity,
+  // still in Focus Mode). This does NOT cover overstimulated — that
+  // state belongs to Relax Mode, and is handled by the effect below
+  // instead of a banner.
   useEffect(() => {
     if (currentState === 'distracted') {
       const showId = setTimeout(() => setShowModeAlert(true), 0)
@@ -80,6 +97,10 @@ export function FocusMode() {
     }
   }
 
+  // Under normal intensity, the nudge lives quietly in the footer.
+  // Under elevated intensity (distracted), TaskCard shows it inline
+  // instead — closer to the content, more likely to land — so the
+  // footer version is suppressed rather than duplicated.
   const nudgeFooter = isElevated ? undefined : (
     <div className={styles.nudge}>
       <span className={styles.nudgeDot} aria-hidden="true" />
@@ -88,31 +109,39 @@ export function FocusMode() {
   )
 
   return (
-    <SessionTemplate
-      className_name="Life Skills"
-      state={currentState}
-      signalStrength={signalStrength}
-      isLive={isLive}
-      taskIndex={task.index}
-      taskTotal={task.total}
-      onBack={() => navigate('/student/home')}
-      footer={nudgeFooter}
-    >
-      {showModeAlert && currentState === 'distracted' && isElevated && (
-        <AlertBanner
-          variant="warning"
-          message="Your focus seems to be drifting. Adjusting content..."
-          className={styles.alert}
-        />
-      )}
+    <>
+      <SessionTemplate
+        className_name="Life Skills"
+        state={currentState}
+        signalStrength={signalStrength}
+        isLive={isLive}
+        taskIndex={task.index}
+        taskTotal={task.total}
+        onBack={() => navigate('/student/home')}
+        footer={nudgeFooter}
+      >
+        {showModeAlert && currentState === 'distracted' && isElevated && (
+          <AlertBanner
+            variant="warning"
+            message="Your focus seems to be drifting. Adjusting content..."
+            className={styles.alert}
+          />
+        )}
 
-      <TaskCard
-        task={task}
-        showNudge={isElevated}
-        nudgeText={NUDGE_MESSAGES[nudgeIndex]}
-        onAnswered={handleAnswered}
-        className={styles.taskCard}
+        <TaskCard
+          task={task}
+          showNudge={isElevated}
+          nudgeText={NUDGE_MESSAGES[nudgeIndex]}
+          onAnswered={handleAnswered}
+          className={styles.taskCard}
+        />
+      </SessionTemplate>
+      <DevEEGPanel
+        currentState={eegData.state}
+        isManualOverride={isManualOverride}
+        onSetState={setMockState}
+        onResumeAuto={resumeAutoCycle}
       />
-    </SessionTemplate>
+    </>
   )
 }

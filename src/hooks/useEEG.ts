@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createMockEEGStream } from '../mocks'
 import type { CognitiveState } from '../constants/states'
 import type { BandPowers } from '../types'
@@ -13,9 +13,25 @@ interface EEGData {
 interface UseEEGReturn {
   eegData: EEGData
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error'
+  // Mock-only controls, used by DevEEGPanel for manual testing. Both
+  // are safe no-ops when IS_MOCK is false (real WebSocket mode) —
+  // there's nothing to override once real EEG data is flowing.
+  isManualOverride: boolean
+  setMockState: (state: CognitiveState) => void
+  resumeAutoCycle: () => void
 }
 
 const IS_MOCK = true
+
+function randomBandPowers(): BandPowers {
+  return {
+    theta: Math.random() * 10 + 1,
+    alpha: Math.random() * 8 + 1,
+    beta: Math.random() * 12 + 2,
+    gamma: Math.random() * 5 + 0.5,
+    tbr: Math.random() * 3 + 0.3,
+  }
+}
 
 export function useEEG(_sessionId: string): UseEEGReturn {
   const [eegData, setEegData] = useState<EEGData>({
@@ -29,23 +45,25 @@ export function useEEG(_sessionId: string): UseEEGReturn {
     UseEEGReturn['connectionStatus']
   >(IS_MOCK ? 'connected' : 'connecting')
 
+  const [isManualOverride, setIsManualOverride] = useState(false)
+  const stopStreamRef = useRef<(() => void) | null>(null)
+
+  const startAutoCycle = useCallback(() => {
+    stopStreamRef.current?.()
+    stopStreamRef.current = createMockEEGStream((state: CognitiveState) => {
+      setEegData({
+        state,
+        bandPowers: randomBandPowers(),
+        signalStrength: 3,
+        lastUpdated: Date.now(),
+      })
+    }, 5000)
+  }, [])
+
   useEffect(() => {
     if (IS_MOCK) {
-      const stop = createMockEEGStream((state: CognitiveState) => {
-        setEegData({
-          state,
-          bandPowers: {
-            theta: Math.random() * 10 + 1,
-            alpha: Math.random() * 8 + 1,
-            beta: Math.random() * 12 + 2,
-            gamma: Math.random() * 5 + 0.5,
-            tbr: Math.random() * 3 + 0.3,
-          },
-          signalStrength: 3,
-          lastUpdated: Date.now(),
-        })
-      }, 5000)
-      return stop
+      startAutoCycle()
+      return () => stopStreamRef.current?.()
     }
 
     const wsUrl = import.meta.env.VITE_WS_URL
@@ -68,7 +86,35 @@ export function useEEG(_sessionId: string): UseEEGReturn {
     }
 
     return () => ws.close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_sessionId])
 
-  return { eegData, connectionStatus }
+  // Forces a specific state and stops the automatic cycle from
+  // overwriting it — otherwise whatever you set would get clobbered
+  // by the next scheduled tick within 5s.
+  const setMockState = useCallback((state: CognitiveState) => {
+    if (!IS_MOCK) return
+    stopStreamRef.current?.()
+    setIsManualOverride(true)
+    setEegData({
+      state,
+      bandPowers: randomBandPowers(),
+      signalStrength: 3,
+      lastUpdated: Date.now(),
+    })
+  }, [])
+
+  const resumeAutoCycle = useCallback(() => {
+    if (!IS_MOCK) return
+    setIsManualOverride(false)
+    startAutoCycle()
+  }, [startAutoCycle])
+
+  return {
+    eegData,
+    connectionStatus,
+    isManualOverride,
+    setMockState,
+    resumeAutoCycle,
+  }
 }

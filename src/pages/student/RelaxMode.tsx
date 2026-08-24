@@ -4,11 +4,18 @@ import { SessionTemplate } from '../../components/templates'
 import { BreathingGuide, AlertBanner } from '../../components/molecules'
 import { useEEG } from '../../hooks/useEEG'
 import { getDeliveryConfig, getDeliveryMode } from '../../constants/delivery'
+import DevEEGPanel from '../../components/dev/DevEEGPanel/DevEEGPanel'
 import styles from './RelaxMode.module.css'
 
 export default function RelaxMode() {
   const navigate = useNavigate()
-  const { eegData, connectionStatus } = useEEG('session-001')
+  const {
+    eegData,
+    connectionStatus,
+    isManualOverride,
+    setMockState,
+    resumeAutoCycle,
+  } = useEEG('session-001')
 
   const isLive = connectionStatus === 'connected'
   const signalStrength = eegData.signalStrength ?? 0
@@ -47,32 +54,40 @@ export default function RelaxMode() {
   )
 
   return (
-    <SessionTemplate
-      className_name="Life Skills"
-      state={currentState}
-      signalStrength={signalStrength}
-      isLive={isLive}
-      onBack={() => navigate('/student/home')}
-      footer={footer}
-    >
-      <div className={styles.content}>
-        {isElevated && (
-          <AlertBanner
-            variant="info"
-            message="Noticed things feel like a lot right now — easing off the pace."
-            className={styles.alert}
-          />
-        )}
+    <>
+      <SessionTemplate
+        className_name="Life Skills"
+        state={currentState}
+        signalStrength={signalStrength}
+        isLive={isLive}
+        onBack={() => navigate('/student/home')}
+        footer={footer}
+      >
+        <div className={styles.content}>
+          {isElevated && (
+            <AlertBanner
+              variant="info"
+              message="Noticed things feel like a lot right now — easing off the pace."
+              className={styles.alert}
+            />
+          )}
 
-        <BreathingGuide
-          showAudio
-          audioLabel="Calming sounds playing softly"
-          pace={isElevated ? 'slow' : 'normal'}
-          onCycleComplete={() => {
-            console.log('Breathing cycle complete')
-          }}
-        />
-      </div>
-    </SessionTemplate>
+          <BreathingGuide
+            showAudio
+            audioLabel="Calming sounds playing softly"
+            pace={isElevated ? 'slow' : 'normal'}
+            onCycleComplete={() => {
+              console.log('Breathing cycle complete')
+            }}
+          />
+        </div>
+      </SessionTemplate>
+      <DevEEGPanel
+        currentState={eegData.state}
+        isManualOverride={isManualOverride}
+        onSetState={setMockState}
+        onResumeAuto={resumeAutoCycle}
+      />
+    </>
   )
 }
