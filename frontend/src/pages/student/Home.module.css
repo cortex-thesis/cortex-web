@@ -4,11 +4,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-3) var(--space-6);
+  padding: var(--space-4) var(--space-10);
   position: relative;
   z-index: var(--z-raised);
   flex-shrink: 0;
-  max-width: 1200px;
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
@@ -20,8 +20,8 @@
 }
 
 .iconBtn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm);
   background: transparent;
   border: none;
@@ -40,12 +40,12 @@
 .body {
   flex: 1;
   display: flex;
-  gap: var(--space-6);
-  padding: var(--space-2) var(--space-6) var(--space-4);
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-10) var(--space-8);
   position: relative;
   z-index: var(--z-raised);
   min-height: 0;
-  max-width: 1200px;
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
@@ -54,16 +54,16 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
   min-width: 0;
   overflow-y: auto;
 }
 
 .right {
-  width: 240px;
+  width: 320px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   flex-shrink: 0;
 }
 
@@ -77,14 +77,14 @@
 
 .greetingSub {
   font-family: var(--font-family);
-  font-size: var(--text-caption-d);
+  font-size: 14px;
   font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
 }
 
 .greetingName {
   font-family: var(--font-family);
-  font-size: 22px;
+  font-size: 30px;
   font-weight: var(--font-weight-semibold);
   color: var(--color-deep-purple);
   line-height: var(--leading-tight);
@@ -105,7 +105,7 @@
 
 .classesLabel {
   font-family: var(--font-family);
-  font-size: var(--text-caption-d);
+  font-size: 13px;
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -116,7 +116,7 @@
   background: none;
   border: none;
   font-family: var(--font-family);
-  font-size: var(--text-caption-d);
+  font-size: 13px;
   color: var(--color-interface-purple);
   cursor: pointer;
   padding: 0;
@@ -130,8 +130,8 @@
 /* Dynamic grid: cards stay proportioned between 140px and 180px */
 .classesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 180px));
-  gap: var(--space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
 }
 
 /* ── Quick Actions ───────────────────────────── */
@@ -139,5 +139,43 @@
 .qaGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-2);
+  gap: var(--space-3);
+}
+
+@media (max-width: 1000px) {
+  .topBar,
+  .body {
+    padding-inline: var(--space-6);
+  }
+
+  .right {
+    width: 270px;
+  }
+
+  .classesGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .left {
+    overflow: visible;
+  }
+
+  .right {
+    width: 100%;
+  }
+
+  .greetingName {
+    font-size: 25px;
+  }
+
+  .classesGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

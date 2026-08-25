@@ -90,6 +90,13 @@ export default function Login() {
           >
             Join a class with a code instead
           </button>
+          <button
+            type="button"
+            className={styles.joinLink}
+            onClick={() => navigate('/student/register')}
+          >
+            Create a student account
+          </button>
         </div>
       </div>
     </PlayfulZoneTemplate>

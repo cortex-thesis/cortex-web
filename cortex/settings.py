@@ -1,8 +1,13 @@
 """Django settings for the Cortex application."""
 from pathlib import Path
 import os
+import sys
+
+import dj_database_url
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-development-only")
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
@@ -46,12 +51,38 @@ TEMPLATES = [{
 WSGI_APPLICATION = "cortex.wsgi.application"
 ASGI_APPLICATION = "cortex.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = os.environ.get("DATABASE_URL")
+TEMPLATE_ONLY = os.environ.get("CORTEX_TEMPLATE_ONLY", "true").lower() == "true"
+
+if TEMPLATE_ONLY or "test" in sys.argv:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
     }
-}
+elif DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=0,
+            conn_health_checks=True,
+            ssl_require=True,
+        )
+    }
+    # Compatible with Supabase's transaction-mode connection pooler.
+    DATABASES["default"].setdefault("OPTIONS", {}).update({
+        "prepare_threshold": None,
+        "connect_timeout": 10,
+    })
+else:
+    # Template-only development fallback: no file and no persistent database.
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = []
 LANGUAGE_CODE = "en-us"

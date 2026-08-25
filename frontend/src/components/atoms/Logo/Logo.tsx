@@ -8,6 +8,7 @@ type LogoVariant = 'horizontal' | 'icon'
 interface LogoProps {
   variant?: LogoVariant
   height?: number
+  size?: 'sm' | 'md' | 'lg'
   className?: string
   onClick?: () => void
 }
@@ -15,9 +16,11 @@ interface LogoProps {
 function Logo({
   variant = 'horizontal',
   height = 36,
+  size,
   className,
   onClick,
 }: LogoProps) {
+  const resolvedHeight = size ? { sm: 32, md: 36, lg: 44 }[size] : height
   const src = variant === 'horizontal' ? logoHorizontal : logoIcon
   const alt = variant === 'horizontal' ? 'Cortex' : 'Cortex logo'
 
@@ -31,7 +34,7 @@ function Logo({
         <img
           src={src}
           alt={alt}
-          height={height}
+          height={resolvedHeight}
           className={styles.img}
           draggable={false}
         />
@@ -43,7 +46,7 @@ function Logo({
     <img
       src={src}
       alt={alt}
-      height={height}
+      height={resolvedHeight}
       className={clsx(styles.img, className)}
       draggable={false}
     />

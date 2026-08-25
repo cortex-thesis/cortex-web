@@ -58,8 +58,8 @@ const LETTERS: LetterConfig[] = [
     id: 't',
     Component: LetterT,
     index: 3,
-    style: { left: 328, top: 62, width: 95, height: 98 },
-    rotate: 22,
+    style: { left: 304, top: 60, width: 95, height: 98 },
+    rotate: 24,
   },
   {
     id: 'e',

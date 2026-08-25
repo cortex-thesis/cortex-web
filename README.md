@@ -9,6 +9,8 @@ multimedia application for ADHD learners in SPED transition curriculum settings.
 
 ```bash
 python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+# Edit .env and add your Supabase DATABASE_URL
 cd frontend
 npm install
 npm run build
@@ -17,9 +19,24 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+Get `DATABASE_URL` from **Supabase Dashboard → Project Settings → Database →
+Connection string**. Use the transaction-pooler URI when available and replace
+its password placeholder with your database password. The local `.env` file is
+ignored by Git so credentials are not committed.
+
+For frontend/template-only development, add `CORTEX_TEMPLATE_ONLY=true` to
+`.env`. Django will use a non-persistent in-memory database and will not create
+`db.sqlite3` or connect to Supabase.
+
+Template-only mode is the default. When the real backend is ready, set
+`CORTEX_TEMPLATE_ONLY=false` to enable the configured Supabase connection.
+
 Open `http://127.0.0.1:8000`. Django serves the existing React interface and
 keeps all client-side routes working. Backend routes live under `/api/`; the
 health check is available at `/api/health/`.
+
+The Cortex administrator interface uses `/admin/dashboard`. Django's internal
+administration site is intentionally kept separate at `/django-admin/`.
 
 The repository is organized as follows:
 

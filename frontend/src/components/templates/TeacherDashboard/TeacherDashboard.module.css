@@ -1,7 +1,10 @@
 .root {
   width: 100%;
   min-height: 100dvh;
-  background: var(--color-surface-1);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(250, 199, 117, 0.24), transparent 32%),
+    radial-gradient(circle at 100% 100%, rgba(29, 158, 117, 0.12), transparent 30%),
+    var(--color-cream);
   display: flex;
   flex-direction: column;
 }

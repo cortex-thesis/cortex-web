@@ -115,7 +115,7 @@ export default function Login() {
             />
             <button
               className={styles.forgotBtn}
-              onClick={() => console.log('Forgot password')}
+              onClick={() => navigate('/teacher/forgot-password')}
               type="button"
             >
               Forgot password?
@@ -143,7 +143,7 @@ export default function Login() {
           <button
             className={styles.hintLink}
             type="button"
-            onClick={() => console.log('Contact admin')}
+            onClick={() => navigate('/teacher/register')}
           >
             create an account
           </button>

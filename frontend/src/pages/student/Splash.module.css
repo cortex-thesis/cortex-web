@@ -1,7 +1,8 @@
 .logoScreen {
   width: 100%;
-  height: 100vh;
-  background: var(--color-warm-surface);
+  height: 100dvh;
+  min-height: 100vh;
+  background: var(--color-cream);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -6,7 +6,15 @@ export const mockTeacher: User = {
   name: 'Ms. Santos',
   role: 'teacher',
   avatar: null,
-  classIds: ['class-001', 'class-002'],
+  classIds: [
+    'class-001',
+    'class-002',
+    'class-003',
+    'class-004',
+    'class-005',
+    'class-006',
+    'class-007',
+  ],
 }
 
 export const mockStudent: User = {
@@ -14,7 +22,15 @@ export const mockStudent: User = {
   name: 'Daniel M.',
   role: 'student',
   avatar: null,
-  classIds: ['class-001'],
+  classIds: [
+    'class-001',
+    'class-002',
+    'class-003',
+    'class-004',
+    'class-005',
+    'class-006',
+    'class-007',
+  ],
 }
 
 export const mockClasses: ClassRoom[] = [
@@ -37,6 +53,56 @@ export const mockClasses: ClassRoom[] = [
     package: 'care',
     iconEmoji: '🤲',
     iconBg: '#E6F1FB',
+  },
+  {
+    id: 'class-003',
+    name: 'Pre-Vocational',
+    code: 'V8RK',
+    teacherId: 'teacher-001',
+    studentIds: ['student-001', 'student-002'],
+    package: 'pre_vocational',
+    iconEmoji: '🛠️',
+    iconBg: '#FAEEDA',
+  },
+  {
+    id: 'class-004',
+    name: 'Livelihood',
+    code: 'L4HD',
+    teacherId: 'teacher-001',
+    studentIds: ['student-001', 'student-003'],
+    package: 'livelihood',
+    iconEmoji: '🌱',
+    iconBg: '#EFF6E4',
+  },
+  {
+    id: 'class-005',
+    name: 'Functional Academics',
+    code: 'F2AC',
+    teacherId: 'teacher-001',
+    studentIds: ['student-001', 'student-002', 'student-003'],
+    package: 'functional_academics',
+    iconEmoji: '📖',
+    iconBg: '#EEEDFE',
+  },
+  {
+    id: 'class-006',
+    name: 'Career',
+    code: 'C9ER',
+    teacherId: 'teacher-001',
+    studentIds: ['student-001'],
+    package: 'career',
+    iconEmoji: '💼',
+    iconBg: '#FBEAF0',
+  },
+  {
+    id: 'class-007',
+    name: 'Enrichment',
+    code: 'E7CH',
+    teacherId: 'teacher-001',
+    studentIds: ['student-001', 'student-002'],
+    package: 'enrichment',
+    iconEmoji: '🎨',
+    iconBg: '#FDF1E7',
   },
 ]
 

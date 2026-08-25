@@ -30,7 +30,7 @@ export default function Classes() {
           <h1 className={styles.title}>Classes</h1>
           <button
             className={styles.addBtn}
-            onClick={() => console.log('Create class')}
+            onClick={() => navigate('/teacher/classes/new')}
           >
             <Plus size={14} strokeWidth={2} />
             New class

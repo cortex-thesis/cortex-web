@@ -3,7 +3,13 @@ from django.test import TestCase
 
 class RoutingTests(TestCase):
     def test_frontend_routes_render_react_shell(self):
-        for route in ("/", "/student/home", "/teacher/dashboard"):
+        for route in (
+            "/",
+            "/student/home",
+            "/teacher/dashboard",
+            "/admin/dashboard",
+            "/admin/accounts",
+        ):
             response = self.client.get(route)
             self.assertEqual(response.status_code, 200)
             self.assertContains(response, '<div id="root"></div>', html=True)

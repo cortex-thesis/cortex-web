@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 import Splash from '../pages/student/Splash'
-import Login from '../pages/student/Login'
+import UnifiedLogin from '../pages/Login'
 import Home from '../pages/student/Home'
 import JoinClass from '../pages/student/JoinClass'
 import EEGPairing from '../pages/student/EEGPairing'
@@ -16,26 +16,34 @@ import Settings from '../pages/student/Settings'
 import Profile from '../pages/student/Profile'
 import Classes from '../pages/student/Classes'
 import ClassDetail from '../pages/student/ClassDetail'
+import StudentSessions from '../pages/student/Sessions'
 
 import Dashboard from '../pages/teacher/Dashboard'
 import ClassOverview from '../pages/teacher/ClassOverview'
 import ClassStudents from '../pages/teacher/ClassStudents'
 import ClassContent from '../pages/teacher/ClassContent'
 import ClassAnalytics from '../pages/teacher/ClassAnalytics'
-import TeacherLogin from '../pages/teacher/Login'
 import TeacherNotifications from '../pages/teacher/Notifications'
 import TeacherSettings from '../pages/teacher/Settings'
 import TeacherProfile from '../pages/teacher/Profile'
 import TeacherClasses from '../pages/teacher/Classes'
 import TeacherContent from '../pages/teacher/Content'
 import TeacherAnalytics from '../pages/teacher/Analytics'
+import {
+  AdminDashboard, AdminAccounts, StudentRegistration, TeacherRegistration,
+  ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
+  HardwareRequired, TeacherJournals, Reports, ClassSetup, Enrollment,
+  ContentAssignment, SessionControl, StudentHistory, Evaluation,
+  DrawingJournal, AudioJournal,
+} from '../pages/prototype'
 
 export default function AppRouter() {
   return (
     <Routes>
       {/* Student */}
-      <Route path="/" element={<Splash />} />
-      <Route path="/student/login" element={<Login />} />
+      <Route path="/" element={<UnifiedLogin />} />
+      <Route path="/welcome" element={<Splash />} />
+      <Route path="/student/login" element={<Navigate to="/" replace />} />
       <Route path="/student/home" element={<Home />} />
       <Route path="/student/join-class" element={<JoinClass />} />
       <Route path="/student/eeg-pairing" element={<EEGPairing />} />
@@ -49,7 +57,17 @@ export default function AppRouter() {
       <Route path="/student/settings" element={<Settings />} />
       <Route path="/student/profile" element={<Profile />} />
       <Route path="/student/classes" element={<Classes />} />
+      <Route path="/student/sessions" element={<StudentSessions />} />
       <Route path="/student/class/:classId" element={<ClassDetail />} />
+      <Route path="/student/register" element={<StudentRegistration />} />
+      <Route path="/student/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/student/calibration" element={<StudentCalibration />} />
+      <Route path="/student/eeg-diagnostics" element={<EEGDiagnostics />} />
+      <Route path="/student/hardware-required" element={<HardwareRequired />} />
+      <Route path="/student/journal/draw" element={<DrawingJournal />} />
+      <Route path="/student/journal/audio" element={<AudioJournal />} />
 
       {/* Teacher */}
       <Route path="/teacher/dashboard" element={<Dashboard />} />
@@ -73,10 +91,25 @@ export default function AppRouter() {
         element={<ClassAnalytics />}
       />
 
-      <Route path="/teacher/login" element={<TeacherLogin />} />
+      <Route path="/teacher/login" element={<Navigate to="/" replace />} />
       <Route path="/teacher/notifications" element={<TeacherNotifications />} />
       <Route path="/teacher/settings" element={<TeacherSettings />} />
       <Route path="/teacher/profile" element={<TeacherProfile />} />
+      <Route path="/teacher/register" element={<TeacherRegistration />} />
+      <Route path="/teacher/forgot-password" element={<ForgotPassword />} />
+      <Route path="/teacher/journals" element={<TeacherJournals />} />
+      <Route path="/teacher/reports" element={<Reports />} />
+      <Route path="/teacher/classes/new" element={<ClassSetup />} />
+      <Route path="/teacher/class/:classId/enroll" element={<Enrollment />} />
+      <Route path="/teacher/class/:classId/assign-content" element={<ContentAssignment />} />
+      <Route path="/teacher/class/:classId/session" element={<SessionControl />} />
+      <Route path="/teacher/student/:studentId/analytics" element={<StudentHistory />} />
+
+      {/* Administrator */}
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/accounts" element={<AdminAccounts />} />
+      <Route path="/admin/evaluation" element={<Evaluation />} />
+      <Route path="/admin/login" element={<Navigate to="/" replace />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

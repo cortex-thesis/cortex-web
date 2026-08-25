@@ -15,6 +15,8 @@ const NAV_LINKS: NavLink[] = [
   { label: 'Classes', path: '/teacher/classes' },
   { label: 'Content', path: '/teacher/content' },
   { label: 'Analytics', path: '/teacher/analytics' },
+  { label: 'Journals', path: '/teacher/journals' },
+  { label: 'Reports', path: '/teacher/reports' },
 ]
 
 interface NavBarTeacherProps {
