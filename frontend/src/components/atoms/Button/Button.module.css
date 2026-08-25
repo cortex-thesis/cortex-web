@@ -101,8 +101,8 @@
 /* Loader */
 
 .spinner {
-  width: var(--space-3.5, 14px);
-  height: var(--space-3.5, 14px);
+  width: 14px;
+  height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.35);
   border-top-color: var(--color-white);
   border-radius: var(--radius-full);

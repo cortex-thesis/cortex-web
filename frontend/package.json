@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "django": "npm run build && python ../manage.py runserver",
     "lint": "eslint .",
     "preview": "vite preview"
   },

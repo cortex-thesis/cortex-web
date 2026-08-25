@@ -16,6 +16,11 @@ node_modules/
 dist
 dist/
 dist-ssr
+frontend_dist/
+staticfiles/
+db.sqlite3
+__pycache__/
+*.py[cod]
 *.local
 
 .vscode/*

@@ -5,10 +5,37 @@ multimedia application for ADHD learners in SPED transition curriculum settings.
 
 ---
 
+## Run with Django
+
+```bash
+python -m pip install -r requirements.txt
+cd frontend
+npm install
+npm run build
+cd ..
+python manage.py migrate
+python manage.py runserver
+```
+
+Open `http://127.0.0.1:8000`. Django serves the existing React interface and
+keeps all client-side routes working. Backend routes live under `/api/`; the
+health check is available at `/api/health/`.
+
+The repository is organized as follows:
+
+```text
+cortex/          Django project settings and root URLs
+web/             Django application, API views, and tests
+templates/       Django HTML templates
+frontend/        React source and all Node/Vite/TypeScript configuration
+requirements.txt Python dependencies
+manage.py        Django command entry point
+```
+
 ## Project Structure
 
-This is the **frontend only**. It does not contain the Django backend or
-the Python EEG bridge. Those live in separate repositories.
+This repository contains the React interface and its Django server/backend
+shell. The Python EEG bridge remains a separate service.
 
 ```
 cortex-web/        ← you are here (React frontend)
