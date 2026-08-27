@@ -11,6 +11,19 @@
     background var(--transition-slow, 0.3s ease);
 }
 
+.compact {
+  padding: 16px 18px;
+  gap: var(--space-3);
+}
+
+.compact .statVal {
+  font-size: var(--text-caption-d, 16px);
+}
+
+.compact .overrideBtn {
+  padding: 9px;
+}
+
 /* Cognitive State Variants */
 .focused {
   border-color: var(--state-focused);
@@ -76,12 +89,25 @@
   line-height: 1;
 }
 
+.sparkline {
+  width: 100%;
+  height: 20px;
+  color: var(--color-text-secondary);
+  opacity: .8;
+}
+
+.focused .sparkline { color: var(--state-focused); }
+.relaxed .sparkline { color: var(--state-relaxed); }
+.distracted .sparkline { color: var(--state-distracted); }
+.overstimulated .sparkline { color: var(--state-overstimulated); }
+
 .statLabel {
   font-family: var(--font-family);
   font-size: var(--text-micro, 10px);
   font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
 }
+
 
 /* Actions & Messaging */
 .overrideBtn {

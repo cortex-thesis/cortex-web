@@ -17,7 +17,7 @@ function TeacherDashboardTemplate({
   return (
     <div className={styles.root}>
       <NavBarTeacher user={user} hasNotification={hasNotification} />
-      <main className={styles.content}>{children}</main>
+      <main className={`${styles.content} ${styles.pageContent}`}>{children}</main>
     </div>
   )
 }

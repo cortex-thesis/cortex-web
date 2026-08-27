@@ -29,7 +29,6 @@ import TeacherSettings from '../pages/teacher/Settings'
 import TeacherProfile from '../pages/teacher/Profile'
 import TeacherClasses from '../pages/teacher/Classes'
 import TeacherContent from '../pages/teacher/Content'
-import TeacherAnalytics from '../pages/teacher/Analytics'
 import {
   AdminDashboard, AdminAccounts, StudentRegistration, TeacherRegistration,
   ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
@@ -75,7 +74,6 @@ export default function AppRouter() {
       <Route path="/teacher/dashboard" element={<Dashboard />} />
       <Route path="/teacher/classes" element={<TeacherClasses />} />
       <Route path="/teacher/content" element={<TeacherContent />} />
-      <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
       <Route
         path="/teacher/class/:classId/overview"
         element={<ClassOverview />}

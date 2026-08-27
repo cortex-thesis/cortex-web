@@ -1,18 +1,105 @@
 .layout {
-  display: flex;
-  gap: 0;
-  height: calc(100vh - var(--nav-height-teacher));
-  margin: calc(var(--space-6) * -1) calc(var(--space-8) * -1);
+  display: block;
+  width: 100%;
+  margin: 0;
 }
 
 .main {
   flex: 1;
-  padding: var(--space-5) var(--space-6);
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   overflow-y: auto;
   min-width: 0;
+  width: 100%;
+}
+
+.analyticsSection {
+  order: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.liveSection {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--teacher-border, var(--color-border));
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-white);
+}
+
+.liveSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.liveSectionTitle {
+  margin-top: 4px;
+  color: var(--color-deep-purple);
+  font-size: 17px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.liveSectionNote {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.compactLiveGrid {
+  gap: var(--space-3);
+}
+
+.analyticsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.analyticsEyebrow {
+  color: var(--color-interface-purple);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.analyticsTitle {
+  margin-top: 4px;
+  color: var(--color-deep-purple);
+  font-size: 19px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.analyticsTabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 11px;
+  background: var(--color-surface-1);
+}
+
+.analyticsTab {
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: 500 11px var(--font-family);
+  cursor: pointer;
+}
+
+.analyticsTabActive {
+  background: var(--color-white);
+  color: var(--color-deep-purple);
+  box-shadow: var(--shadow-xs);
 }
 
 .sidebar {
@@ -75,4 +162,22 @@
   font-size: var(--text-caption);
   color: var(--color-text-muted);
   text-align: center;
+}
+
+@media (max-width: 900px) {
+  .analyticsHeader,
+  .liveSectionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 700px) {
+  .analyticsTabs {
+    width: 100%;
+  }
+
+  .analyticsTab {
+    flex: 1;
+  }
 }

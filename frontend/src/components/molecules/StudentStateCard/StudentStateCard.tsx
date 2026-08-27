@@ -1,12 +1,13 @@
 import type { StudentLive } from '../../../types'
 import type { CognitiveState } from '../../../constants/states'
-import { Avatar, StateBadge, SignalBar } from '../../atoms'
+import { Avatar, StateBadge } from '../../atoms'
 import styles from './StudentStateCard.module.css'
 import clsx from 'clsx'
 
 interface StudentStateCardProps {
   student: StudentLive
   onOverride?: (studentId: string) => void
+  compact?: boolean
   className?: string
 }
 
@@ -33,6 +34,7 @@ function getCardStateClass(
 function StudentStateCard({
   student,
   onOverride,
+  compact = false,
   className,
 }: StudentStateCardProps) {
   const {
@@ -40,7 +42,6 @@ function StudentStateCard({
     name,
     avatar,
     currentState,
-    signalStrength,
     focusScore,
     sessionDuration,
     isConnected,
@@ -51,40 +52,38 @@ function StudentStateCard({
       className={clsx(
         styles.card,
         getCardStateClass(currentState, isConnected),
+        compact && styles.compact,
         className
       )}
       aria-label={`${name} — ${currentState ?? 'not connected'}`}
     >
       <div className={styles.top}>
-        <Avatar
-          name={name}
-          imageUrl={avatar}
-          size="sm"
-          showStatus
-          isOnline={isConnected}
-        />
+        <Avatar name={name} imageUrl={avatar} size="sm" showStatus isOnline={isConnected} />
         <span className={styles.name}>{name}</span>
-        <SignalBar strength={isConnected ? signalStrength : 0} size="xs" />
+        {isConnected && currentState && <StateBadge state={currentState} size="sm" />}
       </div>
 
       {isConnected && currentState ? (
         <>
-          <StateBadge state={currentState} size="sm" />
+          <svg className={styles.sparkline} viewBox="0 0 120 20" role="img" preserveAspectRatio="none" aria-label={`${name} focus trend`}>
+            <polyline
+              points="0,15 15,11 30,13 45,7 60,10 75,5 90,8 105,3 120,6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
 
           <div className={styles.stats}>
             <div className={styles.stat}>
-              <span
-                className={styles.statVal}
-                style={{ color: getFocusScoreColor(focusScore) }}
-              >
+              <span className={styles.statVal} style={{ color: getFocusScoreColor(focusScore) }}>
                 {focusScore}%
               </span>
               <span className={styles.statLabel}>Focus score</span>
             </div>
             <div className={styles.stat}>
-              <span className={styles.statVal}>
-                {formatDuration(sessionDuration)}
-              </span>
+              <span className={styles.statVal}>{formatDuration(sessionDuration)}</span>
               <span className={styles.statLabel}>Session time</span>
             </div>
           </div>

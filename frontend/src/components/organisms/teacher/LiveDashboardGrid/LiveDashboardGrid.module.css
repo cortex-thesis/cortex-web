@@ -4,27 +4,90 @@
   gap: var(--space-5);
 }
 
+.waveform {
+  height: 28px;
+  overflow: hidden;
+  color: var(--teacher-indigo, var(--color-interface-purple));
+  opacity: .48;
+}
+
+.waveform svg {
+  width: 100%;
+  height: 100%;
+}
+
+.waveform path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 12 9;
+  animation: waveformScan 8s linear infinite;
+}
+
+@keyframes waveformScan {
+  to { stroke-dashoffset: -168; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waveform path { animation: none; }
+}
+
+.compact {
+  gap: var(--space-3);
+}
+
+.compact .summaryBar {
+  gap: var(--space-2);
+}
+
+.compact .summaryCard {
+  min-height: 28px;
+  padding: 5px 10px;
+  gap: var(--space-2);
+  border-radius: var(--radius-full);
+}
+
+.compact .summaryNum {
+  font-size: var(--text-body, 16px);
+}
+
+.compact .summaryLabel {
+  font-size: var(--text-tiny-d, 10px);
+}
+
+.compact .summaryDot {
+  width: 6px;
+  height: 6px;
+  box-shadow: none;
+}
+
+.compact .sectionTitle {
+  font-size: 10px;
+}
+
+.compact .grid {
+  gap: var(--space-2);
+}
+
 /* 5-Card Grid with Generous Spacing */
 .summaryBar {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-3);
-  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  width: auto;
 }
 
 /* Base Summary Card */
 .summaryCard {
+  width: auto;              /* was stretching to fill the grid column */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-4);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  box-shadow: var(--shadow-xs);
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast);
+  box-shadow: none;
 }
 
 /* State-colored dot indicator */
@@ -37,16 +100,16 @@
 
 .summaryInfo {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .summaryNum {
-  font-family: var(--font-family);
-  font-size: var(--text-heading-d);
+  font-family: var(--font-mono);
+  font-size: var(--text-body, 0px);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  line-height: var(--leading-none);
+  line-height: 1;
 }
 
 .summaryLabel {
@@ -61,7 +124,6 @@
 /* Focused State (Teal/Green) */
 .focused {
   border-color: rgba(29, 158, 117, 0.3);
-  background: linear-gradient(180deg, #ffffff 0%, #e1f5ee 100%);
 }
 .focused .summaryDot {
   background: var(--color-teal);
@@ -71,7 +133,6 @@
 /* Distracted State (Amber/Yellow) */
 .distracted {
   border-color: rgba(239, 159, 39, 0.3);
-  background: linear-gradient(180deg, #ffffff 0%, #faeeda 100%);
 }
 .distracted .summaryDot {
   background: #ef9f27;
@@ -81,7 +142,6 @@
 /* Relaxed State (Blue) */
 .relaxed {
   border-color: rgba(55, 138, 221, 0.3);
-  background: linear-gradient(180deg, #ffffff 0%, #e6f1fc 100%);
 }
 .relaxed .summaryDot {
   background: #378add;
@@ -91,7 +151,6 @@
 /* Overstimulated State (Coral/Red) */
 .overstimulated {
   border-color: rgba(212, 83, 126, 0.3);
-  background: linear-gradient(180deg, #ffffff 0%, #fbeaf0 100%);
 }
 .overstimulated .summaryDot {
   background: var(--color-coral);
@@ -156,7 +215,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: var(--space-3);
 }
 

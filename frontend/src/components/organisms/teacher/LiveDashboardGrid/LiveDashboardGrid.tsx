@@ -33,6 +33,7 @@ interface LiveDashboardGridProps {
   selectedId?: string | null
   onSelectStudent?: (id: string) => void
   onOverride?: (id: string) => void
+  compact?: boolean
   className?: string
 }
 
@@ -42,12 +43,18 @@ export function LiveDashboardGrid({
   selectedId,
   onSelectStudent,
   onOverride,
+  compact = false,
   className,
 }: LiveDashboardGridProps) {
   const counts = countStates(students)
 
   return (
-    <div className={`${styles.wrapper} ${className ?? ''}`}>
+    <div className={`${styles.wrapper} ${compact ? styles.compact : ''} ${className ?? ''}`}>
+      <div className={styles.waveform} aria-hidden="true">
+        <svg viewBox="0 0 800 28" preserveAspectRatio="none">
+          <path d="M0 14 H80 L90 14 L98 4 L106 24 L114 14 H190 L200 14 L208 8 L216 20 L224 14 H310 L320 14 L328 2 L336 26 L344 14 H430 L440 14 L448 7 L456 21 L464 14 H550 L560 14 L568 5 L576 23 L584 14 H670 L680 14 L688 9 L696 19 L704 14 H800" />
+        </svg>
+      </div>
       <div className={styles.summaryBar}>
         {SUMMARY_STATES.map(({ key, label }) => (
           <div key={key} className={`${styles.summaryCard} ${styles[key]}`}>
@@ -77,7 +84,7 @@ export function LiveDashboardGrid({
             onClick={() => onSelectStudent?.(student.id)}
             className={selectedId === student.id ? styles.cardSelected : ''}
           >
-            <StudentStateCard student={student} onOverride={onOverride} />
+            <StudentStateCard student={student} onOverride={onOverride} compact={compact} />
           </div>
         ))}
       </div>

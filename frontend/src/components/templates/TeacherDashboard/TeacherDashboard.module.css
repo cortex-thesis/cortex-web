@@ -11,6 +11,15 @@
 
 .content {
   flex: 1;
+  width: 100%;
+  max-width: var(--content-max-width, 1300px);
+  margin: 0 auto;
+  box-sizing: border-box;
   padding: var(--space-6, 24px) var(--space-8, 32px);
   overflow-y: auto;
+}
+
+.pageContent {
+  --teacher-page-padding: 0;
+  --teacher-page-max-width: var(--content-max-width, 1300px);
 }

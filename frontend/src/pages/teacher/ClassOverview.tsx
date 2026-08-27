@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { TeacherTabTemplate } from '../../components/templates'
-import { StatSummaryCard } from '../../components/molecules'
-import { LiveDashboardGrid } from '../../components/organisms/teacher'
+import { EEGWaveDisplay, StatSummaryCard } from '../../components/molecules'
+import { LiveDashboardGrid, OverrideModal } from '../../components/organisms/teacher'
 import { Users, Zap, Flame, ClipboardList } from 'lucide-react'
 import type { StudentLive } from '../../types'
 import type { CognitiveState } from '../../constants/states'
@@ -27,6 +27,8 @@ export default function ClassOverview() {
   const classData = mockClasses.find((c) => c.id === classId) ?? mockClasses[0]
 
   const [students, setStudents] = useState<StudentLive[]>(mockStudentsLive)
+  const [selectedId, setSelectedId] = useState<string | null>(mockStudentsLive[0]?.id ?? null)
+  const [overrideTarget, setOverrideTarget] = useState<StudentLive | null>(null)
 
   // Live mock EEG updates
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function ClassOverview() {
     : 0
 
   const tabs = CLASS_TABS(classId)
+  const selectedStudent = students.find((student) => student.id === selectedId)
 
   return (
     <TeacherTabTemplate
@@ -94,12 +97,50 @@ export default function ClassOverview() {
           />
         </div>
 
-        <LiveDashboardGrid
-          students={students}
-          sessionLabel={`${classData.name} — Session in progress`}
-          onOverride={(id) => console.log('Override:', id)}
-        />
+        <div className={styles.liveLayout}>
+          <LiveDashboardGrid
+            students={students}
+            sessionLabel={`${classData.name} — Session in progress`}
+            selectedId={selectedId}
+            onSelectStudent={setSelectedId}
+            onOverride={(id) => setOverrideTarget(students.find((student) => student.id === id) ?? null)}
+          />
+          <aside className={styles.eegSidebar}>
+            {selectedStudent ? (
+              <>
+                <span className={styles.sidebarTitle}>Live EEG — {selectedStudent.name.split(' ')[0]}</span>
+                <EEGWaveDisplay
+                  state={selectedStudent.currentState}
+                  bandPowers={selectedStudent.isConnected ? getBandPowers(selectedStudent.currentState) : null}
+                />
+                <button className={styles.overrideBtn} onClick={() => setOverrideTarget(selectedStudent)}>
+                  Override state
+                </button>
+              </>
+            ) : (
+              <span className={styles.noSelection}>Select a student to see live EEG details.</span>
+            )}
+          </aside>
+        </div>
       </div>
+      {overrideTarget && (
+        <OverrideModal
+          student={overrideTarget}
+          onConfirm={(targetMode) => {
+            setStudents((previous) => previous.map((student) => student.id === overrideTarget.id ? { ...student, currentState: targetMode === 'focus' ? 'focused' : 'relaxed' } : student))
+            setOverrideTarget(null)
+          }}
+          onClose={() => setOverrideTarget(null)}
+        />
+      )}
     </TeacherTabTemplate>
   )
+}
+
+function getBandPowers(state: CognitiveState | null | undefined) {
+  if (!state) return null
+  if (state === 'focused') return { theta: 2.5, alpha: 3.2, beta: 9.8, gamma: 4.1, tbr: 0.8 }
+  if (state === 'relaxed') return { theta: 4.1, alpha: 8.6, beta: 3.1, gamma: 1.2, tbr: 1.3 }
+  if (state === 'distracted') return { theta: 8.4, alpha: 4.0, beta: 2.9, gamma: 0.9, tbr: 2.8 }
+  return { theta: 3.0, alpha: 2.1, beta: 11.5, gamma: 4.8, tbr: 0.6 }
 }

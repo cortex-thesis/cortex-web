@@ -8,7 +8,6 @@
 }
 
 .title {
-  font-family: var(--font-family);
   font-size: 22px;
   font-weight: var(--font-weight-semibold);
   color: var(--color-deep-purple);
@@ -45,14 +44,12 @@
 }
 
 .chartTitle {
-  font-family: var(--font-family);
   font-size: var(--text-body-xs, 13px);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
 .chartSub {
-  font-family: var(--font-family);
   font-size: 11px;
   color: var(--color-text-muted);
 }
@@ -71,7 +68,6 @@
 }
 
 .barLabel {
-  font-family: var(--font-family);
   font-size: 12px;
   color: var(--color-text-secondary);
   white-space: nowrap;
@@ -104,6 +100,20 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-3);
+}
+
+.stackedBar {
+  display: flex;
+  width: 100%;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--teacher-border, var(--color-border));
+}
+
+.stackedBar span {
+  display: block;
+  height: 100%;
 }
 
 .donut {
@@ -205,4 +215,25 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   text-align: right;
+}
+
+@media (max-width: 1100px) {
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .barRow,
+  .stateRow {
+    grid-template-columns: 105px 1fr 36px;
+  }
 }
