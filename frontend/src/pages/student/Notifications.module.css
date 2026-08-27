@@ -2,15 +2,15 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-6);
-  max-width: 640px;
+  padding: var(--space-4) var(--space-10);
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
 
 .backBtn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm);
   background: transparent;
   border: none;
@@ -53,10 +53,10 @@
 }
 
 .body {
-  max-width: 640px;
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 var(--space-6) var(--space-6);
+  padding: var(--space-4) var(--space-10) var(--space-8);
 }
 
 .list {
@@ -146,4 +146,11 @@
   font-family: var(--font-family);
   font-size: var(--text-caption-d);
   max-width: 220px;
+}
+
+@media (max-width: 1000px) {
+  .topBar,
+  .body {
+    padding-inline: var(--space-6);
+  }
 }

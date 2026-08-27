@@ -1,19 +1,22 @@
 .topBar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: var(--space-3) var(--space-4);
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-10);
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
   position: relative;
   z-index: var(--z-raised);
   flex-shrink: 0;
 }
 
 .backBtn {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border);
-  background: var(--color-white);
+  border: none;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,9 +25,7 @@
   transition: background var(--transition-base);
 }
 
-.backBtn:hover {
-  background: var(--color-surface-1);
-}
+.backBtn:hover { background: rgba(0, 0, 0, 0.05); }
 
 .title {
   font-family: var(--font-family);
@@ -43,6 +44,12 @@
   gap: var(--space-5);
   position: relative;
   z-index: var(--z-raised);
+}
+
+@media (max-width: 1000px) {
+  .topBar {
+    padding-inline: var(--space-6);
+  }
 }
 
 .emoji {

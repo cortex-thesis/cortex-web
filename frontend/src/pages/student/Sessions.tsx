@@ -15,6 +15,20 @@ const MOCK_SESSIONS = [
   { id: 'session-004', title: 'Reading a Bus Schedule', className: 'Functional Academics', date: 'August 19, 2026', duration: '28 min', focus: 69, state: 'distracted' as CognitiveState, status: 'completed' as const, tasks: '4 of 5 tasks' },
 ]
 
+function getFocusDescription(score: number) {
+  if (score >= 80) return 'Excellent focus'
+  if (score >= 70) return 'Steady focus'
+  if (score >= 60) return 'Growing focus'
+  return 'Finding your rhythm'
+}
+
+function getFocusEmoji(score: number) {
+  if (score >= 80) return '🌟'
+  if (score >= 70) return '💪'
+  if (score >= 60) return '🌱'
+  return '✨'
+}
+
 export default function Sessions() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState<SessionFilter>('all')
@@ -42,7 +56,7 @@ export default function Sessions() {
 
         <div className={styles.summaryGrid}>
           <div className={styles.summaryCard}><span className={styles.summaryIcon}><CalendarDays size={19}/></span><span><strong>24</strong><small>Sessions completed</small></span></div>
-          <div className={styles.summaryCard}><span className={styles.summaryIcon}><Brain size={19}/></span><span><strong>74%</strong><small>Average focus</small></span></div>
+          <div className={styles.summaryCard}><span className={styles.summaryIcon} aria-hidden="true">{getFocusEmoji(74)}</span><span><strong>{getFocusDescription(74)}</strong><small>Overall performance</small></span></div>
           <div className={styles.summaryCard}><span className={styles.summaryIcon}><Clock size={19}/></span><span><strong>11h 42m</strong><small>Learning time</small></span></div>
         </div>
 
@@ -63,10 +77,10 @@ export default function Sessions() {
               <div className={styles.sessionMain}>
                 <div className={styles.sessionTop}>
                   <div><span className={styles.className}>{session.className}</span><h2>{session.title}</h2></div>
-                  {session.status === 'in_progress' ? <span className={styles.inProgress}>In progress</span> : <StateBadge state={session.state} size="sm"/>}
                 </div>
-                <div className={styles.meta}><span>{session.date}</span><span>{session.duration}</span><span>{session.tasks}</span><span>{session.focus}% focus</span></div>
+                <div className={styles.meta}><span>{session.date}</span><span>{session.duration}</span><span>{session.tasks}</span><span>{getFocusEmoji(session.focus)} {getFocusDescription(session.focus)}</span></div>
               </div>
+              {session.status === 'in_progress' ? <span className={`${styles.inProgress} ${styles.sessionStatus}`}>Keep going</span> : <StateBadge state={session.state} size="sm" className={styles.sessionStatus}/>} 
               <button className={styles.openBtn} onClick={() => navigate(session.status === 'in_progress' ? '/student/eeg-pairing' : '/student/session-summary')} aria-label={`Open ${session.title}`}><ChevronRight size={18}/></button>
             </article>
           ))}
