@@ -44,7 +44,13 @@ export default function ModeSelect() {
   const [selected, setSelected] = useState<SessionMode>('teacher')
 
   function handleStart() {
+    if (selected === 'free') {
+      navigate('/student/free-lesson-select')
+      return
+    }
+
     navigate('/student/focus', {
+      replace: true,
       state: { mode: selected },
     })
   }
@@ -54,7 +60,7 @@ export default function ModeSelect() {
       <div className={styles.topBar}>
         <button
           className={styles.backBtn}
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/student/home', { replace: true })}
           aria-label="Go back"
         >
           <ArrowLeft size={16} strokeWidth={1.75} />

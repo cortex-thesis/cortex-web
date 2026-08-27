@@ -17,6 +17,7 @@ import Profile from '../pages/student/Profile'
 import Classes from '../pages/student/Classes'
 import ClassDetail from '../pages/student/ClassDetail'
 import StudentSessions from '../pages/student/Sessions'
+import FreeLessonSelect from '../pages/student/FreeLessonSelect'
 
 import Dashboard from '../pages/teacher/Dashboard'
 import ClassOverview from '../pages/teacher/ClassOverview'
@@ -48,6 +49,7 @@ export default function AppRouter() {
       <Route path="/student/join-class" element={<JoinClass />} />
       <Route path="/student/eeg-pairing" element={<EEGPairing />} />
       <Route path="/student/mode-select" element={<ModeSelect />} />
+      <Route path="/student/free-lesson-select" element={<FreeLessonSelect />} />
       <Route path="/student/focus" element={<FocusMode />} />
       <Route path="/student/relax" element={<RelaxMode />} />
       <Route path="/student/switching" element={<SwitchingModes />} />

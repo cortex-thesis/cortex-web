@@ -117,7 +117,7 @@ export function FocusMode() {
         isLive={isLive}
         taskIndex={task.index}
         taskTotal={task.total}
-        onBack={() => navigate('/student/home')}
+        onBack={() => navigate('/student/home', { replace: true })}
         footer={nudgeFooter}
       >
         {showModeAlert && currentState === 'distracted' && isElevated && (
