@@ -63,7 +63,7 @@
   width: 320px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   flex-shrink: 0;
 }
 
@@ -140,6 +140,23 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
+}
+
+.journalShortcut {
+  grid-column: 1 / -1;
+  min-height: 84px;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.journalShortcut .label,
+.journalShortcut .sub {
+  margin: 0;
+}
+
+.journalShortcut .sub {
+  margin-left: auto;
 }
 
 @media (max-width: 1000px) {

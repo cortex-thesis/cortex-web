@@ -5,6 +5,7 @@ import {
   Plus,
   Brain,
   BarChart2,
+  BookOpen,
   Star,
   UtensilsCrossed,
 } from 'lucide-react'
@@ -31,7 +32,7 @@ export default function Home() {
 
   const student = mockStudent
   const classes = mockClasses
-  const streakCount = 7
+  const todayFocusScore = 78
 
   // Mock active session — replace with real API call later
   const activeSession = {
@@ -115,7 +116,7 @@ export default function Home() {
         </div>
 
         <div className={styles.right}>
-          <StreakCard count={streakCount} />
+          <StreakCard score={todayFocusScore} />
 
           <div className={styles.qaGrid}>
             <QuickActionCard
@@ -145,6 +146,14 @@ export default function Home() {
               label="Achievements"
               sub="Badges earned"
               onClick={() => navigate('/student/profile')}
+            />
+            <QuickActionCard
+              className={styles.journalShortcut}
+              icon={<BookOpen size={14} strokeWidth={1.75} color="#534AB7" />}
+              iconBg="#EEEDFE"
+              label="Learning journal"
+              sub="Write, draw, or record"
+              onClick={() => navigate('/student/journal')}
             />
           </div>
         </div>
