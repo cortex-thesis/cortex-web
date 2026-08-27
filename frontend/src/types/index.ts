@@ -34,6 +34,14 @@ export interface EEGUpdate {
   timestamp: string
 }
 
+export type SignalQuality = 'good' | 'fair' | 'poor'
+export type HeadsetConnectionStatus = 'connected' | 'resyncing' | 'offline'
+
+export interface StateTransition {
+  state: CognitiveState
+  timestamp: string
+}
+
 export interface ModeChangeEvent {
   type: 'mode_change'
   fromMode: 'focus' | 'relax'
@@ -106,6 +114,14 @@ export interface StudentLive {
   focusScore: number
   sessionDuration: number
   isConnected: boolean
+  bandPowers?: BandPowers
+  signalQuality?: SignalQuality
+  connectionStatus?: HeadsetConnectionStatus
+  workstationPath?: string
+  stateStartedAt?: string
+  stateTransitions?: StateTransition[]
+  activeActivity?: string
+  engineMode?: 'auto' | 'teacher-override'
 }
 
 // ─── JOURNAL ──────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { StudentLive } from '../../../types'
 import type { CognitiveState } from '../../../constants/states'
 import { Avatar, StateBadge } from '../../atoms'
@@ -46,6 +47,17 @@ function StudentStateCard({
     sessionDuration,
     isConnected,
   } = student
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const stateDuration = student.stateStartedAt
+    ? Math.max(0, Math.floor((now - Date.parse(student.stateStartedAt)) / 1000))
+    : 0
+  const connectionStatus = student.connectionStatus ?? (isConnected ? 'connected' : 'offline')
 
   return (
     <div
@@ -61,6 +73,12 @@ function StudentStateCard({
         <Avatar name={name} imageUrl={avatar} size="sm" showStatus isOnline={isConnected} />
         <span className={styles.name}>{name}</span>
         {isConnected && currentState && <StateBadge state={currentState} size="sm" />}
+      </div>
+
+      <div className={styles.contextLine}>
+        <span className={`${styles.connectionDot} ${styles[connectionStatus]}`} />
+        <span>{connectionStatus === 'resyncing' ? 'Re-syncing' : connectionStatus === 'connected' ? 'Connected' : 'Offline'}</span>
+        <span className={styles.engine}>{student.engineMode === 'teacher-override' ? 'Teacher override' : 'Auto engine'}</span>
       </div>
 
       {isConnected && currentState ? (
@@ -86,6 +104,17 @@ function StudentStateCard({
               <span className={styles.statVal}>{formatDuration(sessionDuration)}</span>
               <span className={styles.statLabel}>Session time</span>
             </div>
+            <div className={styles.stat}>
+              <span className={styles.statVal}>{formatDuration(stateDuration)}</span>
+              <span className={styles.statLabel}>State time</span>
+            </div>
+          </div>
+
+          <div className={styles.activity}>{student.activeActivity ?? 'Activity unavailable'}</div>
+          <div className={styles.footerContext}>
+            <span className={`${styles.qualityDot} ${styles[student.signalQuality ?? 'poor']}`} />
+            {student.signalQuality ? `${student.signalQuality[0].toUpperCase()}${student.signalQuality.slice(1)} contact` : 'Contact unknown'}
+            <span className={styles.transitions}>{(student.stateTransitions ?? []).map((transition) => transition.state).join(' > ')}</span>
           </div>
 
           <button

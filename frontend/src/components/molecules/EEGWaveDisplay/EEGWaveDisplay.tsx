@@ -1,5 +1,4 @@
-import type { BandPowers, CognitiveState } from '../../../types'
-import { COGNITIVE_STATES } from '../../../constants/states'
+import type { BandPowers, CognitiveState, HeadsetConnectionStatus, SignalQuality } from '../../../types'
 import { StateBadge } from '../../atoms'
 import styles from './EEGWaveDisplay.module.css'
 import clsx from 'clsx'
@@ -7,6 +6,8 @@ import clsx from 'clsx'
 interface EEGWaveDisplayProps {
   state?: CognitiveState | null
   bandPowers?: BandPowers | null
+  signalQuality?: SignalQuality
+  connectionStatus?: HeadsetConnectionStatus
   className?: string
 }
 
@@ -29,51 +30,35 @@ const TBR_LABELS: Partial<Record<CognitiveState, string>> = {
   overstimulated: 'Elevated (Overstimulated)',
 }
 
-const BAR_COUNT = 12
-
 export function EEGWaveDisplay({
   state,
   bandPowers,
+  signalQuality = 'poor',
+  connectionStatus = 'offline',
   className,
 }: EEGWaveDisplayProps) {
-  // Safe lookup for state color in case state is null, undefined, or missing from COGNITIVE_STATES
-  const stateColor =
-    state && COGNITIVE_STATES[state]?.color
-      ? COGNITIVE_STATES[state].color
-      : '#534AB7'
-
   return (
     <div className={clsx(styles.card, className)}>
       <div className={styles.header}>
         <span className={styles.title}>Brainwaves</span>
-        {state ? (
-          <StateBadge state={state} size="sm" />
-        ) : (
-          <span className={styles.noData}>No signal</span>
-        )}
+        <div className={styles.headerStatus}>
+          <span className={`${styles.connection} ${styles[connectionStatus]}`}>{connectionStatus === 'resyncing' ? 'Re-syncing' : connectionStatus === 'connected' ? 'Connected' : 'Offline'}</span>
+          {state ? <StateBadge state={state} size="sm" /> : <span className={styles.noData}>No signal</span>}
+        </div>
       </div>
 
-      <div
-        className={styles.waveBars}
-        role="img"
-        aria-label={`EEG waveform — ${state ?? 'no signal'}`}
-      >
-        {Array.from({ length: BAR_COUNT }).map((_, i) => (
-          <span
-            key={i}
-            className={styles.waveBar}
-            style={{
-              backgroundColor: stateColor,
-              animationDelay: `${i * 0.08}s`,
-              animationDuration:
-                state === 'distracted' || state === 'overstimulated'
-                  ? '0.65s'
-                  : '1.1s',
-            }}
-            aria-hidden="true"
-          />
+      <div className={styles.channels} role="img" aria-label={`EEG channel waveforms - ${state ?? 'no signal'}`}>
+        {['F3', 'F4', 'C3', 'C4'].map((channel, channelIndex) => (
+          <div className={styles.channel} key={channel}>
+            <span>{channel}</span>
+            <svg viewBox="0 0 160 20" preserveAspectRatio="none">
+              <path d="M0 10 H12 L18 4 L24 16 L30 10 H44 L50 7 L56 13 L62 10 H78 L84 3 L90 17 L96 10 H112 L118 6 L124 14 L130 10 H146 L152 5 L160 10" style={{ transform: `translateY(${channelIndex % 2 ? 1 : 0}px)` }} />
+            </svg>
+          </div>
         ))}
       </div>
+
+      <div className={styles.quality}><span className={`${styles.qualityDot} ${styles[signalQuality]}`} />Signal quality: <strong>{signalQuality[0].toUpperCase() + signalQuality.slice(1)}</strong><span className={styles.contact}>Electrode contact</span></div>
 
       {bandPowers ? (
         <>

@@ -69,6 +69,34 @@
   white-space: nowrap;
 }
 
+.contextLine,
+.footerContext {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-micro, 10px);
+}
+
+.connectionDot,
+.qualityDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.connected,
+.good { background: var(--state-focused); }
+.resyncing,
+.fair { background: var(--state-distracted); }
+.offline,
+.poor { background: var(--state-overstimulated); }
+
+.engine { margin-left: auto; color: var(--color-interface-purple); }
+.activity { color: var(--color-text-primary); font-size: var(--text-micro, 10px); font-weight: var(--font-weight-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transitions { margin-left: auto; color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .stats {
   display: flex;
   justify-content: space-between;

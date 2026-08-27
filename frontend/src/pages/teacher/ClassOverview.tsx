@@ -29,22 +29,38 @@ export default function ClassOverview() {
   const [students, setStudents] = useState<StudentLive[]>(mockStudentsLive)
   const [selectedId, setSelectedId] = useState<string | null>(mockStudentsLive[0]?.id ?? null)
   const [overrideTarget, setOverrideTarget] = useState<StudentLive | null>(null)
+  const [now, setNow] = useState(() => Date.now())
 
   // Live mock EEG updates
   useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
     const stops = mockStudentsLive.map((s) =>
       createMockEEGStream(
         (state: CognitiveState) => {
           setStudents((prev) =>
             prev.map((st) =>
-              st.id === s.id ? { ...st, currentState: state } : st
+              st.id === s.id
+                ? {
+                    ...st,
+                    currentState: state,
+                    stateStartedAt: new Date().toISOString(),
+                    stateTransitions: [
+                      ...(st.stateTransitions ?? []),
+                      { state, timestamp: new Date().toISOString() },
+                    ].slice(-4),
+                    bandPowers: getBandPowers(state) ?? undefined,
+                  }
+                : st
             )
           )
         },
         4000 + Math.random() * 2000
       )
     )
-    return () => stops.forEach((stop) => stop())
+    return () => {
+      window.clearInterval(timer)
+      stops.forEach((stop) => stop())
+    }
   }, [])
 
   const active = students.filter((s) => s.isConnected)
@@ -111,8 +127,17 @@ export default function ClassOverview() {
                 <span className={styles.sidebarTitle}>Live EEG — {selectedStudent.name.split(' ')[0]}</span>
                 <EEGWaveDisplay
                   state={selectedStudent.currentState}
-                  bandPowers={selectedStudent.isConnected ? getBandPowers(selectedStudent.currentState) : null}
+                  bandPowers={selectedStudent.isConnected ? selectedStudent.bandPowers : null}
+                  signalQuality={selectedStudent.signalQuality}
+                  connectionStatus={selectedStudent.connectionStatus}
                 />
+                <div className={styles.contextPanel}>
+                  <div><span>Active activity</span><strong>{selectedStudent.activeActivity ?? 'No activity assigned'}</strong></div>
+                  <div><span>Engine mode</span><strong>{selectedStudent.engineMode === 'teacher-override' ? 'Teacher override' : 'Automatic'}</strong></div>
+                  <div><span>Workstation path</span><strong>{selectedStudent.workstationPath ?? 'Unverified'}</strong></div>
+                  <div><span>State history</span><strong>{(selectedStudent.stateTransitions ?? []).map((transition) => transition.state).join(' > ') || 'No transitions'}</strong></div>
+                  <div><span>Current state time</span><strong>{formatDuration(selectedStudent.stateStartedAt ? Math.max(0, Math.floor((now - Date.parse(selectedStudent.stateStartedAt)) / 1000)) : 0)}</strong></div>
+                </div>
                 <button className={styles.overrideBtn} onClick={() => setOverrideTarget(selectedStudent)}>
                   Override state
                 </button>
@@ -135,6 +160,11 @@ export default function ClassOverview() {
       )}
     </TeacherTabTemplate>
   )
+}
+
+function formatDuration(seconds: number) {
+  const minutes = Math.floor(seconds / 60)
+  return `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
 }
 
 function getBandPowers(state: CognitiveState | null | undefined) {
