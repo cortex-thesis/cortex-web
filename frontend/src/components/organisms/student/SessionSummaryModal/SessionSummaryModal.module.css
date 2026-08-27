@@ -67,6 +67,25 @@
   width: 100%;
 }
 
+.focusStat {
+  width: 100%;
+  min-height: 108px;
+  background: var(--color-cool-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.focusEmoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
 .stat {
   flex: 1;
   background: var(--color-surface-1);
@@ -74,6 +93,12 @@
   padding: var(--space-3) var(--space-2);
   display: flex;
   flex-direction: column;
+
+.focusValue {
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: center;
+}
   align-items: center;
   gap: 3px;
 }

@@ -30,7 +30,7 @@ export default function ClassDetail() {
       <div className={styles.topBar}>
         <button
           className={styles.backBtn}
-          onClick={() => navigate('/student/classes')}
+          onClick={() => navigate('/student/classes', { replace: true })}
           aria-label="Back to classes"
         >
           <ChevronLeft size={18} strokeWidth={1.75} />

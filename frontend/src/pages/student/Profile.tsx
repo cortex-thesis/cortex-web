@@ -41,6 +41,20 @@ const recentSessions = [
   { title: 'Reading a Bus Schedule', date: 'August 19', duration: '28 min', focus: 69, state: 'distracted' as const },
 ]
 
+function getFocusDescription(score: number) {
+  if (score >= 80) return 'Excellent focus'
+  if (score >= 70) return 'Steady focus'
+  if (score >= 60) return 'Growing focus'
+  return 'Finding your rhythm'
+}
+
+function getFocusEmoji(score: number) {
+  if (score >= 80) return '🌟'
+  if (score >= 70) return '💪'
+  if (score >= 60) return '🌱'
+  return '✨'
+}
+
 export default function Profile() {
   const navigate = useNavigate()
   const student = mockStudent
@@ -64,7 +78,7 @@ export default function Profile() {
 
         <section className={styles.statsGrid} aria-label="Learning statistics">
           <Stat icon={<Flame size={22}/>} color="#EF9F27" bg="#FAEEDA" value={mockStats.streak} label="Day streak" detail="Personal best: 10 days" />
-          <Stat icon={<Target size={22}/>} color="#1D9E75" bg="#E1F5EE" value={`${mockStats.avgFocusScore}%`} label="Average focus" detail="Up 6% this month" />
+          <Stat icon={<Target size={22}/>} color="#1D9E75" bg="#E1F5EE" value={getFocusDescription(mockStats.avgFocusScore)} label="Average focus" detail="Improving this month" />
           <Stat icon={<CheckCircle2 size={22}/>} color="#534AB7" bg="#EEEDFE" value={mockStats.sessionsCompleted} label="Sessions completed" detail="4 sessions this week" />
           <Stat icon={<Clock3 size={22}/>} color="#D4537E" bg="#FBEAF0" value={mockStats.learningTime} label="Total learning time" detail="Current school term" />
         </section>
@@ -112,7 +126,12 @@ export default function Profile() {
                 <span className={styles.sessionIcon}><BookOpen size={18}/></span>
                 <span className={styles.sessionInfo}><strong>{session.title}</strong><small>{session.date} · {session.duration}</small></span>
                 <StateBadge state={session.state} size="sm" />
-                <span className={styles.focusScore}>{session.focus}%<small>focus</small></span>
+                <span className={styles.focusScore}>
+                  <span className={styles.focusEmoji} aria-hidden="true">
+                    {getFocusEmoji(session.focus)}
+                  </span>
+                  <span>{getFocusDescription(session.focus)}</span>
+                </span>
                 <ArrowRight size={16} className={styles.chevron}/>
               </button>
             ))}

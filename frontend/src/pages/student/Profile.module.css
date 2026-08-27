@@ -39,8 +39,8 @@
 .sessionInfo strong, .sessionInfo small { display: block; }
 .sessionInfo strong { color: var(--color-deep-purple); font-size: 12px; }
 .sessionInfo small { margin-top: 4px; color: var(--color-text-secondary); font-size: 9px; }
-.focusScore { color: var(--color-deep-purple); font-size: 12px; font-weight: 600; text-align: center; }
-.focusScore small { display: block; color: var(--color-text-secondary); font-size: 8px; font-weight: 400; }
+.focusScore { display: flex; align-items: center; justify-content: center; gap: 5px; color: var(--color-deep-purple); font-size: 12px; font-weight: 600; text-align: center; }
+.focusEmoji { font-size: 16px; line-height: 1; }
 .chevron { color: var(--color-text-muted); }
 .journalBanner { width: 100%; margin-top: 18px; padding: 17px 20px; display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 14px; border: 1px solid #cfcaf8; border-radius: 16px; background: #eeedfe; color: var(--color-interface-purple); text-align: left; font-family: var(--font-family); cursor: pointer; }
 .journalIcon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 13px; background: white; }

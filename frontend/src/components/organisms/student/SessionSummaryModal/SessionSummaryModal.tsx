@@ -29,6 +29,20 @@ function getFocusColor(score: number): string {
   return '#D85A30'
 }
 
+function getFocusDescription(score: number): string {
+  if (score >= 80) return 'Excellent focus'
+  if (score >= 70) return 'Steady focus'
+  if (score >= 60) return 'Growing focus'
+  return 'Finding your rhythm'
+}
+
+function getFocusEmoji(score: number): string {
+  if (score >= 80) return '🌟'
+  if (score >= 70) return '💪'
+  if (score >= 60) return '🌱'
+  return '✨'
+}
+
 function SessionSummaryModal({
   summary,
   onJournal,
@@ -53,16 +67,20 @@ function SessionSummaryModal({
         <p className={styles.sub}>Great work today</p>
       </div>
 
+      <div className={styles.focusStat}>
+        <span className={styles.focusEmoji} aria-hidden="true">
+          {getFocusEmoji(focusScore)}
+        </span>
+        <span
+          className={styles.statVal}
+          style={{ color: getFocusColor(focusScore) }}
+        >
+          {getFocusDescription(focusScore)}
+        </span>
+        <span className={styles.statLabel}>Focus performance</span>
+      </div>
+
       <div className={styles.statsRow}>
-        <div className={styles.stat}>
-          <span
-            className={styles.statVal}
-            style={{ color: getFocusColor(focusScore) }}
-          >
-            {focusScore}%
-          </span>
-          <span className={styles.statLabel}>Focus score</span>
-        </div>
         <div className={styles.stat}>
           <span className={styles.statVal}>
             {taskCompleted}/{taskTotal}
