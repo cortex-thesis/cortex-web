@@ -35,6 +35,13 @@ Open `http://127.0.0.1:8000`. Django serves the existing React interface and
 keeps all client-side routes working. Backend routes live under `/api/`; the
 health check is available at `/api/health/`.
 
+The minimum school workflow is available through session-authenticated API
+routes for registration/login, profiles, class creation and assignment,
+enrollment/removal, consent, and session start/end. See
+[`SECURITY_PRIVACY.md`](SECURITY_PRIVACY.md) for the consent, pseudonymization,
+retention/deletion, secrets, uploads, audit, backup, and non-diagnostic
+messaging baseline.
+
 The Cortex administrator interface uses `/admin/dashboard`. Django's internal
 administration site is intentionally kept separate at `/django-admin/`.
 
