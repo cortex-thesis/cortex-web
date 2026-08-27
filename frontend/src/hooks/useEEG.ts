@@ -21,7 +21,7 @@ interface UseEEGReturn {
   resumeAutoCycle: () => void
 }
 
-const IS_MOCK = true
+const IS_MOCK = import.meta.env.VITE_EEG_MOCK !== 'false'
 
 function randomBandPowers(): BandPowers {
   return {
@@ -85,7 +85,24 @@ export function useEEG(_sessionId: string): UseEEGReturn {
       }
     }
 
-    return () => ws.close()
+    const pollCommands = window.setInterval(() => {
+      fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/sessions/${_sessionId}/interventions/delivery/`, { credentials: 'include' })
+        .then((response) => response.ok ? response.json() : Promise.reject())
+        .then((payload: { commands: Array<{ id: string; action: string; mode?: string; status: string }> }) => {
+          payload.commands.forEach((command) => {
+            if (command.action === 'set_mode' && (command.mode === 'focus' || command.mode === 'relax')) {
+              setEegData((previous) => ({ ...previous, state: command.mode === 'focus' ? 'focused' : 'relaxed', lastUpdated: Date.now() }))
+            }
+            fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/sessions/${_sessionId}/interventions/delivery/`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intervention_id: command.id, status: 'applied' }) }).catch(() => undefined)
+          })
+        })
+        .catch(() => undefined)
+    }, 1000)
+
+    return () => {
+      window.clearInterval(pollCommands)
+      ws.close()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_sessionId])
 

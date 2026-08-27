@@ -214,6 +214,8 @@
   margin-top: 4px;
 }
 
+.uploadArea input { display: none; }
+
 .uploadArea:hover {
   border-color: var(--color-interface-purple);
   background: var(--color-surface-1);

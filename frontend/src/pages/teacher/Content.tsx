@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Plus,
   Pencil,
@@ -20,6 +20,8 @@ import type { CurriculumPackage } from '../../constants/states'
 import { PACKAGE_META } from '../../constants/packages'
 import { mockTeacher } from '../../mocks'
 import styles from './Content.module.css'
+
+const API_URL = import.meta.env.VITE_API_URL ?? '/api'
 
 type ModeFilter = 'all' | 'focus' | 'relax'
 type PackageFilter = 'all' | CurriculumPackage
@@ -142,6 +144,25 @@ export default function Content() {
   const [showAdd, setShowAdd] = useState(false)
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null)
 
+  useEffect(() => {
+    fetch(`${API_URL}/content/lessons/`, { credentials: 'include' })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((payload: { lessons: Array<{ id: number; title: string; package: CurriculumPackage; slides: Array<{ activity: { type: ContentItem['type']; asset_id?: number; configuration?: { mode?: ContentItem['mode'] } } }> }> }) => {
+        const repositoryItems: ContentItem[] = payload.lessons.map((lesson) => {
+          const activity = lesson.slides[0]?.activity
+          const mode = activity?.configuration?.mode ?? 'both'
+          return {
+            id: String(lesson.id), title: lesson.title, type: activity?.type ?? 'interactive', package: lesson.package,
+            mode, cognitiveStateTarget: mode === 'relax' ? 'relaxed' : 'focused',
+            fileUrl: activity?.asset_id ? `${API_URL}/content/assets/${activity.asset_id}/preview/` : '', thumbnailUrl: null,
+            durationSeconds: 0, createdBy: 'repository', createdAt: new Date().toISOString(),
+          }
+        })
+        setItems(repositoryItems)
+      })
+      .catch(() => undefined)
+  }, [])
+
   const filtered = items.filter((item) => {
     const matchesMode =
       modeFilter === 'all' || item.mode === modeFilter || item.mode === 'both'
@@ -152,18 +173,43 @@ export default function Content() {
     return matchesMode && matchesPkg && matchesSearch
   })
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
+    if (/^\d+$/.test(id)) await fetch(`${API_URL}/content/lessons/${id}/`, { method: 'DELETE', credentials: 'include' }).catch(() => undefined)
     setItems((prev) => prev.filter((i) => i.id !== id))
     setDeleted(id)
     setTimeout(() => setDeleted(null), 3000)
   }
 
-  function handleSaveContent(data: {
+  async function handleSaveContent(data: {
     title: string
     type: ContentItem['type']
     package: ContentItem['package']
     mode: ContentItem['mode']
+    file?: File
   }) {
+    if (editingItem && /^\d+$/.test(editingItem.id)) {
+      await fetch(`${API_URL}/content/lessons/${editingItem.id}/`, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: data.title }) })
+      setItems((prev) => prev.map((item) => item.id === editingItem.id ? { ...item, ...data } : item))
+      setShowAdd(false)
+      setEditingItem(null)
+      return
+    }
+    let assetId: number | undefined
+    if (data.file) {
+      const upload = new FormData()
+      upload.append('file', data.file)
+      const assetResponse = await fetch(`${API_URL}/content/assets/upload/`, { method: 'POST', credentials: 'include', body: upload })
+      if (!assetResponse.ok) return
+      const asset = await assetResponse.json() as { id: number }
+      assetId = asset.id
+    }
+    if (!editingItem) {
+      const lessonResponse = await fetch(`${API_URL}/content/lessons/`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ package: data.package, title: data.title }) })
+      if (lessonResponse.ok) {
+        const lesson = await lessonResponse.json() as { id: number }
+        await fetch(`${API_URL}/content/lessons/${lesson.id}/slides/`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: data.type, title: data.title, asset_id: assetId, configuration: { mode: data.mode } }) })
+      }
+    }
     if (editingItem) {
       setItems((prev) =>
         prev.map((item) =>
@@ -296,6 +342,11 @@ export default function Content() {
                     </span>
                   </div>
                   <div className={styles.cardActions}>
+                    {item.fileUrl && (
+                      <button className={styles.editBtn} onClick={() => window.open(item.fileUrl, '_blank', 'noopener,noreferrer')}>
+                        Preview
+                      </button>
+                    )}
                     <button
                       className={styles.editBtn}
                       onClick={() => setEditingItem(item)}
@@ -308,7 +359,7 @@ export default function Content() {
                       onClick={() => handleDelete(item.id)}
                     >
                       <Trash2 size={12} strokeWidth={1.75} />
-                      Delete
+                        Archive
                     </button>
                   </div>
                 </div>

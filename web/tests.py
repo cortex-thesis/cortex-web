@@ -1,9 +1,10 @@
 import json
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from .models import AuditLog, Enrollment, LearningSession, Profile, SchoolClass
+from .models import AuditLog, ContentAssignment, CurriculumPackage, Enrollment, Intervention, LearningSession, Profile, SchoolClass
 
 
 class WorkflowTests(TestCase):
@@ -60,6 +61,67 @@ class WorkflowTests(TestCase):
         response = self.client.post("/api/auth/consent/", data=json.dumps({"consent_type": "eeg_processing", "version": "1", "granted": True}), content_type="application/json")
         self.assertEqual(response.status_code, 201)
         self.assertEqual(self.client.get("/api/auth/consent/").json()["consents"][0]["consent_type"], "eeg_processing")
+
+    def test_content_repository_covers_packages_slides_upload_archive_and_assignment(self):
+        school_class = SchoolClass.objects.create(name="Transition", code="CONT1", teacher=self.teacher)
+        Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
+        self._login(self.teacher)
+
+        packages = self.client.get("/api/content/packages/")
+        self.assertEqual(packages.status_code, 200)
+        self.assertEqual(len(packages.json()["packages"]), 7)
+
+        lesson = self.client.post("/api/content/lessons/", data=json.dumps({"package": "life", "title": "Morning routine"}), content_type="application/json")
+        self.assertEqual(lesson.status_code, 201)
+        lesson_id = lesson.json()["id"]
+        slide = self.client.post(f"/api/content/lessons/{lesson_id}/slides/", data=json.dumps({"type": "interactive", "title": "Order the steps", "position": 0}), content_type="application/json")
+        self.assertEqual(slide.status_code, 201)
+        self.assertEqual(slide.json()["slides"][0]["position"], 0)
+
+        image = SimpleUploadedFile("step.png", b"png-data", content_type="image/png")
+        uploaded = self.client.post("/api/content/assets/upload/", data={"file": image})
+        self.assertEqual(uploaded.status_code, 201)
+        asset_id = uploaded.json()["id"]
+        self.assertEqual(self.client.get(f"/api/content/assets/{asset_id}/preview/").status_code, 200)
+        self.assertEqual(self.client.put(f"/api/content/assets/{asset_id}/", data=json.dumps({"name": "first-step.png"}), content_type="application/json").json()["name"], "first-step.png")
+
+        assigned = self.client.post(f"/api/content/lessons/{lesson_id}/assign/", data=json.dumps({"class_id": school_class.pk, "student_id": self.student.pk}), content_type="application/json")
+        self.assertEqual(assigned.status_code, 201)
+        self.assertTrue(ContentAssignment.objects.filter(lesson_id=lesson_id, school_class=school_class, student=self.student).exists())
+        self.assertEqual(self.client.delete(f"/api/content/lessons/{lesson_id}/").status_code, 200)
+
+    def test_content_upload_rejects_unsupported_type(self):
+        self._login(self.teacher)
+        bad_file = SimpleUploadedFile("script.exe", b"not allowed", content_type="application/x-msdownload")
+        response = self.client.post("/api/content/assets/upload/", data={"file": bad_file})
+        self.assertEqual(response.status_code, 400)
+
+    def test_teacher_intervention_is_delivered_acknowledged_and_audited(self):
+        school_class = SchoolClass.objects.create(name="Live class", code="LIVE1", teacher=self.teacher)
+        Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
+        session = LearningSession.objects.create(school_class=school_class, student=self.student)
+        self._login(self.teacher)
+        command = self.client.post(f"/api/sessions/{session.pk}/interventions/", data=json.dumps({"action": "set_mode", "mode": "focus", "state": "focused", "priority": "urgent", "duration_seconds": 90}), content_type="application/json")
+        self.assertEqual(command.status_code, 201)
+        self.assertEqual(command.json()["priority"], "urgent")
+        intervention_id = command.json()["id"]
+        self.assertEqual(self.client.get("/api/intervention-alerts/").json()["alerts"][0]["priority"], "urgent")
+
+        self._login(self.student)
+        delivery = self.client.get(f"/api/sessions/{session.pk}/interventions/delivery/")
+        self.assertEqual(delivery.status_code, 200)
+        self.assertEqual(delivery.json()["commands"][0]["action"], "set_mode")
+        applied = self.client.post(f"/api/sessions/{session.pk}/interventions/delivery/", data=json.dumps({"intervention_id": intervention_id, "status": "applied"}), content_type="application/json")
+        self.assertEqual(applied.status_code, 200)
+        self.assertEqual(applied.json()["status"], "applied")
+        self.assertTrue(AuditLog.objects.filter(action="intervention_applied").exists())
+
+    def test_student_cannot_issue_interventions(self):
+        school_class = SchoolClass.objects.create(name="Live class", code="LIVE2", teacher=self.teacher)
+        session = LearningSession.objects.create(school_class=school_class, student=self.student)
+        self._login(self.student)
+        response = self.client.post(f"/api/sessions/{session.pk}/interventions/", data=json.dumps({"action": "pause"}), content_type="application/json")
+        self.assertEqual(response.status_code, 403)
 
 
 class RoutingTests(TestCase):

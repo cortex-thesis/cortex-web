@@ -16,6 +16,7 @@ interface AddContentModalProps {
     type: ContentType
     package: CurriculumPackage
     mode: ContentMode
+    file?: File
   }) => void
   onClose: () => void
 }
@@ -34,13 +35,14 @@ function AddContentModal({
   )
   const [mode, setMode] = useState<ContentMode>(initialData?.mode ?? 'focus')
   const [titleError, setTitleError] = useState('')
+  const [file, setFile] = useState<File | undefined>()
 
   function handleSave() {
     if (!title.trim()) {
       setTitleError('Title is required')
       return
     }
-    onSave({ title, type, package: pkg, mode })
+    onSave({ title, type, package: pkg, mode, file })
   }
 
   const CONTENT_TYPES: { value: ContentType; emoji: string; label: string }[] =
@@ -152,15 +154,16 @@ function AddContentModal({
             </div>
           </div>
 
-          <div className={styles.uploadArea}>
+          <label className={styles.uploadArea}>
             <Upload size={24} strokeWidth={1.5} color="#B4B2A9" />
             <span className={styles.uploadText}>
-              {isEditing ? 'Replace current file' : 'Click to upload file'}
+              {file?.name ?? (isEditing ? 'Replace current file' : 'Click to upload file')}
             </span>
             <span className={styles.uploadSub}>
-              PNG, JPG, MP3, MP4 up to 50MB
+              PNG, JPG, MP3, MP4 up to 10MB
             </span>
-          </div>
+            <input type="file" accept="image/*,audio/*,video/mp4,video/webm,application/pdf" onChange={(event) => setFile(event.target.files?.[0])} />
+          </label>
         </div>
 
         <div className={styles.footer}>

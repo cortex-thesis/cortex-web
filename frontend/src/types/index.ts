@@ -50,6 +50,24 @@ export interface ModeChangeEvent {
   timestamp: string
 }
 
+export type InterventionAction = 'set_mode' | 'set_content' | 'pause' | 'resume' | 'return_auto'
+
+export interface InterventionCommand {
+  id: string
+  action: InterventionAction
+  priority: 'urgent' | 'high' | 'normal'
+  state: string
+  mode: string
+  content_id: number | null
+  status: 'pending' | 'delivered' | 'applied' | 'rejected' | 'expired'
+  actor_id: number
+  requested_at: string
+  delivered_at: string | null
+  applied_at: string | null
+  ended_at: string | null
+  duration_seconds: number | null
+}
+
 // session
 
 export interface Session {

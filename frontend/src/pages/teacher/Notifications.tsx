@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ShieldAlert, WifiOff, BarChart2, Bell, CheckCheck } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { mockTeacher } from '../../mocks'
@@ -14,6 +14,7 @@ interface AppNotification {
   body: string
   createdAt: string
   read: boolean
+  priority?: 'urgent' | 'high' | 'normal'
 }
 
 // Mock data — replace with GET /api/notifications/?role=teacher once
@@ -88,6 +89,19 @@ export default function Notifications() {
   const [notifications, setNotifications] = useState(initialNotifications)
   const [filter, setFilter] = useState<KindFilter>('all')
 
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/intervention-alerts/`, { credentials: 'include' })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((payload: { alerts: Array<{ id: number; title: string; message: string; priority: 'urgent' | 'high' | 'normal'; read: boolean; created_at: string }> }) => {
+        const interventionAlerts: AppNotification[] = payload.alerts.map((alert) => ({
+          id: `intervention-${alert.id}`, kind: 'overstim', title: alert.title, body: alert.message,
+          createdAt: alert.created_at, read: alert.read, priority: alert.priority,
+        }))
+        setNotifications((current) => [...interventionAlerts, ...current.filter((item) => !item.id.startsWith('intervention-'))])
+      })
+      .catch(() => undefined)
+  }, [])
+
   const unreadCount = notifications.filter((n) => !n.read).length
   const filtered = notifications.filter(
     (n) => filter === 'all' || n.kind === filter
@@ -101,6 +115,9 @@ export default function Notifications() {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     )
+    if (id.startsWith('intervention-')) {
+      fetch(`${import.meta.env.VITE_API_URL ?? '/api'}/intervention-alerts/`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alert_id: Number(id.replace('intervention-', '')) }) }).catch(() => undefined)
+    }
   }
 
   return (
@@ -161,6 +178,7 @@ export default function Notifications() {
                       <span className={styles.itemBody}>
                         <span className={styles.itemTitle}>{n.title}</span>
                         <span className={styles.itemText}>{n.body}</span>
+                        {n.priority && <span className={styles.itemText}>Priority: {n.priority}</span>}
                       </span>
                       <span className={styles.itemTime}>
                         {timeAgo(n.createdAt)}

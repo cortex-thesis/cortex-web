@@ -1,12 +1,13 @@
 import { X } from 'lucide-react'
 import { Avatar, StateBadge } from '../../../atoms'
 import type { StudentLive } from '../../../../types'
+import type { InterventionAction } from '../../../../types'
 import type { CognitiveState } from '../../../../constants/states'
 import styles from './OverrideModal.module.css'
 
 interface OverrideModalProps {
   student: StudentLive
-  onConfirm: (targetMode: 'focus' | 'relax') => void
+  onConfirm: (action: InterventionAction, mode?: 'focus' | 'relax') => void
   onClose: () => void
 }
 
@@ -60,7 +61,7 @@ function OverrideModal({ student, onConfirm, onClose }: OverrideModalProps) {
         <div className={styles.options}>
           <button
             className={`${styles.optionBtn} ${styles.optionFocus}`}
-            onClick={() => onConfirm('focus')}
+            onClick={() => onConfirm('set_mode', 'focus')}
           >
             <span className={styles.optionIcon}>⚡</span>
             <div className={styles.optionInfo}>
@@ -73,7 +74,7 @@ function OverrideModal({ student, onConfirm, onClose }: OverrideModalProps) {
 
           <button
             className={`${styles.optionBtn} ${styles.optionRelax}`}
-            onClick={() => onConfirm('relax')}
+            onClick={() => onConfirm('set_mode', 'relax')}
           >
             <span className={styles.optionIcon}>🌊</span>
             <div className={styles.optionInfo}>
@@ -83,6 +84,13 @@ function OverrideModal({ student, onConfirm, onClose }: OverrideModalProps) {
               </span>
             </div>
           </button>
+        </div>
+
+        <div className={styles.options}>
+          <button className={styles.optionBtn} onClick={() => onConfirm('pause')}><span className={styles.optionName}>Pause session</span><span className={styles.optionDesc}>Hold the current activity</span></button>
+          <button className={styles.optionBtn} onClick={() => onConfirm('resume')}><span className={styles.optionName}>Resume session</span><span className={styles.optionDesc}>Continue the current activity</span></button>
+          <button className={styles.optionBtn} onClick={() => onConfirm('return_auto')}><span className={styles.optionName}>Return to automatic</span><span className={styles.optionDesc}>Let EEG adaptation control the mode</span></button>
+          <button className={styles.optionBtn} onClick={() => onConfirm('set_content')}><span className={styles.optionName}>Change content</span><span className={styles.optionDesc}>Send a content change command</span></button>
         </div>
 
         <button className={styles.cancelBtn} onClick={onClose}>

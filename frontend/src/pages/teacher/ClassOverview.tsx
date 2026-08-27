@@ -5,6 +5,7 @@ import { EEGWaveDisplay, StatSummaryCard } from '../../components/molecules'
 import { LiveDashboardGrid, OverrideModal } from '../../components/organisms/teacher'
 import { Users, Zap, Flame, ClipboardList } from 'lucide-react'
 import type { StudentLive } from '../../types'
+import type { InterventionAction } from '../../types'
 import type { CognitiveState } from '../../constants/states'
 import {
   mockTeacher,
@@ -151,8 +152,10 @@ export default function ClassOverview() {
       {overrideTarget && (
         <OverrideModal
           student={overrideTarget}
-          onConfirm={(targetMode) => {
-            setStudents((previous) => previous.map((student) => student.id === overrideTarget.id ? { ...student, currentState: targetMode === 'focus' ? 'focused' : 'relaxed' } : student))
+          onConfirm={(action: InterventionAction, mode?: 'focus' | 'relax') => {
+            fetch(`/api/students/${overrideTarget.id.replace('student-', '')}/interventions/`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, mode, priority: overrideTarget.currentState === 'overstimulated' ? 'urgent' : 'normal', state: overrideTarget.currentState ?? '' }) }).catch(() => undefined)
+            if (action === 'set_mode' && mode) setStudents((previous) => previous.map((student) => student.id === overrideTarget.id ? { ...student, currentState: mode === 'focus' ? 'focused' : 'relaxed', engineMode: 'teacher-override' } : student))
+            if (action === 'return_auto') setStudents((previous) => previous.map((student) => student.id === overrideTarget.id ? { ...student, engineMode: 'auto' } : student))
             setOverrideTarget(null)
           }}
           onClose={() => setOverrideTarget(null)}
