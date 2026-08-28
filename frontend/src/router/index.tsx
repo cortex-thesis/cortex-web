@@ -24,6 +24,7 @@ import ClassOverview from '../pages/teacher/ClassOverview'
 import ClassStudents from '../pages/teacher/ClassStudents'
 import ClassContent from '../pages/teacher/ClassContent'
 import ClassAnalytics from '../pages/teacher/ClassAnalytics'
+import TeacherStudentProfile from '../pages/teacher/StudentProfile'
 import TeacherNotifications from '../pages/teacher/Notifications'
 import TeacherSettings from '../pages/teacher/Settings'
 import TeacherProfile from '../pages/teacher/Profile'
@@ -89,6 +90,10 @@ export default function AppRouter() {
       <Route
         path="/teacher/class/:classId/analytics"
         element={<ClassAnalytics />}
+      />
+      <Route
+        path="/teacher/class/:classId/student/:studentId"
+        element={<TeacherStudentProfile />}
       />
 
       <Route path="/teacher/login" element={<Navigate to="/" replace />} />

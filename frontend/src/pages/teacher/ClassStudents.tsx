@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { TeacherTabTemplate } from '../../components/templates'
 import { Avatar, StateBadge } from '../../components/atoms'
@@ -21,6 +21,7 @@ function getFocusColor(score: number): string {
 }
 
 export default function ClassStudents() {
+  const navigate = useNavigate()
   const { classId = 'class-001' } = useParams()
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'focus' | 'sessions'>('name')
@@ -117,7 +118,7 @@ export default function ClassStudents() {
               <span className={styles.tdMuted}>3 entries</span>
 
               <div>
-                <button className={styles.viewBtn}>View profile</button>
+                <button className={styles.viewBtn} onClick={() => navigate(`/teacher/class/${classId}/student/${student.id}`)}>View profile</button>
               </div>
             </div>
           ))}
