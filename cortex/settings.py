@@ -57,11 +57,13 @@ ASGI_APPLICATION = "cortex.asgi.application"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 TEMPLATE_ONLY = os.environ.get("CORTEX_TEMPLATE_ONLY", "true").lower() == "true"
 
-if TEMPLATE_ONLY or "test" in sys.argv:
+if TEMPLATE_ONLY:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
+            # Keep local migration state between management commands and
+            # across the development server's auto-reloads.
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 elif DATABASE_URL:
@@ -79,11 +81,11 @@ elif DATABASE_URL:
         "connect_timeout": 10,
     })
 else:
-    # Template-only development fallback: no file and no persistent database.
+    # Local development fallback when no hosted database is configured.
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 

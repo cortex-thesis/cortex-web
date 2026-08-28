@@ -25,8 +25,8 @@ its password placeholder with your database password. The local `.env` file is
 ignored by Git so credentials are not committed.
 
 For frontend/template-only development, add `CORTEX_TEMPLATE_ONLY=true` to
-`.env`. Django will use a non-persistent in-memory database and will not create
-`db.sqlite3` or connect to Supabase.
+`.env`. Django will use a local `db.sqlite3` database instead of connecting to
+Supabase, so migrations persist between management commands and server reloads.
 
 Template-only mode is the default. When the real backend is ready, set
 `CORTEX_TEMPLATE_ONLY=false` to enable the configured Supabase connection.
