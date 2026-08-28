@@ -5,8 +5,7 @@ import {
   Search,
   Wifi,
   CheckCircle2,
-  AlertCircle,
-  type LucideIcon,
+  Power,
 } from 'lucide-react'
 import { CalmZoneTemplate } from '../../components/templates'
 import { PulseRing, SignalBar } from '../../components/atoms'
@@ -20,44 +19,38 @@ interface StatusConfig {
   sub: string
   pulseColor: 'teal' | 'purple'
   pulseActive: boolean
-  icon: LucideIcon
 }
 
 const STATUS_CONTENT: Record<PairingStatus, StatusConfig> = {
   scanning: {
-    title: 'Looking for your headband',
-    sub: 'Make sure your Muse headband is powered on and resting comfortably on your head.',
+    title: 'Finding your headband',
+    sub: 'Turn it on and wear it snugly.',
     pulseColor: 'purple',
     pulseActive: true,
-    icon: Search,
   },
   found: {
-    title: 'Headband found!',
-    sub: 'Connecting to your Muse headband. Stay still for a moment.',
+    title: 'Headband found',
+    sub: 'Stay still for a moment.',
     pulseColor: 'teal',
     pulseActive: true,
-    icon: Wifi,
   },
   connecting: {
-    title: 'Connecting...',
-    sub: 'Establishing a secure connection with your headband.',
+    title: 'Connecting',
+    sub: 'This will only take a moment.',
     pulseColor: 'teal',
     pulseActive: true,
-    icon: Wifi,
   },
   connected: {
-    title: 'Connected!',
-    sub: 'Great signal! Your headband is reading your brainwaves. Ready to start.',
+    title: 'You’re connected!',
+    sub: 'Your headband is ready.',
     pulseColor: 'teal',
     pulseActive: false,
-    icon: CheckCircle2,
   },
   error: {
     title: 'Could not connect',
-    sub: 'We had trouble finding your headband. Try the steps below and try again.',
+    sub: 'Check your headband and try again.',
     pulseColor: 'purple',
     pulseActive: false,
-    icon: AlertCircle,
   },
 }
 
@@ -77,11 +70,24 @@ const SIGNAL_STRENGTH: Record<PairingStatus, 0 | 1 | 2 | 3 | 4> = {
   error: 0,
 }
 
+const PAIRING_STEPS = [
+  { label: 'Search', icon: Power },
+  { label: 'Found', icon: Search },
+  { label: 'Connect', icon: Wifi },
+  { label: 'Ready', icon: CheckCircle2 },
+]
+
+const STATUS_STEP: Record<PairingStatus, number> = {
+  scanning: 1,
+  found: 2,
+  connecting: 3,
+  connected: 4,
+  error: 1,
+}
+
 const TIPS = [
-  'Make sure Bluetooth is turned on',
-  'Press the power button on your headband until the light blinks',
-  'Place the headband with the sensors touching your forehead',
-  'Move away from other Bluetooth devices if the connection fails',
+  'Check that Bluetooth is on',
+  'Make sure the headband light is blinking',
 ]
 
 export default function EEGPairing() {
@@ -121,7 +127,8 @@ export default function EEGPairing() {
   const content = STATUS_CONTENT[status]
   const signalStrength = SIGNAL_STRENGTH[status]
   const signalLabel = SIGNAL_LABEL[status]
-  const StatusIcon = content.icon
+  const currentStep = STATUS_STEP[status]
+  const progress = ((currentStep - 1) / (PAIRING_STEPS.length - 1)) * 100
 
   return (
     <CalmZoneTemplate showNav={false}>
@@ -137,23 +144,27 @@ export default function EEGPairing() {
       </div>
 
       <div className={styles.content}>
-        <div className={styles.pairingSection}>
-          <PulseRing
-            size="lg"
-            color={content.pulseColor}
-            active={content.pulseActive}
-          />
+        <div className={`${styles.pairingSection} ${status === 'connected' ? styles.connectedState : ''}`}>
+          <div className={styles.stepIntro} aria-live="polite">
+            <span className={styles.stepCount}>Step {currentStep} of {PAIRING_STEPS.length}</span>
+            <span className={styles.stepName}>{PAIRING_STEPS[currentStep - 1].label}</span>
+          </div>
+
+          {status === 'connected' ? (
+            <div className={styles.successMark} role="img" aria-label="Headband connected">
+              <CheckCircle2 size={48} strokeWidth={2.25} aria-hidden="true" />
+            </div>
+          ) : (
+            <PulseRing
+              size="lg"
+              color={content.pulseColor}
+              active={content.pulseActive}
+            />
+          )}
 
           <div className={styles.textBlock}>
-            <h1 className={styles.title}>
+            <h1 className={`${styles.title} ${status === 'connected' ? styles.successTitle : ''}`}>
               {content.title}
-              {status === 'connected' && (
-                <StatusIcon
-                  className={styles.successIcon}
-                  size={22}
-                  aria-hidden="true"
-                />
-              )}
             </h1>
             <p className={styles.sub}>{content.sub}</p>
           </div>
@@ -164,6 +175,34 @@ export default function EEGPairing() {
           >
             <SignalBar strength={signalStrength} size="sm" />
             <span className={styles.signalLabel}>{signalLabel}</span>
+          </div>
+
+          <div
+            className={styles.waveProgress}
+            role="progressbar"
+            aria-valuemin={1}
+            aria-valuemax={PAIRING_STEPS.length}
+            aria-valuenow={currentStep}
+            aria-label={`Headband pairing: step ${currentStep} of ${PAIRING_STEPS.length}, ${PAIRING_STEPS[currentStep - 1].label}`}
+          >
+            <svg className={styles.waveLine} viewBox="0 0 300 44" preserveAspectRatio="none" aria-hidden="true">
+              <path className={styles.waveTrack} pathLength="100" d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" />
+              <path className={`${styles.waveFill} ${status === 'connected' ? styles.waveSuccess : ''}`} pathLength="100" strokeDasharray={`${progress} 100`} d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" />
+            </svg>
+            <div className={styles.stepNodes} aria-hidden="true">
+              {PAIRING_STEPS.map((step, index) => {
+                const StepIcon = step.icon
+                const stepNumber = index + 1
+                return (
+                  <span
+                    className={`${styles.stepNode} ${stepNumber < currentStep ? styles.stepComplete : ''} ${stepNumber === currentStep ? styles.stepActive : ''}`}
+                    key={step.label}
+                  >
+                    <StepIcon size={14} strokeWidth={2} />
+                  </span>
+                )
+              })}
+            </div>
           </div>
         </div>
 
@@ -176,7 +215,7 @@ export default function EEGPairing() {
           />
         )}
 
-        {(status === 'scanning' || status === 'error') && (
+        {status === 'error' && (
           <ul className={styles.tips} aria-label="Connection tips">
             {TIPS.map((tip, i) => (
               <li key={i} className={styles.tip}>
@@ -189,7 +228,7 @@ export default function EEGPairing() {
 
         {status === 'connected' && (
           <div className={styles.successMsg}>
-            Redirecting to your session...
+            Starting your session…
           </div>
         )}
 
