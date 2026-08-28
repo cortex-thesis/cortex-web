@@ -31,6 +31,7 @@ function SessionTemplate({
   return (
     <div className={styles.root}>
       <BreadcrumbBar
+        className={styles.sessionBar}
         backPath={backPath}
         onBack={onBack}
         className_name={className_name}

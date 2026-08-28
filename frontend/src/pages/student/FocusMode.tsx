@@ -9,7 +9,7 @@ import { getDeliveryConfig, getDeliveryMode } from '../../constants/delivery'
 // Note: Un-comment useSession if/when needed in your page logic
 // import { useSession } from '../../hooks/useSession'
 
-import { mockTask } from '../../mocks'
+import { mockTasks } from '../../mocks'
 import type { CognitiveState } from '../../constants/states'
 import type { Task } from '../../types'
 import styles from './FocusMode.module.css'
@@ -25,7 +25,7 @@ export function FocusMode() {
   const navigate = useNavigate()
 
   // In dev — use mock data. Replace with real API call later.
-  const [task, setTask] = useState<Task>(mockTask)
+  const [task, setTask] = useState<Task>(mockTasks[0])
   const [nudgeIndex, setNudgeIndex] = useState(0)
   const [showModeAlert, setShowModeAlert] = useState(false)
 
@@ -90,7 +90,7 @@ export function FocusMode() {
     if (correct && task.index < task.total) {
       // Advance to next task
       setTimeout(() => {
-        setTask((prev) => ({ ...prev, index: prev.index + 1 }))
+        setTask(mockTasks[task.index])
       }, 1200)
     } else if (correct && task.index === task.total) {
       navigate('/student/session-summary')
@@ -128,7 +128,19 @@ export function FocusMode() {
           />
         )}
 
+        {import.meta.env.DEV && (
+          <div className={styles.prototypeNav} aria-label="Prototype content preview">
+            <span>Preview</span>
+            {mockTasks.map((item) => (
+              <button key={item.id} className={item.id === task.id ? styles.prototypeActive : ''} onClick={() => setTask(item)}>
+                {item.contentType}
+              </button>
+            ))}
+          </div>
+        )}
+
         <TaskCard
+          key={task.id}
           task={task}
           showNudge={isElevated}
           nudgeText={NUDGE_MESSAGES[nudgeIndex]}

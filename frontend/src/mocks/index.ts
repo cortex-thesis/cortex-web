@@ -166,17 +166,42 @@ export const mockStudentsLive: StudentLive[] = [
   },
 ]
 
-export const mockTask: Task = {
-  id: 'task-001',
-  index: 1,
-  total: 5,
-  title: 'Getting Ready for School',
-  imageUrl: null,
-  question: 'What should you do FIRST in the morning?',
-  choices: ['Eat Breakfast', 'Wake up first', 'Pack bag', 'Brush Teeth'],
-  answer: 'Wake up first',
-  package: 'life',
-}
+export const mockTasks: Task[] = [
+  {
+    id: 'task-image', index: 1, total: 4, title: 'Getting Ready for School',
+    imageUrl: null, contentType: 'image', contentLabel: 'Morning routine visual',
+    contentDescription: 'Look closely at the routine before answering.',
+    question: 'What should you do FIRST in the morning?',
+    choices: ['Eat breakfast', 'Wake up', 'Pack your bag', 'Brush your teeth'],
+    answer: 'Wake up', package: 'life',
+  },
+  {
+    id: 'task-video', index: 2, total: 4, title: 'Packing a School Bag',
+    imageUrl: null, contentType: 'video', contentLabel: 'Watch: Pack only what you need',
+    contentDescription: 'A short demonstration with captions.', durationSeconds: 42,
+    question: 'Which item belongs in your school bag?',
+    choices: ['Notebook', 'Pillow', 'Cooking pot', 'Toy car'],
+    answer: 'Notebook', package: 'life',
+  },
+  {
+    id: 'task-audio', index: 3, total: 4, title: 'Listen and Follow',
+    imageUrl: null, contentType: 'audio', contentLabel: 'Morning reminder',
+    contentDescription: '“Put your lunch box inside your bag.”', durationSeconds: 12,
+    question: 'What should go inside the bag?',
+    choices: ['Lunch box', 'Shoes', 'Blanket', 'Lamp'],
+    answer: 'Lunch box', package: 'life',
+  },
+  {
+    id: 'task-interactive', index: 4, total: 4, title: 'Put the Steps in Order',
+    imageUrl: null, contentType: 'interactive', contentLabel: 'Morning sequence',
+    contentDescription: 'Review the steps from first to last.',
+    question: 'What comes after waking up?',
+    choices: ['Get dressed', 'Go back to sleep', 'Watch a movie', 'Play outside'],
+    answer: 'Get dressed', package: 'life',
+  },
+]
+
+export const mockTask: Task = mockTasks[0]
 
 // simulates live EEG state cycling for dev/testing
 export function createMockEEGStream(

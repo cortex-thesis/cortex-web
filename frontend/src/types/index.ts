@@ -90,6 +90,10 @@ export interface Task {
   choices: string[]
   answer: string
   package: CurriculumPackage
+  contentType?: 'image' | 'audio' | 'video' | 'interactive'
+  contentLabel?: string
+  contentDescription?: string
+  durationSeconds?: number
 }
 
 // class

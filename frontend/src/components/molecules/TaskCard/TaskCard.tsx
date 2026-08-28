@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { GripVertical, Image as ImageIcon, Pause, Play, Volume2 } from 'lucide-react'
 import type { Task } from '../../../types'
 import AnswerChoice from '../AnswerChoice'
 import { ProgressBar } from '../../atoms'
@@ -23,6 +24,7 @@ function TaskCard({
 }: TaskCardProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   function handleSelect(choice: string) {
     if (revealed) return
@@ -41,6 +43,47 @@ function TaskCard({
   }
 
   const progress = ((task.index - 1) / task.total) * 100
+  const contentType = task.contentType ?? 'image'
+
+  const contentPreview = task.contentType && (
+    <div className={`${styles.contentPreview} ${styles[contentType]}`}>
+      {contentType === 'image' && (
+        <div className={styles.visualPreview} role="img" aria-label={task.contentLabel}>
+          <span className={styles.visualSun} />
+          <ImageIcon size={38} strokeWidth={1.5} aria-hidden="true" />
+          <span className={styles.previewLabel}>{task.contentLabel}</span>
+        </div>
+      )}
+
+      {contentType === 'video' && (
+        <div className={styles.videoPreview}>
+          <button className={styles.mediaButton} onClick={() => setIsPlaying((value) => !value)} aria-label={isPlaying ? 'Pause video' : 'Play video'}>
+            {isPlaying ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" />}
+          </button>
+          <div className={styles.mediaInfo}><strong>{task.contentLabel}</strong><span>{task.contentDescription}</span></div>
+          <span className={styles.duration}>0:{String(task.durationSeconds ?? 0).padStart(2, '0')}</span>
+        </div>
+      )}
+
+      {contentType === 'audio' && (
+        <div className={styles.audioPreview}>
+          <button className={styles.mediaButton} onClick={() => setIsPlaying((value) => !value)} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+            {isPlaying ? <Pause size={20} fill="currentColor" /> : <Volume2 size={20} />}
+          </button>
+          <div className={styles.mediaInfo}><strong>{task.contentLabel}</strong><span>{task.contentDescription}</span></div>
+          <div className={styles.waveform} aria-hidden="true">{[8, 15, 22, 12, 26, 18, 10, 20, 14, 8].map((height, index) => <span key={index} style={{ height }} />)}</div>
+        </div>
+      )}
+
+      {contentType === 'interactive' && (
+        <div className={styles.sequence} aria-label="Interactive morning sequence preview">
+          {['Wake up', 'Get dressed', 'Pack bag'].map((step, index) => (
+            <div className={styles.sequenceStep} key={step}><GripVertical size={15} aria-hidden="true" /><span>{index + 1}</span><strong>{step}</strong></div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <div className={`${styles.card} ${className ?? ''}`}>
@@ -50,6 +93,13 @@ function TaskCard({
         size="xs"
         ariaLabel={`Task ${task.index} of ${task.total}`}
       />
+
+      <div className={styles.contentHeading}>
+        <div><span className={styles.typeLabel}>{contentType}</span><h2>{task.title}</h2></div>
+        <span className={styles.contentHint}>{task.contentDescription}</span>
+      </div>
+
+      {contentPreview}
 
       {task.imageUrl && (
         <div className={styles.imageWrap}>

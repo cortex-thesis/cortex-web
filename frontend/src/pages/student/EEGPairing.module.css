@@ -58,6 +58,14 @@
   width: min(100%, 420px);
 }
 
+.visualSlot {
+  width: 180px;
+  height: 180px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
 .successMark {
   width: 112px;
   height: 112px;
@@ -143,8 +151,8 @@
 
 .waveLine {
   position: absolute;
-  inset: 7px 18px auto;
-  width: calc(100% - 36px);
+  inset: 7px 17px auto;
+  width: calc(100% - 34px);
   height: 44px;
   overflow: visible;
 }
@@ -158,10 +166,6 @@
   vector-effect: non-scaling-stroke;
 }
 
-.waveSuccess {
-  stroke: var(--state-focused);
-}
-
 .waveTrack {
   stroke: var(--color-border);
 }
@@ -169,6 +173,10 @@
 .waveFill {
   stroke: var(--color-interface-purple);
   transition: stroke-dasharray 600ms ease;
+}
+
+.waveFill.waveSuccess {
+  stroke: var(--state-focused);
 }
 
 .stepNodes {
@@ -267,12 +275,19 @@
   text-align: center;
 }
 
+.statusSlot {
+  min-height: 18px;
+  display: grid;
+  place-items: center;
+}
+
 .actions {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
   max-width: 320px;
+  min-height: 46px;
 }
 
 .retryBtn {

@@ -150,17 +150,19 @@ export default function EEGPairing() {
             <span className={styles.stepName}>{PAIRING_STEPS[currentStep - 1].label}</span>
           </div>
 
-          {status === 'connected' ? (
-            <div className={styles.successMark} role="img" aria-label="Headband connected">
-              <CheckCircle2 size={48} strokeWidth={2.25} aria-hidden="true" />
-            </div>
-          ) : (
-            <PulseRing
-              size="lg"
-              color={content.pulseColor}
-              active={content.pulseActive}
-            />
-          )}
+          <div className={styles.visualSlot}>
+            {status === 'connected' ? (
+              <div className={styles.successMark} role="img" aria-label="Headband connected">
+                <CheckCircle2 size={48} strokeWidth={2.25} aria-hidden="true" />
+              </div>
+            ) : (
+              <PulseRing
+                size="lg"
+                color={content.pulseColor}
+                active={content.pulseActive}
+              />
+            )}
+          </div>
 
           <div className={styles.textBlock}>
             <h1 className={`${styles.title} ${status === 'connected' ? styles.successTitle : ''}`}>
@@ -185,7 +187,7 @@ export default function EEGPairing() {
             aria-valuenow={currentStep}
             aria-label={`Headband pairing: step ${currentStep} of ${PAIRING_STEPS.length}, ${PAIRING_STEPS[currentStep - 1].label}`}
           >
-            <svg className={styles.waveLine} viewBox="0 0 300 44" preserveAspectRatio="none" aria-hidden="true">
+            <svg className={styles.waveLine} viewBox="4 0 292 44" preserveAspectRatio="none" aria-hidden="true">
               <path className={styles.waveTrack} pathLength="100" d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" />
               <path className={`${styles.waveFill} ${status === 'connected' ? styles.waveSuccess : ''}`} pathLength="100" strokeDasharray={`${progress} 100`} d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" />
             </svg>
@@ -226,11 +228,13 @@ export default function EEGPairing() {
           </ul>
         )}
 
+        <div className={styles.statusSlot} aria-live="polite">
         {status === 'connected' && (
           <div className={styles.successMsg}>
             Starting your session…
           </div>
         )}
+        </div>
 
         <div className={styles.actions}>
           {(status === 'scanning' || status === 'error') && (
