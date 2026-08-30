@@ -11,35 +11,21 @@ import {
 } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { Avatar, StateBadge } from '../../components/atoms'
-import { mockStudent } from '../../mocks'
+import { useAuthStore } from '../../store/authStore'
 import styles from './Profile.module.css'
 
 const mockStats = {
-  streak: 7,
-  avgFocusScore: 78,
-  sessionsCompleted: 24,
-  learningTime: '11h 42m',
+  streak: 0,
+  avgFocusScore: 0,
+  sessionsCompleted: 0,
+  learningTime: '0m',
 }
 
-const mockBadges = [
-  { id: 'b1', emoji: '🔥', label: '7-day streak', detail: 'Learned every day this week' },
-  { id: 'b2', emoji: '🎯', label: 'Sharp focus', detail: 'Reached 80% focus in a session' },
-  { id: 'b3', emoji: '📚', label: '20 sessions', detail: 'Completed twenty learning sessions' },
-  { id: 'b4', emoji: '🌱', label: 'Calm & steady', detail: 'Completed five regulation breaks' },
-]
+const mockBadges: Array<{ id: string; emoji: string; label: string; detail: string }> = []
 
-const packageProgress = [
-  { name: 'Life Skills', value: 82, color: '#1D9E75' },
-  { name: 'Self Care', value: 68, color: '#378ADD' },
-  { name: 'Functional Academics', value: 61, color: '#534AB7' },
-  { name: 'Pre-Vocational', value: 47, color: '#EF9F27' },
-]
+const packageProgress: Array<{ name: string; value: number; color: string }> = []
 
-const recentSessions = [
-  { title: 'Packing My School Bag', date: 'August 25', duration: '31 min', focus: 78, state: 'focused' as const },
-  { title: 'Four-count Breathing', date: 'August 22', duration: '18 min', focus: 72, state: 'relaxed' as const },
-  { title: 'Reading a Bus Schedule', date: 'August 19', duration: '28 min', focus: 69, state: 'distracted' as const },
-]
+const recentSessions: Array<{ title: string; date: string; duration: string; focus: number; state: 'focused' | 'relaxed' | 'distracted' | 'overstimulated' }> = []
 
 function getFocusDescription(score: number) {
   if (score >= 80) return 'Excellent focus'
@@ -57,7 +43,7 @@ function getFocusEmoji(score: number) {
 
 export default function Profile() {
   const navigate = useNavigate()
-  const student = mockStudent
+  const student = useAuthStore((state) => state.user)!
 
   return (
     <PlayfulZoneTemplate>
@@ -68,7 +54,7 @@ export default function Profile() {
             <div>
               <span className={styles.eyebrow}>Student profile</span>
               <h1 className={styles.name}>{student.name}</h1>
-              <p className={styles.profileMeta}>Independent Living Skills · Student ID CTX-001</p>
+              <p className={styles.profileMeta}>Student ID {student.id}</p>
             </div>
           </div>
           <button className={styles.editBtn} onClick={() => navigate('/student/settings')}>

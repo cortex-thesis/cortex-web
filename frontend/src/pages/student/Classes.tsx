@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Search } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
@@ -6,7 +6,7 @@ import { ClassTile } from '../../components/molecules'
 import { CURRICULUM_PACKAGES } from '../../constants/states'
 import type { CurriculumPackage } from '../../constants/states'
 import { PACKAGE_META } from '../../constants/packages'
-import { mockStudent, mockClasses } from '../../mocks'
+import { classPresentation, getStudentClasses } from '../../lib/studentApi'
 import styles from './Classes.module.css'
 
 type PackageFilter = 'all' | CurriculumPackage
@@ -16,7 +16,8 @@ export default function Classes() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<PackageFilter>('all')
 
-  const classes = mockClasses.filter((c) => mockStudent.classIds.includes(c.id))
+  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>([])
+  useEffect(() => { void getStudentClasses().then((data) => setClasses(data.classes.map(classPresentation))) }, [])
 
   const filtered = classes.filter((c) => {
     const matchesFilter = filter === 'all' || c.package === filter

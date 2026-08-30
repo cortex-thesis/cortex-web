@@ -4,15 +4,14 @@ import { Lock, Mail, ShieldCheck } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../components/templates'
 import { Button, Logo } from '../components/atoms'
 import { InputField } from '../components/molecules'
+import { useAuthStore } from '../store/authStore'
 import styles from './student/Login.module.css'
 
-type AccountRole = 'student' | 'teacher' | 'admin'
-
-const DEMO_ACCOUNTS: Record<string, AccountRole> = {
-  'student@cortex.edu': 'student',
-  'teacher@cortex.edu': 'teacher',
-  'admin@cortex.edu': 'admin',
-}
+const TEST_ACCOUNTS = [
+  { label: 'Administrator', email: 'super@cortex.edu', password: 'superusertest' },
+  { label: 'Student', email: 'student@cortex.edu', password: 'studenttest' },
+  { label: 'Teacher', email: 'teacher@cortex.edu', password: 'teachertest' },
+]
 
 export default function UnifiedLogin() {
   const navigate = useNavigate()
@@ -20,26 +19,21 @@ export default function UnifiedLogin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const login = useAuthStore((state) => state.login)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setError('')
 
-    const role = DEMO_ACCOUNTS[email.trim().toLowerCase()]
-    if (!role || password !== 'password123') {
-      setError('Invalid account. Use one of the prototype accounts below.')
-      return
-    }
-
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 450))
-    navigate('/welcome', { replace: true, state: { role } })
-  }
-
-  function selectAccount(accountEmail: string) {
-    setEmail(accountEmail)
-    setPassword('password123')
-    setError('')
+    try {
+      const user = await login({ email: email.trim(), password })
+      navigate('/welcome', { replace: true, state: { role: user.role } })
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : 'Unable to sign in.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -100,25 +94,27 @@ export default function UnifiedLogin() {
           </form>
 
           <div className={styles.divider}>
-            <span>prototype accounts</span>
+            <span>test accounts</span>
           </div>
 
           <div className={styles.form}>
-            {Object.keys(DEMO_ACCOUNTS).map((accountEmail) => (
+            {TEST_ACCOUNTS.map((account) => (
               <button
-                key={accountEmail}
+                key={account.email}
                 type="button"
                 className={styles.joinLink}
-                onClick={() => selectAccount(accountEmail)}
+                onClick={() => {
+                  setEmail(account.email)
+                  setPassword(account.password)
+                  setError('')
+                }}
               >
-                <ShieldCheck size={12} /> {accountEmail}
+                <ShieldCheck size={12} />
+                {account.label}: {account.email} / {account.password}
               </button>
             ))}
           </div>
 
-          <p className={styles.subtitle}>
-            All prototype accounts use <strong>password123</strong>
-          </p>
         </div>
       </div>
     </PlayfulZoneTemplate>

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Bell, Volume2, Vibrate, LogOut } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { Button } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
+import { api } from '../../lib/api'
 import styles from './Settings.module.css'
 
 interface ToggleRowProps {
@@ -54,9 +55,21 @@ export default function Settings() {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [hapticsEnabled, setHapticsEnabled] = useState(false)
 
-  function handleLogout() {
-    logout()
-    navigate('/student/login')
+  useEffect(() => {
+    void api<{ notifications_enabled: boolean; sound_enabled: boolean; haptics_enabled: boolean }>('/student/preferences/').then((data) => {
+      setNotifsEnabled(data.notifications_enabled)
+      setSoundEnabled(data.sound_enabled)
+      setHapticsEnabled(data.haptics_enabled)
+    })
+  }, [])
+
+  function updatePreference(field: string, value: boolean) {
+    void api('/student/preferences/', { method: 'PATCH', body: JSON.stringify({ [field]: value }) })
+  }
+
+  async function handleLogout() {
+    await logout()
+    navigate('/')
   }
 
   return (
@@ -82,7 +95,7 @@ export default function Settings() {
             label="Notifications"
             sub="Class updates, streaks, and badges"
             checked={notifsEnabled}
-            onChange={setNotifsEnabled}
+            onChange={(value) => { setNotifsEnabled(value); updatePreference('notifications_enabled', value) }}
           />
           <div className={styles.divider} />
           <ToggleRow
@@ -91,7 +104,7 @@ export default function Settings() {
             label="Sound"
             sub="Task and alert sounds during sessions"
             checked={soundEnabled}
-            onChange={setSoundEnabled}
+            onChange={(value) => { setSoundEnabled(value); updatePreference('sound_enabled', value) }}
           />
           <div className={styles.divider} />
           <ToggleRow
@@ -100,7 +113,7 @@ export default function Settings() {
             label="Vibration"
             sub="Gentle buzz for re-engagement prompts"
             checked={hapticsEnabled}
-            onChange={setHapticsEnabled}
+            onChange={(value) => { setHapticsEnabled(value); updatePreference('haptics_enabled', value) }}
           />
         </div>
 

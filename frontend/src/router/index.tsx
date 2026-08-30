@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import ProtectedRoute from './ProtectedRoute'
 
 import Splash from '../pages/student/Splash'
 import UnifiedLogin from '../pages/Login'
@@ -45,6 +46,7 @@ export default function AppRouter() {
       <Route path="/" element={<UnifiedLogin />} />
       <Route path="/welcome" element={<Splash />} />
       <Route path="/student/login" element={<Navigate to="/" replace />} />
+      <Route element={<ProtectedRoute roles={['student']} />}>
       <Route path="/student/home" element={<Home />} />
       <Route path="/student/join-class" element={<JoinClass />} />
       <Route path="/student/eeg-pairing" element={<EEGPairing />} />
@@ -70,6 +72,7 @@ export default function AppRouter() {
       <Route path="/student/hardware-required" element={<HardwareRequired />} />
       <Route path="/student/journal/draw" element={<DrawingJournal />} />
       <Route path="/student/journal/audio" element={<AudioJournal />} />
+      </Route>
 
       {/* Teacher */}
       <Route path="/teacher/dashboard" element={<Dashboard />} />
