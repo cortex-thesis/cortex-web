@@ -13,7 +13,6 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { label: 'Dashboard', path: '/teacher/dashboard' },
   { label: 'Classes', path: '/teacher/classes' },
-  { label: 'Content', path: '/teacher/content' },
   { label: 'Journals', path: '/teacher/journals' },
   { label: 'Reports', path: '/teacher/reports' },
 ]

@@ -63,8 +63,10 @@ elif DATABASE_URL and not TEMPLATE_ONLY:
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
-            conn_max_age=0,
-            conn_health_checks=True,
+            # Reuse the Supabase pooler connection instead of paying for a
+            # new TCP/TLS/PostgreSQL handshake on every API request.
+            conn_max_age=int(os.environ.get("DATABASE_CONN_MAX_AGE", "120")),
+            conn_health_checks=os.environ.get("DATABASE_CONN_HEALTH_CHECKS", "false").lower() == "true",
             ssl_require=True,
         )
     }
@@ -102,6 +104,7 @@ if not DEBUG:
     ]
 
 SESSION_COOKIE_HTTPONLY = True
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
