@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     ActivityResponse, AdaptationEvent, AdaptationRule, Alert, AuditLog,
-    CalibrationProfile, ClassSession, ConsentRecord, DataLifecycleRequest,
+    CalibrationProfile, ClassPackage, ClassSession, ConsentRecord, DataLifecycleRequest,
     EEGConnection, EEGDevice, EEGEpoch, EEGFeature, EEGRecording, Enrollment,
     JournalEntry, LearningSession, ManualOverride, ModelVersion, Profile,
     School, SchoolClass, SessionAnalytics, StatePrediction,
@@ -52,4 +52,5 @@ admin.site.register([
     EEGRecording, EEGEpoch, EEGFeature, ModelVersion, StatePrediction,
     AdaptationRule, AdaptationEvent, ManualOverride, SessionAnalytics, Alert,
     ActivityResponse, JournalEntry, DataLifecycleRequest,
+    ClassPackage,
 ])

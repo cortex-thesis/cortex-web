@@ -6,6 +6,7 @@ import UnifiedLogin from '../pages/Login'
 import Home from '../pages/student/Home'
 import JoinClass from '../pages/student/JoinClass'
 import EEGPairing from '../pages/student/EEGPairing'
+import LiveEEG from '../pages/student/LiveEEG'
 import ModeSelect from '../pages/student/ModeSelect'
 import { FocusMode } from '../pages/student/FocusMode'
 import RelaxMode from '../pages/student/RelaxMode'
@@ -17,6 +18,7 @@ import Settings from '../pages/student/Settings'
 import Profile from '../pages/student/Profile'
 import Classes from '../pages/student/Classes'
 import ClassDetail from '../pages/student/ClassDetail'
+import ClassPackageLessons from '../pages/student/ClassPackageLessons'
 import StudentSessions from '../pages/student/Sessions'
 import FreeLessonSelect from '../pages/student/FreeLessonSelect'
 
@@ -50,6 +52,7 @@ export default function AppRouter() {
       <Route path="/student/home" element={<Home />} />
       <Route path="/student/join-class" element={<JoinClass />} />
       <Route path="/student/eeg-pairing" element={<EEGPairing />} />
+      <Route path="/student/eeg-live" element={<LiveEEG />} />
       <Route path="/student/mode-select" element={<ModeSelect />} />
       <Route path="/student/free-lesson-select" element={<FreeLessonSelect />} />
       <Route path="/student/focus" element={<FocusMode />} />
@@ -63,6 +66,7 @@ export default function AppRouter() {
       <Route path="/student/classes" element={<Classes />} />
       <Route path="/student/sessions" element={<StudentSessions />} />
       <Route path="/student/class/:classId" element={<ClassDetail />} />
+      <Route path="/student/class/:classId/package/:packageSlug" element={<ClassPackageLessons />} />
       <Route path="/student/register" element={<StudentRegistration />} />
       <Route path="/student/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

@@ -2,13 +2,28 @@ import { create } from 'zustand'
 import type { User } from '../types'
 import { api, primeApiCache } from '../lib/api'
 import type { TeacherDashboardData } from '../lib/teacherApi'
+import type { DashboardData, StudentLesson } from '../lib/studentApi'
+import type { CurriculumPackage } from '../constants/states'
 
 interface LoginCredentials {
   email: string
   password: string
 }
 
-type AuthUser = Omit<User, 'classIds'> & { pseudonym: string; student_number?: string; dashboard?: TeacherDashboardData }
+interface StudentBootstrapData {
+  dashboard: DashboardData
+  lessons_by_package: Partial<Record<CurriculumPackage, StudentLesson[]>>
+  notifications: { notifications: unknown[] }
+  preferences: { notifications_enabled: boolean; sound_enabled: boolean; haptics_enabled: boolean }
+  profile: Record<string, unknown>
+}
+
+type AuthUser = Omit<User, 'classIds'> & {
+  pseudonym: string
+  student_number?: string
+  dashboard?: TeacherDashboardData
+  student_bootstrap?: StudentBootstrapData
+}
 const AUTH_CACHE_KEY = 'cortex-auth-user'
 
 interface AuthState {
@@ -26,6 +41,7 @@ interface AuthState {
 function normalizeUser(user: AuthUser): User {
   const identity = { ...user }
   delete identity.dashboard
+  delete identity.student_bootstrap
   return { ...identity, id: String(user.id), avatar: user.avatar ?? null, classIds: [] }
 }
 
@@ -36,6 +52,24 @@ function storedUser(): User | null {
 function storeUser(user: User | null) {
   if (user) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(user))
   else localStorage.removeItem(AUTH_CACHE_KEY)
+}
+
+function primeStudentBootstrap(bootstrap: StudentBootstrapData) {
+  primeApiCache('/student/dashboard/', bootstrap.dashboard)
+  primeApiCache('/classes/', { classes: bootstrap.dashboard.classes })
+  primeApiCache('/student/notifications/', bootstrap.notifications)
+  primeApiCache('/student/preferences/', bootstrap.preferences)
+  primeApiCache('/student/profile/', bootstrap.profile)
+  for (const classItem of bootstrap.dashboard.classes) {
+    primeApiCache(`/classes/${classItem.id}/`, classItem)
+    for (const packageItem of classItem.packages) {
+      primeApiCache(`/student/classes/${classItem.id}/packages/${packageItem.slug}/`, {
+        class: classItem,
+        package: packageItem,
+        lessons: bootstrap.lessons_by_package[packageItem.slug] ?? [],
+      })
+    }
+  }
 }
 
 const initialUser = storedUser()
@@ -50,6 +84,11 @@ export const useAuthStore = create<AuthState>()((set) => ({
   initialize: async () => {
     try {
       const [, authUser] = await Promise.all([api('/auth/csrf/'), api<AuthUser>('/auth/me/')])
+      if (authUser.student_bootstrap) primeStudentBootstrap(authUser.student_bootstrap)
+      if (authUser.dashboard) {
+        primeApiCache('/teacher/dashboard/', authUser.dashboard)
+        primeApiCache('/classes/', { classes: authUser.dashboard.classes })
+      }
       const user = normalizeUser(authUser)
       storeUser(user)
       set({ user, isAuthenticated: true, isInitialized: true })
@@ -81,6 +120,9 @@ export const useAuthStore = create<AuthState>()((set) => ({
           api('/teacher/students/'),
           ...classRequests,
         ])
+      }
+      if (response.student_bootstrap) {
+        primeStudentBootstrap(response.student_bootstrap)
       }
       const user = normalizeUser(response)
       storeUser(user)
