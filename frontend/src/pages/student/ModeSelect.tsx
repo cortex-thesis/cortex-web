@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { CalmZoneTemplate } from '../../components/templates'
 import styles from './ModeSelect.module.css'
@@ -41,17 +41,13 @@ const MODES: ModeOption[] = [
 
 export default function ModeSelect() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [selected, setSelected] = useState<SessionMode>('teacher')
 
   function handleStart() {
-    if (selected === 'free') {
-      navigate('/student/free-lesson-select')
-      return
-    }
-
-    navigate('/student/focus', {
+    navigate('/student/eeg-live', {
       replace: true,
-      state: { mode: selected },
+      state: { ...(location.state as object | null), mode: selected },
     })
   }
 

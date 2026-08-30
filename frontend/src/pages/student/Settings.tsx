@@ -4,7 +4,7 @@ import { ChevronLeft, Bell, Volume2, Vibrate, LogOut } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { Button } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
-import { api } from '../../lib/api'
+import { api, cachedApiValue } from '../../lib/api'
 import styles from './Settings.module.css'
 
 interface ToggleRowProps {
@@ -50,10 +50,11 @@ function ToggleRow({
 export default function Settings() {
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
+  const cachedPreferences = cachedApiValue<{ notifications_enabled: boolean; sound_enabled: boolean; haptics_enabled: boolean }>('/student/preferences/')
 
-  const [notifsEnabled, setNotifsEnabled] = useState(true)
-  const [soundEnabled, setSoundEnabled] = useState(true)
-  const [hapticsEnabled, setHapticsEnabled] = useState(false)
+  const [notifsEnabled, setNotifsEnabled] = useState(cachedPreferences?.notifications_enabled ?? true)
+  const [soundEnabled, setSoundEnabled] = useState(cachedPreferences?.sound_enabled ?? true)
+  const [hapticsEnabled, setHapticsEnabled] = useState(cachedPreferences?.haptics_enabled ?? false)
 
   useEffect(() => {
     void api<{ notifications_enabled: boolean; sound_enabled: boolean; haptics_enabled: boolean }>('/student/preferences/').then((data) => {

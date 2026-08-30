@@ -34,6 +34,17 @@
   color: var(--color-text-primary);
 }
 
+.battery { margin-left: auto; color: var(--color-teal); font-size: 12px; font-weight: 600; }
+.sensorCheck { position: relative; width: 330px; height: 190px; display: grid; place-items: center; }
+.headbandArc { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 20px; border: 2px solid var(--color-interface-purple); border-bottom: 0; border-radius: 150px 150px 30px 30px; background: color-mix(in srgb, var(--color-interface-purple) 7%, white); }
+.sensor { min-height: 82px; padding: 12px 5px; border-radius: 42px 42px 14px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--color-surface-1); border: 2px solid var(--color-border); color: var(--color-text-muted); }
+.sensor span { font-size: 12px; font-weight: 700; }
+.sensor small { font-size: 9px; }
+.sensorFair { border-color: var(--color-coral); background: var(--color-cream); color: var(--color-coral); }
+.sensorGood { border-color: var(--state-focused); background: var(--state-focused-fill); color: var(--state-focused-text); }
+.centerStatus { position: absolute; bottom: 0; width: 74px; height: 74px; display: grid; place-items: center; border-radius: 50%; background: var(--color-deep-purple); color: var(--state-focused); border: 3px solid white; }
+.compatibility { max-width: 520px; color: var(--color-text-muted); font-size: 10px; line-height: 1.5; text-align: center; }
+
 .content {
   flex: 1;
   display: flex;

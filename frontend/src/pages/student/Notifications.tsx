@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Trophy, BookOpen, Users, Bell, CheckCheck } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
-import { api } from '../../lib/api'
+import { api, cachedApiValue } from '../../lib/api'
 import styles from './Notifications.module.css'
 
 type NotificationKind = 'achievement' | 'journal' | 'class' | 'system'
@@ -18,7 +18,7 @@ function timeAgo(iso: string): string {
 }
 
 export default function Notifications() {
-  const navigate = useNavigate(); const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const navigate = useNavigate(); const [notifications, setNotifications] = useState<AppNotification[]>(() => cachedApiValue<{ notifications: AppNotification[] }>('/student/notifications/')?.notifications ?? [])
   useEffect(() => { void api<{ notifications: AppNotification[] }>('/student/notifications/').then((data) => setNotifications(data.notifications)) }, [])
   const unreadCount = notifications.filter((item) => !item.read).length
   function markAllRead() { setNotifications((items) => items.map((item) => ({ ...item, read: true }))); void api('/student/notifications/', { method: 'POST', body: '{}' }) }
