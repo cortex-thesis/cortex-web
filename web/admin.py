@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import AuditLog, ConsentRecord, Enrollment, LearningSession, Profile, SchoolClass
+from .models import (
+    ActivityResponse, AdaptationEvent, AdaptationRule, Alert, AuditLog,
+    CalibrationProfile, ClassSession, ConsentRecord, DataLifecycleRequest,
+    EEGConnection, EEGDevice, EEGEpoch, EEGFeature, EEGRecording, Enrollment,
+    JournalEntry, LearningSession, ManualOverride, ModelVersion, Profile,
+    School, SchoolClass, SessionAnalytics, StatePrediction,
+)
 
 
 @admin.register(Profile)
@@ -39,3 +45,11 @@ class AuditLogAdmin(admin.ModelAdmin):
     list_display = ("created_at", "action", "object_type", "object_id", "actor")
     list_filter = ("action", "object_type")
     readonly_fields = ("actor", "action", "object_type", "object_id", "metadata", "created_at")
+
+
+admin.site.register([
+    School, ClassSession, EEGDevice, CalibrationProfile, EEGConnection,
+    EEGRecording, EEGEpoch, EEGFeature, ModelVersion, StatePrediction,
+    AdaptationRule, AdaptationEvent, ManualOverride, SessionAnalytics, Alert,
+    ActivityResponse, JournalEntry, DataLifecycleRequest,
+])
