@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from .models import AuditLog, ContentAssignment, CurriculumPackage, Enrollment, Intervention, LearningSession, Profile, SchoolClass
+from .models import AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, Enrollment, Intervention, LearningSession, Notification, Profile, SchoolClass, UserPreference
 
 
 class WorkflowTests(TestCase):
@@ -32,6 +32,7 @@ class WorkflowTests(TestCase):
     def test_student_can_start_only_an_enrolled_session_and_owner_can_end(self):
         school_class = SchoolClass.objects.create(name="Life Skills", code="LIFE2", teacher=self.teacher)
         Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
+        ConsentRecord.objects.create(profile=self.student, consent_type="eeg_processing", version="1", granted=True)
         self._login(self.student)
         response = self.client.post("/api/sessions/start/", data=json.dumps({"class_id": school_class.pk}), content_type="application/json")
         self.assertEqual(response.status_code, 201)
@@ -40,6 +41,15 @@ class WorkflowTests(TestCase):
         self.assertNotEqual(response.json()["student_pseudonym"], str(self.student.pk))
         self.assertEqual(AuditLog.objects.filter(action="session_started").count(), 1)
         self.assertEqual(self.client.post(f"/api/sessions/{session.pk}/end/").status_code, 200)
+        session.refresh_from_db()
+        self.assertEqual(session.status, LearningSession.Status.COMPLETED)
+
+    def test_student_cannot_start_without_active_eeg_consent(self):
+        school_class = SchoolClass.objects.create(name="Consent class", code="CNSNT", teacher=self.teacher)
+        Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
+        self._login(self.student)
+        response = self.client.post("/api/sessions/start/", data=json.dumps({"class_id": school_class.pk}), content_type="application/json")
+        self.assertEqual(response.status_code, 403)
 
     def test_student_cannot_access_unenrolled_class(self):
         school_class = SchoolClass.objects.create(name="Private Class", code="PRIV1", teacher=self.teacher)
@@ -61,6 +71,31 @@ class WorkflowTests(TestCase):
         response = self.client.post("/api/auth/consent/", data=json.dumps({"consent_type": "eeg_processing", "version": "1", "granted": True}), content_type="application/json")
         self.assertEqual(response.status_code, 201)
         self.assertEqual(self.client.get("/api/auth/consent/").json()["consents"][0]["consent_type"], "eeg_processing")
+
+    def test_email_login_and_student_dashboard(self):
+        self.student.user.email = "student@example.test"
+        self.student.user.save(update_fields=["email"])
+        response = self.client.post("/api/auth/login/", data=json.dumps({"email": "student@example.test", "password": "a-very-long-test-password"}), content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        dashboard = self.client.get("/api/student/dashboard/")
+        self.assertEqual(dashboard.status_code, 200)
+        self.assertEqual(dashboard.json()["student"]["name"], "Student")
+        self.assertIsNone(dashboard.json()["active_session"])
+
+    def test_student_joins_class_and_receives_notification(self):
+        package = CurriculumPackage.objects.create(slug="life", name="Life")
+        school_class = SchoolClass.objects.create(name="Joinable", code="JOIN1", teacher=self.teacher, package=package)
+        self._login(self.student)
+        response = self.client.post("/api/student/classes/join/", data=json.dumps({"code": "join1"}), content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Enrollment.objects.filter(school_class=school_class, student=self.student, removed_at__isnull=True).exists())
+        self.assertTrue(Notification.objects.filter(recipient=self.student, kind=Notification.Kind.CLASS).exists())
+
+    def test_student_preferences_are_persisted(self):
+        self._login(self.student)
+        response = self.client.patch("/api/student/preferences/", data=json.dumps({"sound_enabled": False}), content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(UserPreference.objects.get(profile=self.student).sound_enabled)
 
     def test_content_repository_covers_packages_slides_upload_archive_and_assignment(self):
         school_class = SchoolClass.objects.create(name="Transition", code="CONT1", teacher=self.teacher)

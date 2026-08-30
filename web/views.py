@@ -11,10 +11,12 @@ from django.http import FileResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import (
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
-    Enrollment, Intervention, InterventionAlert, LearningSession, Lesson, Profile, SchoolClass, Slide,
+    Enrollment, Intervention, InterventionAlert, LearningSession, Lesson,
+    Notification, Profile, SchoolClass, Slide, UserPreference,
 )
 
 PACKAGE_NAMES = {
@@ -30,6 +32,12 @@ def health(request):
     return JsonResponse({"status": "ok", "service": "cortex"})
 
 
+@ensure_csrf_cookie
+def csrf_cookie(request):
+    return JsonResponse({"status": "ok"})
+
+
+@ensure_csrf_cookie
 def frontend(request):
     """Render the React shell; React Router handles the existing client routes."""
     manifest_path = settings.BASE_DIR / "frontend_dist" / ".vite" / "manifest.json"
@@ -73,11 +81,24 @@ def _audit(actor, action, obj, metadata=None):
 
 
 def _profile_data(profile):
-    return {"id": profile.pk, "name": profile.display_name, "role": profile.role, "pseudonym": str(profile.pseudonym)}
+    return {
+        "id": profile.pk, "name": profile.display_name, "role": profile.role,
+        "pseudonym": str(profile.pseudonym), "avatar": None,
+        "student_number": profile.student_number,
+        "school": profile.school.name if profile.school_id else None,
+    }
 
 
 def _class_data(school_class, include_students=False):
-    data = {"id": school_class.pk, "name": school_class.name, "code": school_class.code, "teacher": _profile_data(school_class.teacher)}
+    package = school_class.package
+    if package is None:
+        package = CurriculumPackage.objects.filter(lessons__assignments__school_class=school_class).first()
+    data = {
+        "id": school_class.pk, "name": school_class.name, "code": school_class.code,
+        "description": school_class.description, "school_year": school_class.school_year,
+        "package": package.slug if package else "life",
+        "teacher": _profile_data(school_class.teacher),
+    }
     if include_students:
         data["students"] = [_profile_data(item.student) for item in school_class.enrollments.filter(removed_at__isnull=True).select_related("student")]
     return data
@@ -141,6 +162,8 @@ def content_lesson_detail(request, lesson_id):
     if error:
         return error
     lesson = get_object_or_404(Lesson, pk=lesson_id)
+    if profile.role == Profile.Role.TEACHER and lesson.created_by_id != profile.id:
+        return JsonResponse({"detail": "You do not own this lesson."}, status=403)
     if request.method == "DELETE":
         lesson.archived_at = timezone.now()
         lesson.save(update_fields=["archived_at"])
@@ -179,6 +202,8 @@ def content_asset_detail(request, asset_id):
     if error:
         return error
     asset = get_object_or_404(Asset, pk=asset_id)
+    if profile.role == Profile.Role.TEACHER and asset.uploaded_by_id != profile.id:
+        return JsonResponse({"detail": "You do not own this asset."}, status=403)
     if request.method == "PUT":
         try:
             data = _body(request)
@@ -213,6 +238,8 @@ def content_slide(request, lesson_id):
     if error:
         return error
     lesson = get_object_or_404(Lesson, pk=lesson_id, archived_at__isnull=True)
+    if profile.role == Profile.Role.TEACHER and lesson.created_by_id != profile.id:
+        return JsonResponse({"detail": "You do not own this lesson."}, status=403)
     try:
         data = _body(request)
         activity = Activity.objects.create(type=str(data["type"]), title=str(data.get("title", "Activity")), configuration=data.get("configuration", {}), asset_id=data.get("asset_id"))
@@ -230,6 +257,8 @@ def content_assignment(request, lesson_id):
     if error:
         return error
     lesson = get_object_or_404(Lesson, pk=lesson_id, archived_at__isnull=True)
+    if profile.role == Profile.Role.TEACHER and lesson.created_by_id != profile.id:
+        return JsonResponse({"detail": "You do not own this lesson."}, status=403)
     try:
         data = _body(request)
         school_class = SchoolClass.objects.get(pk=data["class_id"], teacher=profile) if profile.role == Profile.Role.TEACHER else SchoolClass.objects.get(pk=data["class_id"])
@@ -268,7 +297,13 @@ def register(request):
 def login_view(request):
     try:
         data = _body(request)
-        user = authenticate(request, username=data.get("username", ""), password=data.get("password", ""))
+        identifier = str(data.get("username") or data.get("email") or "").strip()
+        username = identifier
+        if "@" in identifier:
+            matched = User.objects.filter(email__iexact=identifier).only("username").first()
+            if matched:
+                username = matched.username
+        user = authenticate(request, username=username, password=data.get("password", ""))
     except ValueError:
         return JsonResponse({"detail": "Request body must be valid JSON."}, status=400)
     if user is None or not hasattr(user, "profile"):
@@ -290,6 +325,133 @@ def logout_view(request):
 def me(request):
     profile, error = _require_profile(request)
     return error or JsonResponse(_profile_data(profile))
+
+
+@require_http_methods(["GET", "PATCH"])
+def student_profile(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    if request.method == "PATCH":
+        try:
+            data = _body(request)
+            name = str(data.get("name", profile.display_name)).strip()
+            if not name:
+                raise ValueError
+            profile.display_name = name
+            profile.guardian_name = str(data.get("guardian_name", profile.guardian_name)).strip()
+            profile.guardian_contact = str(data.get("guardian_contact", profile.guardian_contact)).strip()
+            profile.guardian_email = str(data.get("guardian_email", profile.guardian_email)).strip()
+            profile.save(update_fields=["display_name", "guardian_name", "guardian_contact", "guardian_email", "updated_at"])
+            _audit(profile, "profile_updated", profile)
+        except ValueError:
+            return JsonResponse({"detail": "Profile values are invalid."}, status=400)
+    data = _profile_data(profile)
+    data.update({
+        "guardian_name": profile.guardian_name,
+        "guardian_contact": profile.guardian_contact,
+        "guardian_email": profile.guardian_email,
+    })
+    return JsonResponse(data)
+
+
+@require_http_methods(["GET", "PATCH"])
+def student_preferences(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    preferences, _ = UserPreference.objects.get_or_create(profile=profile)
+    if request.method == "PATCH":
+        try:
+            data = _body(request)
+        except ValueError:
+            return JsonResponse({"detail": "Request body must be valid JSON."}, status=400)
+        for field in ("notifications_enabled", "sound_enabled", "haptics_enabled"):
+            if field in data:
+                if not isinstance(data[field], bool):
+                    return JsonResponse({"detail": f"{field} must be a boolean."}, status=400)
+                setattr(preferences, field, data[field])
+        preferences.save()
+    return JsonResponse({
+        "notifications_enabled": preferences.notifications_enabled,
+        "sound_enabled": preferences.sound_enabled,
+        "haptics_enabled": preferences.haptics_enabled,
+    })
+
+
+def student_dashboard(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    classes_qs = SchoolClass.objects.filter(
+        enrollments__student=profile, enrollments__removed_at__isnull=True,
+        status=SchoolClass.Status.ACTIVE,
+    ).select_related("teacher", "package").distinct()
+    return JsonResponse({
+        "student": _profile_data(profile),
+        "classes": [_class_data(item) for item in classes_qs],
+        "unread_notifications": profile.notifications.filter(read_at__isnull=True).count(),
+        "active_session": None,
+    })
+
+
+@require_POST
+def join_class(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    try:
+        code = str(_body(request)["code"]).strip().upper()
+    except (KeyError, ValueError):
+        return JsonResponse({"detail": "A class code is required."}, status=400)
+    try:
+        school_class = SchoolClass.objects.select_related("teacher", "package").get(code__iexact=code, status=SchoolClass.Status.ACTIVE)
+    except SchoolClass.DoesNotExist:
+        return JsonResponse({"detail": "Class code not found. Please check with your teacher."}, status=404)
+    if profile.school_id and school_class.school_id and profile.school_id != school_class.school_id:
+        return JsonResponse({"detail": "This class belongs to another school."}, status=403)
+    enrollment, created = Enrollment.objects.get_or_create(
+        school_class=school_class, student=profile,
+        defaults={"enrolled_by": profile},
+    )
+    if not created and enrollment.removed_at is None:
+        return JsonResponse({"detail": "You already joined this class.", "class": _class_data(school_class)}, status=409)
+    enrollment.removed_at = None
+    enrollment.enrolled_by = profile
+    enrollment.save(update_fields=["removed_at", "enrolled_by"])
+    Notification.objects.create(
+        recipient=profile, kind=Notification.Kind.CLASS,
+        title=f"Joined {school_class.name}",
+        body=f"{school_class.teacher.display_name} is your teacher for this class.",
+        link=f"/student/class/{school_class.pk}",
+    )
+    _audit(profile, "class_joined", enrollment, {"class_id": school_class.pk})
+    return JsonResponse({"class": _class_data(school_class)}, status=201)
+
+
+@require_http_methods(["GET", "POST"])
+def student_notifications(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    if request.method == "POST":
+        try:
+            data = _body(request)
+        except ValueError:
+            return JsonResponse({"detail": "Request body must be valid JSON."}, status=400)
+        queryset = profile.notifications.filter(read_at__isnull=True)
+        notification_id = data.get("notification_id")
+        if notification_id:
+            queryset = queryset.filter(pk=notification_id)
+        queryset.update(read_at=timezone.now())
+    items = profile.notifications.all()[:100]
+    return JsonResponse({"notifications": [{
+        "id": str(item.id), "kind": item.kind, "title": item.title,
+        "body": item.body, "link": item.link, "createdAt": item.created_at,
+        "read": item.read_at is not None,
+    } for item in items]})
 
 
 @require_http_methods(["GET", "POST"])
@@ -325,7 +487,18 @@ def class_detail(request, class_id):
         return JsonResponse({"detail": "You are not enrolled in this class."}, status=403)
     if profile.role == Profile.Role.TEACHER and school_class.teacher_id != profile.id:
         return JsonResponse({"detail": "You do not teach this class."}, status=403)
-    return JsonResponse(_class_data(school_class, include_students=profile.role != Profile.Role.STUDENT))
+    data = _class_data(school_class, include_students=profile.role != Profile.Role.STUDENT)
+    if profile.role == Profile.Role.STUDENT:
+        lessons = Lesson.objects.filter(archived_at__isnull=True).filter(
+            Q(assignments__school_class=school_class, assignments__student__isnull=True) |
+            Q(assignments__school_class=school_class, assignments__student=profile)
+        ).select_related("package").prefetch_related("slides__activity").distinct()
+        data["lessons"] = [_lesson_data(lesson) for lesson in lessons]
+        data["activities"] = [{
+            "id": str(slide.activity_id), "title": slide.title,
+            "lesson_id": slide.lesson_id, "done": False,
+        } for lesson in lessons for slide in lesson.slides.all()]
+    return JsonResponse(data)
 
 
 @require_POST
@@ -376,7 +549,13 @@ def start_session(request):
         return JsonResponse({"detail": "A valid class_id is required."}, status=400)
     if not Enrollment.objects.filter(school_class=school_class, student=profile, removed_at__isnull=True).exists():
         return JsonResponse({"detail": "You are not enrolled in this class."}, status=403)
-    session = LearningSession.objects.create(school_class=school_class, student=profile)
+    latest_consent = profile.consents.filter(consent_type="eeg_processing").order_by("-recorded_at").first()
+    if not latest_consent or not latest_consent.granted or latest_consent.withdrawn_at or (latest_consent.expires_at and latest_consent.expires_at <= timezone.now()):
+        return JsonResponse({"detail": "Active EEG-processing consent is required before starting a session."}, status=403)
+    try:
+        session = LearningSession.objects.create(school_class=school_class, student=profile)
+    except IntegrityError:
+        return JsonResponse({"detail": "This student already has an active session."}, status=409)
     _audit(profile, "session_started", session, {"student_pseudonym": str(profile.pseudonym)})
     return JsonResponse({"id": str(session.id), "class_id": school_class.pk, "student_pseudonym": str(profile.pseudonym), "started_at": session.started_at}, status=201)
 
@@ -392,7 +571,8 @@ def end_session(request, session_id):
     if profile.role == Profile.Role.TEACHER and session.school_class.teacher_id != profile.id:
         return JsonResponse({"detail": "You do not teach this class."}, status=403)
     session.ended_at = timezone.now()
-    session.save(update_fields=["ended_at"])
+    session.status = LearningSession.Status.COMPLETED
+    session.save(update_fields=["ended_at", "status"])
     _audit(profile, "session_ended", session)
     return JsonResponse({"id": str(session.id), "ended_at": session.ended_at})
 
