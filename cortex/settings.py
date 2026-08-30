@@ -55,18 +55,11 @@ WSGI_APPLICATION = "cortex.wsgi.application"
 ASGI_APPLICATION = "cortex.asgi.application"
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
-TEMPLATE_ONLY = os.environ.get("CORTEX_TEMPLATE_ONLY", "true").lower() == "true"
+TEMPLATE_ONLY = os.environ.get("CORTEX_TEMPLATE_ONLY", "false").lower() == "true"
 
-if TEMPLATE_ONLY:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            # Keep local migration state between management commands and
-            # across the development server's auto-reloads.
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-elif DATABASE_URL:
+if "test" in sys.argv:
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}}
+elif DATABASE_URL and not TEMPLATE_ONLY:
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -80,8 +73,19 @@ elif DATABASE_URL:
         "prepare_threshold": None,
         "connect_timeout": 10,
     })
+elif TEMPLATE_ONLY:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            # Keep local migration state between management commands and
+            # across the development server's auto-reloads.
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 else:
     # Local development fallback when no hosted database is configured.
+    if not DEBUG:
+        raise RuntimeError("DATABASE_URL must be set to the Supabase PostgreSQL connection string in production.")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -123,4 +127,28 @@ STATICFILES_DIRS = [BASE_DIR / "frontend_dist"] if (BASE_DIR / "frontend_dist").
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+SUPABASE_STORAGE_ENDPOINT = os.environ.get("SUPABASE_STORAGE_ENDPOINT")
+if SUPABASE_STORAGE_ENDPOINT and "test" not in sys.argv:
+    storage_access_key = os.environ.get("SUPABASE_STORAGE_ACCESS_KEY")
+    storage_secret_key = os.environ.get("SUPABASE_STORAGE_SECRET_KEY")
+    storage_bucket = os.environ.get("SUPABASE_STORAGE_BUCKET", "private-content")
+    if not storage_access_key or not storage_secret_key:
+        raise RuntimeError("Supabase Storage access and secret keys are required when SUPABASE_STORAGE_ENDPOINT is set.")
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "access_key": storage_access_key,
+                "secret_key": storage_secret_key,
+                "bucket_name": storage_bucket,
+                "endpoint_url": SUPABASE_STORAGE_ENDPOINT,
+                "region_name": os.environ.get("SUPABASE_STORAGE_REGION"),
+                "default_acl": None,
+                "querystring_auth": True,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
