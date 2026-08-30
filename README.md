@@ -28,8 +28,30 @@ For frontend/template-only development, add `CORTEX_TEMPLATE_ONLY=true` to
 `.env`. Django will use a local `db.sqlite3` database instead of connecting to
 Supabase, so migrations persist between management commands and server reloads.
 
-Template-only mode is the default. When the real backend is ready, set
-`CORTEX_TEMPLATE_ONLY=false` to enable the configured Supabase connection.
+Supabase mode is the default whenever `DATABASE_URL` is configured. Set
+`CORTEX_TEMPLATE_ONLY=true` only when you deliberately want the local SQLite
+fallback. Production refuses to start without `DATABASE_URL`.
+
+Apply the complete Cortex schema to Supabase with:
+
+```powershell
+Copy-Item .env.example .env
+# Replace DATABASE_URL with the Supabase transaction-pooler connection string.
+python manage.py migrate
+python manage.py check --database default
+```
+
+The Django migrations are the schema source of truth. Supabase stores accounts,
+schools, curriculum content, sessions, consent history, EEG metadata and
+features, model versions, predictions, adaptations, analytics, journals,
+assessments, alerts, audit history, and privacy lifecycle requests. Uploaded
+binary content and EEG files should use private Supabase Storage buckets; only
+their private storage paths and checksums belong in PostgreSQL.
+
+Supabase Storage is configured through its server-side S3-compatible endpoint.
+Enable that endpoint, create its access keys, create a private
+`private-content` bucket, and fill the `SUPABASE_STORAGE_*` variables in `.env`.
+Never expose those keys through `VITE_*` variables or browser code.
 
 Open `http://127.0.0.1:8000`. Django serves the existing React interface and
 keeps all client-side routes working. Backend routes live under `/api/`; the
