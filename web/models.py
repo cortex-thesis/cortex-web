@@ -61,7 +61,6 @@ class SchoolClass(models.Model):
         ARCHIVED = "archived", "Archived"
 
     school = models.ForeignKey(School, null=True, blank=True, on_delete=models.PROTECT, related_name="classes")
-    package = models.ForeignKey("CurriculumPackage", null=True, blank=True, on_delete=models.PROTECT, related_name="classes")
     name = models.CharField(max_length=160)
     code = models.CharField(max_length=12, unique=True)
     teacher = models.ForeignKey(

@@ -4,12 +4,13 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from .models import AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, Enrollment, Intervention, LearningSession, Notification, Profile, SchoolClass, UserPreference
+from .models import AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, Enrollment, Intervention, JournalEntry, LearningSession, Notification, Profile, SchoolClass, UserPreference
 
 
 class WorkflowTests(TestCase):
     def setUp(self):
         self.teacher = self._account("teacher", "Teacher", Profile.Role.TEACHER)
+        self.admin = self._account("admin", "Administrator", Profile.Role.ADMIN)
         self.student = self._account("student", "Student", Profile.Role.STUDENT)
         self.other_student = self._account("other", "Other Student", Profile.Role.STUDENT)
 
@@ -83,8 +84,8 @@ class WorkflowTests(TestCase):
         self.assertIsNone(dashboard.json()["active_session"])
 
     def test_student_joins_class_and_receives_notification(self):
-        package = CurriculumPackage.objects.create(slug="life", name="Life")
-        school_class = SchoolClass.objects.create(name="Joinable", code="JOIN1", teacher=self.teacher, package=package)
+        CurriculumPackage.objects.create(slug="life", name="Life")
+        school_class = SchoolClass.objects.create(name="Joinable", code="JOIN1", teacher=self.teacher)
         self._login(self.student)
         response = self.client.post("/api/student/classes/join/", data=json.dumps({"code": "join1"}), content_type="application/json")
         self.assertEqual(response.status_code, 201)
@@ -100,7 +101,7 @@ class WorkflowTests(TestCase):
     def test_content_repository_covers_packages_slides_upload_archive_and_assignment(self):
         school_class = SchoolClass.objects.create(name="Transition", code="CONT1", teacher=self.teacher)
         Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
-        self._login(self.teacher)
+        self._login(self.admin)
 
         packages = self.client.get("/api/content/packages/")
         self.assertEqual(packages.status_code, 200)
@@ -126,10 +127,44 @@ class WorkflowTests(TestCase):
         self.assertEqual(self.client.delete(f"/api/content/lessons/{lesson_id}/").status_code, 200)
 
     def test_content_upload_rejects_unsupported_type(self):
-        self._login(self.teacher)
+        self._login(self.admin)
         bad_file = SimpleUploadedFile("script.exe", b"not allowed", content_type="application/x-msdownload")
         response = self.client.post("/api/content/assets/upload/", data={"file": bad_file})
         self.assertEqual(response.status_code, 400)
+
+    def test_teacher_cannot_manage_content(self):
+        CurriculumPackage.objects.create(slug="life", name="Life")
+        self._login(self.teacher)
+        response = self.client.post(
+            "/api/content/lessons/",
+            data=json.dumps({"package": "life", "title": "Teacher content"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_every_class_exposes_all_global_packages(self):
+        for slug in ("care", "life", "pre_vocational", "livelihood", "functional_academics", "career", "enrichment"):
+            CurriculumPackage.objects.create(slug=slug, name=slug.replace("_", " ").title())
+        school_class = SchoolClass.objects.create(name="Section A", code="SECA", teacher=self.teacher)
+        self._login(self.teacher)
+        payload = self.client.get(f"/api/classes/{school_class.pk}/").json()
+        self.assertEqual(payload["package_count"], 7)
+        self.assertEqual(len(payload["packages"]), 7)
+
+    def test_teacher_journals_are_filtered_by_owned_class(self):
+        first_class = SchoolClass.objects.create(name="Section A", code="JRNA", teacher=self.teacher)
+        second_class = SchoolClass.objects.create(name="Section B", code="JRNB", teacher=self.teacher)
+        Enrollment.objects.create(school_class=first_class, student=self.student, enrolled_by=self.teacher)
+        Enrollment.objects.create(school_class=second_class, student=self.other_student, enrolled_by=self.teacher)
+        first_session = LearningSession.objects.create(school_class=first_class, student=self.student)
+        second_session = LearningSession.objects.create(school_class=second_class, student=self.other_student)
+        JournalEntry.objects.create(session=first_session, student=self.student, prompt="First", response_type="text", text_response="A", mood="Proud")
+        JournalEntry.objects.create(session=second_session, student=self.other_student, prompt="Second", response_type="text", text_response="B", mood="Happy")
+        self._login(self.teacher)
+        payload = self.client.get(f"/api/teacher/journals/?class_id={first_class.pk}").json()
+        self.assertEqual(payload["selected_class_id"], first_class.pk)
+        self.assertEqual(len(payload["entries"]), 1)
+        self.assertEqual(payload["entries"][0]["prompt"], "First")
 
     def test_teacher_intervention_is_delivered_acknowledged_and_audited(self):
         school_class = SchoolClass.objects.create(name="Live class", code="LIVE1", teacher=self.teacher)

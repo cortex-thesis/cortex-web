@@ -1,12 +1,16 @@
 import json
+import secrets
+import string
 from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
+from django.utils.crypto import constant_time_compare
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
-from django.db.models import F, Q
+from django.db.models import Count, F, Q
 from django.http import FileResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
@@ -15,7 +19,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import (
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
-    Enrollment, Intervention, InterventionAlert, LearningSession, Lesson,
+    Enrollment, Intervention, InterventionAlert, JournalEntry, LearningSession, Lesson,
     Notification, Profile, SchoolClass, Slide, UserPreference,
 )
 
@@ -64,7 +68,21 @@ def _body(request):
 
 
 def _profile(request):
-    return getattr(request.user, "profile", None) if request.user.is_authenticated else None
+    if hasattr(request, "_cortex_profile"):
+        return request._cortex_profile
+    user_id = request.session.get(SESSION_KEY)
+    if not user_id:
+        request._cortex_profile = None
+        return None
+    profile = Profile.objects.select_related("user", "school").filter(user_id=user_id).first()
+    session_hash = request.session.get(HASH_SESSION_KEY, "")
+    if profile is None or not session_hash or not constant_time_compare(session_hash, profile.user.get_session_auth_hash()):
+        request.session.flush()
+        request._cortex_profile = None
+        return None
+    request.user = profile.user
+    request._cortex_profile = profile
+    return profile
 
 
 def _require_profile(request, roles=None):
@@ -89,14 +107,19 @@ def _profile_data(profile):
     }
 
 
-def _class_data(school_class, include_students=False):
-    package = school_class.package
-    if package is None:
-        package = CurriculumPackage.objects.filter(lessons__assignments__school_class=school_class).first()
+def _class_data(school_class, include_students=False, packages=None):
+    if packages is None:
+        packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    student_count = getattr(school_class, "active_student_count", None)
+    if student_count is None:
+        student_count = school_class.enrollments.filter(removed_at__isnull=True).count()
     data = {
         "id": school_class.pk, "name": school_class.name, "code": school_class.code,
         "description": school_class.description, "school_year": school_class.school_year,
-        "package": package.slug if package else "life",
+        "status": school_class.status,
+        "packages": [{"id": item.pk, "slug": item.slug, "name": item.name} for item in packages],
+        "package_count": len(packages),
+        "student_count": student_count,
         "teacher": _profile_data(school_class.teacher),
     }
     if include_students:
@@ -111,8 +134,8 @@ def _lesson_data(lesson, include_slides=True):
     return data
 
 
-def _content_teacher(request):
-    return _require_profile(request, {Profile.Role.TEACHER, Profile.Role.ADMIN})
+def _content_admin(request):
+    return _require_profile(request, {Profile.Role.ADMIN})
 
 
 def content_packages(request):
@@ -137,11 +160,10 @@ def content_lessons(request):
         package = request.GET.get("package")
         if package:
             lessons = lessons.filter(package__slug=package)
-        if profile.role == Profile.Role.STUDENT:
-            lessons = lessons.filter(assignments__student=profile) | lessons.filter(assignments__school_class__enrollments__student=profile, assignments__school_class__enrollments__removed_at__isnull=True)
-            lessons = lessons.distinct()
+        if profile.role != Profile.Role.ADMIN:
+            lessons = lessons.filter(status=Lesson.Status.APPROVED)
         return JsonResponse({"lessons": [_lesson_data(lesson) for lesson in lessons]})
-    if profile.role not in {Profile.Role.TEACHER, Profile.Role.ADMIN}:
+    if profile.role != Profile.Role.ADMIN:
         return JsonResponse({"detail": "You do not have permission for this action."}, status=403)
     try:
         data = _body(request)
@@ -158,12 +180,10 @@ def content_lessons(request):
 
 @require_http_methods(["PUT", "DELETE"])
 def content_lesson_detail(request, lesson_id):
-    profile, error = _content_teacher(request)
+    profile, error = _content_admin(request)
     if error:
         return error
     lesson = get_object_or_404(Lesson, pk=lesson_id)
-    if profile.role == Profile.Role.TEACHER and lesson.created_by_id != profile.id:
-        return JsonResponse({"detail": "You do not own this lesson."}, status=403)
     if request.method == "DELETE":
         lesson.archived_at = timezone.now()
         lesson.save(update_fields=["archived_at"])
@@ -183,7 +203,7 @@ def content_lesson_detail(request, lesson_id):
 
 @require_POST
 def content_upload(request):
-    profile, error = _content_teacher(request)
+    profile, error = _content_admin(request)
     if error:
         return error
     uploaded = request.FILES.get("file")
@@ -198,12 +218,10 @@ def content_upload(request):
 
 @require_http_methods(["PUT", "POST", "DELETE"])
 def content_asset_detail(request, asset_id):
-    profile, error = _content_teacher(request)
+    profile, error = _content_admin(request)
     if error:
         return error
     asset = get_object_or_404(Asset, pk=asset_id)
-    if profile.role == Profile.Role.TEACHER and asset.uploaded_by_id != profile.id:
-        return JsonResponse({"detail": "You do not own this asset."}, status=403)
     if request.method == "PUT":
         try:
             data = _body(request)
@@ -223,23 +241,27 @@ def content_asset_preview(request, asset_id):
     if error:
         return error
     asset = get_object_or_404(Asset, pk=asset_id, archived_at__isnull=True, status=Asset.Status.VALIDATED)
-    if profile.role == Profile.Role.STUDENT and not ContentAssignment.objects.filter(lesson__slides__activity__asset=asset).filter(
-        Q(student=profile) | Q(school_class__enrollments__student=profile, school_class__enrollments__removed_at__isnull=True)
-    ).exists():
-        return JsonResponse({"detail": "You do not have access to this asset."}, status=403)
-    if profile.role == Profile.Role.TEACHER and asset.uploaded_by_id != profile.id and not Lesson.objects.filter(slides__activity__asset=asset, created_by=profile).exists():
-        return JsonResponse({"detail": "You do not own this asset."}, status=403)
+    if profile.role != Profile.Role.ADMIN:
+        content_access = Lesson.objects.filter(
+            slides__activity__asset=asset, status=Lesson.Status.APPROVED, archived_at__isnull=True
+        ).exists()
+        journal_access = JournalEntry.objects.filter(asset=asset, student=profile).exists()
+        if profile.role == Profile.Role.TEACHER:
+            journal_access = JournalEntry.objects.filter(
+                asset=asset, shared_with_teacher=True,
+                session__school_class__teacher=profile,
+            ).exists()
+        if not content_access and not journal_access:
+            return JsonResponse({"detail": "You do not have access to this asset."}, status=403)
     return FileResponse(asset.file.open("rb"), content_type=asset.mime_type)
 
 
 @require_POST
 def content_slide(request, lesson_id):
-    profile, error = _content_teacher(request)
+    profile, error = _content_admin(request)
     if error:
         return error
     lesson = get_object_or_404(Lesson, pk=lesson_id, archived_at__isnull=True)
-    if profile.role == Profile.Role.TEACHER and lesson.created_by_id != profile.id:
-        return JsonResponse({"detail": "You do not own this lesson."}, status=403)
     try:
         data = _body(request)
         activity = Activity.objects.create(type=str(data["type"]), title=str(data.get("title", "Activity")), configuration=data.get("configuration", {}), asset_id=data.get("asset_id"))
@@ -253,15 +275,13 @@ def content_slide(request, lesson_id):
 
 @require_POST
 def content_assignment(request, lesson_id):
-    profile, error = _content_teacher(request)
+    profile, error = _content_admin(request)
     if error:
         return error
     lesson = get_object_or_404(Lesson, pk=lesson_id, archived_at__isnull=True)
-    if profile.role == Profile.Role.TEACHER and lesson.created_by_id != profile.id:
-        return JsonResponse({"detail": "You do not own this lesson."}, status=403)
     try:
         data = _body(request)
-        school_class = SchoolClass.objects.get(pk=data["class_id"], teacher=profile) if profile.role == Profile.Role.TEACHER else SchoolClass.objects.get(pk=data["class_id"])
+        school_class = SchoolClass.objects.get(pk=data["class_id"])
         student_id = data.get("student_id")
         student = Profile.objects.get(pk=student_id, role=Profile.Role.STUDENT) if student_id else None
         if student and not Enrollment.objects.filter(school_class=school_class, student=student, removed_at__isnull=True).exists():
@@ -310,7 +330,10 @@ def login_view(request):
         return JsonResponse({"detail": "Invalid credentials."}, status=401)
     login(request, user)
     _audit(user.profile, "login", user.profile)
-    return JsonResponse(_profile_data(user.profile))
+    data = _profile_data(user.profile)
+    if user.profile.role == Profile.Role.TEACHER:
+        data["dashboard"] = _teacher_dashboard_data(user.profile)
+    return JsonResponse(data)
 
 
 @require_POST
@@ -388,10 +411,13 @@ def student_dashboard(request):
     classes_qs = SchoolClass.objects.filter(
         enrollments__student=profile, enrollments__removed_at__isnull=True,
         status=SchoolClass.Status.ACTIVE,
-    ).select_related("teacher", "package").distinct()
+    ).select_related("teacher", "teacher__school").annotate(
+        active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
+    ).distinct()
+    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
     return JsonResponse({
         "student": _profile_data(profile),
-        "classes": [_class_data(item) for item in classes_qs],
+        "classes": [_class_data(item, packages=packages) for item in classes_qs],
         "unread_notifications": profile.notifications.filter(read_at__isnull=True).count(),
         "active_session": None,
     })
@@ -407,7 +433,7 @@ def join_class(request):
     except (KeyError, ValueError):
         return JsonResponse({"detail": "A class code is required."}, status=400)
     try:
-        school_class = SchoolClass.objects.select_related("teacher", "package").get(code__iexact=code, status=SchoolClass.Status.ACTIVE)
+        school_class = SchoolClass.objects.select_related("teacher").get(code__iexact=code, status=SchoolClass.Status.ACTIVE)
     except SchoolClass.DoesNotExist:
         return JsonResponse({"detail": "Class code not found. Please check with your teacher."}, status=404)
     if profile.school_id and school_class.school_id and profile.school_id != school_class.school_id:
@@ -454,6 +480,198 @@ def student_notifications(request):
     } for item in items]})
 
 
+@require_http_methods(["GET", "PATCH"])
+def teacher_profile(request):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    if request.method == "PATCH":
+        try:
+            data = _body(request)
+            name = str(data.get("name", profile.display_name)).strip()
+            if not name:
+                raise ValueError
+            profile.display_name = name
+            profile.nonclinical_notes = str(data.get("bio", profile.nonclinical_notes)).strip()
+            profile.save(update_fields=["display_name", "nonclinical_notes", "updated_at"])
+            _audit(profile, "profile_updated", profile)
+        except ValueError:
+            return JsonResponse({"detail": "Profile values are invalid."}, status=400)
+    data = _profile_data(profile)
+    data["bio"] = profile.nonclinical_notes
+    data["class_count"] = profile.taught_classes.filter(status=SchoolClass.Status.ACTIVE).count()
+    return JsonResponse(data)
+
+
+@require_http_methods(["GET", "PATCH"])
+def teacher_preferences(request):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    preferences, _ = UserPreference.objects.get_or_create(profile=profile)
+    if request.method == "PATCH":
+        try:
+            data = _body(request)
+        except ValueError:
+            return JsonResponse({"detail": "Request body must be valid JSON."}, status=400)
+        for field in ("notifications_enabled", "sound_enabled", "haptics_enabled"):
+            if field in data:
+                if not isinstance(data[field], bool):
+                    return JsonResponse({"detail": f"{field} must be a boolean."}, status=400)
+                setattr(preferences, field, data[field])
+        preferences.save()
+    return JsonResponse({
+        "notifications_enabled": preferences.notifications_enabled,
+        "sound_enabled": preferences.sound_enabled,
+        "haptics_enabled": preferences.haptics_enabled,
+    })
+
+
+@require_http_methods(["GET", "POST"])
+def teacher_notifications(request):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    if request.method == "POST":
+        try:
+            notification_id = _body(request).get("notification_id")
+        except ValueError:
+            return JsonResponse({"detail": "Request body must be valid JSON."}, status=400)
+        queryset = profile.notifications.filter(read_at__isnull=True)
+        if notification_id:
+            queryset = queryset.filter(pk=notification_id)
+        queryset.update(read_at=timezone.now())
+    return JsonResponse({"notifications": [{
+        "id": str(item.id), "kind": item.kind, "title": item.title,
+        "body": item.body, "link": item.link, "createdAt": item.created_at,
+        "read": item.read_at is not None,
+    } for item in profile.notifications.all()[:100]]})
+
+
+def teacher_dashboard(request):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    return JsonResponse(_teacher_dashboard_data(profile))
+
+
+def _teacher_dashboard_data(profile):
+    class_items = list(SchoolClass.objects.filter(
+        teacher=profile, status=SchoolClass.Status.ACTIVE,
+    ).select_related("teacher", "teacher__school").annotate(
+        active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
+    ))
+    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    student_ids = Enrollment.objects.filter(
+        school_class__teacher=profile, school_class__status=SchoolClass.Status.ACTIVE,
+        removed_at__isnull=True,
+    ).values_list("student_id", flat=True).distinct()
+    return {
+        "teacher": _profile_data(profile),
+        "classes": [_class_data(item, packages=packages) for item in class_items],
+        "class_count": len(class_items),
+        "student_count": student_ids.count(),
+        "unread_notifications": profile.notifications.filter(read_at__isnull=True).count(),
+        "active_sessions": 0,
+        "total_sessions": 0,
+    }
+
+
+def teacher_students(request):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    students = Profile.objects.filter(role=Profile.Role.STUDENT)
+    if profile.school_id:
+        students = students.filter(Q(school=profile.school) | Q(school__isnull=True))
+    return JsonResponse({"students": [_profile_data(item) for item in students.select_related("school").order_by("display_name")]})
+
+
+def teacher_student_detail(request, student_id):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    student = get_object_or_404(Profile, pk=student_id, role=Profile.Role.STUDENT)
+    enrollments = Enrollment.objects.filter(
+        student=student, school_class__teacher=profile, removed_at__isnull=True,
+    ).select_related("school_class", "school_class__teacher")
+    if not enrollments.exists():
+        return JsonResponse({"detail": "This student is not enrolled in one of your classes."}, status=403)
+    data = _profile_data(student)
+    data.update({
+        "classes": [_class_data(item.school_class) for item in enrollments],
+        "session_count": 0, "journal_count": 0, "average_focus": None,
+    })
+    return JsonResponse(data)
+
+
+def teacher_class_analytics(request, class_id):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    school_class = get_object_or_404(SchoolClass, pk=class_id, teacher=profile)
+    return JsonResponse({
+        "class": _class_data(school_class),
+        "student_count": school_class.enrollments.filter(removed_at__isnull=True).count(),
+        "session_count": 0, "average_focus": None, "completion_rate": None,
+        "students": [], "timeline": [],
+        "message": "Analytics will appear after learning sessions are recorded.",
+    })
+
+
+def teacher_journals(request):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    class_items = list(SchoolClass.objects.filter(
+        teacher=profile, status=SchoolClass.Status.ACTIVE,
+    ).select_related("teacher", "teacher__school").annotate(
+        active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
+    ).order_by("name"))
+    selected_class = None
+    class_id = request.GET.get("class_id")
+    if class_id:
+        selected_class = next((item for item in class_items if str(item.pk) == class_id), None)
+        if selected_class is None:
+            return JsonResponse({"detail": "Class not found."}, status=404)
+    else:
+        selected_class = class_items[0] if class_items else None
+    entries = JournalEntry.objects.none()
+    if selected_class:
+        entries = JournalEntry.objects.filter(
+            session__school_class=selected_class,
+            student__enrollments__school_class=selected_class,
+            student__enrollments__removed_at__isnull=True,
+            shared_with_teacher=True,
+        ).select_related("student", "student__school", "session", "asset").annotate(
+            tasks_completed_count=Count("session__activity_responses", distinct=True),
+        ).distinct().order_by("-created_at")
+    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    return JsonResponse({
+        "classes": [_class_data(item, packages=packages) for item in class_items],
+        "selected_class_id": selected_class.pk if selected_class else None,
+        "entries": [{
+            "id": str(item.pk),
+            "student": _profile_data(item.student),
+            "session_id": str(item.session_id),
+            "prompt": item.prompt,
+            "response_type": item.response_type,
+            "text_response": item.text_response,
+            "mood": item.mood,
+            "asset_url": f"/api/content/assets/{item.asset_id}/preview/" if item.asset_id else None,
+            "created_at": item.created_at,
+            "duration_seconds": max(0, int((item.session.ended_at - item.session.started_at).total_seconds())) if item.session.ended_at else None,
+            "tasks_completed": item.tasks_completed_count,
+        } for item in entries],
+    })
+
+
 @require_http_methods(["GET", "POST"])
 def classes(request):
     profile, error = _require_profile(request, {Profile.Role.STUDENT, Profile.Role.TEACHER, Profile.Role.ADMIN})
@@ -464,9 +682,19 @@ def classes(request):
             return JsonResponse({"detail": "Only teachers can create classes."}, status=403)
         try:
             data = _body(request)
-            school_class = SchoolClass.objects.create(name=str(data["name"]).strip(), code=str(data["code"]).strip().upper(), teacher=profile)
+            name = str(data["name"]).strip()
+            if not name:
+                raise ValueError
+            code = str(data.get("code", "")).strip().upper() or _new_class_code()
+            school_class = SchoolClass.objects.create(
+                name=name, code=code, teacher=profile, school=profile.school,
+                description=str(data.get("description", "")).strip(),
+                school_year=str(data.get("school_year", "")).strip(),
+            )
         except (KeyError, ValueError):
-            return JsonResponse({"detail": "name and code are required."}, status=400)
+            return JsonResponse({"detail": "A class name is required."}, status=400)
+        except IntegrityError:
+            return JsonResponse({"detail": "That class code is already in use."}, status=409)
         _audit(profile, "class_created", school_class)
         return JsonResponse(_class_data(school_class), status=201)
     if profile.role == Profile.Role.TEACHER:
@@ -475,9 +703,14 @@ def classes(request):
         queryset = SchoolClass.objects.filter(enrollments__student=profile, enrollments__removed_at__isnull=True).distinct()
     else:
         queryset = SchoolClass.objects.all()
-    return JsonResponse({"classes": [_class_data(item) for item in queryset.select_related("teacher")]})
+    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    queryset = queryset.select_related("teacher", "teacher__school").annotate(
+        active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
+    )
+    return JsonResponse({"classes": [_class_data(item, packages=packages) for item in queryset]})
 
 
+@require_http_methods(["GET", "PATCH", "DELETE"])
 def class_detail(request, class_id):
     profile, error = _require_profile(request, {Profile.Role.STUDENT, Profile.Role.TEACHER, Profile.Role.ADMIN})
     if error:
@@ -487,18 +720,46 @@ def class_detail(request, class_id):
         return JsonResponse({"detail": "You are not enrolled in this class."}, status=403)
     if profile.role == Profile.Role.TEACHER and school_class.teacher_id != profile.id:
         return JsonResponse({"detail": "You do not teach this class."}, status=403)
+    if request.method != "GET":
+        if profile.role == Profile.Role.STUDENT:
+            return JsonResponse({"detail": "You do not have permission for this action."}, status=403)
+        if request.method == "DELETE":
+            school_class.status = SchoolClass.Status.ARCHIVED
+            school_class.save(update_fields=["status", "updated_at"])
+            _audit(profile, "class_archived", school_class)
+            return JsonResponse({"status": "archived"})
+        try:
+            payload = _body(request)
+            name = str(payload.get("name", school_class.name)).strip()
+            if not name:
+                raise ValueError
+            school_class.name = name
+            school_class.description = str(payload.get("description", school_class.description)).strip()
+            school_class.school_year = str(payload.get("school_year", school_class.school_year)).strip()
+            school_class.save(update_fields=["name", "description", "school_year", "updated_at"])
+        except ValueError:
+            return JsonResponse({"detail": "Class values are invalid."}, status=400)
+        _audit(profile, "class_updated", school_class)
     data = _class_data(school_class, include_students=profile.role != Profile.Role.STUDENT)
     if profile.role == Profile.Role.STUDENT:
-        lessons = Lesson.objects.filter(archived_at__isnull=True).filter(
-            Q(assignments__school_class=school_class, assignments__student__isnull=True) |
-            Q(assignments__school_class=school_class, assignments__student=profile)
-        ).select_related("package").prefetch_related("slides__activity").distinct()
+        lessons = Lesson.objects.filter(
+            archived_at__isnull=True, status=Lesson.Status.APPROVED,
+            package__is_active=True,
+        ).select_related("package").prefetch_related("slides__activity")
         data["lessons"] = [_lesson_data(lesson) for lesson in lessons]
         data["activities"] = [{
             "id": str(slide.activity_id), "title": slide.title,
             "lesson_id": slide.lesson_id, "done": False,
         } for lesson in lessons for slide in lesson.slides.all()]
     return JsonResponse(data)
+
+
+def _new_class_code():
+    alphabet = string.ascii_uppercase + string.digits
+    while True:
+        code = "".join(secrets.choice(alphabet) for _ in range(4))
+        if not SchoolClass.objects.filter(code=code).exists():
+            return code
 
 
 @require_POST
