@@ -1,26 +1,25 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Circle } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { PACKAGE_META } from '../../constants/packages'
-import { classPresentation, getStudentClass, type StudentClass } from '../../lib/studentApi'
+import { PACKAGE_EMOJI, getStudentClass, type StudentClass } from '../../lib/studentApi'
+import { cachedApiValue } from '../../lib/api'
 import styles from './ClassDetail.module.css'
-
-type Detail = ReturnType<typeof classPresentation> & { activities: Array<{ id: string; title: string; done: boolean }> }
+import selectionStyles from './FreeLessonSelect.module.css'
 
 export default function ClassDetail() {
-  const { classId = '' } = useParams(); const navigate = useNavigate()
-  const [classData, setClassData] = useState<Detail | null>(null)
+  const { classId = '' } = useParams()
+  const navigate = useNavigate()
+  const [classData, setClassData] = useState<StudentClass | null>(() => cachedApiValue<StudentClass>(`/classes/${classId}/`) ?? null)
   const [error, setError] = useState('')
-  useEffect(() => { void getStudentClass(classId).then((data) => setClassData({ ...classPresentation(data as StudentClass), activities: data.activities })).catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load class.')) }, [classId])
+  useEffect(() => { void getStudentClass(classId).then(setClassData).catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load class.')) }, [classId])
   if (!classData) return <PlayfulZoneTemplate><div className={styles.body}>{error || 'Loading class...'}</div></PlayfulZoneTemplate>
-  return (
-    <PlayfulZoneTemplate>
-      <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate('/student/classes', { replace: true })} aria-label="Back to classes"><ChevronLeft size={18} strokeWidth={1.75} /></button><span className={styles.classIconSm} style={{ background: classData.iconBg }}>{classData.iconEmoji}</span><h1 className={styles.className}>{classData.name}</h1><span className={styles.packagePill} style={{ background: PACKAGE_META[classData.package].bg }}>{PACKAGE_META[classData.package].label}</span></div>
-      <div className={styles.body}>
-        <div className={styles.main}><span className={styles.sectionLabel}>Activities</span><ul className={styles.activityList}>{classData.activities.length ? classData.activities.map((activity) => <li key={activity.id} className={styles.activityRow}><Circle size={18} strokeWidth={1.75} className={styles.activityIconMuted} /><span className={styles.activityText}>{activity.title}</span></li>) : <li className={styles.activityRow}><span className={styles.activityText}>No assigned activities yet.</span></li>}</ul></div>
-        <aside className={styles.sidebar}><div className={styles.infoCard}><span className={styles.infoLabel}>Class info</span><div className={styles.infoRow}><span className={styles.infoKey}>Teacher</span><span className={styles.infoVal}>{classData.teacher.name}</span></div><div className={styles.infoRow}><span className={styles.infoKey}>Class code</span><span className={styles.infoVal}>{classData.code}</span></div><div className={styles.infoRow}><span className={styles.infoKey}>Category</span><span className={styles.infoVal}>{PACKAGE_META[classData.package].label}</span></div></div></aside>
-      </div>
-    </PlayfulZoneTemplate>
-  )
+  return <PlayfulZoneTemplate>
+    <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate('/student/classes', { replace: true })} aria-label="Back to classes"><ChevronLeft size={18} /></button><span className={styles.classIconSm} style={{ background: '#EEEDFE' }}>🏫</span><h1 className={styles.className}>{classData.name}</h1><span className={styles.packagePill}>7 learning packages</span></div>
+    <div className={styles.body}>
+      <main className={styles.main}><span className={styles.sectionLabel}>Learning packages</span><div className={selectionStyles.packageGrid}>{classData.packages.map((pkg) => <button key={pkg.id} className={selectionStyles.packageCard} onClick={() => navigate(`/student/class/${classId}/package/${pkg.slug}`)}><span className={selectionStyles.packageIcon} style={{ background: PACKAGE_META[pkg.slug].bg }}>{PACKAGE_EMOJI[pkg.slug]}</span><span className={selectionStyles.packageName}>{pkg.name}</span><span className={selectionStyles.lessonCount}>3 lessons</span><ChevronRight className={selectionStyles.chevron} size={18} /></button>)}</div></main>
+      <aside className={styles.sidebar}><div className={styles.infoCard}><span className={styles.infoLabel}>Class info</span><div className={styles.infoRow}><span className={styles.infoKey}>Teacher</span><span className={styles.infoVal}>{classData.teacher.name}</span></div><div className={styles.infoRow}><span className={styles.infoKey}>Class code</span><span className={styles.infoVal}>{classData.code}</span></div><div className={styles.infoRow}><span className={styles.infoKey}>Curriculum</span><span className={styles.infoVal}>All 7 packages</span></div></div></aside>
+    </div>
+  </PlayfulZoneTemplate>
 }

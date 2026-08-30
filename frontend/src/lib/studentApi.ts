@@ -2,7 +2,9 @@ import type { CurriculumPackage } from '../constants/states'
 import { PACKAGE_META } from '../constants/packages'
 import { api } from './api'
 
-export interface StudentClass { id: number; name: string; code: string; description: string; school_year: string; packages: Array<{ id: number; slug: CurriculumPackage; name: string }>; package_count: number; teacher: { id: number; name: string } }
+export interface StudentPackage { id: number; slug: CurriculumPackage; name: string }
+export interface StudentLesson { id: number; package: CurriculumPackage; title: string; description: string }
+export interface StudentClass { id: number; name: string; code: string; description: string; school_year: string; packages: StudentPackage[]; package_count: number; teacher: { id: number; name: string } }
 export interface StudentIdentity { id: number; name: string; role: 'student'; avatar: string | null; student_number: string; school: string | null }
 export interface DashboardData { student: StudentIdentity; classes: StudentClass[]; unread_notifications: number; active_session: null }
 
@@ -19,3 +21,4 @@ export function classPresentation(item: StudentClass) {
 export const getStudentDashboard = () => api<DashboardData>('/student/dashboard/')
 export const getStudentClasses = () => api<{ classes: StudentClass[] }>('/classes/')
 export const getStudentClass = (id: string) => api<StudentClass & { activities: Array<{ id: string; title: string; done: boolean }> }>(`/classes/${id}/`)
+export const getStudentClassPackage = (classId: string, packageSlug: string) => api<{ class: StudentClass; package: StudentPackage; lessons: StudentLesson[] }>(`/student/classes/${classId}/packages/${packageSlug}/`)

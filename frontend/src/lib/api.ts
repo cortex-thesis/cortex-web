@@ -1,6 +1,8 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
-const GET_CACHE_TTL_MS = 5 * 60_000
-const SESSION_CACHE_PREFIX = 'cortex-api:'
+// Keep preloaded workspace data for a full login day. Mutations and logout clear
+// this cache immediately, so normal changes still force fresh server data.
+const GET_CACHE_TTL_MS = 12 * 60 * 60_000
+const SESSION_CACHE_PREFIX = 'cortex-api-v2:'
 const getCache = new Map<string, { expiresAt: number; value: unknown }>()
 const pendingGets = new Map<string, Promise<unknown>>()
 

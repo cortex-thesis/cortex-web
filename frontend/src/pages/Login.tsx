@@ -29,6 +29,7 @@ export default function UnifiedLogin() {
     try {
       const user = await login({ email: email.trim(), password })
       if (user.role === 'admin') navigate('/admin/dashboard', { replace: true })
+      else if (user.role === 'student') navigate('/student/home', { replace: true })
       else navigate('/welcome', { replace: true, state: { role: user.role } })
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : 'Unable to sign in.')
