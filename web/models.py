@@ -2,6 +2,8 @@ import uuid
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.core.validators import FileExtensionValidator, MaxValueValidator, MinValueValidator
 from django.utils import timezone
 
@@ -88,6 +90,39 @@ class CurriculumPackage(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ClassPackage(models.Model):
+    school_class = models.ForeignKey(SchoolClass, on_delete=models.CASCADE, related_name="class_packages")
+    package = models.ForeignKey(CurriculumPackage, on_delete=models.PROTECT, related_name="class_assignments")
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=("school_class", "package"), name="unique_class_curriculum_package"),
+        ]
+        ordering = ("package__id",)
+
+    def __str__(self):
+        return f"{self.school_class.name}: {self.package.name}"
+
+
+@receiver(post_save, sender=SchoolClass)
+def assign_all_packages_to_new_class(sender, instance, created, **kwargs):
+    if created:
+        ClassPackage.objects.bulk_create([
+            ClassPackage(school_class=instance, package=package)
+            for package in CurriculumPackage.objects.filter(is_active=True)
+        ], ignore_conflicts=True)
+
+
+@receiver(post_save, sender=CurriculumPackage)
+def assign_new_package_to_existing_classes(sender, instance, created, **kwargs):
+    if created and instance.is_active:
+        ClassPackage.objects.bulk_create([
+            ClassPackage(school_class=school_class, package=instance)
+            for school_class in SchoolClass.objects.all()
+        ], ignore_conflicts=True)
 
 
 class Lesson(models.Model):

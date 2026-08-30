@@ -144,7 +144,7 @@ class WorkflowTests(TestCase):
 
     def test_every_class_exposes_all_global_packages(self):
         for slug in ("care", "life", "pre_vocational", "livelihood", "functional_academics", "career", "enrichment"):
-            CurriculumPackage.objects.create(slug=slug, name=slug.replace("_", " ").title())
+            CurriculumPackage.objects.get_or_create(slug=slug, defaults={"name": slug.replace("_", " ").title()})
         school_class = SchoolClass.objects.create(name="Section A", code="SECA", teacher=self.teacher)
         self._login(self.teacher)
         payload = self.client.get(f"/api/classes/{school_class.pk}/").json()

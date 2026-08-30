@@ -109,7 +109,13 @@ def _profile_data(profile):
 
 def _class_data(school_class, include_students=False, packages=None):
     if packages is None:
-        packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+        prefetched = getattr(school_class, "_prefetched_objects_cache", {}).get("class_packages")
+        if prefetched is not None:
+            packages = [assignment.package for assignment in prefetched if assignment.package.is_active]
+        else:
+            packages = list(CurriculumPackage.objects.filter(
+                class_assignments__school_class=school_class, is_active=True,
+            ).order_by("id"))
     student_count = getattr(school_class, "active_student_count", None)
     if student_count is None:
         student_count = school_class.enrollments.filter(removed_at__isnull=True).count()
@@ -333,6 +339,8 @@ def login_view(request):
     data = _profile_data(user.profile)
     if user.profile.role == Profile.Role.TEACHER:
         data["dashboard"] = _teacher_dashboard_data(user.profile)
+    elif user.profile.role == Profile.Role.STUDENT:
+        data["student_bootstrap"] = _student_bootstrap_data(user.profile)
     return JsonResponse(data)
 
 
@@ -347,7 +355,14 @@ def logout_view(request):
 
 def me(request):
     profile, error = _require_profile(request)
-    return error or JsonResponse(_profile_data(profile))
+    if error:
+        return error
+    data = _profile_data(profile)
+    if profile.role == Profile.Role.STUDENT:
+        data["student_bootstrap"] = _student_bootstrap_data(profile)
+    elif profile.role == Profile.Role.TEACHER:
+        data["dashboard"] = _teacher_dashboard_data(profile)
+    return JsonResponse(data)
 
 
 @require_http_methods(["GET", "PATCH"])
@@ -408,6 +423,10 @@ def student_dashboard(request):
         return error
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
+    return JsonResponse(_student_dashboard_data(profile))
+
+
+def _student_dashboard_data(profile):
     classes_qs = SchoolClass.objects.filter(
         enrollments__student=profile, enrollments__removed_at__isnull=True,
         status=SchoolClass.Status.ACTIVE,
@@ -415,12 +434,46 @@ def student_dashboard(request):
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
     ).distinct()
     packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
-    return JsonResponse({
+    return {
         "student": _profile_data(profile),
         "classes": [_class_data(item, packages=packages) for item in classes_qs],
         "unread_notifications": profile.notifications.filter(read_at__isnull=True).count(),
         "active_session": None,
+    }
+
+
+def _student_bootstrap_data(profile):
+    dashboard = _student_dashboard_data(profile)
+    lessons = Lesson.objects.filter(
+        archived_at__isnull=True, status=Lesson.Status.APPROVED,
+        package__is_active=True,
+    ).select_related("package").order_by("id")
+    lessons_by_package = {}
+    for lesson in lessons:
+        lessons_by_package.setdefault(lesson.package.slug, []).append(_lesson_data(lesson, include_slides=False))
+    preferences, _ = UserPreference.objects.get_or_create(profile=profile)
+    profile_data = _profile_data(profile)
+    profile_data.update({
+        "guardian_name": profile.guardian_name,
+        "guardian_contact": profile.guardian_contact,
+        "guardian_email": profile.guardian_email,
     })
+    notifications = [{
+        "id": str(item.id), "kind": item.kind, "title": item.title,
+        "body": item.body, "link": item.link, "createdAt": item.created_at,
+        "read": item.read_at is not None,
+    } for item in profile.notifications.all()[:100]]
+    return {
+        "dashboard": dashboard,
+        "lessons_by_package": lessons_by_package,
+        "notifications": {"notifications": notifications},
+        "preferences": {
+            "notifications_enabled": preferences.notifications_enabled,
+            "sound_enabled": preferences.sound_enabled,
+            "haptics_enabled": preferences.haptics_enabled,
+        },
+        "profile": profile_data,
+    }
 
 
 @require_POST
@@ -752,6 +805,35 @@ def class_detail(request, class_id):
             "lesson_id": slide.lesson_id, "done": False,
         } for lesson in lessons for slide in lesson.slides.all()]
     return JsonResponse(data)
+
+
+def student_class_package(request, class_id, package_slug):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    school_class = get_object_or_404(
+        SchoolClass.objects.select_related("teacher", "teacher__school"),
+        pk=class_id, status=SchoolClass.Status.ACTIVE,
+    )
+    if not Enrollment.objects.filter(
+        school_class=school_class, student=profile, removed_at__isnull=True,
+    ).exists():
+        return JsonResponse({"detail": "You are not enrolled in this class."}, status=403)
+    package = get_object_or_404(
+        CurriculumPackage,
+        class_assignments__school_class=school_class,
+        slug=package_slug, is_active=True,
+    )
+    lessons = Lesson.objects.filter(
+        package=package, status=Lesson.Status.APPROVED, archived_at__isnull=True,
+    ).order_by("id")
+    return JsonResponse({
+        "class": _class_data(school_class),
+        "package": {"id": package.pk, "slug": package.slug, "name": package.name},
+        "lessons": [_lesson_data(lesson, include_slides=False) for lesson in lessons],
+    })
 
 
 def _new_class_code():
