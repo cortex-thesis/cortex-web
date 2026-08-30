@@ -7,6 +7,8 @@ import { CURRICULUM_PACKAGES } from '../../constants/states'
 import type { CurriculumPackage } from '../../constants/states'
 import { PACKAGE_META } from '../../constants/packages'
 import { classPresentation, getStudentClasses } from '../../lib/studentApi'
+import { cachedApiValue } from '../../lib/api'
+import type { StudentClass } from '../../lib/studentApi'
 import styles from './Classes.module.css'
 
 type PackageFilter = 'all' | CurriculumPackage
@@ -16,7 +18,7 @@ export default function Classes() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<PackageFilter>('all')
 
-  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>([])
+  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cachedApiValue<{ classes: StudentClass[] }>('/classes/')?.classes ?? []).map(classPresentation))
   useEffect(() => { void getStudentClasses().then((data) => setClasses(data.classes.map(classPresentation))) }, [])
 
   const filtered = classes.filter((c) => {

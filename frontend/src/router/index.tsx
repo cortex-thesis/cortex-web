@@ -23,19 +23,19 @@ import FreeLessonSelect from '../pages/student/FreeLessonSelect'
 import Dashboard from '../pages/teacher/Dashboard'
 import ClassOverview from '../pages/teacher/ClassOverview'
 import ClassStudents from '../pages/teacher/ClassStudents'
-import ClassContent from '../pages/teacher/ClassContent'
 import ClassAnalytics from '../pages/teacher/ClassAnalytics'
 import TeacherStudentProfile from '../pages/teacher/StudentProfile'
 import TeacherNotifications from '../pages/teacher/Notifications'
 import TeacherSettings from '../pages/teacher/Settings'
 import TeacherProfile from '../pages/teacher/Profile'
 import TeacherClasses from '../pages/teacher/Classes'
-import TeacherContent from '../pages/teacher/Content'
+import TeacherClassSetup from '../pages/teacher/ClassSetup'
+import TeacherJournals from '../pages/teacher/Journals'
 import {
   AdminDashboard, AdminAccounts, StudentRegistration, TeacherRegistration,
   ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
-  HardwareRequired, TeacherJournals, Reports, ClassSetup, Enrollment,
-  ContentAssignment, SessionControl, StudentHistory, Evaluation,
+  HardwareRequired, Reports, Enrollment,
+  SessionControl, StudentHistory, Evaluation,
   DrawingJournal, AudioJournal,
 } from '../pages/prototype'
 
@@ -75,9 +75,9 @@ export default function AppRouter() {
       </Route>
 
       {/* Teacher */}
+      <Route element={<ProtectedRoute roles={['teacher']} />}>
       <Route path="/teacher/dashboard" element={<Dashboard />} />
       <Route path="/teacher/classes" element={<TeacherClasses />} />
-      <Route path="/teacher/content" element={<TeacherContent />} />
       <Route
         path="/teacher/class/:classId/overview"
         element={<ClassOverview />}
@@ -85,10 +85,6 @@ export default function AppRouter() {
       <Route
         path="/teacher/class/:classId/students"
         element={<ClassStudents />}
-      />
-      <Route
-        path="/teacher/class/:classId/content"
-        element={<ClassContent />}
       />
       <Route
         path="/teacher/class/:classId/analytics"
@@ -107,11 +103,11 @@ export default function AppRouter() {
       <Route path="/teacher/forgot-password" element={<ForgotPassword />} />
       <Route path="/teacher/journals" element={<TeacherJournals />} />
       <Route path="/teacher/reports" element={<Reports />} />
-      <Route path="/teacher/classes/new" element={<ClassSetup />} />
+      <Route path="/teacher/classes/new" element={<TeacherClassSetup />} />
       <Route path="/teacher/class/:classId/enroll" element={<Enrollment />} />
-      <Route path="/teacher/class/:classId/assign-content" element={<ContentAssignment />} />
       <Route path="/teacher/class/:classId/session" element={<SessionControl />} />
       <Route path="/teacher/student/:studentId/analytics" element={<StudentHistory />} />
+      </Route>
 
       {/* Administrator */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />

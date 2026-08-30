@@ -6,6 +6,8 @@ import { SessionCard, ClassTile, StreakCard, QuickActionCard } from '../../compo
 import { Avatar, Logo } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
 import { classPresentation, getStudentDashboard } from '../../lib/studentApi'
+import { cachedApiValue } from '../../lib/api'
+import type { DashboardData } from '../../lib/studentApi'
 import styles from './Home.module.css'
 
 function getGreeting(): string {
@@ -18,7 +20,7 @@ function getGreeting(): string {
 export default function Home() {
   const navigate = useNavigate()
   const student = useAuthStore((state) => state.user)!
-  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>([])
+  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cachedApiValue<DashboardData>('/student/dashboard/')?.classes ?? []).map(classPresentation))
   useEffect(() => { void getStudentDashboard().then((data) => setClasses(data.classes.map(classPresentation))) }, [])
 
   return (

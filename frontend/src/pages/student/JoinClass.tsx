@@ -35,7 +35,7 @@ export default function JoinClass() {
         <span className={styles.emoji} aria-hidden="true">🎓</span>
         <div className={styles.textBlock}><h2 className={styles.heading}>Enter your class code</h2><p className={styles.sub}>Type the code your teacher gave you</p></div>
         {status === 'error' && <AlertBanner variant="error" message={errorMsg} className={styles.alert} />}
-        {status === 'success' && foundClass && <AlertBanner variant="success" title={`Joined ${PACKAGE_EMOJI[foundClass.package]} ${foundClass.name}`} message="Opening your class..." className={styles.alert} />}
+        {status === 'success' && foundClass && <AlertBanner variant="success" title={`Joined ${PACKAGE_EMOJI[foundClass.packages?.[0]?.slug ?? 'life']} ${foundClass.name}`} message="Opening your class..." className={styles.alert} />}
         <CodeInput value={code} onChange={(value) => { setCode(value); if (status === 'error') setStatus('idle') }} onComplete={handleComplete} fieldState={status === 'error' ? 'error' : status === 'success' ? 'success' : 'default'} errorText={errorMsg} successText={foundClass ? `Joined ${foundClass.name}` : undefined} hint="Enter the code your teacher gave you" disabled={status === 'loading' || status === 'success'} />
         {status === 'loading' && <p className={styles.loadingText}>Looking up your class...</p>}
         <div className={styles.divider}><span className={styles.dividerLine} /><span className={styles.dividerText}>or</span><span className={styles.dividerLine} /></div>

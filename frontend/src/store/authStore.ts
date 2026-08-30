@@ -1,13 +1,15 @@
 import { create } from 'zustand'
 import type { User } from '../types'
-import { api } from '../lib/api'
+import { api, primeApiCache } from '../lib/api'
+import type { TeacherDashboardData } from '../lib/teacherApi'
 
 interface LoginCredentials {
   email: string
   password: string
 }
 
-type AuthUser = Omit<User, 'classIds'> & { pseudonym: string; student_number?: string }
+type AuthUser = Omit<User, 'classIds'> & { pseudonym: string; student_number?: string; dashboard?: TeacherDashboardData }
+const AUTH_CACHE_KEY = 'cortex-auth-user'
 
 interface AuthState {
   user: User | null
@@ -22,22 +24,37 @@ interface AuthState {
 }
 
 function normalizeUser(user: AuthUser): User {
-  return { ...user, id: String(user.id), avatar: user.avatar ?? null, classIds: [] }
+  const identity = { ...user }
+  delete identity.dashboard
+  return { ...identity, id: String(user.id), avatar: user.avatar ?? null, classIds: [] }
 }
 
+function storedUser(): User | null {
+  try { return JSON.parse(localStorage.getItem(AUTH_CACHE_KEY) ?? 'null') as User | null } catch { return null }
+}
+
+function storeUser(user: User | null) {
+  if (user) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(user))
+  else localStorage.removeItem(AUTH_CACHE_KEY)
+}
+
+const initialUser = storedUser()
+
 export const useAuthStore = create<AuthState>()((set) => ({
-  user: null,
-  isAuthenticated: false,
-  isInitialized: false,
+  user: initialUser,
+  isAuthenticated: Boolean(initialUser),
+  isInitialized: Boolean(initialUser),
   isLoading: false,
   error: null,
 
   initialize: async () => {
     try {
-      await api('/auth/csrf/')
-      const user = await api<AuthUser>('/auth/me/')
-      set({ user: normalizeUser(user), isAuthenticated: true, isInitialized: true })
+      const [, authUser] = await Promise.all([api('/auth/csrf/'), api<AuthUser>('/auth/me/')])
+      const user = normalizeUser(authUser)
+      storeUser(user)
+      set({ user, isAuthenticated: true, isInitialized: true })
     } catch {
+      storeUser(null)
       set({ user: null, isAuthenticated: false, isInitialized: true })
     }
   },
@@ -45,9 +62,28 @@ export const useAuthStore = create<AuthState>()((set) => ({
   login: async (credentials) => {
     set({ isLoading: true, error: null })
     try {
-      const user = normalizeUser(await api<AuthUser>('/auth/login/', {
+      const response = await api<AuthUser>('/auth/login/', {
         method: 'POST', body: JSON.stringify(credentials),
-      }))
+      })
+      if (response.dashboard) {
+        primeApiCache('/teacher/dashboard/', response.dashboard)
+        primeApiCache('/classes/', { classes: response.dashboard.classes })
+        const classRequests = response.dashboard.classes.flatMap((item) => [
+          api(`/classes/${item.id}/`),
+          api(`/teacher/classes/${item.id}/analytics/`),
+          api(`/teacher/journals/?class_id=${item.id}`),
+        ])
+        await Promise.allSettled([
+          api('/teacher/journals/'),
+          api('/teacher/notifications/'),
+          api('/teacher/preferences/'),
+          api('/teacher/profile/'),
+          api('/teacher/students/'),
+          ...classRequests,
+        ])
+      }
+      const user = normalizeUser(response)
+      storeUser(user)
       set({ user, isAuthenticated: true, isLoading: false })
       return user
     } catch (error) {
@@ -61,6 +97,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       await api('/auth/logout/', { method: 'POST' })
     } finally {
+      storeUser(null)
       set({ user: null, isAuthenticated: false, error: null })
     }
   },
