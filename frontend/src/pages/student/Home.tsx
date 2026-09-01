@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Settings, Plus, Brain, BarChart2, BookOpen, Star } from 'lucide-react'
+import { Bell, Settings, Plus, Brain, BarChart2, BookOpen, Star, UserRound, LogOut } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { SessionCard, ClassTile, StreakCard, QuickActionCard } from '../../components/molecules'
 import { Avatar, Logo } from '../../components/atoms'
@@ -20,8 +20,27 @@ function getGreeting(): string {
 export default function Home() {
   const navigate = useNavigate()
   const student = useAuthStore((state) => state.user)!
+  const logout = useAuthStore((state) => state.logout)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cachedApiValue<DashboardData>('/student/dashboard/')?.classes ?? []).map(classPresentation))
   useEffect(() => { void getStudentDashboard().then((data) => setClasses(data.classes.map(classPresentation))) }, [])
+  useEffect(() => {
+    function closeMenu(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setIsMenuOpen(false)
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsMenuOpen(false)
+    }
+    document.addEventListener('mousedown', closeMenu)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => { document.removeEventListener('mousedown', closeMenu); document.removeEventListener('keydown', closeOnEscape) }
+  }, [])
+
+  async function handleLogout() {
+    await logout()
+    navigate('/', { replace: true })
+  }
 
   return (
     <PlayfulZoneTemplate>
@@ -30,7 +49,16 @@ export default function Home() {
         <div className={styles.topBarRight}>
           <button className={styles.iconBtn} aria-label="Notifications" onClick={() => navigate('/student/notifications')}><Bell size={18} strokeWidth={1.75} /></button>
           <button className={styles.iconBtn} aria-label="Settings" onClick={() => navigate('/student/settings')}><Settings size={18} strokeWidth={1.75} /></button>
-          <button className={styles.avatarBtn} onClick={() => navigate('/student/profile')} aria-label="View profile"><Avatar name={student.name} imageUrl={student.avatar} size="sm" /></button>
+          <div className={styles.accountMenu} ref={menuRef}>
+            <button className={styles.avatarBtn} onClick={() => setIsMenuOpen((open) => !open)} aria-label="Open account menu" aria-expanded={isMenuOpen} aria-haspopup="menu"><Avatar name={student.name} imageUrl={student.avatar} size="sm" /></button>
+            {isMenuOpen && <div className={styles.accountPopover} role="menu">
+              <div className={styles.accountSummary}><strong>{student.name}</strong><span>Student account</span></div>
+              <div className={styles.menuDivider} />
+              <button className={styles.accountMenuItem} role="menuitem" onClick={() => { setIsMenuOpen(false); navigate('/student/profile') }}><UserRound size={16} /> Profile</button>
+              <button className={styles.accountMenuItem} role="menuitem" onClick={() => { setIsMenuOpen(false); navigate('/student/settings') }}><Settings size={16} /> Settings</button>
+              <button className={styles.accountMenuItem} role="menuitem" onClick={() => void handleLogout()}><LogOut size={16} /> Log out</button>
+            </div>}
+          </div>
         </div>
       </div>
       <div className={styles.body}>

@@ -14,6 +14,11 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get(
     "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver"
 ).split(",") if host.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.environ.get(
+        "DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+    ).split(",") if origin.strip()
+]
 
 if not DEBUG and SECRET_KEY == "django-insecure-development-only":
     raise RuntimeError("DJANGO_SECRET_KEY must be set when DEBUG is false.")

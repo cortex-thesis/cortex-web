@@ -48,6 +48,11 @@ export default function AppRouter() {
       <Route path="/" element={<UnifiedLogin />} />
       <Route path="/welcome" element={<Splash />} />
       <Route path="/student/login" element={<Navigate to="/" replace />} />
+      <Route path="/student/register" element={<StudentRegistration />} />
+      <Route path="/student/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/register" element={<StudentRegistration />} />
       <Route element={<ProtectedRoute roles={['student']} />}>
       <Route path="/student/home" element={<Home />} />
       <Route path="/student/join-class" element={<JoinClass />} />
@@ -67,10 +72,6 @@ export default function AppRouter() {
       <Route path="/student/sessions" element={<StudentSessions />} />
       <Route path="/student/class/:classId" element={<ClassDetail />} />
       <Route path="/student/class/:classId/package/:packageSlug" element={<ClassPackageLessons />} />
-      <Route path="/student/register" element={<StudentRegistration />} />
-      <Route path="/student/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/student/calibration" element={<StudentCalibration />} />
       <Route path="/student/eeg-diagnostics" element={<EEGDiagnostics />} />
       <Route path="/student/hardware-required" element={<HardwareRequired />} />
@@ -100,11 +101,11 @@ export default function AppRouter() {
       />
 
       <Route path="/teacher/login" element={<Navigate to="/" replace />} />
+      <Route path="/teacher/register" element={<TeacherRegistration />} />
+      <Route path="/teacher/forgot-password" element={<ForgotPassword />} />
       <Route path="/teacher/notifications" element={<TeacherNotifications />} />
       <Route path="/teacher/settings" element={<TeacherSettings />} />
       <Route path="/teacher/profile" element={<TeacherProfile />} />
-      <Route path="/teacher/register" element={<TeacherRegistration />} />
-      <Route path="/teacher/forgot-password" element={<ForgotPassword />} />
       <Route path="/teacher/journals" element={<TeacherJournals />} />
       <Route path="/teacher/reports" element={<Reports />} />
       <Route path="/teacher/classes/new" element={<TeacherClassSetup />} />
@@ -114,9 +115,11 @@ export default function AppRouter() {
       </Route>
 
       {/* Administrator */}
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      <Route path="/admin/accounts" element={<AdminAccounts />} />
-      <Route path="/admin/evaluation" element={<Evaluation />} />
+      <Route element={<ProtectedRoute roles={['admin']} />}>
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/accounts" element={<AdminAccounts />} />
+        <Route path="/admin/evaluation" element={<Evaluation />} />
+      </Route>
       <Route path="/admin/login" element={<Navigate to="/" replace />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />

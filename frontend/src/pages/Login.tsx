@@ -93,6 +93,15 @@ export default function UnifiedLogin() {
             <Button type="submit" fullWidth loading={isLoading}>
               Continue
             </Button>
+
+            <button
+              type="button"
+              className={styles.joinLink}
+              onClick={() => navigate('/register')}
+              style={{ marginTop: 12, width: '100%' }}
+            >
+              Create an account
+            </button>
           </form>
 
           <div className={styles.divider}>

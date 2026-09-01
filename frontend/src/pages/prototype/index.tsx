@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Activity, ArrowLeft, BookOpen, Brain, Check, ChevronRight, CircleAlert,
@@ -9,6 +9,8 @@ import {
 import { TeacherDashboardTemplate, CalmZoneTemplate, PlayfulZoneTemplate } from '../../components/templates'
 import { Logo, StateBadge } from '../../components/atoms'
 import { mockStudentsLive, mockTeacher } from '../../mocks'
+import { api } from '../../lib/api'
+import { useAuthStore } from '../../store/authStore'
 import styles from './Prototype.module.css'
 
 const users = [
@@ -20,6 +22,13 @@ const users = [
 
 function AdminShell({ children, active = 'dashboard' }: { children: ReactNode; active?: string }) {
   const navigate = useNavigate()
+  const logout = useAuthStore((state) => state.logout)
+
+  async function handleLogout() {
+    await logout()
+    navigate('/', { replace: true })
+  }
+
   return <div className={styles.adminRoot}>
     <nav className={styles.adminNav}>
       <div className={styles.adminBrand}><ShieldCheck size={20} /> Cortex Admin</div>
@@ -27,7 +36,7 @@ function AdminShell({ children, active = 'dashboard' }: { children: ReactNode; a
         <button className={`${styles.adminLink} ${active === 'dashboard' ? styles.adminLinkActive : ''}`} onClick={() => navigate('/admin/dashboard')}>Overview</button>
         <button className={`${styles.adminLink} ${active === 'accounts' ? styles.adminLinkActive : ''}`} onClick={() => navigate('/admin/accounts')}>Accounts</button>
         <button className={styles.adminLink} onClick={() => navigate('/admin/evaluation')}>Validation</button>
-        <button className={styles.adminLink} onClick={() => navigate('/')}>Sign out</button>
+        <button className={styles.adminLink} onClick={handleLogout}>Sign out</button>
       </div>
     </nav>{children}
   </div>
@@ -57,12 +66,88 @@ export function AdminAccounts() {
   </div></AdminShell>
 }
 
-function Registration({ role }: { role:'student'|'teacher' }) {
+export function Registration({ role }: { role:'student'|'teacher' }) {
   const navigate=useNavigate(); const [done,setDone]=useState(false)
   return <PlayfulZoneTemplate showNav={false}><div className={styles.pageNarrow}><button className={styles.ghost} onClick={()=>navigate(`/${role}/login`)}><ArrowLeft size={14}/> Back to login</button><div className={styles.card} style={{marginTop:12}}>{done?<div className={styles.center}><div className={styles.heroIcon}><Check size={32}/></div><h1 className={styles.title}>Account ready</h1><p className={styles.subtitle} style={{margin:'8px auto 20px'}}>Your {role} account template has been created. You can now continue to sign in.</p><button className={styles.primary} onClick={()=>navigate(`/${role}/login`)}>Continue to login</button></div>:<><span className={styles.eyebrow}>{role} access</span><h1 className={styles.title}>Create your {role} account</h1><p className={styles.subtitle}>Set up a secure Cortex profile. All values are prototype-only for now.</p><div className={styles.divider}/><div className={styles.formGrid}><label className={styles.field}><span className={styles.label}>First name</span><input className={styles.input} placeholder="First name"/></label><label className={styles.field}><span className={styles.label}>Last name</span><input className={styles.input} placeholder="Last name"/></label><label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>School email</span><input className={styles.input} type="email" placeholder="you@school.edu"/></label>{role==='student'&&<label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>Class invitation code</span><input className={styles.input} placeholder="6-character code" maxLength={6}/></label>}{role==='teacher'&&<label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>School / SPED center</span><input className={styles.input} placeholder="Institution name"/></label>}<label className={styles.field}><span className={styles.label}>Password</span><input className={styles.input} type="password" placeholder="At least 8 characters"/></label><label className={styles.field}><span className={styles.label}>Confirm password</span><input className={styles.input} type="password" placeholder="Repeat password"/></label><label className={`${styles.checkRow} ${styles.span2}`}><input type="checkbox"/> I agree to the acceptable-use and data-privacy terms for this educational prototype.</label></div><button className={styles.primary} style={{width:'100%',marginTop:18}} onClick={()=>setDone(true)}>Create account</button></>}</div></div></PlayfulZoneTemplate>
 }
-export const StudentRegistration=()=> <Registration role="student"/>
-export const TeacherRegistration=()=> <Registration role="teacher"/>
+function AccountRegistration() {
+  const navigate = useNavigate()
+  const [role, setRole] = useState<'student' | 'teacher'>('student')
+  const [form, setForm] = useState({ username: '', firstName: '', middleName: '', lastName: '', email: '', password: '', confirmPassword: '', studentNumber: '', birthdate: '', gender: '', guardianName: '', guardianContact: '', guardianEmail: '', notes: '' })
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const update = (field: keyof typeof form, value: string) => setForm((current) => ({ ...current, [field]: value }))
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    setSaving(true)
+    try {
+      const name = `${form.firstName} ${form.lastName}`.trim()
+      await api('/auth/csrf/')
+      await api('/auth/register/', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          confirm_password: form.confirmPassword,
+          name,
+          first_name: form.firstName,
+          middle_name: form.middleName,
+          last_name: form.lastName,
+          role,
+          student_number: form.studentNumber,
+          birthdate: form.birthdate,
+          gender: form.gender,
+          guardian_name: form.guardianName,
+          guardian_contact: form.guardianContact,
+          guardian_email: form.guardianEmail,
+          notes: form.notes,
+        }),
+      })
+      setSaved(true)
+    } catch (registrationError) {
+      setError(registrationError instanceof Error ? registrationError.message : 'Unable to create the account.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return <PlayfulZoneTemplate showNav={false}><div className={styles.pageNarrow}>
+    <button className={styles.ghost} onClick={() => navigate('/')}><ArrowLeft size={14}/> Back to login</button>
+    <div className={styles.card} style={{ marginTop: 12 }}>
+      {saved ? <div className={styles.center}><div className={styles.heroIcon}><Check size={32}/></div><h1 className={styles.title}>Account saved</h1><p className={styles.subtitle} style={{ margin: '8px auto 20px' }}>Your {role} account is ready. You can now sign in.</p><button className={styles.primary} onClick={() => navigate('/', { replace: true })}>Continue to login</button></div> : <form onSubmit={submit}>
+        <span className={styles.eyebrow}>{role} access</span><h1 className={styles.title}>Create your {role} account</h1><p className={styles.subtitle}>Enter your details to save a secure Cortex profile.</p><div className={styles.divider}/>
+        <div className={styles.formGrid}>
+          <label className={styles.field}><span className={styles.label}>Username</span><input required className={styles.input} value={form.username} onChange={(event) => update('username', event.target.value)} /></label>
+          <label className={styles.field}><span className={styles.label}>Role</span><select className={styles.select} value={role} onChange={(event) => setRole(event.target.value as 'student' | 'teacher')}><option value="student">Student</option><option value="teacher">Teacher</option></select></label>
+          <label className={styles.field}><span className={styles.label}>First name</span><input required className={styles.input} value={form.firstName} onChange={(event) => update('firstName', event.target.value)} /></label>
+          <label className={styles.field}><span className={styles.label}>Middle name</span><input className={styles.input} value={form.middleName} onChange={(event) => update('middleName', event.target.value)} /></label>
+          <label className={styles.field}><span className={styles.label}>Last name</span><input required className={styles.input} value={form.lastName} onChange={(event) => update('lastName', event.target.value)} /></label>
+          <label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>School email</span><input required className={styles.input} type="email" value={form.email} onChange={(event) => update('email', event.target.value)} /></label>
+          {role === 'student' && <>
+            <label className={styles.field}><span className={styles.label}>Student number</span><input className={styles.input} value={form.studentNumber} onChange={(event) => update('studentNumber', event.target.value)} /></label>
+            <label className={styles.field}><span className={styles.label}>Birthdate</span><input className={styles.input} type="date" value={form.birthdate} onChange={(event) => update('birthdate', event.target.value)} /></label>
+            <label className={styles.field}><span className={styles.label}>Gender</span><input className={styles.input} value={form.gender} onChange={(event) => update('gender', event.target.value)} /></label>
+            <label className={styles.field}><span className={styles.label}>Guardian name</span><input className={styles.input} value={form.guardianName} onChange={(event) => update('guardianName', event.target.value)} /></label>
+            <label className={styles.field}><span className={styles.label}>Guardian contact</span><input className={styles.input} value={form.guardianContact} onChange={(event) => update('guardianContact', event.target.value)} /></label>
+            <label className={styles.field}><span className={styles.label}>Guardian email</span><input className={styles.input} type="email" value={form.guardianEmail} onChange={(event) => update('guardianEmail', event.target.value)} /></label>
+            <label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>Notes</span><textarea className={styles.textarea} value={form.notes} onChange={(event) => update('notes', event.target.value)} /></label>
+          </>}
+          <label className={styles.field}><span className={styles.label}>Password</span><input required minLength={12} className={styles.input} type="password" value={form.password} onChange={(event) => update('password', event.target.value)} /></label>
+          <label className={styles.field}><span className={styles.label}>Confirm password</span><input required minLength={12} className={styles.input} type="password" value={form.confirmPassword} onChange={(event) => update('confirmPassword', event.target.value)} /></label>
+        </div>
+        {error && <p className={styles.subtitle} role="alert" style={{ color: 'var(--color-danger)', marginTop: 12 }}>{error}</p>}
+        <button className={styles.primary} style={{ width: '100%', marginTop: 18 }} disabled={saving}>{saving ? 'Saving account…' : 'Create account'}</button>
+      </form>}
+    </div>
+  </div></PlayfulZoneTemplate>
+}
+
+export const StudentRegistration=()=> <AccountRegistration/>
+export const TeacherRegistration=()=> <AccountRegistration/>
 
 export function ForgotPassword() {
   const navigate=useNavigate(); const [sent,setSent]=useState(false)

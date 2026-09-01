@@ -1,18 +1,20 @@
 import json
 import secrets
 import string
+import uuid
 from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
+from django.contrib.auth.hashers import check_password, make_password
 from django.utils.crypto import constant_time_compare
 from django.contrib.auth.models import User
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, OperationalError, connection, transaction
 from django.db.models import Count, F, Q
 from django.http import FileResponse, HttpResponseServerError, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -20,7 +22,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import (
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
     Enrollment, Intervention, InterventionAlert, JournalEntry, LearningSession, Lesson,
-    Notification, Profile, SchoolClass, Slide, UserPreference,
+    Notification, Profile, PublicUser, SchoolClass, Slide, UserPreference,
 )
 
 PACKAGE_NAMES = {
@@ -44,6 +46,19 @@ def csrf_cookie(request):
 @ensure_csrf_cookie
 def frontend(request):
     """Render the React shell; React Router handles the existing client routes."""
+    profile = _profile(request)
+    path = request.path_info or "/"
+
+    if path.startswith("/admin/"):
+        if profile is None or profile.role != Profile.Role.ADMIN:
+            return redirect("/")
+    elif path.startswith("/teacher/"):
+        if profile is None or profile.role != Profile.Role.TEACHER:
+            return redirect("/")
+    elif path.startswith("/student/"):
+        if profile is None or profile.role != Profile.Role.STUDENT:
+            return redirect("/")
+
     manifest_path = settings.BASE_DIR / "frontend_dist" / ".vite" / "manifest.json"
     if not manifest_path.exists():
         return HttpResponseServerError(
@@ -76,10 +91,16 @@ def _profile(request):
         return None
     profile = Profile.objects.select_related("user", "school").filter(user_id=user_id).first()
     session_hash = request.session.get(HASH_SESSION_KEY, "")
+    session_role = request.session.get("role")
     if profile is None or not session_hash or not constant_time_compare(session_hash, profile.user.get_session_auth_hash()):
         request.session.flush()
         request._cortex_profile = None
         return None
+    if session_role and profile.role != session_role:
+        request.session.flush()
+        request._cortex_profile = None
+        return None
+    request.session["role"] = profile.role
     request.user = profile.user
     request._cortex_profile = profile
     return profile
@@ -96,6 +117,207 @@ def _require_profile(request, roles=None):
 
 def _audit(actor, action, obj, metadata=None):
     AuditLog.objects.create(actor=actor, action=action, object_type=obj.__class__.__name__, object_id=str(obj.pk), metadata=metadata or {})
+
+
+def _update_public_user_record(profile, data):
+    if not profile or not getattr(profile.user, "username", None):
+        return
+    try:
+        assignments = []
+        values = []
+        if "email" in data and data["email"] is not None:
+            assignments.append("email = %s")
+            values.append(str(data["email"]).strip())
+        if "username" in data and data["username"] is not None:
+            assignments.append("username = %s")
+            values.append(str(data["username"]).strip())
+        if "password" in data and data["password"]:
+            assignments.append("password_hash = %s")
+            values.append(make_password(str(data["password"])))
+        if "first_name" in data:
+            assignments.append("first_name = %s")
+            values.append(str(data.get("first_name") or "").strip())
+        if "middle_name" in data:
+            assignments.append("middle_name = %s")
+            values.append(str(data.get("middle_name") or "").strip())
+        if "last_name" in data:
+            assignments.append("last_name = %s")
+            values.append(str(data.get("last_name") or "").strip())
+        if "name" in data:
+            name = str(data.get("name") or "").strip()
+            first_name = str(data.get("first_name") or "").strip() or (name.split()[0] if name else "")
+            last_name = str(data.get("last_name") or "").strip() or (name.split()[-1] if name else "")
+            if first_name or last_name:
+                assignments.append("first_name = %s")
+                values.append(first_name)
+                assignments.append("last_name = %s")
+                values.append(last_name)
+        if not assignments:
+            return
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"UPDATE public.users SET {', '.join(assignments)}, updated_at = NOW() WHERE auth_user_id = %s OR username = %s",
+                [*values, profile.user.pk, profile.user.username],
+            )
+    except (OperationalError, Exception):
+        pass
+
+
+def _ensure_demo_accounts():
+    demo_accounts = [
+        {"username": "super-demo", "email": "super@cortex.edu", "password": "superusertest", "role": Profile.Role.ADMIN, "display_name": "Administrator"},
+        {"username": "student-demo", "email": "student@cortex.edu", "password": "studenttest", "role": Profile.Role.STUDENT, "display_name": "Student"},
+        {"username": "teacher-demo", "email": "teacher@cortex.edu", "password": "teachertest", "role": Profile.Role.TEACHER, "display_name": "Teacher"},
+    ]
+    for account in demo_accounts:
+        user = User.objects.filter(email__iexact=account["email"]).first()
+        if user is None:
+            username = account["username"]
+            suffix = 2
+            while User.objects.filter(username__iexact=username).exists():
+                username = f"{account['username']}-{suffix}"
+                suffix += 1
+            user = User.objects.create_user(
+                username=username,
+                email=account["email"],
+                password=account["password"],
+            )
+
+        profile, _ = Profile.objects.get_or_create(
+            user=user,
+            defaults={"role": account["role"], "display_name": account["display_name"]},
+        )
+        if user.email.lower() == account["email"].lower() and profile.role != account["role"]:
+            profile.role = account["role"]
+        if user.email.lower() == account["email"].lower() and not profile.display_name:
+            profile.display_name = account["display_name"]
+        if user.email.lower() == account["email"].lower() and (profile.role != account["role"] or not profile.display_name):
+            profile.save(update_fields=["role", "display_name"])
+
+
+def _public_user_for_identifier(identifier):
+    value = str(identifier or "").strip()
+    if not value:
+        return None
+    try:
+        return PublicUser.objects.filter(is_active=True).filter(Q(username__iexact=value) | Q(email__iexact=value)).first()
+    except (OperationalError, Exception):
+        return None
+
+
+def _sync_public_user_record(user, profile, *, password=None, school_id=None, email=None, username=None, first_name=None, middle_name=None, last_name=None, role=None, student_profile=None):
+    if not user or not username:
+        return
+    try:
+        normalized_school_id = None
+        with connection.cursor() as cursor:
+            if school_id:
+                try:
+                    uuid.UUID(str(school_id))
+                    cursor.execute("SELECT 1 FROM public.schools WHERE id = %s", [school_id])
+                    if cursor.fetchone():
+                        normalized_school_id = school_id
+                except (ValueError, TypeError):
+                    pass
+            cursor.execute(
+                """
+                SELECT id, auth_user_id
+                FROM public.users
+                WHERE username = %s OR email = %s
+                LIMIT 1
+                """,
+                [username, email or ""],
+            )
+            row = cursor.fetchone()
+            if row:
+                user_id, existing_auth = row
+                if existing_auth is None:
+                    cursor.execute(
+                        "UPDATE public.users SET auth_user_id = %s, updated_at = NOW() WHERE id = %s",
+                        [user.pk, user_id],
+                    )
+                public_user_id = user_id
+            else:
+                cursor.execute(
+                    """
+                    INSERT INTO public.users (
+                        id, school_id, email, username, password_hash, role,
+                        first_name, middle_name, last_name, profile_image_path,
+                        is_active, last_login_at, created_by, created_at, updated_at,
+                        auth_user_id
+                    ) VALUES (
+                        gen_random_uuid(), %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s,
+                        %s, NULL, NULL, NOW(), NOW(), %s
+                    ) RETURNING id
+                    """,
+                    [
+                        normalized_school_id, email, username,
+                        make_password(password) if password else profile.user.password,
+                        role or profile.role, first_name, middle_name, last_name,
+                        None, True, user.pk,
+                    ],
+                )
+                public_user_id = cursor.fetchone()[0]
+
+            if role == Profile.Role.STUDENT and student_profile:
+                cursor.execute(
+                    """
+                    INSERT INTO public.student_profiles (
+                        user_id, student_number, birthdate, gender, guardian_name,
+                        guardian_contact, guardian_email, consent_status, consent_date,
+                        consent_expiry_date, notes, created_at, updated_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL, NULL, %s, NOW(), NOW())
+                    ON CONFLICT (user_id) DO UPDATE SET
+                        student_number = EXCLUDED.student_number, birthdate = EXCLUDED.birthdate,
+                        gender = EXCLUDED.gender, guardian_name = EXCLUDED.guardian_name,
+                        guardian_contact = EXCLUDED.guardian_contact, guardian_email = EXCLUDED.guardian_email,
+                        notes = EXCLUDED.notes, updated_at = NOW()
+                    """,
+                    [public_user_id, student_profile.get("student_number"), student_profile.get("birthdate") or None,
+                     student_profile.get("gender"), student_profile.get("guardian_name"),
+                     student_profile.get("guardian_contact"), student_profile.get("guardian_email"),
+                     student_profile.get("notes")],
+                )
+            return public_user_id
+    except (OperationalError, Exception):
+        if connection.vendor == "postgresql":
+            raise
+
+
+def _associate_public_user_auth(public_user):
+    if not public_user:
+        return None
+    auth_user = None
+    if public_user.auth_user_id:
+        auth_user = User.objects.filter(pk=public_user.auth_user_id).first()
+    if auth_user is None:
+        auth_user, _ = User.objects.get_or_create(
+            username=public_user.username,
+            defaults={
+                "email": public_user.email or "",
+                "first_name": public_user.first_name or "",
+                "last_name": public_user.last_name or "",
+            },
+        )
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE public.users SET auth_user_id = %s, updated_at = NOW() WHERE id = %s",
+                    [auth_user.pk, str(public_user.id)],
+                )
+        except (OperationalError, Exception):
+            pass
+
+    if not hasattr(auth_user, "profile"):
+        Profile.objects.get_or_create(
+            user=auth_user,
+            defaults={
+                "role": public_user.role,
+                "display_name": " ".join(filter(None, [public_user.first_name, public_user.middle_name, public_user.last_name])).strip() or public_user.username,
+            },
+        )
+    return auth_user
 
 
 def _profile_data(profile):
@@ -302,15 +524,42 @@ def content_assignment(request, lesson_id):
 def register(request):
     try:
         data = _body(request)
-        username, password, name = str(data["username"]).strip(), str(data["password"]), str(data["name"]).strip()
+        username = str(data["username"]).strip()
+        email = str(data.get("email") or "").strip()
+        password = str(data["password"])
+        confirm_password = str(data.get("confirm_password") or "")
+        name = str(data["name"]).strip()
         role = str(data.get("role", Profile.Role.STUDENT))
         if role not in (Profile.Role.STUDENT, Profile.Role.TEACHER):
             return JsonResponse({"detail": "Only student and teacher accounts can self-register."}, status=400)
+        if password != confirm_password:
+            return JsonResponse({"detail": "Passwords do not match."}, status=400)
         if len(password) < 12:
             return JsonResponse({"detail": "Password must be at least 12 characters."}, status=400)
         with transaction.atomic():
-            user = User.objects.create_user(username=username, password=password)
+            user = User.objects.create_user(username=username, email=email or None, password=password)
             profile = Profile.objects.create(user=user, role=role, display_name=name)
+            _sync_public_user_record(
+                user,
+                profile,
+                password=password,
+                school_id=data.get("school_id"),
+                email=email or user.email,
+                username=username,
+                first_name=str(data.get("first_name") or "").strip(),
+                middle_name=str(data.get("middle_name") or "").strip(),
+                last_name=str(data.get("last_name") or "").strip(),
+                role=role,
+                student_profile={
+                    "student_number": str(data.get("student_number") or "").strip() or None,
+                    "birthdate": str(data.get("birthdate") or "").strip() or None,
+                    "gender": str(data.get("gender") or "").strip() or None,
+                    "guardian_name": str(data.get("guardian_name") or "").strip() or None,
+                    "guardian_contact": str(data.get("guardian_contact") or "").strip() or None,
+                    "guardian_email": str(data.get("guardian_email") or "").strip() or None,
+                    "notes": str(data.get("notes") or "").strip() or None,
+                },
+            )
         _audit(profile, "account_created", profile, {"role": role})
         return JsonResponse(_profile_data(profile), status=201)
     except (KeyError, ValueError):
@@ -321,20 +570,41 @@ def register(request):
 
 @require_POST
 def login_view(request):
+    _ensure_demo_accounts()
     try:
         data = _body(request)
         identifier = str(data.get("username") or data.get("email") or "").strip()
+        password = str(data.get("password", ""))
         username = identifier
         if "@" in identifier:
             matched = User.objects.filter(email__iexact=identifier).only("username").first()
             if matched:
                 username = matched.username
-        user = authenticate(request, username=username, password=data.get("password", ""))
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            public_user = _public_user_for_identifier(identifier)
+            if public_user is None:
+                return JsonResponse({"detail": "Invalid credentials."}, status=401)
+            stored_hash = (public_user.password_hash or "").strip()
+            if not stored_hash or (not check_password(password, stored_hash) and stored_hash != password):
+                return JsonResponse({"detail": "Invalid credentials."}, status=401)
+            user = _associate_public_user_auth(public_user)
+            if user is None:
+                return JsonResponse({"detail": "Invalid credentials."}, status=401)
     except ValueError:
         return JsonResponse({"detail": "Request body must be valid JSON."}, status=400)
     if user is None or not hasattr(user, "profile"):
         return JsonResponse({"detail": "Invalid credentials."}, status=401)
     login(request, user)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE public.users SET last_login_at = NOW(), updated_at = NOW() WHERE username = %s OR email = %s",
+                [user.username, user.email or ""],
+            )
+    except (OperationalError, Exception):
+        pass
+    request.session["role"] = user.profile.role
     _audit(user.profile, "login", user.profile)
     data = _profile_data(user.profile)
     if user.profile.role == Profile.Role.TEACHER:
@@ -348,7 +618,14 @@ def login_view(request):
 def logout_view(request):
     profile = _profile(request)
     if profile:
+        active_session = LearningSession.objects.filter(student=profile, ended_at__isnull=True).order_by("-started_at").first()
+        if active_session is not None:
+            active_session.ended_at = timezone.now()
+            active_session.status = LearningSession.Status.COMPLETED
+            active_session.save(update_fields=["ended_at", "status"])
+            _audit(profile, "session_ended", active_session)
         _audit(profile, "logout", profile)
+    request.session.pop("role", None)
     logout(request)
     return JsonResponse({"status": "ok"})
 
@@ -376,11 +653,50 @@ def student_profile(request):
             name = str(data.get("name", profile.display_name)).strip()
             if not name:
                 raise ValueError
-            profile.display_name = name
+            user = profile.user
+            if "username" in data:
+                username = str(data["username"]).strip()
+                if not username:
+                    raise ValueError
+                if User.objects.exclude(pk=user.pk).filter(username__iexact=username).exists():
+                    return JsonResponse({"detail": "That username is already in use."}, status=409)
+                user.username = username
+            if "email" in data:
+                email = str(data["email"]).strip()
+                if email:
+                    if User.objects.exclude(pk=user.pk).filter(email__iexact=email).exists():
+                        return JsonResponse({"detail": "That email is already in use."}, status=409)
+                    user.email = email
+            if "password" in data and str(data["password"]).strip():
+                password = str(data["password"])
+                if len(password) < 12:
+                    return JsonResponse({"detail": "Password must be at least 12 characters."}, status=400)
+                user.set_password(password)
+            if "first_name" in data or "last_name" in data or "middle_name" in data:
+                first_name = str(data.get("first_name") or "").strip()
+                middle_name = str(data.get("middle_name") or "").strip()
+                last_name = str(data.get("last_name") or "").strip()
+                if first_name or last_name:
+                    name = " ".join(filter(None, [first_name, middle_name, last_name])).strip()
+                    profile.display_name = name
+                else:
+                    profile.display_name = name
+            else:
+                profile.display_name = name
             profile.guardian_name = str(data.get("guardian_name", profile.guardian_name)).strip()
             profile.guardian_contact = str(data.get("guardian_contact", profile.guardian_contact)).strip()
             profile.guardian_email = str(data.get("guardian_email", profile.guardian_email)).strip()
+            user.save(update_fields=["username", "email", "password"] if "password" in data and str(data["password"]).strip() else ["username", "email"])
             profile.save(update_fields=["display_name", "guardian_name", "guardian_contact", "guardian_email", "updated_at"])
+            _update_public_user_record(profile, {
+                "email": user.email,
+                "username": user.username,
+                "password": data.get("password") if "password" in data and str(data["password"]).strip() else None,
+                "first_name": data.get("first_name"),
+                "middle_name": data.get("middle_name"),
+                "last_name": data.get("last_name"),
+                "name": profile.display_name,
+            })
             _audit(profile, "profile_updated", profile)
         except ValueError:
             return JsonResponse({"detail": "Profile values are invalid."}, status=400)
@@ -389,8 +705,24 @@ def student_profile(request):
         "guardian_name": profile.guardian_name,
         "guardian_contact": profile.guardian_contact,
         "guardian_email": profile.guardian_email,
+        "email": profile.user.email,
+        "username": profile.user.username,
     })
     return JsonResponse(data)
+
+
+@require_POST
+def verify_student_profile_password(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    try:
+        password = str(_body(request)["password"])
+    except (KeyError, ValueError):
+        return JsonResponse({"detail": "Password is required."}, status=400)
+    if not authenticate(request, username=profile.user.username, password=password):
+        return JsonResponse({"detail": "The password is incorrect."}, status=403)
+    return JsonResponse({"verified": True})
 
 
 @require_http_methods(["GET", "PATCH"])
@@ -544,15 +876,56 @@ def teacher_profile(request):
             name = str(data.get("name", profile.display_name)).strip()
             if not name:
                 raise ValueError
-            profile.display_name = name
+            user = profile.user
+            if "username" in data:
+                username = str(data["username"]).strip()
+                if not username:
+                    raise ValueError
+                if User.objects.exclude(pk=user.pk).filter(username__iexact=username).exists():
+                    return JsonResponse({"detail": "That username is already in use."}, status=409)
+                user.username = username
+            if "email" in data:
+                email = str(data["email"]).strip()
+                if email:
+                    if User.objects.exclude(pk=user.pk).filter(email__iexact=email).exists():
+                        return JsonResponse({"detail": "That email is already in use."}, status=409)
+                    user.email = email
+            if "password" in data and str(data["password"]).strip():
+                password = str(data["password"])
+                if len(password) < 12:
+                    return JsonResponse({"detail": "Password must be at least 12 characters."}, status=400)
+                user.set_password(password)
+            if "first_name" in data or "last_name" in data or "middle_name" in data:
+                first_name = str(data.get("first_name") or "").strip()
+                middle_name = str(data.get("middle_name") or "").strip()
+                last_name = str(data.get("last_name") or "").strip()
+                if first_name or last_name:
+                    name = " ".join(filter(None, [first_name, middle_name, last_name])).strip()
+                    profile.display_name = name
+                else:
+                    profile.display_name = name
+            else:
+                profile.display_name = name
             profile.nonclinical_notes = str(data.get("bio", profile.nonclinical_notes)).strip()
+            user.save(update_fields=["username", "email", "password"] if "password" in data and str(data["password"]).strip() else ["username", "email"])
             profile.save(update_fields=["display_name", "nonclinical_notes", "updated_at"])
+            _update_public_user_record(profile, {
+                "email": user.email,
+                "username": user.username,
+                "password": data.get("password") if "password" in data and str(data["password"]).strip() else None,
+                "first_name": data.get("first_name"),
+                "middle_name": data.get("middle_name"),
+                "last_name": data.get("last_name"),
+                "name": profile.display_name,
+            })
             _audit(profile, "profile_updated", profile)
         except ValueError:
             return JsonResponse({"detail": "Profile values are invalid."}, status=400)
     data = _profile_data(profile)
     data["bio"] = profile.nonclinical_notes
     data["class_count"] = profile.taught_classes.filter(status=SchoolClass.Status.ACTIVE).count()
+    data["email"] = profile.user.email
+    data["username"] = profile.user.username
     return JsonResponse(data)
 
 

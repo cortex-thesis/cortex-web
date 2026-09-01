@@ -83,8 +83,67 @@ class WorkflowTests(TestCase):
         self.assertEqual(dashboard.json()["student"]["name"], "Student")
         self.assertIsNone(dashboard.json()["active_session"])
 
+    def test_prepared_demo_credentials_are_created_and_can_log_in(self):
+        response = self.client.post(
+            "/api/auth/login/",
+            data=json.dumps({"email": "student@cortex.edu", "password": "studenttest"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["role"], Profile.Role.STUDENT)
+        self.assertTrue(User.objects.filter(email="student@cortex.edu").exists())
+
+    def test_logout_ends_active_session(self):
+        school_class = SchoolClass.objects.create(name="Session class", code="SESS1", teacher=self.teacher)
+        Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
+        ConsentRecord.objects.create(profile=self.student, consent_type="eeg_processing", version="1", granted=True)
+        self._login(self.student)
+        start = self.client.post("/api/sessions/start/", data=json.dumps({"class_id": school_class.pk}), content_type="application/json")
+        session_id = start.json()["id"]
+        self.client.post("/api/auth/logout/", content_type="application/json")
+        session = LearningSession.objects.get(pk=session_id)
+        self.assertIsNotNone(session.ended_at)
+        self.assertEqual(session.status, LearningSession.Status.COMPLETED)
+
+    def test_student_profile_edit_requires_current_password(self):
+        self._login(self.student)
+        wrong = self.client.post(
+            "/api/student/profile/verify-password/",
+            data=json.dumps({"password": "wrong-password"}),
+            content_type="application/json",
+        )
+        self.assertEqual(wrong.status_code, 403)
+        correct = self.client.post(
+            "/api/student/profile/verify-password/",
+            data=json.dumps({"password": "a-very-long-test-password"}),
+            content_type="application/json",
+        )
+        self.assertEqual(correct.status_code, 200)
+        self.assertEqual(correct.json(), {"verified": True})
+
+    def test_public_registration_is_available_without_authentication(self):
+        response = self.client.post(
+            "/api/auth/register/",
+            data=json.dumps({
+                "username": "newstudent",
+                "email": "newstudent@example.test",
+                "password": "a-very-long-test-password",
+                "name": "New Student",
+                "role": Profile.Role.STUDENT,
+                "first_name": "New",
+                "last_name": "Student",
+                "confirm_password": "a-very-long-test-password",
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(User.objects.filter(username="newstudent", email="newstudent@example.test").exists())
+        self.assertTrue(Profile.objects.filter(user__username="newstudent", role=Profile.Role.STUDENT).exists())
+        login = self.client.post("/api/auth/login/", data=json.dumps({"email": "newstudent@example.test", "password": "a-very-long-test-password"}), content_type="application/json")
+        self.assertEqual(login.status_code, 200)
+
     def test_student_joins_class_and_receives_notification(self):
-        CurriculumPackage.objects.create(slug="life", name="Life")
+        CurriculumPackage.objects.get_or_create(slug="life", defaults={"name": "Life"})
         school_class = SchoolClass.objects.create(name="Joinable", code="JOIN1", teacher=self.teacher)
         self._login(self.student)
         response = self.client.post("/api/student/classes/join/", data=json.dumps({"code": "join1"}), content_type="application/json")
@@ -133,7 +192,7 @@ class WorkflowTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_teacher_cannot_manage_content(self):
-        CurriculumPackage.objects.create(slug="life", name="Life")
+        CurriculumPackage.objects.get_or_create(slug="life", defaults={"name": "Life"})
         self._login(self.teacher)
         response = self.client.post(
             "/api/content/lessons/",
@@ -195,17 +254,19 @@ class WorkflowTests(TestCase):
 
 
 class RoutingTests(TestCase):
-    def test_frontend_routes_render_react_shell(self):
-        for route in (
-            "/",
-            "/student/home",
-            "/teacher/dashboard",
-            "/admin/dashboard",
-            "/admin/accounts",
-        ):
-            response = self.client.get(route)
-            self.assertEqual(response.status_code, 200)
-            self.assertContains(response, '<div id="root"></div>', html=True)
+    def setUp(self):
+        self.teacher = self._account("teacher", "Teacher", Profile.Role.TEACHER)
+        self.admin = self._account("admin", "Administrator", Profile.Role.ADMIN)
+        self.student = self._account("student", "Student", Profile.Role.STUDENT)
+
+    def _account(self, username, name, role):
+        user = User.objects.create_user(username=username, password="a-very-long-test-password")
+        return Profile.objects.create(user=user, display_name=name, role=role)
+
+    def test_site_routes_are_not_served_by_backend(self):
+        for path in ("/", "/student/home", "/teacher/dashboard", "/admin/dashboard", "/django-admin/"):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 404)
 
     def test_health_endpoint(self):
         response = self.client.get("/api/health/")

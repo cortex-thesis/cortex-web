@@ -53,9 +53,9 @@ Enable that endpoint, create its access keys, create a private
 `private-content` bucket, and fill the `SUPABASE_STORAGE_*` variables in `.env`.
 Never expose those keys through `VITE_*` variables or browser code.
 
-Open `http://127.0.0.1:8000`. Django serves the existing React interface and
-keeps all client-side routes working. Backend routes live under `/api/`; the
-health check is available at `/api/health/`.
+Open `http://localhost:5173`. Vite serves the existing React interface and
+proxies all `/api/` requests to Django on port 8000. The backend health check
+is available internally at `/api/health/`.
 
 The minimum school workflow is available through session-authenticated API
 routes for registration/login, profiles, class creation and assignment,
@@ -121,7 +121,11 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open `http://localhost:5173` in your browser. Vite serves the React
+application and proxies `/api/*` requests to Django on port 8000.
+
+Keep Django running in a separate terminal with `python manage.py runserver`.
+Port 8000 is the internal backend service and should not be opened as the site.
 
 ---
 
@@ -134,9 +138,8 @@ VITE_API_URL=http://localhost:8000/api
 VITE_WS_URL=ws://localhost:8000/ws
 ```
 
-These point to the Django backend. The frontend runs independently
-without the backend — mock data is used for all screens during
-frontend development.
+The application uses relative `/api` requests, so the browser only sees the
+Vite site URL. Vite proxies those requests to Django during development.
 
 **Never commit `.env` files.** They are in `.gitignore`.
 
@@ -428,7 +431,7 @@ Here is what you need to know to stay in sync:
 **1. Run your backend on port 8000.**
 The frontend dev environment expects `http://localhost:8000`.
 
-**2. Enable CORS for localhost:5173.**
+**2. Enable CSRF trust for the Vite-only development server.**
 The Vite dev server runs on port 5173. Add it to your Django
 `CORS_ALLOWED_ORIGINS`.
 

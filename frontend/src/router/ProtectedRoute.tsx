@@ -5,6 +5,9 @@ import { useAuthStore } from '../store/authStore'
 export default function ProtectedRoute({ roles }: { roles: UserRole[] }) {
   const location = useLocation()
   const user = useAuthStore((state) => state.user)
+  const initialized = useAuthStore((state) => state.isInitialized)
+
+  if (!initialized) return null
   if (!user) return <Navigate to="/" replace state={{ from: location.pathname }} />
   if (!roles.includes(user.role)) {
     const destination = user.role === 'teacher' ? '/teacher/dashboard' : user.role === 'admin' ? '/admin/dashboard' : '/student/home'

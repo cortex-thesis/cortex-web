@@ -35,6 +35,7 @@ interface AuthState {
   initialize: () => Promise<void>
   login: (credentials: LoginCredentials) => Promise<User>
   logout: () => Promise<void>
+  updateUser: (user: Partial<User>) => void
   clearError: () => void
 }
 
@@ -77,7 +78,7 @@ const initialUser = storedUser()
 export const useAuthStore = create<AuthState>()((set) => ({
   user: initialUser,
   isAuthenticated: Boolean(initialUser),
-  isInitialized: Boolean(initialUser),
+  isInitialized: false,
   isLoading: false,
   error: null,
 
@@ -101,6 +102,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   login: async (credentials) => {
     set({ isLoading: true, error: null })
     try {
+      await api('/auth/csrf/')
       const response = await api<AuthUser>('/auth/login/', {
         method: 'POST', body: JSON.stringify(credentials),
       })
@@ -143,6 +145,13 @@ export const useAuthStore = create<AuthState>()((set) => ({
       set({ user: null, isAuthenticated: false, error: null })
     }
   },
+
+  updateUser: (nextUser) => set((state) => {
+    if (!state.user) return state
+    const merged = { ...state.user, ...nextUser }
+    storeUser(merged)
+    return { user: merged }
+  }),
 
   clearError: () => set({ error: null }),
 }))
