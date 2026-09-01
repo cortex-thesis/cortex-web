@@ -1,6 +1,4 @@
 import json
-from types import SimpleNamespace
-from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -140,30 +138,6 @@ class WorkflowTests(TestCase):
         self.assertEqual(self.student.user.email, "updated.student@example.test")
         self.assertEqual(self.student.user.first_name, "Updated")
         self.assertEqual(self.student.user.last_name, "Student")
-
-    def test_teacher_profile_update_syncs_public_user_by_current_or_previous_username(self):
-        cursor = type("Cursor", (), {"rowcount": 1, "execute": lambda self, query, params: setattr(self, "call", (query, params))})()
-        with patch("web.views.connection.cursor") as cursor_factory:
-            cursor_factory.return_value.__enter__.return_value = cursor
-            from .views import _update_public_user_record
-            _update_public_user_record(
-                SimpleNamespace(user=SimpleNamespace(pk=7, username="updated-teacher")),
-                {
-                    "name": "Updated Teacher",
-                    "email": "updated.teacher@example.test",
-                    "first_name": "Updated",
-                    "middle_name": None,
-                    "last_name": "Teacher",
-                },
-                previous_username="teacher",
-            )
-
-        query, params = cursor.call
-        self.assertIn("auth_user_id = %s", query)
-        self.assertIn("WHERE auth_user_id = %s OR username = %s OR username = %s", query)
-        self.assertEqual(query.count("first_name = %s"), 1)
-        self.assertEqual(query.count("last_name = %s"), 1)
-        self.assertEqual(params[-3:], [7, "updated-teacher", "teacher"])
 
     def test_public_registration_is_available_without_authentication(self):
         response = self.client.post(

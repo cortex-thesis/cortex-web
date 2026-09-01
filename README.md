@@ -50,6 +50,12 @@ For a safe local reset, stop Supabase, confirm that the project is local and unl
 
 Production backup and recovery must cover two coordinated assets: PostgreSQL metadata and the local EEG directory. Preserve recording UUID/object-key relationships and test restoring both. A database-only backup cannot restore signals; a file-only backup cannot restore sessions, predictions, or provenance.
 
+### Legacy duplicate tables
+
+Migration `0012_archive_duplicate_public_tables` moves the former unprefixed SQL-export tables from `public` to the `legacy_duplicates` schema. It does not delete their rows. The application does not model or query that schema; active application tables are Django-owned (`web_*`, `auth_*`, and `django_*`). Back up PostgreSQL and inspect the archived row counts before considering a later permanent drop. Reversing migration `0012` restores the tables to `public` only when no same-named public table exists.
+
+For manual Supabase SQL-editor cleanup, run `supabase/scripts/duplicate_tables_preflight.sql` first and inspect every result. After backing up PostgreSQL, run `supabase/scripts/archive_duplicate_tables.sql`. The matching `restore_duplicate_tables.sql` is an emergency rollback. Do not run both the Django archival migration and the manual archive script concurrently; each is idempotent when the other has already completed, but schema changes should still be performed through one controlled deployment path.
+
 React + TypeScript frontend for Cortex: an EEG-integrated neuro-adaptive
 multimedia application for ADHD learners in SPED transition curriculum settings.
 
