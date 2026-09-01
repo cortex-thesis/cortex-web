@@ -52,7 +52,8 @@ export function primeApiCache(path: string, value: unknown) {
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers)
   const method = (options.method ?? 'GET').toUpperCase()
-  if (method === 'GET') {
+  const isProfileRequest = path === '/student/profile/' || path === '/teacher/profile/'
+  if (method === 'GET' && !isProfileRequest) {
     const cached = getCache.get(path)
     if (cached && cached.expiresAt > Date.now()) return cached.value as T
     const stored = cachedApiValue<T>(path)
@@ -72,7 +73,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   pendingGets.set(path, request)
   try {
     const value = await request
-    if (!path.startsWith('/auth/')) primeApiCache(path, value)
+    if (!path.startsWith('/auth/') && !isProfileRequest) primeApiCache(path, value)
     else getCache.set(path, { expiresAt: Date.now() + GET_CACHE_TTL_MS, value })
     return value
   } finally {

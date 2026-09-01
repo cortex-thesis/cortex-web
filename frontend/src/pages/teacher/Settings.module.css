@@ -134,6 +134,45 @@
   background: var(--color-surface-1);
 }
 
+.formField {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.formField > span,
+.card > div > strong {
+  font-size: var(--text-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.formField input,
+.formField textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 8px);
+  font: inherit;
+  color: var(--color-text-primary);
+  background: var(--color-white);
+}
+
+.formField textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.message {
+  margin: 0;
+  color: var(--color-teal);
+  font-size: var(--text-caption);
+}
+
 .logoutBtn {
   align-self: flex-start;
 }
