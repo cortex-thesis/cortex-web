@@ -79,6 +79,7 @@ elif DATABASE_URL and not TEMPLATE_ONLY:
     DATABASES["default"].setdefault("OPTIONS", {}).update({
         "prepare_threshold": None,
         "connect_timeout": 10,
+        "options": "-c search_path=django,public",
     })
 elif TEMPLATE_ONLY:
     DATABASES = {
