@@ -24,6 +24,22 @@ __pycache__/
 *.py[cod]
 *.local
 
+# Local EEG signals, analytical databases, models, and processing scratch data.
+local-data/
+*.duckdb
+*.duckdb.wal
+*.edf
+*.bdf
+*.fif
+*.parquet
+*.joblib
+*.pkl
+*.onnx
+*.tmp
+# Small synthetic fixtures may be committed deliberately here.
+!tests/fixtures/**
+!web/tests/fixtures/**
+
 .vscode/*
 !.vscode/extensions.json
 .idea

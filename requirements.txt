@@ -3,3 +3,5 @@ dj-database-url>=2.3,<3.0
 psycopg[binary]>=3.2,<4.0
 python-dotenv>=1.0,<2.0
 django-storages[s3]>=1.14,<2.0
+pyarrow>=17,<22
+duckdb>=1.1,<2.0

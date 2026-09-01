@@ -6,11 +6,9 @@ from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
-from django.contrib.auth.hashers import check_password, make_password
 from django.utils.crypto import constant_time_compare
-from django.contrib.auth.models import User
 from django.db import IntegrityError, OperationalError, connection, transaction
 from django.db.models import Count, F, Q
 from django.http import FileResponse, HttpResponseServerError, JsonResponse
@@ -30,6 +28,7 @@ PACKAGE_NAMES = {
     "livelihood": "Livelihood", "functional_academics": "Functional Academics",
     "career": "Career", "enrichment": "Enrichment",
 }
+User = get_user_model()
 ALLOWED_UPLOADS = {"image/jpeg", "image/png", "image/gif", "image/webp", "audio/mpeg", "audio/wav", "video/mp4", "video/webm", "application/pdf"}
 MAX_ASSET_BYTES = 10 * 1024 * 1024
 
@@ -128,8 +127,6 @@ def _update_public_user_record(profile, data, previous_username=None):
             field_values["email"] = str(data["email"]).strip()
         if "username" in data and data["username"] is not None:
             field_values["username"] = str(data["username"]).strip()
-        if "password" in data and data["password"]:
-            field_values["password_hash"] = make_password(str(data["password"]))
         if "first_name" in data:
             field_values["first_name"] = str(data.get("first_name") or "").strip()
         if "middle_name" in data:
@@ -265,7 +262,7 @@ def _sync_public_user_record(user, profile, *, password=None, school_id=None, em
                     """,
                     [
                         normalized_school_id, email, username,
-                        make_password(password) if password else profile.user.password,
+                        None,
                         role or profile.role, first_name, middle_name, last_name,
                         None, True, user.pk,
                     ],
@@ -594,15 +591,7 @@ def login_view(request):
                 username = matched.username
         user = authenticate(request, username=username, password=password)
         if user is None:
-            public_user = _public_user_for_identifier(identifier)
-            if public_user is None:
-                return JsonResponse({"detail": "Invalid credentials."}, status=401)
-            stored_hash = (public_user.password_hash or "").strip()
-            if not stored_hash or (not check_password(password, stored_hash) and stored_hash != password):
-                return JsonResponse({"detail": "Invalid credentials."}, status=401)
-            user = _associate_public_user_auth(public_user)
-            if user is None:
-                return JsonResponse({"detail": "Invalid credentials."}, status=401)
+            return JsonResponse({"detail": "Invalid credentials."}, status=401)
     except ValueError:
         return JsonResponse({"detail": "Request body must be valid JSON."}, status=400)
     if user is None or not hasattr(user, "profile"):

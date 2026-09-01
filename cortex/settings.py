@@ -62,8 +62,32 @@ ASGI_APPLICATION = "cortex.asgi.application"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 TEMPLATE_ONLY = os.environ.get("CORTEX_TEMPLATE_ONLY", "false").lower() == "true"
 
-if "test" in sys.argv:
+def _postgres_database_from_environment():
+    """Build a PostgreSQL config without embedding credentials in source."""
+    if not os.environ.get("DB_HOST"):
+        return None
+    sslmode = os.environ.get("DB_SSLMODE", "require")
+    return {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DB_NAME", "postgres"),
+        "USER": os.environ.get("DB_USER", "postgres"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+        "HOST": os.environ["DB_HOST"],
+        "PORT": os.environ.get("DB_PORT", "5432"),
+        "CONN_MAX_AGE": int(os.environ.get("DATABASE_CONN_MAX_AGE", "120")),
+        "CONN_HEALTH_CHECKS": os.environ.get("DATABASE_CONN_HEALTH_CHECKS", "false").lower() == "true",
+        "OPTIONS": {
+            "sslmode": sslmode,
+            "connect_timeout": 10,
+            "prepare_threshold": None,
+            "options": f"-c search_path={os.environ.get('DB_SEARCH_PATH', 'public')}",
+        },
+    }
+
+if "test" in sys.argv and not os.environ.get("CORTEX_TEST_POSTGRES"):
     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}}
+elif not TEMPLATE_ONLY and _postgres_database_from_environment():
+    DATABASES = {"default": _postgres_database_from_environment()}
 elif DATABASE_URL and not TEMPLATE_ONLY:
     DATABASES = {
         "default": dj_database_url.parse(
@@ -72,14 +96,15 @@ elif DATABASE_URL and not TEMPLATE_ONLY:
             # new TCP/TLS/PostgreSQL handshake on every API request.
             conn_max_age=int(os.environ.get("DATABASE_CONN_MAX_AGE", "120")),
             conn_health_checks=os.environ.get("DATABASE_CONN_HEALTH_CHECKS", "false").lower() == "true",
-            ssl_require=True,
+            ssl_require=os.environ.get("DB_SSLMODE", "require") == "require",
         )
     }
     # Compatible with Supabase's transaction-mode connection pooler.
     DATABASES["default"].setdefault("OPTIONS", {}).update({
         "prepare_threshold": None,
         "connect_timeout": 10,
-        "options": "-c search_path=django,public",
+        "sslmode": os.environ.get("DB_SSLMODE", "require"),
+        "options": f"-c search_path={os.environ.get('DB_SEARCH_PATH', 'django,public')}",
     })
 elif TEMPLATE_ONLY:
     DATABASES = {
@@ -136,6 +161,13 @@ STATICFILES_DIRS = [BASE_DIR / "frontend_dist"] if (BASE_DIR / "frontend_dist").
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# EEG signal data is intentionally separate from both PostgreSQL and MEDIA_ROOT.
+EEG_DATA_ROOT = Path(os.environ.get("EEG_DATA_ROOT", BASE_DIR / "local-data"))
+EEG_RAW_SUBDIR = os.environ.get("EEG_RAW_SUBDIR", "raw")
+EEG_PROCESSED_SUBDIR = os.environ.get("EEG_PROCESSED_SUBDIR", "processed")
+EEG_MODEL_SUBDIR = os.environ.get("EEG_MODEL_SUBDIR", "models")
+EEG_TEMP_SUBDIR = os.environ.get("EEG_TEMP_SUBDIR", "temp")
 
 SUPABASE_STORAGE_ENDPOINT = os.environ.get("SUPABASE_STORAGE_ENDPOINT")
 if SUPABASE_STORAGE_ENDPOINT and "test" not in sys.argv:

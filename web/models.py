@@ -1,6 +1,8 @@
 import uuid
+from pathlib import PurePosixPath
 
-from django.contrib.auth.models import User
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -33,7 +35,8 @@ class PublicUser(models.Model):
     school_id = models.UUIDField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     username = models.CharField(max_length=100, unique=True)
-    password_hash = models.TextField()
+    # Deprecated compatibility column. Django's auth user password is authoritative.
+    password_hash = models.TextField(null=True, blank=True)
     role = models.CharField(max_length=20)
     first_name = models.CharField(max_length=100, null=True, blank=True)
     middle_name = models.CharField(max_length=100, null=True, blank=True)
@@ -60,7 +63,7 @@ class Profile(models.Model):
         TEACHER = "teacher", "Teacher"
         ADMIN = "admin", "Administrator"
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     school = models.ForeignKey(School, null=True, blank=True, on_delete=models.PROTECT, related_name="profiles")
     role = models.CharField(max_length=20, choices=Role.choices)
     display_name = models.CharField(max_length=160)
@@ -424,7 +427,10 @@ class AuditLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        indexes = [models.Index(fields=("object_type", "object_id"))]
+        indexes = [
+            models.Index(fields=("object_type", "object_id")),
+            models.Index(fields=("actor", "-created_at")),
+        ]
 
 
 class EEGDevice(TimeStampedModel):
@@ -487,6 +493,7 @@ class EEGConnection(models.Model):
 class EEGRecording(models.Model):
     class ProcessingStatus(models.TextChoices):
         PENDING = "pending", "Pending"
+        RECORDING = "recording", "Recording"
         PROCESSING = "processing", "Processing"
         COMPLETED = "completed", "Completed"
         FAILED = "failed", "Failed"
@@ -497,13 +504,57 @@ class EEGRecording(models.Model):
     started_at = models.DateTimeField()
     ended_at = models.DateTimeField(null=True, blank=True)
     sampling_rate_hz = models.PositiveIntegerField()
+    channel_count = models.PositiveSmallIntegerField(default=1)
+    channel_names = models.JSONField(default=list, blank=True)
+    storage_location = models.CharField(max_length=20, default="local")
     raw_storage_path = models.TextField(blank=True)
     processed_storage_path = models.TextField(blank=True)
     format = models.CharField(max_length=20, default="parquet")
     total_samples = models.PositiveBigIntegerField(default=0)
+    raw_file_size_bytes = models.PositiveBigIntegerField(default=0)
+    processed_file_size_bytes = models.PositiveBigIntegerField(default=0)
+    raw_checksum_sha256 = models.CharField(max_length=64, blank=True)
+    processed_checksum_sha256 = models.CharField(max_length=64, blank=True)
     processing_status = models.CharField(max_length=20, choices=ProcessingStatus.choices, default=ProcessingStatus.PENDING)
     processing_error = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=("session", "-created_at"))]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(ended_at__isnull=True) | models.Q(ended_at__gte=models.F("started_at")), name="recording_end_not_before_start"),
+        ]
+
+    @property
+    def raw_object_key(self):
+        return self.raw_storage_path
+
+    @property
+    def processed_object_key(self):
+        return self.processed_storage_path
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        if self.sampling_rate_hz <= 0:
+            errors["sampling_rate_hz"] = "Sampling rate must be positive."
+        if self.channel_count <= 0:
+            errors["channel_count"] = "Channel count must be positive."
+        if self.ended_at and self.ended_at < self.started_at:
+            errors["ended_at"] = "End time cannot precede start time."
+        for field in ("raw_checksum_sha256", "processed_checksum_sha256"):
+            value = getattr(self, field)
+            if value and (len(value) != 64 or any(c not in "0123456789abcdefABCDEF" for c in value)):
+                errors[field] = "Checksum must be a 64-character SHA-256 hex string."
+        for field in ("raw_storage_path", "processed_storage_path"):
+            value = getattr(self, field)
+            normalized = value.replace("\\", "/")
+            path = PurePosixPath(normalized)
+            if value and (path.is_absolute() or ".." in path.parts or (len(normalized) > 1 and normalized[1] == ":")):
+                errors[field] = "Storage paths must be safe relative object keys."
+        if errors:
+            raise ValidationError(errors)
 
 
 class EEGEpoch(models.Model):
@@ -667,6 +718,14 @@ class SessionAnalytics(models.Model):
     loop_continuity_rate = models.DecimalField(max_digits=7, decimal_places=3, null=True, blank=True)
     engagement_consistency_score = models.DecimalField(max_digits=7, decimal_places=3, null=True, blank=True)
     generated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(focused_percentage__gte=0, focused_percentage__lte=100), name="valid_focused_percentage"),
+            models.CheckConstraint(condition=models.Q(relaxed_percentage__gte=0, relaxed_percentage__lte=100), name="valid_relaxed_percentage"),
+            models.CheckConstraint(condition=models.Q(distracted_percentage__gte=0, distracted_percentage__lte=100), name="valid_distracted_percentage"),
+            models.CheckConstraint(condition=models.Q(overstimulated_percentage__gte=0, overstimulated_percentage__lte=100), name="valid_overstimulated_percentage"),
+        ]
 
 
 class Alert(models.Model):

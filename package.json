@@ -1,0 +1,10 @@
+{
+  "name": "cortex-web-development",
+  "private": true,
+  "scripts": {
+    "supabase": "supabase"
+  },
+  "devDependencies": {
+    "supabase": "^2.39.2"
+  }
+}
