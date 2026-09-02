@@ -51,9 +51,17 @@ join pg_namespace dependent_ns on dependent_ns.oid = dependent.relnamespace
 where dependent.oid <> source.oid
 order by dependent_schema, dependent_object;
 
--- These core relations must exist before the old schema is archived.
-select required.table_name,
-       to_regclass('public.' || required.table_name) is not null as exists
+-- These core relations must exist in either the dedicated django schema or
+-- public before the old unprefixed public schema is archived.
+select
+  required.table_name,
+  case
+    when to_regclass(format('django.%I', required.table_name)) is not null then 'django'
+    when to_regclass(format('public.%I', required.table_name)) is not null then 'public'
+    else null
+  end as authoritative_schema,
+  to_regclass(format('django.%I', required.table_name)) is not null
+    or to_regclass(format('public.%I', required.table_name)) is not null as exists
 from (values
   ('auth_user'), ('django_migrations'), ('web_profile'), ('web_school'),
   ('web_schoolclass'), ('web_learningsession'), ('web_eegrecording')

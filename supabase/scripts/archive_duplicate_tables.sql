@@ -22,8 +22,11 @@ begin
     'auth_user', 'django_migrations', 'web_profile', 'web_school',
     'web_schoolclass', 'web_learningsession', 'web_eegrecording'
   ] loop
-    if to_regclass(format('public.%I', required_table)) is null then
-      raise exception 'Required Django table public.% is missing; cleanup aborted.', required_table;
+    if to_regclass(format('django.%I', required_table)) is null
+       and to_regclass(format('public.%I', required_table)) is null then
+      raise exception
+        'Required Django table % is missing from both django and public schemas; cleanup aborted.',
+        required_table;
     end if;
   end loop;
 
