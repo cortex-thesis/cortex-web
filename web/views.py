@@ -1,11 +1,17 @@
 import json
+import hashlib
+import os
 import secrets
 import string
+import sys
 from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.cache import cache
 from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
 from django.utils.crypto import constant_time_compare
 from django.db import IntegrityError, transaction
@@ -18,8 +24,8 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import (
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
-    Enrollment, Intervention, InterventionAlert, JournalEntry, LearningSession, Lesson,
-    Notification, Profile, SchoolClass, Slide, UserPreference,
+    DataLifecycleRequest, Enrollment, Intervention, InterventionAlert, JournalEntry,
+    LearningSession, Lesson, Notification, Profile, School, SchoolClass, Slide, UserPreference,
 )
 
 PACKAGE_NAMES = {
@@ -29,7 +35,17 @@ PACKAGE_NAMES = {
 }
 User = get_user_model()
 ALLOWED_UPLOADS = {"image/jpeg", "image/png", "image/gif", "image/webp", "audio/mpeg", "audio/wav", "video/mp4", "video/webm", "application/pdf"}
+UPLOAD_EXTENSIONS = {
+    "image/jpeg": {".jpg", ".jpeg"}, "image/png": {".png"}, "image/gif": {".gif"},
+    "image/webp": {".webp"}, "audio/mpeg": {".mp3"}, "audio/wav": {".wav"},
+    "video/mp4": {".mp4"}, "video/webm": {".webm"}, "application/pdf": {".pdf"},
+}
 MAX_ASSET_BYTES = 10 * 1024 * 1024
+CONSENT_VERSIONS = {
+    "eeg_processing": "1",
+    "journal_media": "1",
+    "staff_sharing": "1",
+}
 
 
 def health(request):
@@ -90,7 +106,7 @@ def _profile(request):
     profile = Profile.objects.select_related("user", "school").filter(user_id=user_id).first()
     session_hash = request.session.get(HASH_SESSION_KEY, "")
     session_role = request.session.get("role")
-    if profile is None or not session_hash or not constant_time_compare(session_hash, profile.user.get_session_auth_hash()):
+    if profile is None or profile.account_status != Profile.AccountStatus.ACTIVE or not profile.user.is_active or not session_hash or not constant_time_compare(session_hash, profile.user.get_session_auth_hash()):
         request.session.flush()
         request._cortex_profile = None
         return None
@@ -117,11 +133,60 @@ def _audit(actor, action, obj, metadata=None):
     AuditLog.objects.create(actor=actor, action=action, object_type=obj.__class__.__name__, object_id=str(obj.pk), metadata=metadata or {})
 
 
+def _same_school(*items):
+    """Permit legacy unscoped records, but never cross a defined school boundary."""
+    school_ids = {getattr(item, "school_id", None) for item in items if item is not None}
+    return len(school_ids) <= 1
+
+
+def _admin_can_manage(admin, target):
+    if admin.is_super_admin:
+        return True
+    return admin.is_school_admin and admin.school_id is not None and admin.school_id == target.school_id
+
+
+def _validated_upload(uploaded):
+    extension = Path(uploaded.name).suffix.lower()
+    mime_type = uploaded.content_type
+    if uploaded.size > MAX_ASSET_BYTES or mime_type not in ALLOWED_UPLOADS or extension not in UPLOAD_EXTENSIONS[mime_type]:
+        return None
+    header = uploaded.read(16)
+    uploaded.seek(0)
+    signatures = {
+        "image/jpeg": header.startswith(b"\xff\xd8\xff"),
+        "image/png": header.startswith(b"\x89PNG\r\n\x1a\n"),
+        "image/gif": header.startswith((b"GIF87a", b"GIF89a")),
+        "image/webp": header.startswith(b"RIFF") and header[8:12] == b"WEBP",
+        "audio/mpeg": header.startswith(b"ID3") or header.startswith(b"\xff\xfb") or header.startswith(b"\xff\xf3") or header.startswith(b"\xff\xf2"),
+        "audio/wav": header.startswith(b"RIFF") and header[8:12] == b"WAVE",
+        "video/mp4": len(header) >= 12 and header[4:8] == b"ftyp",
+        "video/webm": header.startswith(b"\x1aE\xdf\xa3"),
+        "application/pdf": header.startswith(b"%PDF-"),
+    }
+    if not signatures[mime_type]:
+        return None
+    digest = hashlib.sha256()
+    for chunk in uploaded.chunks():
+        if b"EICAR-STANDARD-ANTIVIRUS-TEST-FILE" in chunk:
+            uploaded.seek(0)
+            return None
+        digest.update(chunk)
+    uploaded.seek(0)
+    return digest.hexdigest()
+
+
 def _ensure_demo_accounts():
+    enabled = "test" in sys.argv or os.environ.get("CORTEX_ENABLE_DEMO_ACCOUNTS", "true" if settings.DEBUG else "false").lower() == "true"
+    if not enabled:
+        return
+    demo_school, _ = School.objects.get_or_create(
+        id="11111111-1111-4111-8111-111111111111",
+        defaults={"name": "Cortex Demonstration School", "contact_email": "office@example-school.test"},
+    )
     demo_accounts = [
-        {"username": "super-demo", "email": "super@cortex.edu", "password": "superusertest", "role": Profile.Role.ADMIN, "display_name": "Administrator"},
-        {"username": "student-demo", "email": "student@cortex.edu", "password": "studenttest", "role": Profile.Role.STUDENT, "display_name": "Student"},
-        {"username": "teacher-demo", "email": "teacher@cortex.edu", "password": "teachertest", "role": Profile.Role.TEACHER, "display_name": "Teacher"},
+        {"username": "school-admin-demo", "email": "school-admin@example-school.test", "password": "admin-demo-2026!", "role": Profile.Role.ADMIN, "display_name": "School Administrator", "admin_scope": Profile.AdminScope.SCHOOL},
+        {"username": "teacher-example", "email": "teacher@example-school.test", "password": "teacher-demo-2026!", "role": Profile.Role.TEACHER, "display_name": "Example Teacher"},
+        {"username": "student-example", "email": "student@example-school.test", "password": "student-demo-2026!", "role": Profile.Role.STUDENT, "display_name": "Example Student"},
     ]
     for account in demo_accounts:
         user = User.objects.filter(email__iexact=account["email"]).first()
@@ -139,14 +204,19 @@ def _ensure_demo_accounts():
 
         profile, _ = Profile.objects.get_or_create(
             user=user,
-            defaults={"role": account["role"], "display_name": account["display_name"]},
+            defaults={"role": account["role"], "display_name": account["display_name"], "school": demo_school, "admin_scope": account.get("admin_scope", Profile.AdminScope.NONE)},
         )
         if user.email.lower() == account["email"].lower() and profile.role != account["role"]:
             profile.role = account["role"]
         if user.email.lower() == account["email"].lower() and not profile.display_name:
             profile.display_name = account["display_name"]
-        if user.email.lower() == account["email"].lower() and (profile.role != account["role"] or not profile.display_name):
-            profile.save(update_fields=["role", "display_name"])
+        expected_scope = account.get("admin_scope", Profile.AdminScope.NONE)
+        if user.email.lower() == account["email"].lower() and profile.admin_scope != expected_scope:
+            profile.admin_scope = expected_scope
+        if user.email.lower() == account["email"].lower():
+            profile.school = demo_school
+            profile.account_status = Profile.AccountStatus.ACTIVE
+            profile.save(update_fields=["role", "display_name", "school", "account_status", "admin_scope"])
 
 
 def _profile_data(profile):
@@ -155,7 +225,117 @@ def _profile_data(profile):
         "pseudonym": str(profile.pseudonym), "avatar": None,
         "student_number": profile.student_number,
         "school": profile.school.name if profile.school_id else None,
+        "account_status": profile.account_status,
+        "admin_scope": profile.admin_scope,
     }
+
+
+@require_http_methods(["GET", "POST"])
+def admin_accounts(request):
+    admin, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    if request.method == "GET":
+        queryset = Profile.objects.select_related("user", "school").order_by("display_name")
+        if not admin.is_super_admin:
+            if not admin.is_school_admin or not admin.school_id:
+                return JsonResponse({"detail": "School-administrator scope is required."}, status=403)
+            queryset = queryset.filter(school=admin.school).exclude(role=Profile.Role.ADMIN, admin_scope=Profile.AdminScope.SUPER)
+        return JsonResponse({"accounts": [_profile_data(item) | {"email": item.user.email} for item in queryset]})
+
+    try:
+        data = _body(request)
+        role = str(data["role"])
+        if role not in Profile.Role.values:
+            raise ValueError
+        if role == Profile.Role.ADMIN and not admin.is_super_admin:
+            return JsonResponse({"detail": "Only a super administrator can create school administrators."}, status=403)
+        if role not in {Profile.Role.ADMIN, Profile.Role.TEACHER, Profile.Role.STUDENT}:
+            raise ValueError
+        school_id = data.get("school_id") or (str(admin.school_id) if admin.school_id else None)
+        school = School.objects.get(pk=school_id, is_active=True) if school_id else None
+        if role != Profile.Role.ADMIN and not admin.is_super_admin and school != admin.school:
+            return JsonResponse({"detail": "Accounts can only be created in your school."}, status=403)
+        if role == Profile.Role.ADMIN and school is None:
+            return JsonResponse({"detail": "A school administrator must be assigned to a school."}, status=400)
+        username = str(data["username"]).strip()
+        name = str(data["name"]).strip()
+        email = str(data.get("email", "")).strip()
+        password = str(data.get("temporary_password") or secrets.token_urlsafe(18))
+        validate_password(password)
+        with transaction.atomic():
+            user = User.objects.create_user(username=username, email=email, password=password)
+            profile = Profile.objects.create(
+                user=user, display_name=name, role=role, school=school,
+                account_status=Profile.AccountStatus.ACTIVE if role in {Profile.Role.ADMIN, Profile.Role.STUDENT} else Profile.AccountStatus.PENDING,
+                admin_scope=Profile.AdminScope.SCHOOL if role == Profile.Role.ADMIN else Profile.AdminScope.NONE,
+                approved_by=admin if role != Profile.Role.TEACHER else None,
+                approved_at=timezone.now() if role != Profile.Role.TEACHER else None,
+            )
+    except (KeyError, ValueError, School.DoesNotExist, ValidationError):
+        return JsonResponse({"detail": "Valid account, school, and strong temporary-password values are required."}, status=400)
+    except IntegrityError:
+        return JsonResponse({"detail": "That username is already in use."}, status=409)
+    _audit(admin, "account_created_by_admin", profile, {"role": role, "school_id": str(school.pk) if school else None})
+    response = _profile_data(profile)
+    if not data.get("temporary_password"):
+        response["temporary_password"] = password
+    return JsonResponse(response, status=201)
+
+
+@require_http_methods(["PATCH"])
+def admin_account_status(request, profile_id):
+    admin, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    target = get_object_or_404(Profile.objects.select_related("school", "user"), pk=profile_id)
+    if not _admin_can_manage(admin, target) or target.is_super_admin:
+        return JsonResponse({"detail": "You cannot manage this account."}, status=403)
+    try:
+        data = _body(request)
+        status = str(data["status"])
+        if status not in Profile.AccountStatus.values:
+            raise ValueError
+        if target.role == Profile.Role.TEACHER and status == Profile.AccountStatus.ACTIVE:
+            if not admin.is_school_admin or not admin.school_id:
+                return JsonResponse({"detail": "A school administrator must approve teachers."}, status=403)
+            target.school = admin.school
+        target.account_status = status
+        target.approved_by = admin if status == Profile.AccountStatus.ACTIVE else target.approved_by
+        target.approved_at = timezone.now() if status == Profile.AccountStatus.ACTIVE else target.approved_at
+        target.user.is_active = status not in {Profile.AccountStatus.DISABLED, Profile.AccountStatus.SUSPENDED}
+        with transaction.atomic():
+            target.save(update_fields=["school", "account_status", "approved_by", "approved_at", "updated_at"])
+            target.user.save(update_fields=["is_active"])
+    except (KeyError, ValueError):
+        return JsonResponse({"detail": "A valid status is required."}, status=400)
+    _audit(admin, "account_status_changed", target, {"status": status})
+    return JsonResponse(_profile_data(target))
+
+
+@require_http_methods(["GET", "POST"])
+def admin_schools(request):
+    admin, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    if not admin.is_super_admin:
+        return JsonResponse({"detail": "Super-administrator scope is required."}, status=403)
+    if request.method == "GET":
+        return JsonResponse({"schools": [{"id": str(item.pk), "name": item.name, "is_active": item.is_active} for item in School.objects.order_by("name")]})
+    try:
+        data = _body(request)
+        name = str(data["name"]).strip()
+        if not name:
+            raise ValueError
+        school = School.objects.create(
+            name=name, address=str(data.get("address", "")).strip(),
+            contact_email=str(data.get("contact_email", "")).strip(),
+            contact_number=str(data.get("contact_number", "")).strip(),
+        )
+    except (KeyError, ValueError):
+        return JsonResponse({"detail": "A non-empty school name is required."}, status=400)
+    _audit(admin, "school_created", school)
+    return JsonResponse({"id": str(school.pk), "name": school.name, "is_active": school.is_active}, status=201)
 
 
 def _class_data(school_class, include_students=False, packages=None):
@@ -266,9 +446,10 @@ def content_upload(request):
     uploaded = request.FILES.get("file")
     if not uploaded:
         return JsonResponse({"detail": "A file is required."}, status=400)
-    if uploaded.size > MAX_ASSET_BYTES or uploaded.content_type not in ALLOWED_UPLOADS:
-        return JsonResponse({"detail": "Unsupported file type or file exceeds the 10 MB limit."}, status=400)
-    asset = Asset.objects.create(file=uploaded, original_name=Path(uploaded.name).name, mime_type=uploaded.content_type, size_bytes=uploaded.size, uploaded_by=profile)
+    checksum = _validated_upload(uploaded)
+    if checksum is None:
+        return JsonResponse({"detail": "Unsupported, unsafe, or mismatched file, or file exceeds the 10 MB limit."}, status=400)
+    asset = Asset.objects.create(file=uploaded, original_name=Path(uploaded.name).name, mime_type=uploaded.content_type, size_bytes=uploaded.size, checksum_sha256=checksum, uploaded_by=profile)
     _audit(profile, "asset_uploaded", asset, {"mime_type": asset.mime_type, "size_bytes": asset.size_bytes})
     return JsonResponse({"id": asset.pk, "name": asset.original_name, "mime_type": asset.mime_type, "size_bytes": asset.size_bytes, "status": asset.status}, status=201)
 
@@ -367,7 +548,8 @@ def register(request):
             return JsonResponse({"detail": "Password must be at least 12 characters."}, status=400)
         with transaction.atomic():
             user = User.objects.create_user(username=username, email=email or None, password=password)
-            profile = Profile.objects.create(user=user, role=role, display_name=name)
+            status = Profile.AccountStatus.PENDING if role == Profile.Role.TEACHER else Profile.AccountStatus.ACTIVE
+            profile = Profile.objects.create(user=user, role=role, display_name=name, account_status=status)
         _audit(profile, "account_created", profile, {"role": role})
         return JsonResponse(_profile_data(profile), status=201)
     except (KeyError, ValueError):
@@ -379,6 +561,11 @@ def register(request):
 @require_POST
 def login_view(request):
     _ensure_demo_accounts()
+    remote_address = request.META.get("REMOTE_ADDR", "unknown")
+    throttle_key = f"cortex-login:{remote_address}"
+    failures = cache.get(throttle_key, 0)
+    if failures >= 10:
+        return JsonResponse({"detail": "Too many login attempts. Try again later."}, status=429)
     try:
         data = _body(request)
         identifier = str(data.get("username") or data.get("email") or "").strip()
@@ -390,12 +577,22 @@ def login_view(request):
                 username = matched.username
         user = authenticate(request, username=username, password=password)
         if user is None:
+            cache.set(throttle_key, failures + 1, 300)
+            AuditLog.objects.create(
+                actor=None, action="login_failed", object_type="Authentication",
+                object_id=hashlib.sha256(identifier.lower().encode("utf-8")).hexdigest()[:16],
+                metadata={"reason": "invalid_credentials"}, ip_address=remote_address if remote_address != "unknown" else None,
+            )
             return JsonResponse({"detail": "Invalid credentials."}, status=401)
     except ValueError:
         return JsonResponse({"detail": "Request body must be valid JSON."}, status=400)
     if user is None or not hasattr(user, "profile"):
         return JsonResponse({"detail": "Invalid credentials."}, status=401)
+    if not user.is_active or user.profile.account_status != Profile.AccountStatus.ACTIVE:
+        _audit(user.profile, "login_blocked", user.profile, {"account_status": user.profile.account_status})
+        return JsonResponse({"detail": "This account is pending approval or is disabled."}, status=403)
     login(request, user)
+    cache.delete(throttle_key)
     request.session["role"] = user.profile.role
     _audit(user.profile, "login", user.profile)
     data = _profile_data(user.profile)
@@ -631,8 +828,13 @@ def join_class(request):
         school_class = SchoolClass.objects.select_related("teacher").get(code__iexact=code, status=SchoolClass.Status.ACTIVE)
     except SchoolClass.DoesNotExist:
         return JsonResponse({"detail": "Class code not found. Please check with your teacher."}, status=404)
-    if profile.school_id and school_class.school_id and profile.school_id != school_class.school_id:
+    if profile.school_id and profile.school_id != school_class.school_id:
         return JsonResponse({"detail": "This class belongs to another school."}, status=403)
+    if school_class.teacher.account_status != Profile.AccountStatus.ACTIVE:
+        return JsonResponse({"detail": "This class is not currently accepting enrollments."}, status=403)
+    if profile.school_id is None and school_class.school_id is not None:
+        profile.school = school_class.school
+        profile.save(update_fields=["school", "updated_at"])
     enrollment, created = Enrollment.objects.get_or_create(
         school_class=school_class, student=profile,
         defaults={"enrolled_by": profile},
@@ -931,7 +1133,7 @@ def classes(request):
     elif profile.role == Profile.Role.STUDENT:
         queryset = SchoolClass.objects.filter(enrollments__student=profile, enrollments__removed_at__isnull=True).distinct()
     else:
-        queryset = SchoolClass.objects.all()
+        queryset = SchoolClass.objects.all() if profile.is_super_admin else SchoolClass.objects.filter(school=profile.school)
     packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
     queryset = queryset.select_related("teacher", "teacher__school").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
@@ -945,6 +1147,8 @@ def class_detail(request, class_id):
     if error:
         return error
     school_class = get_object_or_404(SchoolClass.objects.select_related("teacher"), pk=class_id)
+    if profile.role == Profile.Role.ADMIN and not _admin_can_manage(profile, school_class):
+        return JsonResponse({"detail": "You cannot manage this school's class."}, status=403)
     if profile.role == Profile.Role.STUDENT and not Enrollment.objects.filter(school_class=school_class, student=profile, removed_at__isnull=True).exists():
         return JsonResponse({"detail": "You are not enrolled in this class."}, status=403)
     if profile.role == Profile.Role.TEACHER and school_class.teacher_id != profile.id:
@@ -1030,6 +1234,8 @@ def assign_teacher(request, class_id):
         teacher = Profile.objects.get(pk=_body(request)["teacher_id"], role=Profile.Role.TEACHER)
     except (KeyError, ValueError, Profile.DoesNotExist):
         return JsonResponse({"detail": "A valid teacher_id is required."}, status=400)
+    if teacher.account_status != Profile.AccountStatus.ACTIVE or not _admin_can_manage(profile, school_class) or not _same_school(school_class, teacher):
+        return JsonResponse({"detail": "The teacher must be active and belong to the same school."}, status=403)
     school_class.teacher = teacher
     school_class.save(update_fields=["teacher"])
     _audit(profile, "teacher_assigned", school_class, {"teacher_id": teacher.pk})
@@ -1045,6 +1251,8 @@ def enrollment(request, class_id, student_id):
     if profile.role == Profile.Role.TEACHER and school_class.teacher_id != profile.id:
         return JsonResponse({"detail": "You do not teach this class."}, status=403)
     student = get_object_or_404(Profile, pk=student_id, role=Profile.Role.STUDENT)
+    if student.account_status != Profile.AccountStatus.ACTIVE or not _same_school(school_class, student, school_class.teacher):
+        return JsonResponse({"detail": "The student must be active and belong to the same school as the class."}, status=403)
     record, created = Enrollment.objects.get_or_create(school_class=school_class, student=student, defaults={"enrolled_by": profile})
     if request.method == "POST":
         record.removed_at, record.enrolled_by = None, profile
@@ -1053,6 +1261,9 @@ def enrollment(request, class_id, student_id):
         return JsonResponse({"status": "enrolled"}, status=201 if created else 200)
     record.removed_at = timezone.now()
     record.save(update_fields=["removed_at"])
+    LearningSession.objects.filter(
+        school_class=school_class, student=student, ended_at__isnull=True,
+    ).update(ended_at=timezone.now(), status=LearningSession.Status.INTERRUPTED)
     _audit(profile, "student_removed", record, {"student_pseudonym": str(student.pseudonym)})
     return JsonResponse({"status": "removed"})
 
@@ -1202,17 +1413,101 @@ def intervention_alerts(request):
     return JsonResponse({"alerts": [{"id": alert.pk, "title": alert.title, "message": alert.message, "priority": alert.priority, "read": alert.read_at is not None, "created_at": alert.created_at} for alert in alerts]})
 
 
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET", "POST", "DELETE"])
 def consent(request):
     profile, error = _require_profile(request)
     if error:
         return error
     if request.method == "GET":
-        return JsonResponse({"consents": list(profile.consents.values("consent_type", "version", "granted", "recorded_at"))})
+        return JsonResponse({"consents": list(profile.consents.values("id", "consent_type", "version", "granted", "subject", "expires_at", "withdrawn_at", "recorded_at"))})
     try:
         data = _body(request)
-        record = ConsentRecord.objects.create(profile=profile, consent_type=str(data["consent_type"]), version=str(data["version"]), granted=bool(data["granted"]))
+        consent_type = str(data["consent_type"])
+        version = str(data["version"])
+        if consent_type not in CONSENT_VERSIONS or version != CONSENT_VERSIONS[consent_type]:
+            return JsonResponse({"detail": "The consent type or notice version is not current."}, status=400)
+        if request.method == "DELETE":
+            record = profile.consents.filter(consent_type=consent_type, version=version, withdrawn_at__isnull=True).order_by("-recorded_at").first()
+            if record is None:
+                return JsonResponse({"detail": "No active consent record was found."}, status=404)
+            record.withdrawn_at = timezone.now()
+            record.save(update_fields=["withdrawn_at"])
+            LearningSession.objects.filter(student=profile, ended_at__isnull=True).update(
+                ended_at=timezone.now(), status=LearningSession.Status.INTERRUPTED,
+            )
+            _audit(profile, "consent_withdrawn", record, {"consent_type": consent_type})
+            return JsonResponse({"status": "withdrawn"})
+        granted = data["granted"]
+        if not isinstance(granted, bool):
+            return JsonResponse({"detail": "granted must be a JSON boolean."}, status=400)
+        subject = str(data.get("subject", "student"))
+        if subject not in {"student", "guardian"}:
+            return JsonResponse({"detail": "subject must be student or guardian."}, status=400)
+        granted_by_name = str(data.get("granted_by_name", "")).strip()
+        if subject == "guardian" and not granted_by_name:
+            return JsonResponse({"detail": "Guardian consent requires granted_by_name."}, status=400)
+        record = ConsentRecord.objects.create(
+            profile=profile, consent_type=consent_type, version=version, granted=granted,
+            subject=subject, granted_by_name=granted_by_name,
+        )
     except (KeyError, ValueError):
         return JsonResponse({"detail": "consent_type, version, and granted are required."}, status=400)
     _audit(profile, "consent_recorded", record, {"consent_type": record.consent_type, "granted": record.granted})
     return JsonResponse({"status": "recorded"}, status=201)
+
+
+@require_http_methods(["GET", "POST", "PATCH"])
+def data_lifecycle_requests(request, request_id=None):
+    actor, error = _require_profile(request)
+    if error:
+        return error
+    if request.method == "POST":
+        try:
+            data = _body(request)
+            request_type = str(data["request_type"])
+            if request_type not in DataLifecycleRequest.RequestType.values:
+                raise ValueError
+            target = actor
+            if data.get("profile_id") is not None:
+                if actor.role != Profile.Role.ADMIN:
+                    return JsonResponse({"detail": "Only an administrator can submit for another profile."}, status=403)
+                target = Profile.objects.get(pk=data["profile_id"])
+                if not _admin_can_manage(actor, target):
+                    return JsonResponse({"detail": "You cannot manage this profile."}, status=403)
+            item = DataLifecycleRequest.objects.create(
+                profile=target, requested_by=actor, request_type=request_type,
+                reason=str(data.get("reason", "")).strip(),
+            )
+        except (KeyError, ValueError, Profile.DoesNotExist):
+            return JsonResponse({"detail": "A valid request_type and profile are required."}, status=400)
+        _audit(actor, "data_lifecycle_requested", item, {"request_type": request_type, "subject_pseudonym": str(target.pseudonym)})
+        return JsonResponse({"id": str(item.pk), "status": item.status, "request_type": item.request_type}, status=201)
+
+    queryset = DataLifecycleRequest.objects.select_related("profile", "requested_by").order_by("-created_at")
+    if actor.role != Profile.Role.ADMIN:
+        queryset = queryset.filter(profile=actor)
+    elif not actor.is_super_admin:
+        queryset = queryset.filter(profile__school=actor.school)
+    if request.method == "GET":
+        return JsonResponse({"requests": [{
+            "id": str(item.pk), "profile_pseudonym": str(item.profile.pseudonym),
+            "request_type": item.request_type, "status": item.status,
+            "reason": item.reason, "created_at": item.created_at, "completed_at": item.completed_at,
+        } for item in queryset]})
+
+    if actor.role != Profile.Role.ADMIN or request_id is None:
+        return JsonResponse({"detail": "Administrator access is required."}, status=403)
+    item = get_object_or_404(queryset, pk=request_id)
+    try:
+        data = _body(request)
+        status = str(data["status"])
+        if status not in DataLifecycleRequest.Status.values:
+            raise ValueError
+        item.status = status
+        item.resolution_notes = str(data.get("resolution_notes", item.resolution_notes)).strip()
+        item.completed_at = timezone.now() if status in {DataLifecycleRequest.Status.COMPLETED, DataLifecycleRequest.Status.REJECTED} else None
+        item.save(update_fields=["status", "resolution_notes", "completed_at", "updated_at"])
+    except (KeyError, ValueError):
+        return JsonResponse({"detail": "A valid status is required."}, status=400)
+    _audit(actor, "data_lifecycle_status_changed", item, {"status": status})
+    return JsonResponse({"id": str(item.pk), "status": item.status})

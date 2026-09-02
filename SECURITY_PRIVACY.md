@@ -11,6 +11,8 @@ This baseline applies to the student, teacher, and administrator workflows. It i
 ## Identity and access
 
 - Use Django authentication with role-bound profiles. Teachers may manage only classes assigned to them; students may access only active enrollments and their own sessions.
+- Accounts have `pending`, `active`, `suspended`, and `disabled` states. A super administrator creates school administrators; each school administrator can create or approve teachers only within that school. New public teacher registrations remain pending until approval.
+- Defined school boundaries are enforced for class administration, teacher assignment, enrollment, and account administration. Assign legacy/demo records to schools before production.
 - Session records use UUIDs and expose a stable pseudonym rather than a student username or name to EEG/analytics integrations.
 - Use HTTPS, secure HttpOnly session cookies, SameSite cookies, CSRF protection, strong passwords, and a non-default `DJANGO_SECRET_KEY` in production. Do not put secrets in source, frontend bundles, logs, or URLs.
 
@@ -19,11 +21,14 @@ This baseline applies to the student, teacher, and administrator workflows. It i
 - Define and publish a school-approved retention schedule before production. A recommended starting point is: account/profile data while enrolled plus the school’s required period; raw EEG and audio for the shortest documented period; derived session summaries only as long as educationally necessary; audit records for the approved compliance period.
 - Provide verified deletion/export workflows for student data. Deletion must remove or anonymize linked sessions, journal/media objects, consents where legally required to retain proof, and backups according to the backup expiry window.
 - Soft removal is used for enrollment history (`removed_at`); it is not a substitute for the approved data deletion process.
+- Users submit export, correction, and deletion requests through `/api/privacy/requests/`; administrators can process only requests in their scope. Operators must verify all database, media, EEG, and backup actions before completing a request.
+- `manage.py enforce_retention` performs a dry run. After policy approval, schedule `manage.py enforce_retention --apply` to enforce the environment-configured EEG and archived-media periods.
 
 ## Uploads and media
 
 - Accept uploads only through authenticated, role-authorized endpoints. Enforce an allowlist of MIME types and extensions, size limits, malware scanning, randomized names, and storage outside the web root or in private object storage.
 - Never trust client filenames or content types. Serve media through authorization checks and short-lived signed URLs. The current settings cap request bodies at 10 MB and in-memory uploads at 5 MB; media endpoints must enforce stricter per-type limits when added.
+- Uploads are checked for allowed extension/MIME combinations, expected file signatures, size, SHA-256, and the EICAR test marker. Production still requires a quarantine-and-release workflow backed by a full malware scanner.
 
 ## Audit logging
 
@@ -37,4 +42,4 @@ This baseline applies to the student, teacher, and administrator workflows. It i
 
 ## Implemented baseline
 
-The Django app provides role-aware account/profile, class creation and teacher assignment, enrollment/removal, consent recording, pseudonymous session linkage, and audit records. Production settings enable secure transport/cookie headers and upload request limits when `DJANGO_DEBUG=false`. Before deployment, configure HTTPS, secret values, database backups, malware scanning/storage, and the school-approved retention/deletion policy.
+The Django app provides role-aware account governance, school-scoped teacher approval and assignment, enrollment/removal, consent recording and withdrawal, privacy-request tracking, pseudonymous session linkage, retention tooling, and audit records. Demo accounts are controlled by `CORTEX_ENABLE_DEMO_ACCOUNTS` and default off when `DJANGO_DEBUG=false`. Before deployment, configure HTTPS, secret values, database backups, external malware scanning/private storage, and approved retention/deletion and backup-expiry procedures.

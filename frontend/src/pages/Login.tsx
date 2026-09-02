@@ -8,9 +8,9 @@ import { useAuthStore } from '../store/authStore'
 import styles from './student/Login.module.css'
 
 const TEST_ACCOUNTS = [
-  { label: 'Administrator', email: 'super@cortex.edu', password: 'superusertest' },
-  { label: 'Student', email: 'student@cortex.edu', password: 'studenttest' },
-  { label: 'Teacher', email: 'teacher@cortex.edu', password: 'teachertest' },
+  { label: 'School Administrator', email: 'school-admin@example-school.test', password: 'admin-demo-2026!' },
+  { label: 'Teacher', email: 'teacher@example-school.test', password: 'teacher-demo-2026!' },
+  { label: 'Student', email: 'student@example-school.test', password: 'student-demo-2026!' },
 ]
 
 export default function UnifiedLogin() {

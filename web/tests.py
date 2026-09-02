@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from .models import AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, Enrollment, Intervention, JournalEntry, LearningSession, Notification, Profile, SchoolClass, UserPreference
+from .models import AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, Enrollment, Intervention, JournalEntry, LearningSession, Notification, Profile, School, SchoolClass, UserPreference
 
 
 class WorkflowTests(TestCase):
@@ -86,12 +86,12 @@ class WorkflowTests(TestCase):
     def test_prepared_demo_credentials_are_created_and_can_log_in(self):
         response = self.client.post(
             "/api/auth/login/",
-            data=json.dumps({"email": "student@cortex.edu", "password": "studenttest"}),
+            data=json.dumps({"email": "student@example-school.test", "password": "student-demo-2026!"}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["role"], Profile.Role.STUDENT)
-        self.assertTrue(User.objects.filter(email="student@cortex.edu").exists())
+        self.assertTrue(User.objects.filter(email="student@example-school.test").exists())
 
     def test_logout_ends_active_session(self):
         school_class = SchoolClass.objects.create(name="Session class", code="SESS1", teacher=self.teacher)
@@ -191,7 +191,7 @@ class WorkflowTests(TestCase):
         self.assertEqual(slide.status_code, 201)
         self.assertEqual(slide.json()["slides"][0]["position"], 0)
 
-        image = SimpleUploadedFile("step.png", b"png-data", content_type="image/png")
+        image = SimpleUploadedFile("step.png", b"\x89PNG\r\n\x1a\nsynthetic", content_type="image/png")
         uploaded = self.client.post("/api/content/assets/upload/", data={"file": image})
         self.assertEqual(uploaded.status_code, 201)
         asset_id = uploaded.json()["id"]
@@ -269,6 +269,84 @@ class WorkflowTests(TestCase):
         self._login(self.student)
         response = self.client.post(f"/api/sessions/{session.pk}/interventions/", data=json.dumps({"action": "pause"}), content_type="application/json")
         self.assertEqual(response.status_code, 403)
+
+    def test_public_teacher_registration_requires_school_admin_approval(self):
+        response = self.client.post(
+            "/api/auth/register/",
+            data=json.dumps({
+                "username": "pending-teacher", "email": "pending@example.test",
+                "password": "a-very-long-test-password", "confirm_password": "a-very-long-test-password",
+                "name": "Pending Teacher", "role": Profile.Role.TEACHER,
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        pending = Profile.objects.get(user__username="pending-teacher")
+        self.assertEqual(pending.account_status, Profile.AccountStatus.PENDING)
+        denied = self.client.post(
+            "/api/auth/login/",
+            data=json.dumps({"email": "pending@example.test", "password": "a-very-long-test-password"}),
+            content_type="application/json",
+        )
+        self.assertEqual(denied.status_code, 403)
+
+    def test_school_admin_approves_only_same_school_teacher(self):
+        school = School.objects.create(name="North School")
+        other_school = School.objects.create(name="South School")
+        school_admin = self._account("school-admin", "School Admin", Profile.Role.ADMIN)
+        school_admin.school = school
+        school_admin.admin_scope = Profile.AdminScope.SCHOOL
+        school_admin.save(update_fields=["school", "admin_scope"])
+        pending = self._account("pending", "Pending", Profile.Role.TEACHER)
+        pending.school = school
+        pending.account_status = Profile.AccountStatus.PENDING
+        pending.save(update_fields=["school", "account_status"])
+        outsider = self._account("outsider", "Outsider", Profile.Role.TEACHER)
+        outsider.school = other_school
+        outsider.account_status = Profile.AccountStatus.PENDING
+        outsider.save(update_fields=["school", "account_status"])
+        self._login(school_admin)
+        approved = self.client.patch(
+            f"/api/admin/accounts/{pending.pk}/status/",
+            data=json.dumps({"status": Profile.AccountStatus.ACTIVE}), content_type="application/json",
+        )
+        self.assertEqual(approved.status_code, 200)
+        rejected = self.client.patch(
+            f"/api/admin/accounts/{outsider.pk}/status/",
+            data=json.dumps({"status": Profile.AccountStatus.ACTIVE}), content_type="application/json",
+        )
+        self.assertEqual(rejected.status_code, 403)
+
+    def test_consent_requires_boolean_and_can_be_withdrawn(self):
+        self._login(self.student)
+        invalid = self.client.post(
+            "/api/auth/consent/",
+            data=json.dumps({"consent_type": "eeg_processing", "version": "1", "granted": "false"}),
+            content_type="application/json",
+        )
+        self.assertEqual(invalid.status_code, 400)
+        self.client.post(
+            "/api/auth/consent/",
+            data=json.dumps({"consent_type": "eeg_processing", "version": "1", "granted": True}),
+            content_type="application/json",
+        )
+        withdrawn = self.client.delete(
+            "/api/auth/consent/",
+            data=json.dumps({"consent_type": "eeg_processing", "version": "1"}),
+            content_type="application/json",
+        )
+        self.assertEqual(withdrawn.status_code, 200)
+        self.assertIsNotNone(ConsentRecord.objects.latest("recorded_at").withdrawn_at)
+
+    def test_student_can_submit_privacy_request(self):
+        self._login(self.student)
+        response = self.client.post(
+            "/api/privacy/requests/",
+            data=json.dumps({"request_type": DataLifecycleRequest.RequestType.EXPORT}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(DataLifecycleRequest.objects.filter(profile=self.student).exists())
 
 
 class RoutingTests(TestCase):

@@ -36,9 +36,24 @@ class Profile(models.Model):
         TEACHER = "teacher", "Teacher"
         ADMIN = "admin", "Administrator"
 
+    class AccountStatus(models.TextChoices):
+        PENDING = "pending", "Pending approval"
+        ACTIVE = "active", "Active"
+        SUSPENDED = "suspended", "Suspended"
+        DISABLED = "disabled", "Disabled"
+
+    class AdminScope(models.TextChoices):
+        NONE = "none", "Not an administrator"
+        SCHOOL = "school", "School administrator"
+        SUPER = "super", "Super administrator"
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     school = models.ForeignKey(School, null=True, blank=True, on_delete=models.PROTECT, related_name="profiles")
     role = models.CharField(max_length=20, choices=Role.choices)
+    account_status = models.CharField(max_length=20, choices=AccountStatus.choices, default=AccountStatus.ACTIVE)
+    admin_scope = models.CharField(max_length=20, choices=AdminScope.choices, default=AdminScope.NONE)
+    approved_by = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="approved_profiles")
+    approved_at = models.DateTimeField(null=True, blank=True)
     display_name = models.CharField(max_length=160)
     pseudonym = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     student_number = models.CharField(max_length=50, blank=True)
@@ -51,12 +66,21 @@ class Profile(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
     class Meta:
+        indexes = [models.Index(fields=("school", "role", "account_status"), name="web_prof_school_role_status")]
         constraints = [
             models.UniqueConstraint(fields=("school", "student_number"), condition=~models.Q(student_number=""), name="unique_school_student_number"),
         ]
 
     def __str__(self):
         return self.display_name
+
+    @property
+    def is_super_admin(self):
+        return self.role == self.Role.ADMIN and self.admin_scope == self.AdminScope.SUPER
+
+    @property
+    def is_school_admin(self):
+        return self.role == self.Role.ADMIN and self.admin_scope == self.AdminScope.SCHOOL
 
 
 class SchoolClass(models.Model):
@@ -151,12 +175,17 @@ class Lesson(models.Model):
         ordering = ["created_at", "id"]
 
 
+def asset_upload_path(instance, filename):
+    extension = PurePosixPath(filename).suffix.lower()
+    return f"content/{timezone.now():%Y/%m}/{uuid.uuid4().hex}{extension}"
+
+
 class Asset(models.Model):
     class Status(models.TextChoices):
         VALIDATED = "validated", "Validated"
         REJECTED = "rejected", "Rejected"
 
-    file = models.FileField(upload_to="content/%Y/%m/", validators=[FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png", "gif", "webp", "mp3", "wav", "mp4", "webm", "pdf"])])
+    file = models.FileField(upload_to=asset_upload_path, validators=[FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png", "gif", "webp", "mp3", "wav", "mp4", "webm", "pdf"])])
     original_name = models.CharField(max_length=255)
     mime_type = models.CharField(max_length=100)
     size_bytes = models.PositiveBigIntegerField()

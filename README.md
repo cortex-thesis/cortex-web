@@ -120,6 +120,14 @@ enrollment/removal, consent, and session start/end. See
 retention/deletion, secrets, uploads, audit, backup, and non-diagnostic
 messaging baseline.
 
+Account governance follows a super-admin → school-admin → teacher chain.
+Super administrators manage schools and create school administrators through
+`/api/admin/schools/` and `/api/admin/accounts/`. School administrators create
+or approve same-school teachers through `/api/admin/accounts/` and
+`/api/admin/accounts/{profileId}/status/`. New public teacher registrations are
+pending. Privacy lifecycle requests use `/api/privacy/requests/`. Development
+demo credentials are controlled by `CORTEX_ENABLE_DEMO_ACCOUNTS`.
+
 The Cortex administrator interface uses `/admin/dashboard`. Django's internal
 administration site is intentionally kept separate at `/django-admin/`.
 
