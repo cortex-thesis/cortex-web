@@ -1,34 +1,36 @@
 import { COGNITIVE_STATES } from './states'
 import type { CognitiveState } from './states'
 
-export type DeliveryIntensity = 'normal' | 'elevated'
+export type DeliveryIntensity = 'normal' | 'elevated' | 'gentle' | 'reduced'
+export type DeliveryStrategy = 'steady_instruction' | 'attention_reengagement' | 'gentle_reactivation' | 'sensory_cooldown'
+export type InteractionDensity = 'full' | 'narrowed' | 'gentle' | 'none'
 
-interface DeliveryConfig {
+export interface DeliveryConfig {
   intensity: DeliveryIntensity
+  strategy: DeliveryStrategy
+  interactionDensity: InteractionDensity
+  visualIntensity: 1 | 2 | 3 | 4 | 5
+  audioIntensity: 1 | 2 | 3 | 4 | 5
+  pacing: 'slow' | 'normal'
   nudgeIntervalMs: number
   adaptations: string[]
 }
 
-// Maps each classified cognitive state to how strongly its delivery
-// mode should adapt. The mode itself (focus/relax) already lives on
-// COGNITIVE_STATES[state].mode in states.ts — this file doesn't
-// repeat that, it only adds intensity, which is the one thing that
-// actually differs between the two states sharing a mode:
-//   focused + distracted        -> both 'focus' mode
-//   relaxed + overstimulated    -> both 'relax' mode
-// This is deliberately the ONLY place that distinguishes
-// "focused vs distracted" or "relaxed vs overstimulated" behavior —
-// session pages read intensity from here, they don't branch on the
-// raw state string themselves. Adjust the numbers/adaptations below
-// and every page picks it up automatically.
+// Paper-aligned state-to-delivery policy. Focused maintains delivery;
+// distracted narrows and briefly strengthens the cue; relaxed uses a
+// gentle re-entry stimulus; overstimulated replaces the academic task
+// with sensory cooldown. Pages consume this policy instead of inventing
+// their own state behavior.
 export const DELIVERY_CONFIG: Record<CognitiveState, DeliveryConfig> = {
   focused: {
     intensity: 'normal',
+    strategy: 'steady_instruction', interactionDensity: 'full', visualIntensity: 3, audioIntensity: 3, pacing: 'normal',
     nudgeIntervalMs: 30000,
     adaptations: [],
   },
   distracted: {
     intensity: 'elevated',
+    strategy: 'attention_reengagement', interactionDensity: 'narrowed', visualIntensity: 4, audioIntensity: 3, pacing: 'normal',
     nudgeIntervalMs: 15000,
     adaptations: [
       'Re-engagement prompt shown',
@@ -37,12 +39,14 @@ export const DELIVERY_CONFIG: Record<CognitiveState, DeliveryConfig> = {
     ],
   },
   relaxed: {
-    intensity: 'normal',
+    intensity: 'gentle',
+    strategy: 'gentle_reactivation', interactionDensity: 'gentle', visualIntensity: 2, audioIntensity: 2, pacing: 'slow',
     nudgeIntervalMs: 30000,
-    adaptations: [],
+    adaptations: ['Mild re-engagement cue', 'Gentle pacing', 'No sudden stimulus increase'],
   },
   overstimulated: {
-    intensity: 'elevated',
+    intensity: 'reduced',
+    strategy: 'sensory_cooldown', interactionDensity: 'none', visualIntensity: 1, audioIntensity: 1, pacing: 'slow',
     nudgeIntervalMs: 20000,
     adaptations: [
       'Reduced visual/audio intensity',

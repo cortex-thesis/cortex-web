@@ -1,8 +1,12 @@
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
 import { GripVertical, Image as ImageIcon, Pause, Play, Volume2 } from 'lucide-react'
 import type { Task } from '../../../types'
 import AnswerChoice from '../AnswerChoice'
 import { ProgressBar } from '../../atoms'
+import ActivityTemplate from '../ActivityTemplate'
+import TaskInteraction from '../TaskInteraction'
+import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../../constants/activityTemplates'
 import styles from './TaskCard.module.css'
 
 type AnswerState = 'default' | 'selected' | 'correct' | 'incorrect'
@@ -13,6 +17,7 @@ interface TaskCardProps {
   nudgeText?: string
   showNudge?: boolean
   className?: string
+  deliveryStrategy?: 'steady_instruction' | 'attention_reengagement' | 'gentle_reactivation' | 'sensory_cooldown'
 }
 
 function TaskCard({
@@ -21,10 +26,18 @@ function TaskCard({
   nudgeText = 'Focus music playing softly. Keep going!',
   showNudge = false,
   className,
+  deliveryStrategy = 'steady_instruction',
 }: TaskCardProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [interactionResult, setInteractionResult] = useState<'correct' | 'incorrect' | null>(null)
+
+  function handleInteraction(correct: boolean, response: string) {
+    setInteractionResult(correct ? 'correct' : 'incorrect')
+    onAnswered?.(correct, response)
+    if (!correct) setTimeout(() => setInteractionResult(null), 900)
+  }
 
   function handleSelect(choice: string) {
     if (revealed) return
@@ -42,8 +55,20 @@ function TaskCard({
     return 'default'
   }
 
-  const progress = ((task.index - 1) / task.total) * 100
+  const safeTotal = Math.max(task.total, 1)
+  const progress = Math.min(100, Math.max(0, ((task.index - 1) / safeTotal) * 100))
   const contentType = task.contentType ?? 'image'
+  const template = task.template ?? 'multiple_choice'
+  const isKnowledgeCheck = template === 'multiple_choice'
+  const hasTaskInteraction = Boolean(task.taskTemplate)
+  const templateLabel = task.taskTemplate ? TASK_TEMPLATE_BY_ID[task.taskTemplate].label : ACTIVITY_TEMPLATE_BY_ID[template].label
+  const maxWidths = { compact: '560px', standard: '760px', wide: '1040px', immersive: 'min(1280px, 100%)' }
+  const taskStyle = {
+    '--activity-max-width': maxWidths[task.layout?.size ?? 'standard'],
+    '--activity-columns': task.layout?.preferredColumns ?? 'auto-fit',
+    '--activity-board-min-height': `${task.layout?.boardMinHeight ?? 220}px`,
+    '--activity-media-fit': task.layout?.mediaFit ?? 'contain',
+  } as CSSProperties
 
   const contentPreview = task.contentType && (
     <div className={`${styles.contentPreview} ${styles[contentType]}`}>
@@ -86,7 +111,7 @@ function TaskCard({
   )
 
   return (
-    <div className={`${styles.card} ${className ?? ''}`}>
+    <div className={`${styles.card} ${styles[deliveryStrategy]} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy}>
       <ProgressBar
         value={progress}
         state="focused"
@@ -95,11 +120,11 @@ function TaskCard({
       />
 
       <div className={styles.contentHeading}>
-        <div><span className={styles.typeLabel}>{contentType}</span><h2>{task.title}</h2></div>
+        <div><span className={styles.typeLabel}>{templateLabel}</span><h2>{task.title}</h2></div>
         <span className={styles.contentHint}>{task.contentDescription}</span>
       </div>
 
-      {contentPreview}
+      {!hasTaskInteraction && task.template ? <ActivityTemplate task={task} /> : !hasTaskInteraction ? contentPreview : null}
 
       {task.imageUrl && (
         <div className={styles.imageWrap}>
@@ -119,19 +144,26 @@ function TaskCard({
         </span>
       </div>
 
-      <p className={styles.question}>{task.question}</p>
-
-      <div className={styles.choices}>
-        {task.choices.map((choice) => (
-          <AnswerChoice
-            key={choice}
-            label={choice}
-            answerState={getAnswerState(choice)}
-            disabled={revealed && choice !== task.answer && choice !== selected}
-            onClick={() => handleSelect(choice)}
-          />
-        ))}
-      </div>
+      {hasTaskInteraction ? (
+        <>
+          <p className={styles.question}>{task.question}</p>
+          <TaskInteraction task={task} onAnswered={handleInteraction} />
+          {interactionResult && <div className={`${styles.feedback} ${styles[interactionResult]}`} role="status">{interactionResult === 'correct' ? 'Nice work! You found it.' : 'Almost. Try another move.'}</div>}
+        </>
+      ) : isKnowledgeCheck ? (
+        <>
+          <p className={styles.question}>{task.question}</p>
+          <div className={styles.choices}>
+            {task.choices.map((choice) => (
+              <AnswerChoice key={choice} label={choice} answerState={getAnswerState(choice)} disabled={revealed && choice !== task.answer && choice !== selected} onClick={() => handleSelect(choice)} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <button type="button" className={styles.continueButton} onClick={() => onAnswered?.(true, 'completed')}>
+          {task.actionLabel ?? (template === 'reengagement_prompt' ? "I'm ready" : 'Continue')}
+        </button>
+      )}
 
       {showNudge && nudgeText && (
         <div className={styles.nudge} aria-live="polite">

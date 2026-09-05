@@ -27,6 +27,7 @@ from .models import (
     DataLifecycleRequest, Enrollment, Intervention, InterventionAlert, JournalEntry,
     LearningSession, Lesson, Notification, Profile, School, SchoolClass, Slide, UserPreference,
 )
+from .activity_templates import ACTIVITY_TEMPLATES, LAYOUT_OPTIONS, TASK_TEMPLATES, validate_activity_configuration
 
 PACKAGE_NAMES = {
     "care": "Care", "life": "Life Skills", "pre_vocational": "Pre-Vocational",
@@ -387,6 +388,19 @@ def content_packages(request):
     return JsonResponse({"packages": [{"id": item.pk, "slug": item.slug, "name": item.name, "lessons": [_lesson_data(lesson, False) for lesson in item.lessons.filter(archived_at__isnull=True)]} for item in packages]})
 
 
+def content_activity_templates(request):
+    profile, error = _require_profile(request)
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    return JsonResponse({
+        "presentation_templates": [{"id": template_id, **definition} for template_id, definition in ACTIVITY_TEMPLATES.items()],
+        "task_templates": [{"id": template_id, **definition} for template_id, definition in TASK_TEMPLATES.items()],
+        "layout_options": LAYOUT_OPTIONS,
+    })
+
+
 @require_http_methods(["GET", "POST"])
 def content_lessons(request):
     profile, error = _require_profile(request)
@@ -502,7 +516,12 @@ def content_slide(request, lesson_id):
     lesson = get_object_or_404(Lesson, pk=lesson_id, archived_at__isnull=True)
     try:
         data = _body(request)
-        activity = Activity.objects.create(type=str(data["type"]), title=str(data.get("title", "Activity")), configuration=data.get("configuration", {}), asset_id=data.get("asset_id"))
+        activity_type = str(data["type"])
+        configuration = data.get("configuration", {})
+        configuration_error = validate_activity_configuration(activity_type, configuration)
+        if configuration_error:
+            return JsonResponse({"detail": configuration_error}, status=400)
+        activity = Activity.objects.create(type=activity_type, title=str(data.get("title", "Activity")), configuration=configuration, asset_id=data.get("asset_id"))
         position = int(data.get("position", lesson.slides.count()))
         Slide.objects.filter(lesson=lesson, position__gte=position).update(position=F("position") + 1)
         slide = Slide.objects.create(lesson=lesson, position=position, title=str(data.get("title", "Slide")), activity=activity)

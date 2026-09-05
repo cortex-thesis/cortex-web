@@ -80,6 +80,70 @@ export interface Session {
   mode: 'focus' | 'relax'
 }
 
+export type ActivityTemplateId =
+  | 'instructional_video'
+  | 'visual_narrative'
+  | 'multiple_choice'
+  | 'reengagement_prompt'
+  | 'breathing_exercise'
+  | 'calming_visual'
+  | 'calming_soundscape'
+
+export interface ActivityStep {
+  id: string
+  title: string
+  description?: string
+  imageUrl?: string | null
+  altText?: string
+}
+
+export type TaskTemplateId =
+  | 'multiple_choice'
+  | 'picture_choice'
+  | 'yes_no'
+  | 'matching_pairs'
+  | 'sequence_order'
+  | 'sort_groups'
+  | 'tap_target'
+  | 'picture_puzzle'
+  | 'drag_to_target'
+  | 'hotspot_hunt'
+  | 'trace_route'
+  | 'memory_flip'
+  | 'pattern_builder'
+
+export interface TaskItem {
+  id: string
+  label: string
+  imageUrl?: string | null
+  altText?: string
+}
+
+export interface TaskPair {
+  id: string
+  left: TaskItem
+  right: TaskItem
+}
+
+export interface TaskCategory {
+  id: string
+  label: string
+}
+
+export interface TaskHotspot {
+  x: number
+  y: number
+  radius: number
+  label: string
+}
+
+export interface TaskLayout {
+  size?: 'compact' | 'standard' | 'wide' | 'immersive'
+  preferredColumns?: number
+  boardMinHeight?: number
+  mediaFit?: 'contain' | 'cover'
+}
+
 export interface Task {
   id: string
   index: number
@@ -94,6 +158,23 @@ export interface Task {
   contentLabel?: string
   contentDescription?: string
   durationSeconds?: number
+  template?: ActivityTemplateId
+  instruction?: string
+  steps?: ActivityStep[]
+  mediaUrl?: string | null
+  actionLabel?: string
+  taskTemplate?: TaskTemplateId
+  items?: TaskItem[]
+  pairs?: TaskPair[]
+  categories?: TaskCategory[]
+  correctItemIds?: string[]
+  correctOrder?: string[]
+  sortAnswers?: Record<string, string>
+  deliveryVariants?: Partial<Record<'attention_reengagement' | 'gentle_reactivation', Partial<Task>>>
+  sceneImageUrl?: string | null
+  hotspot?: TaskHotspot
+  pattern?: TaskItem[]
+  layout?: TaskLayout
 }
 
 // class

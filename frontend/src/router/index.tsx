@@ -53,6 +53,10 @@ export default function AppRouter() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/register" element={<StudentRegistration />} />
+      <Route
+        path="/preview/activities"
+        element={import.meta.env.DEV ? <FocusMode preview /> : <Navigate to="/" replace />}
+      />
       <Route element={<ProtectedRoute roles={['student']} />}>
       <Route path="/student/home" element={<Home />} />
       <Route path="/student/join-class" element={<JoinClass />} />

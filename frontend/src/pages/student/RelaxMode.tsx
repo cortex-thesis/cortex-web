@@ -21,18 +21,15 @@ export default function RelaxMode() {
   const signalStrength = eegData.signalStrength ?? 0
   const currentState = eegData.state ?? 'relaxed'
 
-  // 'relaxed' -> normal, 'overstimulated' -> elevated. Same config
-  // source FocusMode reads from — see constants/delivery.ts.
+  // Relax Mode is reserved for sensory cooldown during overstimulation.
+  // Once the classifier reports a non-overstimulated state, the learner
+  // returns through the gentle Focus-mode re-entry path.
   const deliveryConfig = getDeliveryConfig(currentState)
-  const isElevated = deliveryConfig.intensity === 'elevated'
+  const isElevated = deliveryConfig.strategy === 'sensory_cooldown'
 
-  // Previously this only checked for the literal 'focused' state. If
-  // the EEG classified the student as 'distracted' instead, nothing
-  // happened — even though distracted belongs to Focus Mode just as
-  // much as focused does. Reading the mode from the config instead of
-  // comparing against a single hardcoded state covers both.
+  // All non-overstimulated states route back to instructional delivery.
   useEffect(() => {
-    if (getDeliveryMode(eegData.state) === 'focus') {
+    if (eegData.state && getDeliveryMode(eegData.state) === 'focus') {
       const id = setTimeout(() => {
         navigate('/student/switching', {
           state: { from: 'relax', to: 'focus' },

@@ -30,8 +30,8 @@ export const COGNITIVE_STATES: Record<
     color: colors.state.relaxed,
     fill: colors.state.relaxedFill,
     textColor: colors.state.relaxedText,
-    description: 'Calm but passive — gentle pacing triggered',
-    mode: 'relax',
+    description: 'Calm but passive — gentle re-engagement triggered',
+    mode: 'focus',
   },
   distracted: {
     label: 'Distracted',

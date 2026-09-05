@@ -5,13 +5,13 @@ import { TaskCard, AlertBanner } from '../../components/molecules'
 import { useEEG } from '../../hooks/useEEG'
 import DevEEGPanel from '../../components/dev/DevEEGPanel/DevEEGPanel'
 import { getDeliveryConfig, getDeliveryMode } from '../../constants/delivery'
+import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../constants/activityTemplates'
 
 // Note: Un-comment useSession if/when needed in your page logic
 // import { useSession } from '../../hooks/useSession'
 
 import { mockTasks } from '../../mocks'
 import type { CognitiveState } from '../../constants/states'
-import type { Task } from '../../types'
 import styles from './FocusMode.module.css'
 
 const NUDGE_MESSAGES = [
@@ -21,11 +21,15 @@ const NUDGE_MESSAGES = [
   'Great effort. Keep it up!',
 ]
 
-export function FocusMode() {
+interface FocusModeProps {
+  preview?: boolean
+}
+
+export function FocusMode({ preview = false }: FocusModeProps) {
   const navigate = useNavigate()
 
   // In dev — use mock data. Replace with real API call later.
-  const [task, setTask] = useState<Task>(mockTasks[0])
+  const [taskPosition, setTaskPosition] = useState(0)
   const [nudgeIndex, setNudgeIndex] = useState(0)
   const [showModeAlert, setShowModeAlert] = useState(false)
 
@@ -38,7 +42,7 @@ export function FocusMode() {
     resumeAutoCycle,
   } = useEEG('session-001')
 
-  const currentState: CognitiveState = eegData.state ?? 'focused'
+  const currentState: CognitiveState = preview ? 'focused' : (eegData.state ?? 'focused')
   const isLive = connectionStatus === 'connected'
   const signalStrength = eegData.signalStrength ?? 0
 
@@ -49,6 +53,18 @@ export function FocusMode() {
   // change in constants/delivery.ts, not a page-by-page edit.
   const deliveryConfig = getDeliveryConfig(currentState)
   const isElevated = deliveryConfig.intensity === 'elevated'
+  const isRegulating = deliveryConfig.strategy === 'sensory_cooldown'
+  const task = {
+    ...mockTasks[taskPosition],
+    index: taskPosition + 1,
+    total: mockTasks.length,
+  }
+  const deliveredTask = {
+    ...task,
+    ...(deliveryConfig.strategy === 'attention_reengagement' || deliveryConfig.strategy === 'gentle_reactivation'
+      ? task.deliveryVariants?.[deliveryConfig.strategy]
+      : undefined),
+  }
 
   // Rotate nudge messages — interval speeds up under elevated
   // intensity (distracted) instead of staying fixed at 30s.
@@ -76,23 +92,23 @@ export function FocusMode() {
   }, [currentState])
 
   useEffect(() => {
-    if (getDeliveryMode(eegData.state) === 'relax') {
+    if (!preview && getDeliveryMode(eegData.state) === 'relax') {
       const id = setTimeout(() => {
         navigate('/student/switching', {
           state: { from: 'focus', to: 'relax' },
         })
-      }, 5000)
+      }, 300)
       return () => clearTimeout(id)
     }
-  }, [eegData.state, navigate])
+  }, [eegData.state, navigate, preview])
 
   function handleAnswered(correct: boolean) {
-    if (correct && task.index < task.total) {
+    if (correct && taskPosition < mockTasks.length - 1) {
       // Advance to next task
       setTimeout(() => {
-        setTask(mockTasks[task.index])
+        setTaskPosition((position) => position + 1)
       }, 1200)
-    } else if (correct && task.index === task.total) {
+    } else if (correct) {
       navigate('/student/session-summary')
     }
   }
@@ -117,7 +133,7 @@ export function FocusMode() {
         isLive={isLive}
         taskIndex={task.index}
         taskTotal={task.total}
-        onBack={() => navigate('/student/home', { replace: true })}
+        onBack={() => navigate(preview ? '/' : '/student/home', { replace: true })}
         footer={nudgeFooter}
       >
         {showModeAlert && currentState === 'distracted' && isElevated && (
@@ -131,29 +147,34 @@ export function FocusMode() {
         {import.meta.env.DEV && (
           <div className={styles.prototypeNav} aria-label="Prototype content preview">
             <span>Preview</span>
-            {mockTasks.map((item) => (
-              <button key={item.id} className={item.id === task.id ? styles.prototypeActive : ''} onClick={() => setTask(item)}>
-                {item.contentType}
+            {mockTasks.map((item, index) => (
+              <button key={item.id} className={index === taskPosition ? styles.prototypeActive : ''} onClick={() => setTaskPosition(index)}>
+                {item.taskTemplate ? TASK_TEMPLATE_BY_ID[item.taskTemplate].label : ACTIVITY_TEMPLATE_BY_ID[item.template ?? 'multiple_choice'].label}
               </button>
             ))}
           </div>
         )}
 
-        <TaskCard
-          key={task.id}
-          task={task}
-          showNudge={isElevated}
-          nudgeText={NUDGE_MESSAGES[nudgeIndex]}
-          onAnswered={handleAnswered}
-          className={styles.taskCard}
-        />
+        {!isRegulating && (
+          <TaskCard
+            key={`${task.id}-${deliveryConfig.strategy}`}
+            task={deliveredTask}
+            deliveryStrategy={deliveryConfig.strategy}
+            showNudge={isElevated}
+            nudgeText={NUDGE_MESSAGES[nudgeIndex]}
+            onAnswered={handleAnswered}
+            className={styles.taskCard}
+          />
+        )}
       </SessionTemplate>
-      <DevEEGPanel
-        currentState={eegData.state}
-        isManualOverride={isManualOverride}
-        onSetState={setMockState}
-        onResumeAuto={resumeAutoCycle}
-      />
+      {!preview && (
+        <DevEEGPanel
+          currentState={eegData.state}
+          isManualOverride={isManualOverride}
+          onSetState={setMockState}
+          onResumeAuto={resumeAutoCycle}
+        />
+      )}
     </>
   )
 }

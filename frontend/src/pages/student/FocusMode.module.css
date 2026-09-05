@@ -1,5 +1,5 @@
 .taskCard {
-  max-width: var(--card-max-width);
+  max-width: var(--activity-max-width, var(--card-max-width));
   width: 100%;
 }
 
@@ -8,9 +8,9 @@
   width: 100%;
 }
 
-.prototypeNav { max-width: var(--card-max-width); width: 100%; display: flex; align-items: center; gap: 6px; padding: 6px; border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-white) 75%, transparent); }
+.prototypeNav { max-width: min(100%, 1100px); width: 100%; display: flex; align-items: center; gap: 6px; padding: 6px; border: 1px dashed var(--color-border); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-white) 75%, transparent); overflow-x: auto; flex-shrink: 0; }
 .prototypeNav span { margin: 0 4px; color: var(--color-text-muted); font: var(--font-weight-medium) var(--text-micro, 10px)/1 var(--font-family); text-transform: uppercase; letter-spacing: .06em; }
-.prototypeNav button { padding: 6px 9px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-text-secondary); font: var(--font-weight-medium) var(--text-caption-d)/1 var(--font-family); text-transform: capitalize; cursor: pointer; }
+.prototypeNav button { flex: 0 0 auto; padding: 6px 9px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-text-secondary); font: var(--font-weight-medium) var(--text-caption-d)/1 var(--font-family); text-transform: capitalize; cursor: pointer; }
 .prototypeNav button:hover, .prototypeActive { background: var(--state-relaxed-fill) !important; color: var(--color-interface-purple) !important; }
 
 .nudge {

@@ -7,7 +7,7 @@ import type { CognitiveState } from '../../constants/states'
 import styles from './SwitchingModes.module.css'
 
 // Duration before auto-advancing to target screen
-const TRANSITION_DURATION = 3000
+const TRANSITION_DURATION = 1200
 
 interface SwitchingState {
   from: 'focus' | 'relax'

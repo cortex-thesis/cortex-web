@@ -187,9 +187,28 @@ class WorkflowTests(TestCase):
         lesson = self.client.post("/api/content/lessons/", data=json.dumps({"package": "life", "title": "Morning routine"}), content_type="application/json")
         self.assertEqual(lesson.status_code, 201)
         lesson_id = lesson.json()["id"]
-        slide = self.client.post(f"/api/content/lessons/{lesson_id}/slides/", data=json.dumps({"type": "interactive", "title": "Order the steps", "position": 0}), content_type="application/json")
+        template_catalog = self.client.get("/api/content/activity-templates/")
+        self.assertEqual(template_catalog.status_code, 200)
+        self.assertEqual(len(template_catalog.json()["presentation_templates"]), 7)
+        self.assertEqual(len(template_catalog.json()["task_templates"]), 13)
+        self.assertEqual(template_catalog.json()["layout_options"]["sizes"], ["compact", "standard", "wide", "immersive"])
+        slide = self.client.post(f"/api/content/lessons/{lesson_id}/slides/", data=json.dumps({
+            "type": "interactive", "title": "Choose the first step", "position": 0,
+            "configuration": {"task_template": "multiple_choice", "question": "What comes first?", "choices": ["Wake up", "Pack"], "answer": "Wake up"},
+        }), content_type="application/json")
         self.assertEqual(slide.status_code, 201)
         self.assertEqual(slide.json()["slides"][0]["position"], 0)
+        invalid_slide = self.client.post(f"/api/content/lessons/{lesson_id}/slides/", data=json.dumps({
+            "type": "audio", "title": "Invalid", "configuration": {"task_template": "multiple_choice"},
+        }), content_type="application/json")
+        self.assertEqual(invalid_slide.status_code, 400)
+        invalid_layout = self.client.post(f"/api/content/lessons/{lesson_id}/slides/", data=json.dumps({
+            "type": "interactive", "title": "Invalid layout", "configuration": {
+                "task_template": "multiple_choice", "question": "Choose", "choices": ["A", "B"], "answer": "A",
+                "layout": {"preferred_columns": 99},
+            },
+        }), content_type="application/json")
+        self.assertEqual(invalid_layout.status_code, 400)
 
         image = SimpleUploadedFile("step.png", b"\x89PNG\r\n\x1a\nsynthetic", content_type="image/png")
         uploaded = self.client.post("/api/content/assets/upload/", data={"file": image})

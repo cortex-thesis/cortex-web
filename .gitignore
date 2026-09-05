@@ -1,4 +1,5 @@
 # environment files
+.venv/
 .env
 .env.local
 .env.development.local
