@@ -5,6 +5,7 @@ import { mockPrevLessons } from './prevLessons'
 import { mockLiveLessons } from './liveLessons'
 import { mockFuncLessons } from './funcLessons'
 import { mockCareerLessons } from './careerLessons'
+import { mockEnrichmentLessons } from './enrichmentLessons'
 
 export const mockTeacher: User = {
   id: 'teacher-001',
@@ -310,7 +311,7 @@ export const mockCareLessons = [
   { id: 'CARE-03', title: 'Tools for Good Grooming', tasks: care03Tasks },
 ] as const
 
-export const mockPreviewLessons = [...mockCareLessons, ...mockLifeLessons, ...mockPrevLessons, ...mockLiveLessons, ...mockFuncLessons, ...mockCareerLessons] as const
+export const mockPreviewLessons = [...mockCareLessons, ...mockLifeLessons, ...mockPrevLessons, ...mockLiveLessons, ...mockFuncLessons, ...mockCareerLessons, ...mockEnrichmentLessons] as const
 
 // simulates live EEG state cycling for dev/testing
 export function createMockEEGStream(

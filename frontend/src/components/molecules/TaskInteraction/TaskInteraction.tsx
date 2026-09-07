@@ -128,7 +128,7 @@ function TaskInteraction({ task, onAnswered }: TaskInteractionProps) {
     setSorted(next)
     setSortItem(null)
     if (Object.keys(next).length === items.length) {
-      finish(items.every((item) => next[item.id] === task.sortAnswers?.[item.id]), JSON.stringify(next))
+      finish(task.scored === false || items.every((item) => next[item.id] === task.sortAnswers?.[item.id]), JSON.stringify(next))
     }
   }
 
