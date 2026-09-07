@@ -1,0 +1,73 @@
+import type { Task } from '../types'
+
+const base = (id: string, index: number, total: number, title: string): Pick<Task, 'id' | 'index' | 'total' | 'title' | 'imageUrl' | 'package' | 'question' | 'choices' | 'answer'> => ({ id, index, total, title, imageUrl: null, package: 'functional_academics', question: '', choices: [], answer: '' })
+const money = (name: string) => `/assets/life/life-03/${name}`
+const communication = (name: string) => `/assets/functional-academics/func-01/${name}.png`
+
+const communicationImageByLabel: Record<string, string> = {
+  'Getting help': communication('ask-for-help'),
+  'Communicating needs': communication('communicate-hunger'),
+  'Safety and boundaries': communication('communicate-boundaries'),
+  'Social interaction': communication('social-interaction'),
+  'Can I help you?': communication('offer-help'),
+  'Someone gives you an item': communication('show-gratitude'),
+  'You need assistance': communication('help-expression'),
+  'Help, please.': communication('ask-for-help'),
+  'Thank you.': communication('show-gratitude'),
+}
+
+const communicationTaskImages: Record<string, string> = {
+  'func01-opening': communication('needs-assistance'),
+  'func01-thanks': communication('show-gratitude'),
+  'func01-stop': communication('communicate-boundaries'),
+  'func01-hello': communication('social-interaction'),
+}
+
+function withFunctionalAssets(task: Task): Task {
+  return {
+    ...task,
+    imageUrl: communicationTaskImages[task.id] ?? task.imageUrl,
+    steps: task.steps?.map((step) => ({ ...step, imageUrl: step.imageUrl ?? communicationImageByLabel[step.title], altText: step.altText ?? step.title })),
+    items: task.items?.map((item) => ({ ...item, imageUrl: item.imageUrl ?? communicationImageByLabel[item.label], altText: item.altText ?? item.label })),
+  }
+}
+
+const func01: Task[] = [
+  { ...base('func01-opening', 1, 8, 'What Would You Say?'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'You cannot reach an item and need assistance. What could you say?', choices: ['Help, please.', 'Goodbye.', 'Welcome.'], answer: 'Help, please.', correctFeedback: 'Yes. “Help” tells someone you need assistance.', retryFeedback: 'Which expression asks another person for assistance?', contentDescription: 'PNG + optional audio needed: person requesting help in an age-respectful everyday setting.' },
+  { ...base('func01-stations', 2, 8, 'Everyday Expression Stations'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Group useful expressions by their communication purpose.', steps: [{ id: 'help', title: 'Getting help', description: 'Help. Please.' }, { id: 'needs', title: 'Communicating needs', description: 'Hungry. Eat. Drink. Water, please.' }, { id: 'safety', title: 'Safety and boundaries', description: 'No. Stop.' }, { id: 'social', title: 'Social interaction', description: 'Hello. Thank you. I’m sorry. Welcome.' }], actionLabel: 'Continue', layout: { size: 'wide', preferredColumns: 4 } },
+  { ...base('func01-model', 3, 8, 'Expressions in Conversation'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Audio/scene assets needed for three short contextual exchanges.', steps: [{ id: 'offer', title: 'Can I help you?', description: 'Yes, please.' }, { id: 'item', title: 'Someone gives you an item', description: 'Thank you.' }, { id: 'assist', title: 'You need assistance', description: 'Help, please.' }], actionLabel: 'Try a conversation' },
+  { ...base('func01-thanks', 4, 8, 'Complete the Conversation'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'Someone gives you the item you requested. What could you say?', choices: ['Thank you.', 'Stop.', 'Hungry.'], answer: 'Thank you.', correctFeedback: 'Correct. “Thank you” shows appreciation.', retryFeedback: 'Which expression shows appreciation?' },
+  { ...base('func01-stop', 5, 8, 'Communicate a Boundary'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'Someone is doing something you want them to stop doing. What can you say?', choices: ['Stop.', 'Welcome.', 'Go.'], answer: 'Stop.', correctFeedback: 'Correct. “Stop” clearly communicates the boundary.', retryFeedback: 'Choose the direct safety or boundary expression.' },
+  { ...base('func01-hello', 6, 8, 'Meet Someone'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'You meet someone at school. Which expression is an appropriate greeting?', choices: ['Hello.', 'I’m sorry.', 'No.'], answer: 'Hello.', correctFeedback: 'Correct. “Hello” is a greeting.', retryFeedback: 'Which expression greets another person?' },
+  { ...base('func01-exchange', 7, 8, 'A Two-Turn School Conversation'), contentType: 'interactive', taskTemplate: 'sequence_order', question: 'You need help finding materials, then a classmate gives them to you. Put the expressions in order.', items: [{ id: 'help', label: 'Help, please.' }, { id: 'thanks', label: 'Thank you.' }], correctOrder: ['help', 'thanks'], correctFeedback: 'Correct. Ask for help, then thank the person who assists.', retryFeedback: 'First communicate the need, then respond after receiving help.', contentDescription: 'Speech, pointing, AAC selection, or supported communication are valid response modes.' },
+  { ...base('func01-complete', 8, 8, 'Everyday Communication Complete'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Teacher verification in natural interactions is recommended.', steps: [{ id: 'summary', title: 'Match words to what you need', description: 'Use everyday expressions to communicate needs, boundaries, and social responses.' }], actionLabel: 'Finish lesson' },
+]
+
+const currencyItems = [{ id: 'five', label: '₱5', imageUrl: money('five-peso-coin.png'), altText: 'Philippine five-peso coin' }, { id: 'ten', label: '₱10', imageUrl: money('ten-peso-coin.jpg'), altText: 'Philippine ten-peso coin' }, { id: 'twenty', label: '₱20', imageUrl: money('twenty-peso-coin.png'), altText: 'Philippine twenty-peso coin' }]
+const func02: Task[] = [
+  { ...base('func02-opening', 1, 8, 'Money Desk: What Money Is This?'), imageUrl: money('twenty-peso-coin.png'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'What value does this money represent?', choices: ['₱5', '₱10', '₱20'], answer: '₱20', correctFeedback: 'Correct. This represents twenty pesos.', retryFeedback: 'Look at the denomination shown on the money.', contentDescription: 'Recognize the denomination; do not calculate a purchase or change.' },
+  { ...base('func02-gallery', 2, 8, 'Currency Gallery'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Current supplied Philippine coin representations up to ₱20.', steps: [{ id: 'five', title: 'Five pesos — ₱5', imageUrl: money('five-peso-coin.png'), altText: 'Philippine five-peso coin' }, { id: 'ten', title: 'Ten pesos — ₱10', imageUrl: money('ten-peso-coin.jpg'), altText: 'Philippine ten-peso coin' }, { id: 'twenty', title: 'Twenty pesos — ₱20', imageUrl: money('twenty-peso-coin.png'), altText: 'Philippine twenty-peso coin' }], actionLabel: 'Continue', layout: { size: 'wide', preferredColumns: 3 } },
+  { ...base('func02-model', 3, 8, 'Image → Value → Notation'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Connect a currency representation to its denomination and written notation.', steps: [{ id: 'example', title: 'Ten pesos', description: 'Its notation is ₱10.', imageUrl: money('ten-peso-coin.jpg'), altText: 'Philippine ten-peso coin' }], actionLabel: 'Start matching' },
+  { ...base('func02-match', 4, 8, 'Match the Money'), contentType: 'interactive', taskTemplate: 'matching_pairs', question: 'Match each currency image with its notation.', pairs: [{ id: 'five', left: currencyItems[0], right: { id: 'five-label', label: '₱5' } }, { id: 'ten', left: currencyItems[1], right: { id: 'ten-label', label: '₱10' } }, { id: 'twenty', left: currencyItems[2], right: { id: 'twenty-label', label: '₱20' } }], correctFeedback: 'Correct. Each currency representation matches its notation.', retryFeedback: 'Look at the denomination, then find the matching written amount.', layout: { size: 'wide' } },
+  { ...base('func02-find20', 5, 8, 'Find ₱20'), contentType: 'interactive', taskTemplate: 'picture_choice', question: 'Select the money that represents twenty pesos.', items: currencyItems, correctItemIds: ['twenty'], correctFeedback: 'Correct. This represents ₱20.', retryFeedback: 'Look for the twenty-peso denomination.', layout: { size: 'wide', preferredColumns: 3 } },
+  { ...base('func02-find10', 6, 8, 'Find ₱10'), contentType: 'interactive', taskTemplate: 'picture_choice', question: 'Select the money that represents ten pesos.', items: currencyItems, correctItemIds: ['ten'], correctFeedback: 'Correct. This represents ₱10.', retryFeedback: 'Look for the ten-peso denomination.', layout: { size: 'wide', preferredColumns: 3 } },
+  { ...base('func02-notation', 7, 8, 'Choose the Notation'), imageUrl: money('five-peso-coin.png'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'Which notation matches this money?', choices: ['₱5', '₱10', '₱20'], answer: '₱5', correctFeedback: 'Correct. The notation for five pesos is ₱5.', retryFeedback: 'Look at the denomination and choose the same written value.' },
+  { ...base('func02-complete', 8, 8, 'Money Recognition Complete'), contentType: 'image', template: 'visual_narrative', contentDescription: 'This lesson checks recognition, not counting sets, purchasing, or change.', steps: [{ id: 'summary', title: 'See the money, recognize its value', description: 'Match Philippine currency with its denomination and notation.', imageUrl: money('twenty-peso-coin.png'), altText: 'Philippine twenty-peso coin' }], actionLabel: 'Finish lesson' },
+]
+
+const func03: Task[] = [
+  { ...base('func03-opening', 1, 8, 'My Day on Time'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'Your morning begins at 7:00 a.m. What time is shown?', choices: ['7:00 a.m.', '7:00 p.m.', '3:00 p.m.'], answer: '7:00 a.m.', correctFeedback: 'Correct. The digital time is 7:00 a.m.', retryFeedback: 'Read the hour, minutes, and morning label.', contentDescription: 'PNG needed: morning routine with matching analog and digital clocks.' },
+  { ...base('func03-digital', 2, 8, 'Read Digital Time'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Read the hour, minutes, and time period.', steps: [{ id: 'morning', title: '8:15 a.m.', description: '8 is the hour, 15 is the minutes, and a.m. indicates morning.' }, { id: 'afternoon', title: '2:30 p.m.', description: '2 is the hour, 30 is the minutes, and p.m. indicates afternoon.' }], actionLabel: 'Continue' },
+  { ...base('func03-analog', 3, 8, 'Read an Analog Clock'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Analog clock PNG/SVG assets needed: hour hand, minute hand, and numbered clock face.', steps: [{ id: 'hour', title: 'Short hand', description: 'Shows the hour.' }, { id: 'minute', title: 'Long hand', description: 'Shows the minutes.' }, { id: 'face', title: 'Clock numbers', description: 'Help show where the hands point.' }], actionLabel: 'Continue', layout: { size: 'wide', preferredColumns: 3 } },
+  { ...base('func03-match', 4, 8, 'Match Analog and Digital Time'), contentType: 'interactive', taskTemplate: 'matching_pairs', question: 'Match each analog-clock placeholder with its equivalent digital time.', pairs: [{ id: 'seven', left: { id: 'analog-seven', label: 'Analog clock: 7:00' }, right: { id: 'digital-seven', label: '7:00 a.m.' } }, { id: 'twelve', left: { id: 'analog-twelve', label: 'Analog clock: 12:00' }, right: { id: 'digital-twelve', label: '12:00 p.m.' } }, { id: 'three', left: { id: 'analog-three', label: 'Analog clock: 3:00' }, right: { id: 'digital-three', label: '3:00 p.m.' } }], correctFeedback: 'Correct. Each analog representation matches the digital time.', retryFeedback: 'Check the hour hand first, then the minutes.', contentDescription: 'PLACEHOLDER: replace text representations with approved analog-clock assets.', layout: { size: 'wide' } },
+  { ...base('func03-period', 5, 8, 'A.M. or P.M.?'), contentType: 'interactive', taskTemplate: 'sort_groups', question: 'Sort each example by the time period shown.', items: [{ id: 'breakfast', label: 'Breakfast at 7:00 a.m.' }, { id: 'morning', label: 'Morning activity at 8:00 a.m.' }, { id: 'afternoon', label: 'Afternoon activity at 3:00 p.m.' }, { id: 'sleep', label: 'Getting ready to sleep at 9:00 p.m.' }], categories: [{ id: 'am', label: 'a.m.' }, { id: 'pm', label: 'p.m.' }], sortAnswers: { breakfast: 'am', morning: 'am', afternoon: 'pm', sleep: 'pm' }, correctFeedback: 'Correct. A.M. and p.m. identify different periods of the day.', retryFeedback: 'Look at the period written with each time.', contentDescription: 'Actual daily routines vary; these are instructional examples.', layout: { size: 'wide' } },
+  { ...base('func03-read', 6, 8, 'Read the Digital Clock'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'The display reads 10:30 a.m. Which answer matches?', choices: ['10:30 a.m.', '10:00 a.m.', '3:10 p.m.'], answer: '10:30 a.m.', correctFeedback: 'Correct. The time is 10:30 a.m.', retryFeedback: 'Check the hour first, then the minutes and period.' },
+  { ...base('func03-schedule', 7, 8, 'Find the Scheduled Time'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'Your activity begins at 2:30 p.m. Which clock label matches?', choices: ['2:30 p.m.', '2:30 a.m.', '3:20 p.m.'], answer: '2:30 p.m.', correctFeedback: 'Correct. You found the scheduled time.', retryFeedback: 'Match the hour, minutes, and p.m. label.', contentDescription: 'Analog-clock choice assets needed for the final version.' },
+  { ...base('func03-complete', 8, 8, 'Daily Schedule Complete'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Teacher verification using a classroom clock or device is recommended.', steps: [{ id: 'summary', title: 'Know when activities happen', description: 'Analog and digital clocks show hours and minutes, while a.m. and p.m. identify the time period.' }], actionLabel: 'Finish lesson' },
+]
+
+export const mockFuncLessons = [
+  { id: 'FUNC-01', title: 'Words I Use Every Day', tasks: func01.map(withFunctionalAssets) },
+  { id: 'FUNC-02', title: 'Money Up to Twenty Pesos', tasks: func02.map(withFunctionalAssets) },
+  { id: 'FUNC-03', title: 'Tell Time Using Clocks', tasks: func03.map(withFunctionalAssets) },
+] as const

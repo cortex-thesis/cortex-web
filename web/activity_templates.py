@@ -117,7 +117,7 @@ def validate_activity_configuration(activity_type, configuration):
         choices = configuration["choices"]
         if not isinstance(choices, list) or len(choices) < 2 or configuration["answer"] not in choices:
             return f"{task_id} requires at least two choices and an answer contained in choices."
-    if task_id and configuration.get("lesson_id", "").startswith(("CARE-", "LIFE-", "PREV-", "LIVE-")):
+    if task_id and configuration.get("lesson_id", "").startswith(("CARE-", "LIFE-", "PREV-", "LIVE-", "FUNC-")):
         missing_feedback = [field for field in ("correct_feedback", "retry_feedback") if not configuration.get(field)]
         if missing_feedback:
             return f"Scored lesson activities require: {', '.join(missing_feedback)}."

@@ -3,6 +3,7 @@ import type { CognitiveState } from '../constants/states'
 import { mockLifeLessons } from './lifeLessons'
 import { mockPrevLessons } from './prevLessons'
 import { mockLiveLessons } from './liveLessons'
+import { mockFuncLessons } from './funcLessons'
 
 export const mockTeacher: User = {
   id: 'teacher-001',
@@ -308,7 +309,7 @@ export const mockCareLessons = [
   { id: 'CARE-03', title: 'Tools for Good Grooming', tasks: care03Tasks },
 ] as const
 
-export const mockPreviewLessons = [...mockCareLessons, ...mockLifeLessons, ...mockPrevLessons, ...mockLiveLessons] as const
+export const mockPreviewLessons = [...mockCareLessons, ...mockLifeLessons, ...mockPrevLessons, ...mockLiveLessons, ...mockFuncLessons] as const
 
 // simulates live EEG state cycling for dev/testing
 export function createMockEEGStream(

@@ -42,6 +42,7 @@ tmp/care-assets-import/
 tmp/life-assets-import/
 tmp/prev-assets-import/
 tmp/live-assets-import/
+tmp/func-assets-import/
 # Small synthetic fixtures may be committed deliberately here.
 !tests/fixtures/**
 !web/tests/fixtures/**
