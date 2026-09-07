@@ -38,8 +38,12 @@ import Reports from '../pages/teacher/Reports'
 import AdvancedReports from '../pages/teacher/AdvancedReports'
 import ResearchAnalysis from '../pages/admin/ResearchAnalysis'
 import AdminSchools from '../pages/admin/Schools'
-import AdminDashboardPage from '../pages/admin/Dashboard'
-import AdminAccountsPage from '../pages/admin/Accounts'
+import SchoolAdminDashboard from '../pages/schoolAdmin/Dashboard'
+import SchoolAdminClasses from '../pages/schoolAdmin/Classes'
+import SchoolAdminDirectory from '../pages/schoolAdmin/Directory'
+import SuperAdminAccounts from '../pages/superAdmin/Accounts'
+import SuperAdminDashboard from '../pages/superAdmin/Dashboard'
+import SuperAdminRequests from '../pages/superAdmin/Requests'
 import {
   StudentRegistration, TeacherRegistration,
   ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
@@ -125,10 +129,19 @@ export default function AppRouter() {
       <Route path="/teacher/student/:studentId/analytics" element={<StudentHistory />} />
       </Route>
 
-      {/* Administrator */}
-      <Route element={<ProtectedRoute roles={['admin']} />}>
-        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-        <Route path="/admin/accounts" element={<AdminAccountsPage />} />
+      {/* School administrator */}
+      <Route element={<ProtectedRoute roles={['school_admin']} />}>
+        <Route path="/school-admin/dashboard" element={<SchoolAdminDashboard />} />
+        <Route path="/school-admin/classes" element={<SchoolAdminClasses />} />
+        <Route path="/school-admin/teachers" element={<SchoolAdminDirectory />} />
+        <Route path="/school-admin/students" element={<SchoolAdminDirectory />} />
+      </Route>
+
+      {/* Super administrator */}
+      <Route element={<ProtectedRoute roles={['super_admin']} />}>
+        <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
+        <Route path="/admin/accounts" element={<SuperAdminAccounts />} />
+        <Route path="/admin/requests" element={<SuperAdminRequests />} />
         <Route path="/admin/evaluation" element={<Evaluation />} />
         <Route path="/admin/analysis" element={<ResearchAnalysis />} />
         <Route path="/admin/schools" element={<AdminSchools />} />

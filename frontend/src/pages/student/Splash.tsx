@@ -5,7 +5,7 @@ import { LogoAnimation } from '../../components/atoms'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import styles from './Splash.module.css'
 
-type AccountRole = 'student' | 'teacher' | 'admin'
+type AccountRole = 'student' | 'teacher'
 
 interface SplashStep {
   icon: ComponentType<{ className?: string; size?: number }>
@@ -17,7 +17,6 @@ interface SplashStep {
 const ROLE_DESTINATIONS: Record<AccountRole, string> = {
   student: '/student/home',
   teacher: '/teacher/dashboard',
-  admin: '/admin/dashboard',
 }
 
 const STUDENT_STEPS: SplashStep[] = [

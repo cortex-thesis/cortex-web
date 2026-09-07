@@ -33,6 +33,8 @@ class WorkflowTests(TestCase):
         self.assertTrue(Enrollment.objects.filter(student=self.student, removed_at__isnull=True).exists())
 
     def test_admin_stores_structured_research_analysis(self):
+        self.admin.admin_scope = Profile.AdminScope.SUPER
+        self.admin.save(update_fields=["admin_scope"])
         self._login(self.admin)
         response = self.client.post("/api/admin/research-analyses/", data=json.dumps({
             "phase": "phase_2", "analysis_key": "filter_effectiveness",
@@ -74,6 +76,50 @@ class WorkflowTests(TestCase):
         self.assertEqual(teacher.account_status, Profile.AccountStatus.ACTIVE)
         accounts = self.client.get(f"/api/admin/accounts/?school_id={school.pk}").json()["accounts"]
         self.assertEqual([item["name"] for item in accounts], ["Assigned Teacher"])
+
+    def test_super_admin_creates_school_admin_and_school_admin_manages_only_own_users(self):
+        self.admin.admin_scope = Profile.AdminScope.SUPER
+        self.admin.save(update_fields=["admin_scope"])
+        school = School.objects.create(name="Managed School")
+        other_school = School.objects.create(name="Other School")
+        self._login(self.admin)
+        created = self.client.post("/api/admin/accounts/", data=json.dumps({
+            "username": "managed-admin", "name": "Managed Administrator",
+            "email": "admin@managed.test", "temporary_password": "strong-school-admin-2026",
+            "role": "admin", "school_id": str(school.pk),
+        }), content_type="application/json")
+        self.assertEqual(created.status_code, 201)
+        school_admin = Profile.objects.get(user__username="managed-admin")
+        self.assertTrue(school_admin.is_school_admin)
+        self.assertEqual(school_admin.school, school)
+
+        self._login(school_admin)
+        teacher = self.client.post("/api/admin/accounts/", data=json.dumps({
+            "username": "managed-teacher", "name": "Managed Teacher",
+            "email": "teacher@managed.test", "temporary_password": "strong-managed-teacher-2026",
+            "role": "teacher", "school_id": str(other_school.pk),
+        }), content_type="application/json")
+        self.assertEqual(teacher.status_code, 403)
+        teacher = self.client.post("/api/admin/accounts/", data=json.dumps({
+            "username": "managed-teacher", "name": "Managed Teacher",
+            "email": "teacher@managed.test", "temporary_password": "strong-managed-teacher-2026",
+            "role": "teacher",
+        }), content_type="application/json")
+        self.assertEqual(teacher.status_code, 201)
+        managed_teacher = Profile.objects.get(user__username="managed-teacher")
+        self.assertEqual(managed_teacher.school, school)
+        self.assertEqual(managed_teacher.account_status, Profile.AccountStatus.ACTIVE)
+        self.assertEqual(self.client.delete(f"/api/admin/accounts/{managed_teacher.pk}/status/").status_code, 200)
+        managed_teacher.refresh_from_db()
+        self.assertEqual(managed_teacher.account_status, Profile.AccountStatus.DISABLED)
+        self.assertFalse(managed_teacher.user.is_active)
+
+        forbidden_admin = self.client.post("/api/admin/accounts/", data=json.dumps({
+            "username": "second-admin", "name": "Second Admin",
+            "email": "second@managed.test", "temporary_password": "strong-second-admin-2026",
+            "role": "admin",
+        }), content_type="application/json")
+        self.assertEqual(forbidden_admin.status_code, 403)
 
     def test_teacher_report_uses_owned_completed_session_analytics(self):
         school_class = SchoolClass.objects.create(name="Report Class", code="RPRT1", teacher=self.teacher, school_year="2026-2027")
