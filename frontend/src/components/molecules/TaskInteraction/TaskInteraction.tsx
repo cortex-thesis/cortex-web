@@ -68,7 +68,7 @@ function TaskInteraction({ task, onAnswered }: TaskInteractionProps) {
             </button>
           ))}
         </div>
-        {multiple && <div className={styles.actions}><button type="button" className={styles.check} disabled={!selected.length || result !== null} onClick={() => finish(selected.length === expected.length && selected.every((id) => expected.includes(id)), selected.join(','))}><Check size={15} /> Check choices</button></div>}
+        {multiple && <div className={styles.actions}><button type="button" className={styles.check} disabled={!selected.length || result !== null} onClick={() => finish(task.scored === false || expected.length === 0 || (selected.length === expected.length && selected.every((id) => expected.includes(id))), selected.join(','))}><Check size={15} /> {task.scored === false || expected.length === 0 ? 'Save choices' : 'Check choices'}</button></div>}
       </div>
     )
   }

@@ -171,6 +171,7 @@ export interface Task {
   correctOrder?: string[]
   sortAnswers?: Record<string, string>
   selectionMode?: 'single' | 'multiple'
+  scored?: boolean
   correctFeedback?: string
   retryFeedback?: string
   deliveryVariants?: Partial<Record<'attention_reengagement' | 'gentle_reactivation', Partial<Task>>>

@@ -10,7 +10,7 @@ import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../constants/ac
 // Note: Un-comment useSession if/when needed in your page logic
 // import { useSession } from '../../hooks/useSession'
 
-import { mockCareLessons, mockTasks } from '../../mocks'
+import { mockPreviewLessons, mockTasks } from '../../mocks'
 import type { CognitiveState } from '../../constants/states'
 import styles from './FocusMode.module.css'
 
@@ -55,7 +55,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
   const deliveryConfig = getDeliveryConfig(currentState)
   const isElevated = deliveryConfig.intensity === 'elevated'
   const isRegulating = deliveryConfig.strategy === 'sensory_cooldown'
-  const previewTasks = mockCareLessons[previewLessonIndex].tasks
+  const previewTasks = mockPreviewLessons[previewLessonIndex].tasks
   const activeTasks: readonly typeof mockTasks[number][] = preview ? previewTasks : mockTasks
   const safeTaskPosition = Math.min(taskPosition, activeTasks.length - 1)
   const task = {
@@ -131,7 +131,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
   return (
     <>
       <SessionTemplate
-        className_name={preview ? `${mockCareLessons[previewLessonIndex].id} · ${mockCareLessons[previewLessonIndex].title}` : 'Life Skills'}
+        className_name={preview ? `${mockPreviewLessons[previewLessonIndex].id} · ${mockPreviewLessons[previewLessonIndex].title}` : 'Life Skills'}
         state={currentState}
         signalStrength={signalStrength}
         isLive={isLive}
@@ -151,7 +151,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
         {import.meta.env.DEV && (
           <div className={styles.prototypeNav} aria-label="Prototype content preview">
             <span>Lesson</span>
-            {mockCareLessons.map((lesson, index) => (
+            {mockPreviewLessons.map((lesson, index) => (
               <button key={lesson.id} className={index === previewLessonIndex ? styles.prototypeActive : ''} onClick={() => { setPreviewLessonIndex(index); setTaskPosition(0) }}>
                 {lesson.id}
               </button>
