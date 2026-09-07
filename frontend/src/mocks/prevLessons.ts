@@ -2,6 +2,64 @@ import type { Task } from '../types'
 
 const base = (id: string, index: number, total: number, title: string): Pick<Task, 'id' | 'index' | 'total' | 'title' | 'imageUrl' | 'package' | 'question' | 'choices' | 'answer'> => ({ id, index, total, title, imageUrl: null, package: 'pre_vocational', question: '', choices: [], answer: '' })
 
+const common = (name: string) => `/assets/pre-vocational/common/${name}.png`
+const imageByLabel: Record<string, string> = {
+  Interest: common('interest'),
+  'Skill or capability': common('skills'),
+  Practice: common('practice'),
+  'Ana enjoys drawing': common('drawing-interest'),
+  'Marco likes computers': common('computer-interest'),
+  Gardening: common('gardening'),
+  'Food preparation': common('meal-preparation'),
+  'Using a computer': common('using-computer'),
+  'Drawing or design': common('drawing-interest'),
+  'Organizing materials': common('organizing'),
+  Music: common('music'),
+  'Care for plants': common('gardening'),
+  'Prepare food': common('meal-preparation'),
+  'Use technology': common('using-computer'),
+  'Organize materials': common('organizing'),
+  'Help with household tasks': common('household-tasks'),
+  Product: common('product'),
+  Service: common('customer-service'),
+  'Grow vegetables': common('raised-garden-bed'),
+  'Repair computers': common('appliance-repair'),
+  Tailoring: common('tailoring'),
+  'Computer repair': common('appliance-repair'),
+  'Food processing': common('dairy-products'),
+  'Selling baked goods': common('product'),
+  'Repairing electronics for customers': common('appliance-repair'),
+  'Growing vegetables for sale': common('raised-garden-bed'),
+  'Food selling': common('product'),
+  'Computer service': common('customer-service'),
+  'Repair work': common('repair'),
+  Activity: common('skills'),
+  Opportunity: common('opportunities'),
+  'People need device repairs': common('appliance-repair'),
+  'Tailoring service': common('tailoring'),
+  'Grow and sell vegetables': common('raised-garden-bed'),
+  'Electronics or computer repair': common('repair'),
+}
+
+const taskImageById: Record<string, string> = {
+  'prev01-practice': common('practice'),
+  'prev02-service': common('appliance-repair'),
+  'prev03-orientation': common('opportunities'),
+  'prev03-snacks': common('product'),
+  'prev03-tailoring': common('tailoring'),
+  'prev03-fit': common('repair'),
+}
+
+function withSuppliedAssets(task: Task): Task {
+  return {
+    ...task,
+    imageUrl: taskImageById[task.id] ?? task.imageUrl,
+    steps: task.steps?.map((step) => ({ ...step, imageUrl: step.imageUrl ?? imageByLabel[step.title], altText: step.altText ?? step.title })),
+    items: task.items?.map((item) => ({ ...item, imageUrl: item.imageUrl ?? imageByLabel[item.label], altText: item.altText ?? item.label })),
+    pairs: task.pairs?.map((pair) => ({ ...pair, left: { ...pair.left, imageUrl: pair.left.imageUrl ?? imageByLabel[pair.left.label], altText: pair.left.altText ?? pair.left.label }, right: { ...pair.right, imageUrl: pair.right.imageUrl ?? imageByLabel[pair.right.label], altText: pair.right.altText ?? pair.right.label } })),
+  }
+}
+
 const prev01: Task[] = [
   { ...base('prev01-orientation', 1, 8, 'My Capabilities, Interests, and Skills'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Recognize activities you enjoy and abilities you are developing.', steps: [{ id: 'goal', title: 'Know what interests you', description: 'Interests and skills can guide what you choose to practise.', imageUrl: '/assets/pre-vocational/prev-01/skills-and-responsibilities.png', altText: 'Document, gear, and check mark representing skills and responsibilities' }], actionLabel: 'Continue' },
   { ...base('prev01-concepts', 2, 8, 'Interest and Skill'), contentType: 'image', template: 'visual_narrative', contentDescription: 'An interest can become a stronger skill through practice.', steps: [{ id: 'interest', title: 'Interest', description: 'Something you like or want to explore.' }, { id: 'skill', title: 'Skill or capability', description: 'Something you can do or are learning to do.' }, { id: 'practice', title: 'Practice', description: 'A way to develop an interest or skill.' }], actionLabel: 'Continue', layout: { size: 'wide', preferredColumns: 3 } },
@@ -36,7 +94,7 @@ const prev03: Task[] = [
 ]
 
 export const mockPrevLessons = [
-  { id: 'PREV-01', title: 'My Capabilities, Interests, and Skills', tasks: prev01 },
-  { id: 'PREV-02', title: 'Livelihood Activities Around Us', tasks: prev02 },
-  { id: 'PREV-03', title: 'Livelihood Opportunities in My Community', tasks: prev03 },
+  { id: 'PREV-01', title: 'My Capabilities, Interests, and Skills', tasks: prev01.map(withSuppliedAssets) },
+  { id: 'PREV-02', title: 'Livelihood Activities Around Us', tasks: prev02.map(withSuppliedAssets) },
+  { id: 'PREV-03', title: 'Livelihood Opportunities in My Community', tasks: prev03.map(withSuppliedAssets) },
 ] as const
