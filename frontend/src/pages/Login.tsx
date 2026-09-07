@@ -8,6 +8,7 @@ import { useAuthStore } from '../store/authStore'
 import styles from './student/Login.module.css'
 
 const TEST_ACCOUNTS = [
+  { label: 'Super Administrator', email: 'super-admin@cortex.test', password: 'super-admin-demo-2026!' },
   { label: 'School Administrator', email: 'school-admin@example-school.test', password: 'admin-demo-2026!' },
   { label: 'Teacher', email: 'teacher@example-school.test', password: 'teacher-demo-2026!' },
   { label: 'Student', email: 'student@example-school.test', password: 'student-demo-2026!' },
@@ -28,7 +29,8 @@ export default function UnifiedLogin() {
     setIsLoading(true)
     try {
       const user = await login({ email: email.trim(), password })
-      if (user.role === 'admin') navigate('/admin/dashboard', { replace: true })
+      if (user.role === 'super_admin') navigate('/admin/dashboard', { replace: true })
+      else if (user.role === 'school_admin') navigate('/school-admin/dashboard', { replace: true })
       else if (user.role === 'student') navigate('/student/home', { replace: true })
       else navigate('/welcome', { replace: true, state: { role: user.role } })
     } catch (loginError) {

@@ -33,8 +33,14 @@ import TeacherProfile from '../pages/teacher/Profile'
 import TeacherClasses from '../pages/teacher/Classes'
 import TeacherClassSetup from '../pages/teacher/ClassSetup'
 import TeacherJournals from '../pages/teacher/Journals'
+import SchoolAdminDashboard from '../pages/schoolAdmin/Dashboard'
+import SchoolAdminClasses from '../pages/schoolAdmin/Classes'
+import SchoolAdminDirectory from '../pages/schoolAdmin/Directory'
+import SuperAdminAccounts from '../pages/superAdmin/Accounts'
+import SuperAdminDashboard from '../pages/superAdmin/Dashboard'
+import SuperAdminRequests from '../pages/superAdmin/Requests'
 import {
-  AdminDashboard, AdminAccounts, StudentRegistration, TeacherRegistration,
+  StudentRegistration, TeacherRegistration,
   ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
   HardwareRequired, Reports, Enrollment,
   SessionControl, StudentHistory, Evaluation,
@@ -118,10 +124,19 @@ export default function AppRouter() {
       <Route path="/teacher/student/:studentId/analytics" element={<StudentHistory />} />
       </Route>
 
-      {/* Administrator */}
-      <Route element={<ProtectedRoute roles={['admin']} />}>
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/accounts" element={<AdminAccounts />} />
+      {/* School administrator */}
+      <Route element={<ProtectedRoute roles={['school_admin']} />}>
+        <Route path="/school-admin/dashboard" element={<SchoolAdminDashboard />} />
+        <Route path="/school-admin/classes" element={<SchoolAdminClasses />} />
+        <Route path="/school-admin/teachers" element={<SchoolAdminDirectory />} />
+        <Route path="/school-admin/students" element={<SchoolAdminDirectory />} />
+      </Route>
+
+      {/* Super administrator */}
+      <Route element={<ProtectedRoute roles={['super_admin']} />}>
+        <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
+        <Route path="/admin/accounts" element={<SuperAdminAccounts />} />
+        <Route path="/admin/requests" element={<SuperAdminRequests />} />
         <Route path="/admin/evaluation" element={<Evaluation />} />
       </Route>
       <Route path="/admin/login" element={<Navigate to="/" replace />} />

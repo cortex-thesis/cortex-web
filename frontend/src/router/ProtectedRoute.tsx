@@ -10,7 +10,9 @@ export default function ProtectedRoute({ roles }: { roles: UserRole[] }) {
   if (!initialized) return null
   if (!user) return <Navigate to="/" replace state={{ from: location.pathname }} />
   if (!roles.includes(user.role)) {
-    const destination = user.role === 'teacher' ? '/teacher/dashboard' : user.role === 'admin' ? '/admin/dashboard' : '/student/home'
+    const destination = user.role === 'teacher' ? '/teacher/dashboard'
+      : user.role === 'school_admin' ? '/school-admin/dashboard'
+        : user.role === 'super_admin' ? '/admin/dashboard' : '/student/home'
     return <Navigate to={destination} replace />
   }
   return <Outlet />

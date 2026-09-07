@@ -18,8 +18,10 @@ interface StudentBootstrapData {
   profile: Record<string, unknown>
 }
 
-type AuthUser = Omit<User, 'classIds'> & {
+type AuthUser = Omit<User, 'classIds' | 'role'> & {
   pseudonym: string
+  role: 'student' | 'teacher' | 'admin'
+  admin_scope?: 'none' | 'school' | 'super'
   student_number?: string
   dashboard?: TeacherDashboardData
   student_bootstrap?: StudentBootstrapData
@@ -43,7 +45,10 @@ function normalizeUser(user: AuthUser): User {
   const identity = { ...user }
   delete identity.dashboard
   delete identity.student_bootstrap
-  return { ...identity, id: String(user.id), avatar: user.avatar ?? null, classIds: [] }
+  const role = user.role === 'admin'
+    ? (user.admin_scope === 'school' ? 'school_admin' : 'super_admin')
+    : user.role
+  return { ...identity, role, id: String(user.id), avatar: user.avatar ?? null, classIds: [] }
 }
 
 function storedUser(): User | null {

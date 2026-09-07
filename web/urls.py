@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     admin_account_status,
     admin_accounts,
+    admin_dashboard,
     admin_schools,
     assign_teacher,
     class_detail,
@@ -75,6 +76,7 @@ urlpatterns = [
     path("privacy/requests/", data_lifecycle_requests, name="data-lifecycle-requests"),
     path("privacy/requests/<uuid:request_id>/", data_lifecycle_requests, name="data-lifecycle-request-detail"),
     path("admin/schools/", admin_schools, name="admin-schools"),
+    path("admin/dashboard/", admin_dashboard, name="admin-dashboard"),
     path("admin/accounts/", admin_accounts, name="admin-accounts"),
     path("admin/accounts/<int:profile_id>/status/", admin_account_status, name="admin-account-status"),
     path("classes/", classes, name="classes"),

@@ -5,7 +5,7 @@ import {
 
 // auth
 
-export type UserRole = 'student' | 'teacher' | 'admin'
+export type UserRole = 'student' | 'teacher' | 'school_admin' | 'super_admin'
 
 export interface User {
   id: string

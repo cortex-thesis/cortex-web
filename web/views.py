@@ -15,7 +15,8 @@ from django.core.cache import cache
 from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
 from django.utils.crypto import constant_time_compare
 from django.db import IntegrityError, transaction
-from django.db.models import Count, F, Q
+from django.db.models import Avg, Count, F, Q
+from django.db.models.deletion import ProtectedError
 from django.http import FileResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -25,7 +26,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import (
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
     DataLifecycleRequest, Enrollment, Intervention, InterventionAlert, JournalEntry,
-    LearningSession, Lesson, Notification, Profile, School, SchoolClass, Slide, UserPreference,
+    EEGDevice, LearningSession, Lesson, Notification, Profile, School, SchoolClass, Slide, UserPreference,
 )
 from .activity_templates import ACTIVITY_TEMPLATES, LAYOUT_OPTIONS, TASK_TEMPLATES, validate_activity_configuration
 
@@ -185,6 +186,7 @@ def _ensure_demo_accounts():
         defaults={"name": "Cortex Demonstration School", "contact_email": "office@example-school.test"},
     )
     demo_accounts = [
+        {"username": "super-admin-demo", "email": "super-admin@cortex.test", "password": "super-admin-demo-2026!", "role": Profile.Role.ADMIN, "display_name": "Super Administrator", "admin_scope": Profile.AdminScope.SUPER},
         {"username": "school-admin-demo", "email": "school-admin@example-school.test", "password": "admin-demo-2026!", "role": Profile.Role.ADMIN, "display_name": "School Administrator", "admin_scope": Profile.AdminScope.SCHOOL},
         {"username": "teacher-example", "email": "teacher@example-school.test", "password": "teacher-demo-2026!", "role": Profile.Role.TEACHER, "display_name": "Example Teacher"},
         {"username": "student-example", "email": "student@example-school.test", "password": "student-demo-2026!", "role": Profile.Role.STUDENT, "display_name": "Example Student"},
@@ -223,12 +225,68 @@ def _ensure_demo_accounts():
 def _profile_data(profile):
     return {
         "id": profile.pk, "name": profile.display_name, "role": profile.role,
+        "username": profile.user.username,
         "pseudonym": str(profile.pseudonym), "avatar": None,
         "student_number": profile.student_number,
         "school": profile.school.name if profile.school_id else None,
         "account_status": profile.account_status,
         "admin_scope": profile.admin_scope,
+        "requested_at": profile.created_at.isoformat(),
     }
+
+
+@require_http_methods(["GET"])
+def admin_dashboard(request):
+    admin, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    if admin.is_super_admin:
+        profiles = Profile.objects.all()
+        sessions = LearningSession.objects.all()
+        devices = EEGDevice.objects.all()
+        return JsonResponse({
+            "scope": "super",
+            "total_users": profiles.count(),
+            "active_users": profiles.filter(account_status=Profile.AccountStatus.ACTIVE).count(),
+            "pending_invitations": profiles.filter(account_status=Profile.AccountStatus.PENDING).count(),
+            "school_count": School.objects.filter(is_active=True).count(),
+            "class_count": SchoolClass.objects.filter(status=SchoolClass.Status.ACTIVE).count(),
+            "active_sessions": sessions.filter(ended_at__isnull=True).count(),
+            "total_sessions": sessions.count(),
+            "device_count": devices.count(),
+            "connected_devices": devices.filter(status=EEGDevice.Status.CONNECTED).count(),
+            "teachers": profiles.filter(role=Profile.Role.TEACHER).count(),
+            "students": profiles.filter(role=Profile.Role.STUDENT).count(),
+            "school_admins": profiles.filter(role=Profile.Role.ADMIN, admin_scope=Profile.AdminScope.SCHOOL).count(),
+        })
+    if not admin.is_school_admin or not admin.school_id:
+        return JsonResponse({"detail": "School-administrator scope is required."}, status=403)
+    classes = SchoolClass.objects.filter(school=admin.school).select_related("teacher", "teacher__school").annotate(
+        active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
+        session_count=Count("sessions", distinct=True),
+        average_completion=Avg("sessions__completion_percentage"),
+        average_focus=Avg("sessions__analytics__focused_percentage"),
+    )
+    students = Profile.objects.filter(school=admin.school, role=Profile.Role.STUDENT)
+    teachers = Profile.objects.filter(school=admin.school, role=Profile.Role.TEACHER)
+    sessions = LearningSession.objects.filter(school_class__school=admin.school)
+    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    return JsonResponse({
+        "administrator": _profile_data(admin),
+        "classes": [_class_data(item, packages=packages) | {
+            "session_count": item.session_count,
+            "average_completion": round(float(item.average_completion or 0), 1),
+            "average_focus": round(float(item.average_focus or 0), 1),
+        } for item in classes],
+        "class_count": classes.filter(status=SchoolClass.Status.ACTIVE).count(),
+        "teacher_count": teachers.filter(account_status=Profile.AccountStatus.ACTIVE).count(),
+        "student_count": students.filter(account_status=Profile.AccountStatus.ACTIVE).count(),
+        "active_sessions": sessions.filter(ended_at__isnull=True).count(),
+        "total_sessions": sessions.count(),
+        "pending_teachers": teachers.filter(account_status=Profile.AccountStatus.PENDING).count(),
+        "average_completion": round(float(sessions.aggregate(value=Avg("completion_percentage"))["value"] or 0), 1),
+        "average_focus": round(float(sessions.aggregate(value=Avg("analytics__focused_percentage"))["value"] or 0), 1),
+    })
 
 
 @require_http_methods(["GET", "POST"])
@@ -284,7 +342,7 @@ def admin_accounts(request):
     return JsonResponse(response, status=201)
 
 
-@require_http_methods(["PATCH"])
+@require_http_methods(["PATCH", "DELETE"])
 def admin_account_status(request, profile_id):
     admin, error = _require_profile(request, {Profile.Role.ADMIN})
     if error:
@@ -292,14 +350,23 @@ def admin_account_status(request, profile_id):
     target = get_object_or_404(Profile.objects.select_related("school", "user"), pk=profile_id)
     if not _admin_can_manage(admin, target) or target.is_super_admin:
         return JsonResponse({"detail": "You cannot manage this account."}, status=403)
+    if request.method == "DELETE":
+        if target.account_status != Profile.AccountStatus.PENDING:
+            return JsonResponse({"detail": "Only pending requests can be deleted."}, status=409)
+        target_user = target.user
+        try:
+            with transaction.atomic():
+                _audit(admin, "account_request_deleted", target, {"name": target.display_name})
+                target_user.delete()
+        except ProtectedError:
+            return JsonResponse({"detail": "This request is referenced by system records and cannot be deleted."}, status=409)
+        return JsonResponse({"status": "deleted"})
     try:
         data = _body(request)
         status = str(data["status"])
         if status not in Profile.AccountStatus.values:
             raise ValueError
-        if target.role == Profile.Role.TEACHER and status == Profile.AccountStatus.ACTIVE:
-            if not admin.is_school_admin or not admin.school_id:
-                return JsonResponse({"detail": "A school administrator must approve teachers."}, status=403)
+        if target.role == Profile.Role.TEACHER and status == Profile.AccountStatus.ACTIVE and admin.is_school_admin:
             target.school = admin.school
         target.account_status = status
         target.approved_by = admin if status == Profile.AccountStatus.ACTIVE else target.approved_by
