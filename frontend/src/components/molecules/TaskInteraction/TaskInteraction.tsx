@@ -50,13 +50,25 @@ function TaskInteraction({ task, onAnswered }: TaskInteractionProps) {
   }
 
   if (template === 'picture_choice' || template === 'tap_target') {
+    const multiple = task.selectionMode === 'multiple'
+    function choosePicture(itemId: string) {
+      if (!multiple) {
+        setSelected([itemId])
+        finish(expected.includes(itemId), itemId)
+        return
+      }
+      setSelected((current) => current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId])
+    }
     return (
-      <div className={`${styles.pictureGrid} ${template === 'tap_target' ? styles.targetGrid : ''}`}>
-        {items.map((item) => (
-          <button key={item.id} type="button" className={`${styles.pictureChoice} ${selected.includes(item.id) ? styles.selected : ''}`} disabled={result !== null} onClick={() => { setSelected([item.id]); finish(expected.includes(item.id), item.id) }}>
-            <ItemVisual item={item} /><strong>{item.label}</strong>
-          </button>
-        ))}
+      <div className={styles.stack}>
+        <div className={`${styles.pictureGrid} ${template === 'tap_target' ? styles.targetGrid : ''}`}>
+          {items.map((item) => (
+            <button key={item.id} type="button" className={`${styles.pictureChoice} ${selected.includes(item.id) ? styles.selected : ''}`} disabled={result !== null} onClick={() => choosePicture(item.id)}>
+              <ItemVisual item={item} /><strong>{item.label}</strong>
+            </button>
+          ))}
+        </div>
+        {multiple && <div className={styles.actions}><button type="button" className={styles.check} disabled={!selected.length || result !== null} onClick={() => finish(selected.length === expected.length && selected.every((id) => expected.includes(id)), selected.join(','))}><Check size={15} /> Check choices</button></div>}
       </div>
     )
   }
@@ -104,7 +116,7 @@ function TaskInteraction({ task, onAnswered }: TaskInteractionProps) {
     }
     return (
       <div className={styles.matchGrid}>
-        <div>{pairs.map((pair) => <button type="button" draggable key={pair.id} disabled={matched.includes(pair.id)} className={`${styles.matchButton} ${activePair === pair.id ? styles.selected : ''}`} onDragStart={() => setActivePair(pair.id)} onClick={() => setActivePair(pair.id)}><GripVertical size={15} />{pair.left.label}</button>)}</div>
+        <div>{pairs.map((pair) => <button type="button" draggable key={pair.id} disabled={matched.includes(pair.id)} className={`${styles.matchButton} ${pair.left.imageUrl ? styles.visualMatchButton : ''} ${activePair === pair.id ? styles.selected : ''}`} onDragStart={() => setActivePair(pair.id)} onClick={() => setActivePair(pair.id)}><GripVertical size={15} />{pair.left.imageUrl && <ItemVisual item={pair.left} />}<strong>{pair.left.label}</strong></button>)}</div>
         <div>{shuffledRights.map((pair) => <button type="button" key={pair.id} disabled={matched.includes(pair.id)} className={styles.matchButton} onDragOver={(event) => event.preventDefault()} onDrop={() => chooseRight(pair.id)} onClick={() => chooseRight(pair.id)}>{pair.right.label}</button>)}</div>
       </div>
     )
@@ -122,7 +134,7 @@ function TaskInteraction({ task, onAnswered }: TaskInteractionProps) {
 
   return (
     <div className={styles.stack}>
-      <div className={styles.itemRow}>{items.filter((item) => !sorted[item.id]).map((item) => <button type="button" draggable key={item.id} className={`${styles.itemButton} ${sortItem === item.id ? styles.selected : ''}`} onDragStart={() => setSortItem(item.id)} onClick={() => setSortItem(item.id)}><GripVertical size={15} />{item.label}</button>)}</div>
+        <div className={styles.itemRow}>{items.filter((item) => !sorted[item.id]).map((item) => <button type="button" draggable key={item.id} className={`${styles.itemButton} ${item.imageUrl ? styles.visualItemButton : ''} ${sortItem === item.id ? styles.selected : ''}`} onDragStart={() => setSortItem(item.id)} onClick={() => setSortItem(item.id)}><GripVertical size={15} />{item.imageUrl && <ItemVisual item={item} />}<strong>{item.label}</strong></button>)}</div>
       <p className={styles.helper}>{sortItem ? 'Move it to a group, or tap a group.' : 'Choose or drag an item to sort.'}</p>
       <div className={styles.categoryGrid}>{(task.categories ?? []).map((category) => <button type="button" key={category.id} className={styles.category} disabled={result !== null} onDragOver={(event) => event.preventDefault()} onDrop={() => assignCategory(category.id)} onClick={() => assignCategory(category.id)}><strong>{category.label}</strong><span>{Object.entries(sorted).filter(([, value]) => value === category.id).map(([id]) => items.find((item) => item.id === id)?.label).join(', ') || 'Drop items here'}</span></button>)}</div>
     </div>

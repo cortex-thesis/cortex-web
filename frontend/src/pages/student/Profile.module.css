@@ -1,4 +1,4 @@
-.page { width: 100%; max-width: 1440px; margin: 0 auto; padding: 28px 40px 96px; }
+.page { width: 100%; max-width: var(--student-shell-width); margin: 0 auto; padding: var(--student-shell-top) var(--student-shell-gutter) 96px; }
 .profileHero { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 28px; border: 1px solid var(--color-border); border-radius: 20px; background: rgba(255,255,255,.92); box-shadow: var(--shadow-card); }
 .identity { display: flex; align-items: center; gap: 18px; }
 .eyebrow, .sectionEyebrow { display: block; color: var(--color-interface-purple); font-size: 10px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; }
@@ -47,5 +47,5 @@
 .journalBanner strong, .journalBanner small { display: block; }
 .journalBanner strong { color: var(--color-deep-purple); font-size: 14px; }
 .journalBanner small { margin-top: 4px; color: var(--color-text-secondary); font-size: 10px; }
-@media (max-width: 1000px) { .page { padding-inline: 24px; } .statsGrid { grid-template-columns: repeat(2, 1fr); } .dashboardGrid { grid-template-columns: 1fr; } }
+@media (max-width: 1000px) { .statsGrid { grid-template-columns: repeat(2, 1fr); } .dashboardGrid { grid-template-columns: 1fr; } }
 @media (max-width: 650px) { .page { padding: 18px 16px 90px; } .profileHero { align-items: flex-start; flex-direction: column; } .statsGrid, .badgeGrid { grid-template-columns: 1fr; } .sessionRow { grid-template-columns: 42px 1fr auto; } .sessionRow > :nth-child(3), .focusScore { display: none; } }

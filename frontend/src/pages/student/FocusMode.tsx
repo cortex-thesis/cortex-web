@@ -10,7 +10,7 @@ import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../constants/ac
 // Note: Un-comment useSession if/when needed in your page logic
 // import { useSession } from '../../hooks/useSession'
 
-import { mockTasks } from '../../mocks'
+import { mockCareLessons, mockTasks } from '../../mocks'
 import type { CognitiveState } from '../../constants/states'
 import styles from './FocusMode.module.css'
 
@@ -30,6 +30,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
 
   // In dev — use mock data. Replace with real API call later.
   const [taskPosition, setTaskPosition] = useState(0)
+  const [previewLessonIndex, setPreviewLessonIndex] = useState(0)
   const [nudgeIndex, setNudgeIndex] = useState(0)
   const [showModeAlert, setShowModeAlert] = useState(false)
 
@@ -54,10 +55,13 @@ export function FocusMode({ preview = false }: FocusModeProps) {
   const deliveryConfig = getDeliveryConfig(currentState)
   const isElevated = deliveryConfig.intensity === 'elevated'
   const isRegulating = deliveryConfig.strategy === 'sensory_cooldown'
+  const previewTasks = mockCareLessons[previewLessonIndex].tasks
+  const activeTasks: readonly typeof mockTasks[number][] = preview ? previewTasks : mockTasks
+  const safeTaskPosition = Math.min(taskPosition, activeTasks.length - 1)
   const task = {
-    ...mockTasks[taskPosition],
+    ...activeTasks[safeTaskPosition],
     index: taskPosition + 1,
-    total: mockTasks.length,
+    total: activeTasks.length,
   }
   const deliveredTask = {
     ...task,
@@ -103,7 +107,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
   }, [eegData.state, navigate, preview])
 
   function handleAnswered(correct: boolean) {
-    if (correct && taskPosition < mockTasks.length - 1) {
+    if (correct && taskPosition < activeTasks.length - 1) {
       // Advance to next task
       setTimeout(() => {
         setTaskPosition((position) => position + 1)
@@ -127,7 +131,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
   return (
     <>
       <SessionTemplate
-        className_name="Life Skills"
+        className_name={preview ? `${mockCareLessons[previewLessonIndex].id} · ${mockCareLessons[previewLessonIndex].title}` : 'Life Skills'}
         state={currentState}
         signalStrength={signalStrength}
         isLive={isLive}
@@ -146,8 +150,14 @@ export function FocusMode({ preview = false }: FocusModeProps) {
 
         {import.meta.env.DEV && (
           <div className={styles.prototypeNav} aria-label="Prototype content preview">
-            <span>Preview</span>
-            {mockTasks.map((item, index) => (
+            <span>Lesson</span>
+            {mockCareLessons.map((lesson, index) => (
+              <button key={lesson.id} className={index === previewLessonIndex ? styles.prototypeActive : ''} onClick={() => { setPreviewLessonIndex(index); setTaskPosition(0) }}>
+                {lesson.id}
+              </button>
+            ))}
+            <span>Screen</span>
+            {activeTasks.map((item, index) => (
               <button key={item.id} className={index === taskPosition ? styles.prototypeActive : ''} onClick={() => setTaskPosition(index)}>
                 {item.taskTemplate ? TASK_TEMPLATE_BY_ID[item.taskTemplate].label : ACTIVITY_TEMPLATE_BY_ID[item.template ?? 'multiple_choice'].label}
               </button>

@@ -1,4 +1,4 @@
-.page { width: 100%; max-width: 1000px; min-height: 100%; margin: 0 auto; padding: 28px 24px 90px; overflow-anchor: none; }
+.page { width: 100%; max-width: var(--student-shell-width); min-height: 100%; margin: 0 auto; padding: var(--student-shell-top) var(--student-shell-gutter) 96px; overflow-anchor: none; }
 .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .eyebrow { display: block; margin-bottom: 5px; color: var(--color-interface-purple); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .title { margin: 0; color: var(--color-deep-purple); font-size: 26px; font-weight: 600; }

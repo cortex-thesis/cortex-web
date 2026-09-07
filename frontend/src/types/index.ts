@@ -170,6 +170,9 @@ export interface Task {
   correctItemIds?: string[]
   correctOrder?: string[]
   sortAnswers?: Record<string, string>
+  selectionMode?: 'single' | 'multiple'
+  correctFeedback?: string
+  retryFeedback?: string
   deliveryVariants?: Partial<Record<'attention_reengagement' | 'gentle_reactivation', Partial<Task>>>
   sceneImageUrl?: string | null
   hotspot?: TaskHotspot

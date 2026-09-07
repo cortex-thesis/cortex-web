@@ -117,6 +117,15 @@ def validate_activity_configuration(activity_type, configuration):
         choices = configuration["choices"]
         if not isinstance(choices, list) or len(choices) < 2 or configuration["answer"] not in choices:
             return f"{task_id} requires at least two choices and an answer contained in choices."
+    if task_id and configuration.get("lesson_id", "").startswith("CARE-"):
+        missing_feedback = [field for field in ("correct_feedback", "retry_feedback") if not configuration.get(field)]
+        if missing_feedback:
+            return f"Scored CARE activities require: {', '.join(missing_feedback)}."
+    if task_id in {"picture_choice", "tap_target"}:
+        item_ids = {item.get("id") for item in configuration["items"] if isinstance(item, dict)}
+        correct_ids = configuration["correct_item_ids"]
+        if not isinstance(correct_ids, list) or not correct_ids or not set(correct_ids).issubset(item_ids):
+            return f"{task_id} requires correct_item_ids contained in items."
     if template_id == "visual_narrative" and not isinstance(configuration["steps"], list):
         return "visual_narrative steps must be a list."
     return None

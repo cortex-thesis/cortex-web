@@ -10,8 +10,11 @@
 .checkpoint { position: relative; z-index: 1; width: clamp(62px, 9vw, 82px); min-height: clamp(62px, 9vw, 82px); justify-self: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 3px solid #8fc5eb; border-radius: 50%; background: white; cursor: crosshair; font-family: var(--font-family); }
 .checkpoint b { color: var(--color-interface-blue); }.checkpoint span { font-size: var(--text-micro, 11px); }.visited { background: #dff4e8; border-color: var(--state-focused); }
 .reset { align-self: flex-end; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: white; cursor: pointer; }
-.memoryGrid { display: grid; grid-template-columns: repeat(var(--activity-columns, auto-fit), minmax(min(100%, 110px), 1fr)); gap: 12px; perspective: 700px; }
-.memoryCard { min-height: 105px; border: 2px solid #a8a5e6; border-radius: var(--radius-lg); background: linear-gradient(145deg, #534ab7, #3c3489); color: white; cursor: pointer; font: var(--font-weight-semibold) var(--text-body-d)/1.3 var(--font-family); transition: transform .25s, background .25s; }
+.memoryGrid { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 128px), 1fr)); gap: 12px; perspective: 700px; }
+.memoryCard { width: 100%; min-width: 0; aspect-ratio: 1; min-height: 112px; display: grid; place-items: center; overflow: hidden; padding: 12px; border: 2px solid #a8a5e6; border-radius: var(--radius-lg); background: linear-gradient(145deg, #534ab7, #3c3489); color: white; cursor: pointer; font: var(--font-weight-semibold) var(--text-body-d)/1.3 var(--font-family); transition: transform .25s, background .25s; }
+.memoryCard img { width: 100%; height: 100%; max-height: 132px; object-fit: contain; }
+.memoryCard span { overflow-wrap: anywhere; text-align: center; }
+.cardBack { font-size: clamp(24px, 4vw, 38px); }
 .memoryCard:hover { transform: translateY(-3px) rotate(-1deg); }.flipped { transform: scale(1.02); background: white; color: var(--color-text-primary); }
 .pattern { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 9px; padding: clamp(12px, 3vw, 22px); border-radius: var(--radius-lg); background: #fff8e7; }
 .pattern span { min-width: 62px; min-height: 62px; display: grid; place-items: center; border-radius: 14px; background: white; border: 2px solid #fac775; font: var(--font-weight-semibold) var(--text-body-d)/1 var(--font-family); }.pattern .missing { border-style: dashed; }

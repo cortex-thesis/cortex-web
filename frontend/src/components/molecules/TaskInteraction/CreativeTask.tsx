@@ -17,8 +17,8 @@ export default function CreativeTask({ task, onAnswered }: CreativeTaskProps) {
   const [matchedPairs, setMatchedPairs] = useState<string[]>([])
 
   const memoryCards = useMemo(() => (task.pairs ?? []).flatMap((pair) => [
-    { key: `${pair.id}-left`, pairId: pair.id, label: pair.left.label },
-    { key: `${pair.id}-right`, pairId: pair.id, label: pair.right.label },
+    { key: `${pair.id}-left`, pairId: pair.id, label: pair.left.label, imageUrl: pair.left.imageUrl, altText: pair.left.altText },
+    { key: `${pair.id}-right`, pairId: pair.id, label: pair.right.label, imageUrl: pair.right.imageUrl, altText: pair.right.altText },
   ]).sort((a, b) => a.key.localeCompare(b.key)).reverse(), [task.pairs])
 
   if (task.taskTemplate === 'hotspot_hunt') {
@@ -79,7 +79,7 @@ export default function CreativeTask({ task, onAnswered }: CreativeTaskProps) {
         }
       }
     }
-    return <div className={styles.memoryGrid}>{memoryCards.map((card) => { const shown = openCards.includes(card.key) || matchedPairs.includes(card.pairId); return <button type="button" key={card.key} className={`${styles.memoryCard} ${shown ? styles.flipped : ''}`} onClick={() => flip(card.key, card.pairId)} aria-label={shown ? card.label : 'Hidden card'}>{shown ? card.label : '?'}</button> })}</div>
+    return <div className={styles.memoryGrid}>{memoryCards.map((card) => { const shown = openCards.includes(card.key) || matchedPairs.includes(card.pairId); return <button type="button" key={card.key} className={`${styles.memoryCard} ${shown ? styles.flipped : ''}`} onClick={() => flip(card.key, card.pairId)} aria-label={shown ? card.label : 'Hidden card'}>{shown ? (card.imageUrl ? <img src={card.imageUrl} alt={card.altText ?? card.label} /> : <span>{card.label}</span>) : <span className={styles.cardBack}>?</span>}</button> })}</div>
   }
 
   const options = task.items ?? []

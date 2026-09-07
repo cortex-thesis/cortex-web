@@ -9,7 +9,10 @@
   box-shadow: var(--shadow-sm, 0 2px 8px rgba(45, 42, 122, 0.08));
   width: 100%;
   max-width: var(--activity-max-width, 760px);
+  height: auto;
+  min-height: min-content;
   min-width: 0;
+  overflow: visible;
   overflow-wrap: anywhere;
 }
 

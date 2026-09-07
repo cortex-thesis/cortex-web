@@ -3,7 +3,7 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-10);
-  max-width: 1440px;
+  max-width: var(--student-shell-width);
   width: 100%;
   margin: 0 auto;
 }
@@ -38,7 +38,7 @@
 }
 
 .body {
-  max-width: 1440px;
+  max-width: var(--student-shell-width);
   width: 100%;
   margin: 0 auto;
   padding: var(--space-4) var(--space-10) var(--space-8);

@@ -1,5 +1,6 @@
 # environment files
 .venv/
+.runtime/
 .env
 .env.local
 .env.development.local
@@ -37,6 +38,7 @@ local-data/
 *.pkl
 *.onnx
 *.tmp
+tmp/care-assets-import/
 # Small synthetic fixtures may be committed deliberately here.
 !tests/fixtures/**
 !web/tests/fixtures/**

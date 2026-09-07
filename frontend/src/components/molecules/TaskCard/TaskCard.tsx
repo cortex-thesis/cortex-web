@@ -148,7 +148,7 @@ function TaskCard({
         <>
           <p className={styles.question}>{task.question}</p>
           <TaskInteraction task={task} onAnswered={handleInteraction} />
-          {interactionResult && <div className={`${styles.feedback} ${styles[interactionResult]}`} role="status">{interactionResult === 'correct' ? 'Nice work! You found it.' : 'Almost. Try another move.'}</div>}
+          {interactionResult && <div className={`${styles.feedback} ${styles[interactionResult]}`} role="status">{interactionResult === 'correct' ? (task.correctFeedback ?? 'Nice work! You found it.') : (task.retryFeedback ?? 'Almost. Try another move.')}</div>}
         </>
       ) : isKnowledgeCheck ? (
         <>
@@ -158,6 +158,7 @@ function TaskCard({
               <AnswerChoice key={choice} label={choice} answerState={getAnswerState(choice)} disabled={revealed && choice !== task.answer && choice !== selected} onClick={() => handleSelect(choice)} />
             ))}
           </div>
+          {revealed && <div className={`${styles.feedback} ${selected === task.answer ? styles.correct : styles.incorrect}`} role="status">{selected === task.answer ? (task.correctFeedback ?? 'Correct.') : (task.retryFeedback ?? 'Try again.')}</div>}
         </>
       ) : (
         <button type="button" className={styles.continueButton} onClick={() => onAnswered?.(true, 'completed')}>

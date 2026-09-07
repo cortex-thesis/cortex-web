@@ -1,7 +1,10 @@
 .root {
+  --student-shell-width: 1200px;
+  --student-shell-gutter: clamp(16px, 3vw, 40px);
+  --student-shell-top: clamp(18px, 2.5vw, 28px);
   position: relative;
   width: 100%;
-  height: 100dvh;
+  min-height: 100dvh;
   background: var(--color-surface-warm, #fbf7ee);
   display: flex;
   flex-direction: column;
