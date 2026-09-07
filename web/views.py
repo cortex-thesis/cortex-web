@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.core.cache import cache
 from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
 from django.utils.crypto import constant_time_compare
@@ -25,7 +26,9 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import (
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
     DataLifecycleRequest, Enrollment, Intervention, InterventionAlert, JournalEntry,
-    LearningSession, Lesson, Notification, Profile, School, SchoolClass, Slide, UserPreference,
+    LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School, SchoolClass, SessionAnalytics,
+    SessionSlideExposure, Slide, StatePrediction,
+    UserPreference,
 )
 from .activity_templates import ACTIVITY_TEMPLATES, LAYOUT_OPTIONS, TASK_TEMPLATES, validate_activity_configuration
 
@@ -35,10 +38,11 @@ PACKAGE_NAMES = {
     "career": "Career", "enrichment": "Enrichment",
 }
 User = get_user_model()
-ALLOWED_UPLOADS = {"image/jpeg", "image/png", "image/gif", "image/webp", "audio/mpeg", "audio/wav", "video/mp4", "video/webm", "application/pdf"}
+ALLOWED_UPLOADS = {"image/jpeg", "image/png", "image/gif", "image/webp", "audio/mpeg", "audio/wav", "audio/webm", "audio/mp4", "video/mp4", "video/webm", "application/pdf"}
 UPLOAD_EXTENSIONS = {
     "image/jpeg": {".jpg", ".jpeg"}, "image/png": {".png"}, "image/gif": {".gif"},
     "image/webp": {".webp"}, "audio/mpeg": {".mp3"}, "audio/wav": {".wav"},
+    "audio/webm": {".webm"}, "audio/mp4": {".mp4"},
     "video/mp4": {".mp4"}, "video/webm": {".webm"}, "application/pdf": {".pdf"},
 }
 MAX_ASSET_BYTES = 10 * 1024 * 1024
@@ -46,6 +50,29 @@ CONSENT_VERSIONS = {
     "eeg_processing": "1",
     "journal_media": "1",
     "staff_sharing": "1",
+}
+
+ANALYSIS_CATALOG = {
+    "phase_2": {
+        "signal_quality": ("Signal Quality Assessment", ["snr_db", "flatline_events", "contact_quality_percent"]),
+        "data_completeness": ("Data Completeness and Sampling", ["actual_samples", "expected_samples", "completeness_percent", "sampling_error_percent"]),
+        "filter_effectiveness": ("Filter Effectiveness Check", ["noise_attenuation_percent", "delta_retained_percent", "theta_retained_percent", "alpha_retained_percent", "beta_retained_percent"]),
+        "ica_artifact_removal": ("ICA Artifact Removal", ["total_components", "artifact_component_percent", "retained_component_percent", "variance_preserved_percent"]),
+        "epoch_quality": ("Epoch Retention and Post-processing SNR", ["total_epochs", "passed_epochs", "retention_percent", "postprocess_snr_db"]),
+        "feature_preparation": ("EEG Feature Preparation", ["delta_power", "theta_power", "alpha_power", "beta_power", "gamma_power", "theta_beta_ratio", "mean", "variance", "standard_deviation"]),
+        "clustering": ("Clustering Evaluation", ["silhouette_score", "davies_bouldin_index", "calinski_harabasz_index", "inertia", "adjusted_rand_index", "normalized_mutual_information"]),
+        "classification": ("Classification Evaluation", ["accuracy", "precision_macro", "recall_macro", "f1_macro", "confidence", "response_time_ms"]),
+        "baseline_comparison": ("Baseline Comparison", ["silhouette_gain", "temporal_stability_index", "observational_convergence_rate"]),
+    },
+    "phase_3": {
+        "content_validation": ("Multimedia Content Validation", ["curricular_alignment", "adhd_appropriateness", "clarity", "multimedia_usability", "sensory_regulation_suitability", "content_validation_rate"]),
+        "closed_loop_response": ("Closed-Loop Response Time", ["mean_ms", "median_ms", "minimum_ms", "maximum_ms", "p95_ms", "within_threshold_percent"]),
+        "loop_continuity": ("Loop Continuity Rate", ["session_duration_seconds", "interrupted_duration_seconds", "continuity_percent"]),
+        "adaptation_appropriateness": ("Adaptation Appropriateness", ["mean_rating", "focused_rating", "relaxed_rating", "distracted_rating", "overstimulated_rating"]),
+        "inter_rater_reliability": ("Inter-rater Reliability", ["kappa", "reviewer_count", "rated_instances"]),
+        "mismatch": ("Mismatch and Iteration Improvement", ["reviewed_instances", "mismatched_instances", "mismatch_rate", "baseline_mismatch_rate", "relative_reduction_percent"]),
+        "internal_evaluation": ("Internal System Evaluation", ["requirements_checked", "requirements_passed", "completion_percent", "defects_found"]),
+    },
 }
 
 
@@ -160,6 +187,8 @@ def _validated_upload(uploaded):
         "image/webp": header.startswith(b"RIFF") and header[8:12] == b"WEBP",
         "audio/mpeg": header.startswith(b"ID3") or header.startswith(b"\xff\xfb") or header.startswith(b"\xff\xf3") or header.startswith(b"\xff\xf2"),
         "audio/wav": header.startswith(b"RIFF") and header[8:12] == b"WAVE",
+        "audio/webm": header.startswith(b"\x1aE\xdf\xa3"),
+        "audio/mp4": len(header) >= 12 and header[4:8] == b"ftyp",
         "video/mp4": len(header) >= 12 and header[4:8] == b"ftyp",
         "video/webm": header.startswith(b"\x1aE\xdf\xa3"),
         "application/pdf": header.startswith(b"%PDF-"),
@@ -242,7 +271,14 @@ def admin_accounts(request):
             if not admin.is_school_admin or not admin.school_id:
                 return JsonResponse({"detail": "School-administrator scope is required."}, status=403)
             queryset = queryset.filter(school=admin.school).exclude(role=Profile.Role.ADMIN, admin_scope=Profile.AdminScope.SUPER)
-        return JsonResponse({"accounts": [_profile_data(item) | {"email": item.user.email} for item in queryset]})
+        school_id = request.GET.get("school_id")
+        if school_id:
+            queryset = queryset.filter(school_id=school_id)
+        return JsonResponse({"accounts": [_profile_data(item) | {
+            "email": item.user.email, "username": item.user.username,
+            "school_id": str(item.school_id) if item.school_id else None,
+            "school_name": item.school.name if item.school_id else None,
+        } for item in queryset]})
 
     try:
         data = _body(request)
@@ -266,12 +302,13 @@ def admin_accounts(request):
         validate_password(password)
         with transaction.atomic():
             user = User.objects.create_user(username=username, email=email, password=password)
+            is_immediately_active = role != Profile.Role.TEACHER or admin.is_super_admin
             profile = Profile.objects.create(
                 user=user, display_name=name, role=role, school=school,
-                account_status=Profile.AccountStatus.ACTIVE if role in {Profile.Role.ADMIN, Profile.Role.STUDENT} else Profile.AccountStatus.PENDING,
+                account_status=Profile.AccountStatus.ACTIVE if is_immediately_active else Profile.AccountStatus.PENDING,
                 admin_scope=Profile.AdminScope.SCHOOL if role == Profile.Role.ADMIN else Profile.AdminScope.NONE,
-                approved_by=admin if role != Profile.Role.TEACHER else None,
-                approved_at=timezone.now() if role != Profile.Role.TEACHER else None,
+                approved_by=admin if is_immediately_active else None,
+                approved_at=timezone.now() if is_immediately_active else None,
             )
     except (KeyError, ValueError, School.DoesNotExist, ValidationError):
         return JsonResponse({"detail": "Valid account, school, and strong temporary-password values are required."}, status=400)
@@ -282,6 +319,32 @@ def admin_accounts(request):
     if not data.get("temporary_password"):
         response["temporary_password"] = password
     return JsonResponse(response, status=201)
+
+
+def admin_dashboard(request):
+    admin, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    schools = School.objects.all()
+    profiles = Profile.objects.all()
+    classes_qs = SchoolClass.objects.all()
+    if not admin.is_super_admin:
+        schools = schools.filter(pk=admin.school_id)
+        profiles = profiles.filter(school_id=admin.school_id)
+        classes_qs = classes_qs.filter(school_id=admin.school_id)
+    recent_accounts = profiles.select_related("user", "school").order_by("-created_at")[:5]
+    return JsonResponse({
+        "counts": {
+            "schools": schools.count(), "teachers": profiles.filter(role=Profile.Role.TEACHER).count(),
+            "students": profiles.filter(role=Profile.Role.STUDENT).count(), "classes": classes_qs.count(),
+            "pending_accounts": profiles.filter(account_status=Profile.AccountStatus.PENDING).count(),
+        },
+        "recent_accounts": [_profile_data(item) | {
+            "email": item.user.email, "school_name": item.school.name if item.school_id else None,
+        } for item in recent_accounts],
+    })
 
 
 @require_http_methods(["PATCH"])
@@ -322,21 +385,111 @@ def admin_schools(request):
     if not admin.is_super_admin:
         return JsonResponse({"detail": "Super-administrator scope is required."}, status=403)
     if request.method == "GET":
-        return JsonResponse({"schools": [{"id": str(item.pk), "name": item.name, "is_active": item.is_active} for item in School.objects.order_by("name")]})
+        return JsonResponse({"schools": [{
+            "id": str(item.pk), "name": item.name, "address": item.address,
+            "contact_email": item.contact_email, "contact_number": item.contact_number,
+            "is_active": item.is_active, "created_at": item.created_at, "updated_at": item.updated_at,
+        } for item in School.objects.order_by("name")]})
     try:
         data = _body(request)
         name = str(data["name"]).strip()
-        if not name:
+        address = str(data.get("address", "")).strip()
+        contact_email = str(data.get("contact_email", "")).strip()
+        contact_number = str(data.get("contact_number", "")).strip()
+        if not name or len(name) > 200 or len(contact_number) > 30:
             raise ValueError
+        if contact_email:
+            validate_email(contact_email)
+        if School.objects.filter(name__iexact=name).exists():
+            return JsonResponse({"detail": "A school with this name already exists."}, status=409)
         school = School.objects.create(
-            name=name, address=str(data.get("address", "")).strip(),
-            contact_email=str(data.get("contact_email", "")).strip(),
-            contact_number=str(data.get("contact_number", "")).strip(),
+            name=name, address=address, contact_email=contact_email,
+            contact_number=contact_number,
         )
-    except (KeyError, ValueError):
-        return JsonResponse({"detail": "A non-empty school name is required."}, status=400)
+    except (KeyError, ValueError, ValidationError):
+        return JsonResponse({"detail": "Provide a valid school name, email, and contact number."}, status=400)
     _audit(admin, "school_created", school)
-    return JsonResponse({"id": str(school.pk), "name": school.name, "is_active": school.is_active}, status=201)
+    return JsonResponse({
+        "id": str(school.pk), "name": school.name, "address": school.address,
+        "contact_email": school.contact_email, "contact_number": school.contact_number,
+        "is_active": school.is_active, "created_at": school.created_at, "updated_at": school.updated_at,
+    }, status=201)
+
+
+def _analysis_record_data(item):
+    return {
+        "id": str(item.pk), "phase": item.phase, "analysis_key": item.analysis_key,
+        "analysis_name": item.analysis_name, "scope_label": item.scope_label,
+        "source_reference": item.source_reference, "values": item.values,
+        "result": item.result, "notes": item.notes,
+        "recorded_by": _profile_data(item.recorded_by),
+        "created_at": item.created_at, "updated_at": item.updated_at,
+    }
+
+
+@require_http_methods(["GET", "POST"])
+def admin_research_analyses(request):
+    admin, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    if request.method == "GET":
+        queryset = ResearchAnalysisRecord.objects.select_related("recorded_by", "recorded_by__school")
+        phase = request.GET.get("phase")
+        if phase:
+            queryset = queryset.filter(phase=phase)
+        return JsonResponse({
+            "catalog": {phase_key: [{"key": key, "name": definition[0], "metrics": definition[1]} for key, definition in items.items()] for phase_key, items in ANALYSIS_CATALOG.items()},
+            "records": [_analysis_record_data(item) for item in queryset[:1000]],
+        })
+    try:
+        data = _body(request)
+        phase, analysis_key = str(data["phase"]), str(data["analysis_key"])
+        definition = ANALYSIS_CATALOG[phase][analysis_key]
+        scope_label, values = str(data["scope_label"]).strip(), data.get("values", {})
+        result = str(data.get("result", ResearchAnalysisRecord.Result.PENDING))
+        allowed_metrics = set(definition[1])
+        if not scope_label or not isinstance(values, dict) or not values or set(values) - allowed_metrics or result not in ResearchAnalysisRecord.Result.values:
+            raise ValueError
+        if any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in values.values()):
+            raise ValueError
+        record = ResearchAnalysisRecord.objects.create(
+            phase=phase, analysis_key=analysis_key, analysis_name=definition[0], scope_label=scope_label,
+            source_reference=str(data.get("source_reference", "")).strip(), values=values, result=result,
+            notes=str(data.get("notes", "")).strip(), recorded_by=admin,
+        )
+    except (KeyError, ValueError, TypeError):
+        return JsonResponse({"detail": "Select a valid analysis and provide a scope with numeric metric values."}, status=400)
+    _audit(admin, "research_analysis_created", record, {"phase": record.phase, "analysis_key": record.analysis_key})
+    return JsonResponse(_analysis_record_data(record), status=201)
+
+
+@require_http_methods(["PATCH", "DELETE"])
+def admin_research_analysis_detail(request, record_id):
+    admin, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    record = get_object_or_404(ResearchAnalysisRecord, pk=record_id)
+    if request.method == "DELETE":
+        _audit(admin, "research_analysis_deleted", record, {"phase": record.phase, "analysis_key": record.analysis_key})
+        record.delete()
+        return JsonResponse({"status": "deleted"})
+    try:
+        data = _body(request)
+        definition = ANALYSIS_CATALOG[record.phase][record.analysis_key]
+        values = data.get("values", record.values)
+        if not isinstance(values, dict) or set(values) - set(definition[1]) or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in values.values()):
+            raise ValueError
+        record.scope_label = str(data.get("scope_label", record.scope_label)).strip()
+        record.source_reference = str(data.get("source_reference", record.source_reference)).strip()
+        record.values, record.result = values, str(data.get("result", record.result))
+        record.notes = str(data.get("notes", record.notes)).strip()
+        if not record.scope_label or record.result not in ResearchAnalysisRecord.Result.values:
+            raise ValueError
+        record.save()
+    except (KeyError, ValueError, TypeError):
+        return JsonResponse({"detail": "The analysis values are invalid."}, status=400)
+    _audit(admin, "research_analysis_updated", record)
+    return JsonResponse(_analysis_record_data(record))
 
 
 def _class_data(school_class, include_students=False, packages=None):
@@ -351,11 +504,21 @@ def _class_data(school_class, include_students=False, packages=None):
     student_count = getattr(school_class, "active_student_count", None)
     if student_count is None:
         student_count = school_class.enrollments.filter(removed_at__isnull=True).count()
+    package_ids = [item.pk for item in packages]
+    lesson_counts = dict(
+        Lesson.objects.filter(
+            package_id__in=package_ids, status=Lesson.Status.APPROVED,
+            archived_at__isnull=True,
+        ).values("package_id").annotate(total=Count("id")).values_list("package_id", "total")
+    )
     data = {
         "id": school_class.pk, "name": school_class.name, "code": school_class.code,
         "description": school_class.description, "school_year": school_class.school_year,
         "status": school_class.status,
-        "packages": [{"id": item.pk, "slug": item.slug, "name": item.name} for item in packages],
+        "packages": [{
+            "id": item.pk, "slug": item.slug, "name": item.name,
+            "lesson_count": lesson_counts.get(item.pk, 0),
+        } for item in packages],
         "package_count": len(packages),
         "student_count": student_count,
         "teacher": _profile_data(school_class.teacher),
@@ -1122,6 +1285,130 @@ def teacher_journals(request):
     })
 
 
+def _state_metrics(counts, confidence_sums):
+    total = sum(counts.values())
+    return {state: {
+        "samples": counts[state],
+        "percentage": round(counts[state] * 100 / total, 1) if total else 0,
+        "average_confidence": round(confidence_sums[state] / counts[state], 3) if counts[state] else 0,
+    } for state in StatePrediction.State.values}
+
+
+def teacher_advanced_reports(request):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    classes = list(SchoolClass.objects.filter(teacher=profile, status=SchoolClass.Status.ACTIVE).order_by("name"))
+    class_id = request.GET.get("class_id")
+    school_class = next((item for item in classes if str(item.pk) == class_id), None) if class_id else (classes[0] if classes else None)
+    if class_id and school_class is None:
+        return JsonResponse({"detail": "Class not found."}, status=404)
+    range_key = request.GET.get("range", "month")
+    if range_key not in {"week", "month", "term"}:
+        return JsonResponse({"detail": "range must be week, month, or term."}, status=400)
+    today = timezone.localdate()
+    start_date = today - timedelta(days=today.weekday()) if range_key == "week" else (today.replace(day=1) if range_key == "month" else None)
+    sessions_qs = LearningSession.objects.none()
+    if school_class:
+        sessions_qs = LearningSession.objects.filter(school_class=school_class, ended_at__isnull=False).select_related("student", "lesson")
+        if start_date:
+            sessions_qs = sessions_qs.filter(started_at__date__gte=start_date)
+    sessions = list(sessions_qs.order_by("started_at"))
+    session_map = {item.pk: item for item in sessions}
+    exposures = list(SessionSlideExposure.objects.filter(session_id__in=session_map).select_related("slide", "slide__lesson", "slide__activity").order_by("entered_at"))
+    predictions_by_session = {}
+    for prediction in StatePrediction.objects.filter(session_id__in=session_map).order_by("classified_at"):
+        predictions_by_session.setdefault(prediction.session_id, []).append(prediction)
+
+    def empty_totals():
+        return ({state: 0 for state in StatePrediction.State.values}, {state: 0.0 for state in StatePrediction.State.values})
+
+    overall_counts, overall_confidence = empty_totals()
+    lesson_nodes, student_nodes = {}, {}
+    session_nodes = {item.pk: {
+        "id": str(item.pk), "student": _profile_data(item.student), "lesson_id": item.lesson_id,
+        "lesson_title": item.lesson.title if item.lesson_id else "Unassigned lesson",
+        "started_at": item.started_at, "ended_at": item.ended_at, "slides": [],
+        "_counts": empty_totals()[0], "_confidence": empty_totals()[1],
+    } for item in sessions}
+    for exposure in exposures:
+        end = exposure.exited_at or session_map[exposure.session_id].ended_at
+        matched = [item for item in predictions_by_session.get(exposure.session_id, []) if exposure.entered_at <= item.classified_at <= end]
+        counts, confidence = empty_totals()
+        for prediction in matched:
+            counts[prediction.state] += 1
+            confidence[prediction.state] += float(prediction.confidence_score)
+            overall_counts[prediction.state] += 1
+            overall_confidence[prediction.state] += float(prediction.confidence_score)
+        slide_data = {
+            "exposure_id": str(exposure.pk), "slide_id": exposure.slide_id, "position": exposure.slide.position,
+            "title": exposure.slide.title, "content_title": exposure.slide.activity.title,
+            "entered_at": exposure.entered_at, "exited_at": end,
+            "duration_seconds": max(0, int((end - exposure.entered_at).total_seconds())),
+            "states": _state_metrics(counts, confidence),
+        }
+        session_node = session_nodes[exposure.session_id]
+        session_node["slides"].append(slide_data)
+        lesson = lesson_nodes.setdefault(exposure.slide.lesson_id, {
+            "id": exposure.slide.lesson_id, "title": exposure.slide.lesson.title,
+            "sessions": set(), "students": set(), "slides": {},
+            "_counts": empty_totals()[0], "_confidence": empty_totals()[1],
+        })
+        lesson["sessions"].add(exposure.session_id)
+        lesson["students"].add(session_node["student"]["id"])
+        aggregate_slide = lesson["slides"].setdefault(exposure.slide_id, {
+            "id": exposure.slide_id, "position": exposure.slide.position, "title": exposure.slide.title,
+            "content_title": exposure.slide.activity.title, "exposures": 0,
+            "_counts": empty_totals()[0], "_confidence": empty_totals()[1],
+        })
+        aggregate_slide["exposures"] += 1
+        for state in StatePrediction.State.values:
+            session_node["_counts"][state] += counts[state]
+            session_node["_confidence"][state] += confidence[state]
+            lesson["_counts"][state] += counts[state]
+            lesson["_confidence"][state] += confidence[state]
+            aggregate_slide["_counts"][state] += counts[state]
+            aggregate_slide["_confidence"][state] += confidence[state]
+
+    for session in sessions:
+        node = session_nodes[session.pk]
+        counts, confidence = node.pop("_counts"), node.pop("_confidence")
+        node["states"] = _state_metrics(counts, confidence)
+        student = student_nodes.setdefault(session.student_id, {
+            "student": _profile_data(session.student), "sessions": [],
+            "_counts": empty_totals()[0], "_confidence": empty_totals()[1],
+        })
+        student["sessions"].append(node)
+        for state in StatePrediction.State.values:
+            student["_counts"][state] += counts[state]
+            student["_confidence"][state] += confidence[state]
+    student_results = []
+    for node in student_nodes.values():
+        node["states"] = _state_metrics(node.pop("_counts"), node.pop("_confidence"))
+        student_results.append(node)
+    lesson_results = []
+    for node in lesson_nodes.values():
+        slides = []
+        for slide_node in node.pop("slides").values():
+            slide_node["states"] = _state_metrics(slide_node.pop("_counts"), slide_node.pop("_confidence"))
+            slides.append(slide_node)
+        node["session_count"], node["student_count"] = len(node.pop("sessions")), len(node.pop("students"))
+        node["states"] = _state_metrics(node.pop("_counts"), node.pop("_confidence"))
+        node["slides"] = sorted(slides, key=lambda item: item["position"])
+        lesson_results.append(node)
+    return JsonResponse({
+        "classes": [{"id": item.pk, "name": item.name} for item in classes],
+        "selected_class_id": school_class.pk if school_class else None,
+        "class_name": school_class.name if school_class else None,
+        "range": range_key, "start_date": start_date, "end_date": today,
+        "overall": {"session_count": len(sessions), "states": _state_metrics(overall_counts, overall_confidence)},
+        "lessons": sorted(lesson_results, key=lambda item: item["title"]),
+        "students": sorted(student_results, key=lambda item: item["student"]["name"]),
+    })
+
+
 @require_http_methods(["GET", "POST"])
 def classes(request):
     profile, error = _require_profile(request, {Profile.Role.STUDENT, Profile.Role.TEACHER, Profile.Role.ADMIN})
@@ -1293,7 +1580,8 @@ def start_session(request):
     if error:
         return error
     try:
-        school_class = SchoolClass.objects.get(pk=_body(request)["class_id"])
+        data = _body(request)
+        school_class = SchoolClass.objects.get(pk=data["class_id"])
     except (KeyError, ValueError, SchoolClass.DoesNotExist):
         return JsonResponse({"detail": "A valid class_id is required."}, status=400)
     if not Enrollment.objects.filter(school_class=school_class, student=profile, removed_at__isnull=True).exists():
@@ -1301,12 +1589,292 @@ def start_session(request):
     latest_consent = profile.consents.filter(consent_type="eeg_processing").order_by("-recorded_at").first()
     if not latest_consent or not latest_consent.granted or latest_consent.withdrawn_at or (latest_consent.expires_at and latest_consent.expires_at <= timezone.now()):
         return JsonResponse({"detail": "Active EEG-processing consent is required before starting a session."}, status=403)
+    lesson = None
+    if data.get("lesson_id") is not None:
+        lesson = Lesson.objects.filter(
+            pk=data["lesson_id"], archived_at__isnull=True, status=Lesson.Status.APPROVED,
+            package__class_assignments__school_class=school_class,
+        ).first()
+        if lesson is None:
+            return JsonResponse({"detail": "The selected lesson is not available in this class."}, status=400)
+    control_mode = str(data.get("control_mode", LearningSession.ControlMode.AUTOMATIC))
+    if control_mode not in LearningSession.ControlMode.values:
+        return JsonResponse({"detail": "A valid control_mode is required."}, status=400)
     try:
-        session = LearningSession.objects.create(school_class=school_class, student=profile)
+        session = LearningSession.objects.create(
+            school_class=school_class, student=profile, lesson=lesson, control_mode=control_mode,
+        )
     except IntegrityError:
         return JsonResponse({"detail": "This student already has an active session."}, status=409)
     _audit(profile, "session_started", session, {"student_pseudonym": str(profile.pseudonym)})
-    return JsonResponse({"id": str(session.id), "class_id": school_class.pk, "student_pseudonym": str(profile.pseudonym), "started_at": session.started_at}, status=201)
+    return JsonResponse({"id": str(session.id), "class_id": school_class.pk, "lesson_id": session.lesson_id, "control_mode": session.control_mode, "student_pseudonym": str(profile.pseudonym), "started_at": session.started_at}, status=201)
+
+
+def _student_session_data(session, now):
+    ended_at = session.ended_at or now
+    duration_seconds = max(0, int((ended_at - session.started_at).total_seconds()))
+    state_counts = {
+        "focused": session.focused_count,
+        "relaxed": session.relaxed_count,
+        "distracted": session.distracted_count,
+        "overstimulated": session.overstimulated_count,
+    }
+    prediction_total = sum(state_counts.values())
+    if prediction_total:
+        state_distribution = {
+            state: round(count * 100 / prediction_total)
+            for state, count in state_counts.items()
+        }
+    else:
+        state_distribution = {state: 0 for state in state_counts}
+        fallback_state = {"focus": "focused", "relax": "relaxed"}.get(session.active_presentation_mode, "focused")
+        state_distribution[fallback_state] = 100
+    focus_score = state_distribution["focused"]
+    dominant_state = max(state_distribution, key=state_distribution.get)
+    return {
+        "id": str(session.pk),
+        "class_id": session.school_class_id,
+        "lesson_id": session.lesson_id,
+        "control_mode": session.control_mode,
+        "title": session.lesson.title if session.lesson_id else session.school_class.name,
+        "class_name": session.school_class.name,
+        "started_at": session.started_at,
+        "ended_at": session.ended_at,
+        "duration_seconds": duration_seconds,
+        "focus_score": focus_score,
+        "state": dominant_state,
+        "status": "in_progress" if session.ended_at is None else "completed",
+        "tasks_completed": session.tasks_completed,
+        "tasks_total": session.tasks_total,
+        "state_distribution": state_distribution,
+    }
+
+
+def student_sessions(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    sessions = list(
+        LearningSession.objects.filter(student=profile)
+        .select_related("school_class", "lesson")
+        .annotate(
+            tasks_completed=Count("activity_responses__activity", distinct=True),
+            tasks_total=Count("lesson__slides", distinct=True),
+            focused_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.FOCUSED), distinct=True),
+            relaxed_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.RELAXED), distinct=True),
+            distracted_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.DISTRACTED), distinct=True),
+            overstimulated_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.OVERSTIMULATED), distinct=True),
+        )
+        .order_by("-started_at")
+    )
+    now = timezone.now()
+    items = [_student_session_data(session, now) for session in sessions]
+    completed = [item for item in items if item["status"] == "completed"]
+    total_duration = sum(item["duration_seconds"] for item in completed)
+    average_focus = round(sum(item["focus_score"] for item in completed) / len(completed)) if completed else 0
+    return JsonResponse({
+        "summary": {
+            "completed_sessions": len(completed),
+            "average_focus_score": average_focus,
+            "total_duration_seconds": total_duration,
+        },
+        "sessions": items,
+    })
+
+
+def teacher_reports(request):
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    if request.method != "GET":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    class_items = list(SchoolClass.objects.filter(
+        teacher=profile, status=SchoolClass.Status.ACTIVE,
+    ).order_by("name"))
+    class_id = request.GET.get("class_id")
+    selected_class = next((item for item in class_items if str(item.pk) == class_id), None) if class_id else (class_items[0] if class_items else None)
+    if class_id and selected_class is None:
+        return JsonResponse({"detail": "Class not found."}, status=404)
+
+    range_key = request.GET.get("range", "month")
+    if range_key not in {"week", "month", "term"}:
+        return JsonResponse({"detail": "range must be week, month, or term."}, status=400)
+    today = timezone.localdate()
+    start_date = today - timedelta(days=today.weekday()) if range_key == "week" else (today.replace(day=1) if range_key == "month" else None)
+    sessions = LearningSession.objects.none()
+    if selected_class:
+        sessions = LearningSession.objects.filter(
+            school_class=selected_class, ended_at__isnull=False,
+        ).select_related("student", "analytics").prefetch_related("state_predictions")
+        if start_date:
+            sessions = sessions.filter(started_at__date__gte=start_date)
+    sessions = list(sessions.order_by("started_at"))
+
+    state_percentage_totals = {state: 0.0 for state in StatePrediction.State.values}
+    sessions_with_state_data = 0
+    focus_percentages = []
+    focused_seconds = 0
+    total_duration_seconds = 0
+    session_rows = []
+    for session in sessions:
+        duration = max(0, int(((session.ended_at or session.started_at) - session.started_at).total_seconds()))
+        total_duration_seconds += duration
+        predictions = list(session.state_predictions.all())
+        counts = {state: 0 for state in state_percentage_totals}
+        for prediction in predictions:
+            counts[prediction.state] += 1
+        analytics = getattr(session, "analytics", None)
+        if analytics is not None:
+            focus = round(float(analytics.focused_percentage))
+            session_focused_seconds = analytics.focused_seconds
+            state_percentage_totals[StatePrediction.State.FOCUSED] += float(analytics.focused_percentage)
+            state_percentage_totals[StatePrediction.State.RELAXED] += float(analytics.relaxed_percentage)
+            state_percentage_totals[StatePrediction.State.DISTRACTED] += float(analytics.distracted_percentage)
+            state_percentage_totals[StatePrediction.State.OVERSTIMULATED] += float(analytics.overstimulated_percentage)
+            sessions_with_state_data += 1
+        else:
+            focus = round(counts[StatePrediction.State.FOCUSED] * 100 / len(predictions)) if predictions else 0
+            session_focused_seconds = round(duration * focus / 100)
+            if predictions:
+                for state, count in counts.items():
+                    state_percentage_totals[state] += count * 100 / len(predictions)
+                sessions_with_state_data += 1
+        focus_percentages.append(focus)
+        focused_seconds += session_focused_seconds
+        session_rows.append({
+            "id": str(session.pk), "date": timezone.localtime(session.started_at).date(),
+            "student": _profile_data(session.student), "duration_seconds": duration,
+            "focus_percentage": focus, "tasks_completed": session.activity_responses.count(),
+            "mode_changes": session.adaptation_events.count() + session.manual_overrides.count(),
+        })
+    distribution = {
+        state: round(total / sessions_with_state_data) if sessions_with_state_data else 0
+        for state, total in state_percentage_totals.items()
+    }
+    return JsonResponse({
+        "classes": [{"id": item.pk, "name": item.name} for item in class_items],
+        "selected_class_id": selected_class.pk if selected_class else None,
+        "class_name": selected_class.name if selected_class else None,
+        "school_year": selected_class.school_year if selected_class else "",
+        "range": range_key, "start_date": start_date, "end_date": today,
+        "prepared_by": profile.display_name,
+        "summary": {
+            "sessions": len(sessions),
+            "participating_students": len({item.student_id for item in sessions}),
+            "average_focus_percentage": round(sum(focus_percentages) / len(focus_percentages)) if focus_percentages else 0,
+            "focused_duration_seconds": focused_seconds,
+            "total_duration_seconds": total_duration_seconds,
+            "mode_changes": sum(item["mode_changes"] for item in session_rows),
+            "tasks_completed": sum(item["tasks_completed"] for item in session_rows),
+        },
+        "state_distribution": distribution,
+        "sessions": session_rows,
+    })
+
+
+@require_http_methods(["GET", "POST"])
+def student_journals(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    is_multipart = request.method == "POST" and (request.content_type or "").startswith("multipart/form-data")
+    try:
+        data = request.POST if is_multipart else (_body(request) if request.method == "POST" else request.GET)
+    except ValueError:
+        return JsonResponse({"detail": "Invalid request body."}, status=400)
+    session_id = data.get("session_id")
+    sessions = LearningSession.objects.select_related("school_class", "lesson").filter(
+        student=profile, ended_at__isnull=False,
+    )
+    if session_id:
+        session = get_object_or_404(sessions, pk=session_id)
+    elif request.method == "GET":
+        session = sessions.order_by("-ended_at").first()
+        if session is None:
+            return JsonResponse({"detail": "Complete a learning session before writing a journal."}, status=404)
+    else:
+        return JsonResponse({"detail": "A session_id is required."}, status=400)
+    if session.ended_at is None:
+        return JsonResponse({"detail": "Finish the session before writing its journal."}, status=409)
+
+    completed_task_titles = (
+        session.activity_responses.filter(is_correct=True)
+        .order_by("answered_at")
+        .values_list("activity__title", flat=True)
+    )
+    completed_tasks = list(dict.fromkeys(completed_task_titles))
+    duration_seconds = max(0, int((session.ended_at - session.started_at).total_seconds()))
+    entry = session.journal_entries.filter(student=profile).order_by("-created_at").first()
+
+    if request.method == "GET":
+        return JsonResponse({
+            "session": {
+                "id": str(session.pk),
+                "title": session.lesson.title if session.lesson_id else session.school_class.name,
+                "class_name": session.school_class.name,
+                "duration_seconds": duration_seconds,
+                "completed_tasks": completed_tasks,
+            },
+            "entry": {
+                "id": str(entry.pk), "prompt": entry.prompt, "response_type": entry.response_type,
+                "text_response": entry.text_response, "mood": entry.mood,
+                "shared_with_teacher": entry.shared_with_teacher, "created_at": entry.created_at,
+            } if entry else None,
+        })
+
+    prompt = str(data.get("prompt", "")).strip()
+    response_type = str(data.get("response_type", JournalEntry.ResponseType.TEXT))
+    text_response = str(data.get("text_response", "")).strip()
+    mood = str(data.get("mood", "")).strip()
+    allowed_moods = {"", "happy", "okay", "tired", "confused", "proud"}
+    if not prompt or len(prompt) > 500:
+        return JsonResponse({"detail": "A journal prompt of at most 500 characters is required."}, status=400)
+    if response_type not in JournalEntry.ResponseType.values:
+        return JsonResponse({"detail": "The journal response type is invalid."}, status=400)
+    if response_type == JournalEntry.ResponseType.TEXT and (not text_response or len(text_response) > 5000):
+        return JsonResponse({"detail": "Write a response of at most 5,000 characters."}, status=400)
+    if mood not in allowed_moods:
+        return JsonResponse({"detail": "The selected mood is invalid."}, status=400)
+
+    shared_with_teacher = data.get("shared_with_teacher", True)
+    if is_multipart:
+        shared_with_teacher = str(shared_with_teacher).lower() == "true"
+    if not isinstance(shared_with_teacher, bool):
+        return JsonResponse({"detail": "shared_with_teacher must be true or false."}, status=400)
+    uploaded = request.FILES.get("file") if is_multipart else None
+    asset = None
+    if response_type in {JournalEntry.ResponseType.DRAWING, JournalEntry.ResponseType.AUDIO}:
+        if uploaded is None:
+            return JsonResponse({"detail": "A drawing or recording file is required."}, status=400)
+        expected_prefix = "image/" if response_type == JournalEntry.ResponseType.DRAWING else "audio/"
+        if not uploaded.content_type.startswith(expected_prefix):
+            return JsonResponse({"detail": f"The uploaded file is not a valid {response_type}."}, status=400)
+        checksum = _validated_upload(uploaded)
+        if checksum is None:
+            return JsonResponse({"detail": "Unsupported or invalid journal file, or file exceeds the 10 MB limit."}, status=400)
+
+    created = entry is None
+    with transaction.atomic():
+        if uploaded is not None:
+            asset = Asset.objects.create(
+                file=uploaded, original_name=Path(uploaded.name).name,
+                mime_type=uploaded.content_type, size_bytes=uploaded.size,
+                checksum_sha256=checksum, uploaded_by=profile,
+            )
+        if entry is None:
+            entry = JournalEntry(session=session, student=profile)
+        entry.prompt = prompt
+        entry.response_type = response_type
+        entry.text_response = text_response if response_type == JournalEntry.ResponseType.TEXT else ""
+        entry.mood = mood
+        entry.shared_with_teacher = shared_with_teacher
+        if asset is not None:
+            entry.asset = asset
+        entry.save()
+    _audit(profile, "journal_created" if created else "journal_updated", entry, {"session_id": str(session.pk)})
+    return JsonResponse({"id": str(entry.pk), "status": "saved"}, status=201 if created else 200)
 
 
 @require_POST
@@ -1320,10 +1888,43 @@ def end_session(request, session_id):
     if profile.role == Profile.Role.TEACHER and session.school_class.teacher_id != profile.id:
         return JsonResponse({"detail": "You do not teach this class."}, status=403)
     session.ended_at = timezone.now()
+    session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=session.ended_at)
     session.status = LearningSession.Status.COMPLETED
     session.save(update_fields=["ended_at", "status"])
     _audit(profile, "session_ended", session)
     return JsonResponse({"id": str(session.id), "ended_at": session.ended_at})
+
+
+@require_POST
+def session_slide_exposure(request, session_id, slide_id):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    session = get_object_or_404(LearningSession, pk=session_id, student=profile)
+    slide = get_object_or_404(Slide.objects.select_related("lesson"), pk=slide_id)
+    if session.lesson_id != slide.lesson_id:
+        return JsonResponse({"detail": "This slide does not belong to the session lesson."}, status=400)
+    try:
+        action = str(_body(request).get("action", "enter"))
+    except ValueError:
+        return JsonResponse({"detail": "Invalid request body."}, status=400)
+    now = timezone.now()
+    active = session.slide_exposures.filter(exited_at__isnull=True).first()
+    if action == "exit":
+        if active and active.slide_id == slide.pk:
+            active.exited_at = now
+            active.save(update_fields=["exited_at"])
+        return JsonResponse({"status": "closed", "exited_at": now})
+    if action != "enter":
+        return JsonResponse({"detail": "action must be enter or exit."}, status=400)
+    if session.ended_at is not None:
+        return JsonResponse({"detail": "The session has already ended."}, status=409)
+    if active and active.slide_id == slide.pk:
+        return JsonResponse({"id": str(active.pk), "entered_at": active.entered_at, "status": "active"})
+    with transaction.atomic():
+        session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=now)
+        exposure = SessionSlideExposure.objects.create(session=session, slide=slide, entered_at=now)
+    return JsonResponse({"id": str(exposure.pk), "entered_at": exposure.entered_at, "status": "active"}, status=201)
 
 
 def _intervention_data(item):

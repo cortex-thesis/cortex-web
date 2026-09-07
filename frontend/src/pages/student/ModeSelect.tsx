@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { CalmZoneTemplate } from '../../components/templates'
 import styles from './ModeSelect.module.css'
+import { startStudentSession } from '../../lib/studentApi'
 
 type SessionMode = 'teacher' | 'free'
 
@@ -43,12 +44,31 @@ export default function ModeSelect() {
   const navigate = useNavigate()
   const location = useLocation()
   const [selected, setSelected] = useState<SessionMode>('teacher')
+  const [isStarting, setIsStarting] = useState(false)
+  const [error, setError] = useState('')
 
-  function handleStart() {
-    navigate('/student/eeg-live', {
-      replace: true,
-      state: { ...(location.state as object | null), mode: selected },
-    })
+  async function handleStart() {
+    const context = (location.state as { classId?: number; lessonId?: number; sessionId?: string } | null) ?? {}
+    if (!context.classId) {
+      setError('Choose a class and lesson before starting a session.')
+      return
+    }
+    setIsStarting(true)
+    setError('')
+    try {
+      if (context.sessionId) {
+        navigate('/student/eeg-live', { replace: true, state: { ...context, mode: selected } })
+        return
+      }
+      const session = await startStudentSession({ class_id: context.classId, lesson_id: context.lessonId, control_mode: selected })
+      navigate('/student/eeg-live', {
+        replace: true,
+        state: { ...context, mode: selected, sessionId: session.id },
+      })
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to start the session.')
+      setIsStarting(false)
+    }
   }
 
   return (
@@ -113,8 +133,9 @@ export default function ModeSelect() {
           ))}
         </div>
 
-        <button className={styles.startBtn} onClick={handleStart}>
-          Start session
+        {error && <p className={styles.hint} role="alert">{error}</p>}
+        <button className={styles.startBtn} disabled={isStarting} onClick={() => void handleStart()}>
+          {isStarting ? 'Starting...' : 'Start session'}
         </button>
 
         <p className={styles.hint}>

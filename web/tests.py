@@ -1,10 +1,12 @@
 import json
+from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.utils import timezone
 
-from .models import AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, Enrollment, Intervention, JournalEntry, LearningSession, Notification, Profile, School, SchoolClass, UserPreference
+from .models import Activity, AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, Enrollment, Intervention, JournalEntry, LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School, SchoolClass, SessionAnalytics, SessionSlideExposure, Slide, UserPreference
 
 
 class WorkflowTests(TestCase):
@@ -30,6 +32,101 @@ class WorkflowTests(TestCase):
         self.assertEqual(enroll.status_code, 201)
         self.assertTrue(Enrollment.objects.filter(student=self.student, removed_at__isnull=True).exists())
 
+    def test_admin_stores_structured_research_analysis(self):
+        self._login(self.admin)
+        response = self.client.post("/api/admin/research-analyses/", data=json.dumps({
+            "phase": "phase_2", "analysis_key": "filter_effectiveness",
+            "scope_label": "Participant P01 - Session 1", "source_reference": "recording-001",
+            "values": {"noise_attenuation_percent": 94.2, "alpha_retained_percent": 89.1},
+            "result": "passed", "notes": "Validated preprocessing output.",
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(ResearchAnalysisRecord.objects.get().analysis_name, "Filter Effectiveness Check")
+        self.assertEqual(self.client.get("/api/admin/research-analyses/").json()["records"][0]["values"]["noise_attenuation_percent"], 94.2)
+
+    def test_super_admin_can_create_school_with_database_fields(self):
+        self.admin.admin_scope = Profile.AdminScope.SUPER
+        self.admin.save(update_fields=["admin_scope"])
+        self._login(self.admin)
+        response = self.client.post("/api/admin/schools/", data=json.dumps({
+            "name": "Cortex Learning Center", "address": "Manila, Philippines",
+            "contact_email": "office@cortex.test", "contact_number": "+63 900 000 0000",
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertEqual(payload["address"], "Manila, Philippines")
+        self.assertEqual(payload["contact_email"], "office@cortex.test")
+        self.assertEqual(self.client.get("/api/admin/schools/").json()["schools"][0]["contact_number"], "+63 900 000 0000")
+
+    def test_super_admin_can_add_active_teacher_to_selected_school(self):
+        self.admin.admin_scope = Profile.AdminScope.SUPER
+        self.admin.save(update_fields=["admin_scope"])
+        school = School.objects.create(name="Teacher Assignment School")
+        self._login(self.admin)
+        response = self.client.post("/api/admin/accounts/", data=json.dumps({
+            "username": "assigned-teacher", "name": "Assigned Teacher",
+            "email": "teacher@assigned.test", "temporary_password": "strong-test-password-2026",
+            "role": "teacher", "school_id": str(school.pk),
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+        teacher = Profile.objects.get(user__username="assigned-teacher")
+        self.assertEqual(teacher.school, school)
+        self.assertEqual(teacher.account_status, Profile.AccountStatus.ACTIVE)
+        accounts = self.client.get(f"/api/admin/accounts/?school_id={school.pk}").json()["accounts"]
+        self.assertEqual([item["name"] for item in accounts], ["Assigned Teacher"])
+
+    def test_teacher_report_uses_owned_completed_session_analytics(self):
+        school_class = SchoolClass.objects.create(name="Report Class", code="RPRT1", teacher=self.teacher, school_year="2026-2027")
+        session = LearningSession.objects.create(school_class=school_class, student=self.student)
+        LearningSession.objects.filter(pk=session.pk).update(
+            started_at=timezone.now() - timedelta(minutes=20), ended_at=timezone.now(),
+            status=LearningSession.Status.COMPLETED,
+        )
+        SessionAnalytics.objects.create(
+            session=session, total_duration_seconds=1200, focused_seconds=900,
+            focused_percentage=75, relaxed_percentage=15,
+            distracted_percentage=10, overstimulated_percentage=0,
+        )
+        self._login(self.teacher)
+
+        response = self.client.get(f"/api/teacher/reports/?class_id={school_class.pk}&range=month")
+
+        self.assertEqual(response.status_code, 200)
+        report = response.json()
+        self.assertEqual(report["class_name"], "Report Class")
+        self.assertEqual(report["summary"]["sessions"], 1)
+        self.assertEqual(report["summary"]["average_focus_percentage"], 75)
+        self.assertEqual(report["summary"]["focused_duration_seconds"], 900)
+
+    def test_teacher_cannot_report_on_another_teachers_class(self):
+        other_teacher = self._account("report-other", "Other Teacher", Profile.Role.TEACHER)
+        other_class = SchoolClass.objects.create(name="Other Report", code="RPRT2", teacher=other_teacher)
+        self._login(self.teacher)
+        self.assertEqual(self.client.get(f"/api/teacher/reports/?class_id={other_class.pk}").status_code, 404)
+
+    def test_session_slide_timeline_feeds_advanced_teacher_report(self):
+        school_class = SchoolClass.objects.create(name="Advanced Report", code="RPRT3", teacher=self.teacher)
+        package = CurriculumPackage.objects.filter(is_active=True).first()
+        lesson = Lesson.objects.create(package=package, title="Measured Lesson", status=Lesson.Status.APPROVED, created_by=self.admin)
+        activity = Activity.objects.create(type=Activity.ActivityType.INTERACTIVE, title="Measured Content")
+        slide = Slide.objects.create(lesson=lesson, activity=activity, position=1, title="Measured Slide")
+        session = LearningSession.objects.create(school_class=school_class, student=self.student, lesson=lesson)
+        self._login(self.student)
+
+        entered = self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "enter"}), content_type="application/json")
+        self.assertEqual(entered.status_code, 201)
+        self.assertEqual(SessionSlideExposure.objects.filter(session=session, exited_at__isnull=True).count(), 1)
+        self.assertEqual(self.client.post(f"/api/sessions/{session.pk}/end/").status_code, 200)
+        self.assertFalse(SessionSlideExposure.objects.filter(session=session, exited_at__isnull=True).exists())
+
+        self._login(self.teacher)
+        report = self.client.get(f"/api/teacher/reports/advanced/?class_id={school_class.pk}&range=term")
+        self.assertEqual(report.status_code, 200)
+        payload = report.json()
+        self.assertEqual(payload["lessons"][0]["title"], "Measured Lesson")
+        self.assertEqual(payload["lessons"][0]["slides"][0]["title"], "Measured Slide")
+        self.assertEqual(payload["students"][0]["sessions"][0]["slides"][0]["content_title"], "Measured Content")
+
     def test_student_can_start_only_an_enrolled_session_and_owner_can_end(self):
         school_class = SchoolClass.objects.create(name="Life Skills", code="LIFE2", teacher=self.teacher)
         Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
@@ -51,6 +148,99 @@ class WorkflowTests(TestCase):
         self._login(self.student)
         response = self.client.post("/api/sessions/start/", data=json.dumps({"class_id": school_class.pk}), content_type="application/json")
         self.assertEqual(response.status_code, 403)
+
+    def test_student_sessions_returns_only_owned_history_and_summary(self):
+        school_class = SchoolClass.objects.create(name="Life Skills", code="HIST1", teacher=self.teacher)
+        other_class = SchoolClass.objects.create(name="Other Class", code="HIST2", teacher=self.teacher)
+        completed = LearningSession.objects.create(school_class=school_class, student=self.student)
+        started_at = timezone.now() - timedelta(minutes=30)
+        ended_at = timezone.now()
+        LearningSession.objects.filter(pk=completed.pk).update(started_at=started_at, ended_at=ended_at, status=LearningSession.Status.COMPLETED)
+        LearningSession.objects.create(school_class=other_class, student=self.other_student)
+        self._login(self.student)
+
+        response = self.client.get("/api/student/sessions/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["summary"]["completed_sessions"], 1)
+        self.assertEqual(len(payload["sessions"]), 1)
+        self.assertEqual(payload["sessions"][0]["class_name"], "Life Skills")
+        self.assertEqual(payload["sessions"][0]["status"], "completed")
+        self.assertGreaterEqual(payload["summary"]["total_duration_seconds"], 1799)
+
+    def test_student_can_create_and_update_completed_session_journal(self):
+        school_class = SchoolClass.objects.create(name="Journal Class", code="JRNL1", teacher=self.teacher)
+        session = LearningSession.objects.create(school_class=school_class, student=self.student)
+        LearningSession.objects.filter(pk=session.pk).update(ended_at=timezone.now(), status=LearningSession.Status.COMPLETED)
+        self._login(self.student)
+        payload = {"session_id": str(session.pk), "prompt": "What did you learn?", "response_type": "text", "text_response": "I learned a routine.", "mood": "proud", "shared_with_teacher": True}
+
+        created = self.client.post("/api/student/journals/", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(created.status_code, 201)
+        payload["text_response"] = "I learned my morning routine."
+        updated = self.client.post("/api/student/journals/", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(JournalEntry.objects.filter(session=session, student=self.student).count(), 1)
+        self.assertEqual(self.client.get(f"/api/student/journals/?session_id={session.pk}").json()["entry"]["text_response"], payload["text_response"])
+
+    def test_student_cannot_write_journal_for_another_students_session(self):
+        school_class = SchoolClass.objects.create(name="Private Journal", code="JRNL2", teacher=self.teacher)
+        session = LearningSession.objects.create(school_class=school_class, student=self.other_student)
+        LearningSession.objects.filter(pk=session.pk).update(ended_at=timezone.now(), status=LearningSession.Status.COMPLETED)
+        self._login(self.student)
+        response = self.client.get(f"/api/student/journals/?session_id={session.pk}")
+        self.assertEqual(response.status_code, 404)
+
+    def test_student_journal_defaults_to_latest_completed_session(self):
+        school_class = SchoolClass.objects.create(name="Latest Journal", code="JRNL3", teacher=self.teacher)
+        older = LearningSession.objects.create(school_class=school_class, student=self.student)
+        LearningSession.objects.filter(pk=older.pk).update(ended_at=timezone.now() - timedelta(hours=1), status=LearningSession.Status.COMPLETED)
+        latest = LearningSession.objects.create(school_class=school_class, student=self.student)
+        LearningSession.objects.filter(pk=latest.pk).update(ended_at=timezone.now(), status=LearningSession.Status.COMPLETED)
+        self._login(self.student)
+
+        response = self.client.get("/api/student/journals/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["session"]["id"], str(latest.pk))
+
+    def test_student_can_save_a_drawing_journal(self):
+        school_class = SchoolClass.objects.create(name="Drawing Journal", code="JRNL4", teacher=self.teacher)
+        session = LearningSession.objects.create(school_class=school_class, student=self.student)
+        LearningSession.objects.filter(pk=session.pk).update(ended_at=timezone.now(), status=LearningSession.Status.COMPLETED)
+        self._login(self.student)
+        drawing = SimpleUploadedFile("reflection.png", b"\x89PNG\r\n\x1a\n" + b"drawing-data", content_type="image/png")
+
+        response = self.client.post("/api/student/journals/", {
+            "session_id": str(session.pk), "prompt": "Draw what you learned",
+            "response_type": "drawing", "mood": "happy",
+            "shared_with_teacher": "true", "file": drawing,
+        })
+
+        self.assertEqual(response.status_code, 201)
+        entry = JournalEntry.objects.get(session=session)
+        self.assertEqual(entry.response_type, JournalEntry.ResponseType.DRAWING)
+        self.assertEqual(entry.asset.mime_type, "image/png")
+        self.assertEqual(self.client.get(f"/api/content/assets/{entry.asset_id}/preview/").status_code, 200)
+
+    def test_student_can_save_a_browser_audio_journal(self):
+        school_class = SchoolClass.objects.create(name="Audio Journal", code="JRNL5", teacher=self.teacher)
+        session = LearningSession.objects.create(school_class=school_class, student=self.student)
+        LearningSession.objects.filter(pk=session.pk).update(ended_at=timezone.now(), status=LearningSession.Status.COMPLETED)
+        self._login(self.student)
+        recording = SimpleUploadedFile("reflection.webm", b"\x1aE\xdf\xa3" + b"audio-data", content_type="audio/webm")
+
+        response = self.client.post("/api/student/journals/", {
+            "session_id": str(session.pk), "prompt": "Tell me what you learned",
+            "response_type": "audio", "mood": "okay",
+            "shared_with_teacher": "true", "file": recording,
+        })
+
+        self.assertEqual(response.status_code, 201)
+        entry = JournalEntry.objects.get(session=session)
+        self.assertEqual(entry.response_type, JournalEntry.ResponseType.AUDIO)
+        self.assertEqual(entry.asset.mime_type, "audio/webm")
 
     def test_student_cannot_access_unenrolled_class(self):
         school_class = SchoolClass.objects.create(name="Private Class", code="PRIV1", teacher=self.teacher)

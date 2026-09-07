@@ -3,6 +3,7 @@ import { BatteryMedium, Bluetooth, CircleHelp, HeartPulse, Radio } from 'lucide-
 import { useLocation, useNavigate } from 'react-router-dom'
 import { MUSE_CHANNELS, useMuseStore, type BandPowers } from '../../store/museStore'
 import styles from './LiveEEG.module.css'
+import { endStudentSession, getStudentSessions } from '../../lib/studentApi'
 
 const BANDS: Array<{ key: keyof BandPowers; symbol: string; color: string }> = [
   { key: 'delta', symbol: 'δ', color: '#23c8b7' },
@@ -53,7 +54,26 @@ export default function LiveEEG() {
 
   if (status !== 'streaming') return <div className={styles.unsupported}><Bluetooth size={44} /><h1>Muse 2 is not connected</h1><p>Reconnect the headset before starting a visualization session.</p><button onClick={() => navigate('/student/eeg-pairing', { replace: true, state: location.state })}>Connect Muse 2</button></div>
 
-  function endSession() { disconnect(); navigate('/student/home', { replace: true }) }
+  async function endSession() {
+    const sessionId = (location.state as { sessionId?: string } | null)?.sessionId
+    disconnect()
+    if (!sessionId) {
+      navigate('/student/sessions', { replace: true })
+      return
+    }
+    try {
+      await endStudentSession(sessionId)
+      const data = await getStudentSessions()
+      const session = data.sessions.find((item) => item.id === sessionId)
+      if (!session) throw new Error('The completed session could not be loaded.')
+      navigate('/student/session-summary', {
+        replace: true,
+        state: { summary: { sessionId, duration: session.duration_seconds, focusScore: session.focus_score, stateDistribution: session.state_distribution, taskCompleted: session.tasks_completed, taskTotal: session.tasks_total } },
+      })
+    } catch {
+      navigate('/student/sessions', { replace: true })
+    }
+  }
 
   return <main className={styles.page}>
     <header className={styles.header}><div><span className={styles.eyebrow}>Live Muse 2 &middot; {mode}</span><h1>Brainwave visualization</h1></div><div className={styles.device}><Radio size={16} />{deviceName || 'Muse 2'}<span><BatteryMedium size={16} />{battery == null ? 'Unavailable' : `${battery}%`}</span></div></header>
@@ -67,6 +87,6 @@ export default function LiveEEG() {
         {paths.map((path, index) => <path key={BANDS[index].key} d={path} fill="none" stroke={BANDS[index].color} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" className={styles.bandPath} />)}
       </svg>
     </section>
-    <footer className={styles.footer}><div className={styles.elapsed}><HeartPulse size={18} /> Time elapsed: <strong>{elapsedLabel(elapsed)}</strong></div><button className={styles.endButton} onClick={endSession}>End session</button><details><summary><CircleHelp size={15} /> What am I seeing?</summary><p>The five lines are baseline-relative scores: 1.0 is your calibration average, values above 1.0 are higher, and values below 1.0 are lower. Processing uses 1–50 Hz band-pass and 60 Hz notch filters, artifact rejection, four-second overlapping windows, Welch power spectra, logarithmic absolute power, relative power, and personal baseline normalization. These are educational signals, not a medical diagnosis.</p></details></footer>
+    <footer className={styles.footer}><div className={styles.elapsed}><HeartPulse size={18} /> Time elapsed: <strong>{elapsedLabel(elapsed)}</strong></div><button className={styles.endButton} onClick={() => void endSession()}>End session</button><details><summary><CircleHelp size={15} /> What am I seeing?</summary><p>The five lines are baseline-relative scores: 1.0 is your calibration average, values above 1.0 are higher, and values below 1.0 are lower. Processing uses 1–50 Hz band-pass and 60 Hz notch filters, artifact rejection, four-second overlapping windows, Welch power spectra, logarithmic absolute power, relative power, and personal baseline normalization. These are educational signals, not a medical diagnosis.</p></details></footer>
   </main>
 }

@@ -1,19 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Brain, CalendarDays, ChevronRight, Clock, Play, Search } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { StateBadge } from '../../components/atoms'
-import type { CognitiveState } from '../../constants/states'
+import { getStudentSessions, type StudentSessionsData } from '../../lib/studentApi'
 import styles from './Sessions.module.css'
 
 type SessionFilter = 'all' | 'completed' | 'in_progress'
-
-const MOCK_SESSIONS = [
-  { id: 'session-001', title: 'Getting Ready for School', className: 'Life Skills', date: 'Today, 9:15 AM', duration: '24 min', focus: 78, state: 'focused' as CognitiveState, status: 'in_progress' as const, tasks: '3 of 5 tasks' },
-  { id: 'session-002', title: 'Packing My School Bag', className: 'Independent Living Skills', date: 'August 25, 2026', duration: '31 min', focus: 74, state: 'focused' as CognitiveState, status: 'completed' as const, tasks: '5 of 5 tasks' },
-  { id: 'session-003', title: 'Four-count Breathing', className: 'Self-Regulation', date: 'August 22, 2026', duration: '18 min', focus: 67, state: 'relaxed' as CognitiveState, status: 'completed' as const, tasks: '4 of 4 activities' },
-  { id: 'session-004', title: 'Reading a Bus Schedule', className: 'Functional Academics', date: 'August 19, 2026', duration: '28 min', focus: 69, state: 'distracted' as CognitiveState, status: 'completed' as const, tasks: '4 of 5 tasks' },
-]
 
 function getFocusDescription(score: number) {
   if (score >= 80) return 'Excellent focus'
@@ -33,12 +26,22 @@ export default function Sessions() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState<SessionFilter>('all')
   const [search, setSearch] = useState('')
+  const [data, setData] = useState<StudentSessionsData | null>(null)
+  const [error, setError] = useState('')
 
-  const sessions = MOCK_SESSIONS.filter((session) => {
+  useEffect(() => {
+    void getStudentSessions().then(setData).catch((reason: Error) => setError(reason.message))
+  }, [])
+
+  const sessions = (data?.sessions ?? []).filter((session) => {
     const matchesFilter = filter === 'all' || session.status === filter
     const query = search.trim().toLowerCase()
-    return matchesFilter && (!query || session.title.toLowerCase().includes(query) || session.className.toLowerCase().includes(query))
+    return matchesFilter && (!query || session.title.toLowerCase().includes(query) || session.class_name.toLowerCase().includes(query))
   })
+  const completed = data?.summary.completed_sessions ?? 0
+  const averageFocus = data?.summary.average_focus_score ?? 0
+  const totalSeconds = data?.summary.total_duration_seconds ?? 0
+  const learningTime = `${Math.floor(totalSeconds / 3600)}h ${Math.floor((totalSeconds % 3600) / 60)}m`
 
   return (
     <PlayfulZoneTemplate>
@@ -49,15 +52,15 @@ export default function Sessions() {
             <h1 className={styles.title}>Sessions</h1>
             <p className={styles.subtitle}>Continue a lesson or look back at your learning history.</p>
           </div>
-          <button className={styles.startBtn} onClick={() => navigate('/student/eeg-pairing')}>
+          <button className={styles.startBtn} onClick={() => navigate('/student/classes')}>
             <Play size={16} fill="currentColor" /> New session
           </button>
         </header>
 
         <div className={styles.summaryGrid}>
-          <div className={styles.summaryCard}><span className={styles.summaryIcon}><CalendarDays size={19}/></span><span><strong>24</strong><small>Sessions completed</small></span></div>
-          <div className={styles.summaryCard}><span className={styles.summaryIcon} aria-hidden="true">{getFocusEmoji(74)}</span><span><strong>{getFocusDescription(74)}</strong><small>Overall performance</small></span></div>
-          <div className={styles.summaryCard}><span className={styles.summaryIcon}><Clock size={19}/></span><span><strong>11h 42m</strong><small>Learning time</small></span></div>
+          <div className={styles.summaryCard}><span className={styles.summaryIcon}><CalendarDays size={19}/></span><span><strong>{completed}</strong><small>Sessions completed</small></span></div>
+          <div className={styles.summaryCard}><span className={styles.summaryIcon} aria-hidden="true">{getFocusEmoji(averageFocus)}</span><span><strong>{completed ? getFocusDescription(averageFocus) : 'No sessions yet'}</strong><small>Overall performance</small></span></div>
+          <div className={styles.summaryCard}><span className={styles.summaryIcon}><Clock size={19}/></span><span><strong>{learningTime}</strong><small>Learning time</small></span></div>
         </div>
 
         <div className={styles.toolbar}>
@@ -71,20 +74,22 @@ export default function Sessions() {
         </div>
 
         <div className={styles.list}>
+          {!data && !error && <div className={styles.empty}>Loading your sessions...</div>}
+          {error && <div className={styles.empty}>{error}</div>}
           {sessions.map((session) => (
             <article className={styles.sessionCard} key={session.id}>
               <div className={styles.sessionIcon}><Brain size={21}/></div>
               <div className={styles.sessionMain}>
                 <div className={styles.sessionTop}>
-                  <div><span className={styles.className}>{session.className}</span><h2>{session.title}</h2></div>
+                  <div><span className={styles.className}>{session.class_name}</span><h2>{session.title}</h2></div>
                 </div>
-                <div className={styles.meta}><span>{session.date}</span><span>{session.duration}</span><span>{session.tasks}</span><span>{getFocusEmoji(session.focus)} {getFocusDescription(session.focus)}</span></div>
+                <div className={styles.meta}><span>{new Date(session.started_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span><span>{Math.max(1, Math.round(session.duration_seconds / 60))} min</span><span>{session.tasks_completed} of {session.tasks_total} tasks</span><span>{getFocusEmoji(session.focus_score)} {getFocusDescription(session.focus_score)}</span></div>
               </div>
               {session.status === 'in_progress' ? <span className={`${styles.inProgress} ${styles.sessionStatus}`}>Keep going</span> : <StateBadge state={session.state} size="sm" className={styles.sessionStatus}/>} 
-              <button className={styles.openBtn} onClick={() => navigate(session.status === 'in_progress' ? '/student/eeg-pairing' : '/student/session-summary')} aria-label={`Open ${session.title}`}><ChevronRight size={18}/></button>
+              <button className={styles.openBtn} onClick={() => navigate(session.status === 'in_progress' ? '/student/eeg-pairing' : '/student/session-summary', session.status === 'completed' ? { state: { summary: { sessionId: session.id, duration: session.duration_seconds, focusScore: session.focus_score, stateDistribution: session.state_distribution, taskCompleted: session.tasks_completed, taskTotal: session.tasks_total } } } : { state: { classId: session.class_id, lessonId: session.lesson_id ?? undefined, sessionId: session.id } })} aria-label={`Open ${session.title}`}><ChevronRight size={18}/></button>
             </article>
           ))}
-          {sessions.length === 0 && <div className={styles.empty}>No sessions match your search.</div>}
+          {data && sessions.length === 0 && <div className={styles.empty}>No sessions match your search.</div>}
         </div>
       </div>
     </PlayfulZoneTemplate>

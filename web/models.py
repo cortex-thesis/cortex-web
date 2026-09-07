@@ -368,6 +368,61 @@ class LearningSession(models.Model):
         ]
 
 
+class SessionSlideExposure(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session = models.ForeignKey(LearningSession, on_delete=models.CASCADE, related_name="slide_exposures")
+    slide = models.ForeignKey(Slide, on_delete=models.PROTECT, related_name="session_exposures")
+    entered_at = models.DateTimeField(default=timezone.now)
+    exited_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("entered_at",)
+        indexes = [
+            models.Index(fields=("session", "entered_at")),
+            models.Index(fields=("slide", "entered_at")),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("session",), condition=models.Q(exited_at__isnull=True),
+                name="one_active_slide_per_session",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(exited_at__isnull=True) | models.Q(exited_at__gte=models.F("entered_at")),
+                name="slide_exit_not_before_entry",
+            ),
+        ]
+
+
+class ResearchAnalysisRecord(TimeStampedModel):
+    class Phase(models.TextChoices):
+        PHASE_2 = "phase_2", "Phase 2 - Data Collection and Modeling"
+        PHASE_3 = "phase_3", "Phase 3 - Development and Refinement"
+
+    class Result(models.TextChoices):
+        PENDING = "pending", "Pending review"
+        PASSED = "passed", "Passed"
+        FAILED = "failed", "Failed"
+        INFORMATIONAL = "informational", "Informational"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    phase = models.CharField(max_length=20, choices=Phase.choices)
+    analysis_key = models.CharField(max_length=80)
+    analysis_name = models.CharField(max_length=200)
+    scope_label = models.CharField(max_length=200)
+    source_reference = models.CharField(max_length=300, blank=True)
+    values = models.JSONField(default=dict)
+    result = models.CharField(max_length=20, choices=Result.choices, default=Result.PENDING)
+    notes = models.TextField(blank=True)
+    recorded_by = models.ForeignKey(Profile, on_delete=models.PROTECT, related_name="research_analysis_records")
+
+    class Meta:
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(fields=("phase", "analysis_key", "-created_at")),
+            models.Index(fields=("recorded_by", "-created_at")),
+        ]
+
+
 class Intervention(models.Model):
     class Action(models.TextChoices):
         SET_MODE = "set_mode", "Set mode"

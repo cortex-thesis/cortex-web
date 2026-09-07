@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import {
 import { PlayfulZoneTemplate } from '../../components/templates'
 import type { JournalResponseType, MoodOption } from '../../types'
 import styles from './LearningJournal.module.css'
+import { getStudentJournal, saveStudentJournal, type StudentJournalData } from '../../lib/studentApi'
 
 const MOODS: { value: MoodOption; icon: ReactNode; label: string }[] = [
   { value: 'happy', icon: <Smile size={28} />, label: 'Happy' },
@@ -55,33 +56,51 @@ export default function LearningJournal() {
   const navigate = useNavigate()
   const location = useLocation()
   const state = (location.state as LocationState) ?? {}
-  const tasksDone = state.tasksDone ?? [
-    'Getting Ready for School',
-    'Morning Routine Steps',
-    'Packing My School Bag',
-  ]
-
+  const [journalData, setJournalData] = useState<StudentJournalData | null>(null)
   const [mood, setMood] = useState<MoodOption | null>(null)
-  const [promptIndex] = useState(() => Math.floor(Math.random() * PROMPTS.length))
+  const [prompt, setPrompt] = useState(() => PROMPTS[Math.floor(Math.random() * PROMPTS.length)])
   const [responseType, setResponseType] = useState<JournalResponseType>('text')
   const [textContent, setTextContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const prompt = PROMPTS[promptIndex]
+  const [error, setError] = useState('')
+  const tasksDone = journalData?.session.completed_tasks ?? state.tasksDone ?? []
 
-  function handleSave() {
+  useEffect(() => {
+    void getStudentJournal(state.sessionId)
+      .then((data) => {
+        setJournalData(data)
+        if (data.entry) {
+          setPrompt(data.entry.prompt)
+          setTextContent(data.entry.text_response)
+          setMood((data.entry.mood || null) as MoodOption | null)
+          setResponseType(data.entry.response_type)
+        }
+      })
+      .catch((reason: Error) => setError(reason.message))
+  }, [state.sessionId])
+
+  async function handleSave() {
+    const sessionId = journalData?.session.id
+    if (!sessionId) return
     setIsSaving(true)
-
-    // TODO: replace with a real API call when the backend is connected.
-    setTimeout(() => navigate('/student/home', { replace: true }), 800)
+    setError('')
+    try {
+      await saveStudentJournal({ session_id: sessionId, prompt, response_type: 'text', text_response: textContent, mood: mood ?? '', shared_with_teacher: true })
+      navigate('/student/home', { replace: true })
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to save your journal.')
+      setIsSaving(false)
+    }
   }
 
   function selectResponseType(value: JournalResponseType) {
+    const journalState = { ...state, sessionId: journalData?.session.id ?? state.sessionId, prompt, mood }
     if (value === 'drawing') {
-      navigate('/student/journal/draw', { state })
+      navigate('/student/journal/draw', { state: journalState })
       return
     }
     if (value === 'audio') {
-      navigate('/student/journal/audio', { state })
+      navigate('/student/journal/audio', { state: journalState })
       return
     }
     setResponseType(value)
@@ -107,11 +126,11 @@ export default function LearningJournal() {
         <section className={styles.sessionStrip} aria-label="Session summary">
           <div className={styles.summaryItem}>
             <span className={`${styles.summaryIcon} ${styles.purpleIcon}`}><BookOpen size={22} /></span>
-            <span><strong>Session complete</strong><small>Daily Living Skills</small></span>
+            <span><strong>Session complete</strong><small>{journalData?.session.title ?? 'Loading session...'}</small></span>
           </div>
           <div className={styles.summaryItem}>
             <span className={`${styles.summaryIcon} ${styles.yellowIcon}`}><Clock3 size={22} /></span>
-            <span><strong>31 minutes</strong><small>Learning time</small></span>
+            <span><strong>{journalData ? `${Math.max(1, Math.round(journalData.session.duration_seconds / 60))} minutes` : '--'}</strong><small>Learning time</small></span>
           </div>
           <div className={styles.summaryItem}>
             <span className={`${styles.summaryIcon} ${styles.coralIcon}`}><Target size={22} /></span>
@@ -159,7 +178,7 @@ export default function LearningJournal() {
 
             <div className={styles.saveArea}>
               <p>Your journal helps you remember how much you are growing.</p>
-              <button className={styles.saveBtn} onClick={handleSave} disabled={isSaving} aria-busy={isSaving}>
+              <button className={styles.saveBtn} onClick={() => void handleSave()} disabled={isSaving || !journalData || !textContent.trim()} aria-busy={isSaving}>
                 <Save size={19} />
                 {isSaving ? 'Saving...' : 'Save my journal'}
               </button>
@@ -203,6 +222,7 @@ export default function LearningJournal() {
             </section>
           </aside>
         </div>
+        {error && <p className={styles.errorMessage} role="alert">{error}</p>}
       </div>
     </PlayfulZoneTemplate>
   )

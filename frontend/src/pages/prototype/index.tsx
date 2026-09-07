@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   Activity, ArrowLeft, BookOpen, Brain, Check, ChevronRight, CircleAlert,
   Download, FileText, Headphones, LockKeyhole, Mic, Pause, Pencil, Play,
-  Plus, Radio, RefreshCw, Save, Search, ShieldCheck, Square, Trash2,
+  Plus, Radio, RefreshCw, Save, Search, Square, Trash2,
   UserPlus, Users, Waves, WifiOff, X,
 } from 'lucide-react'
 import { TeacherDashboardTemplate, CalmZoneTemplate, PlayfulZoneTemplate } from '../../components/templates'
@@ -20,7 +20,7 @@ const users = [
   { id: 'u4', name: 'Noah Garcia', email: 'noah@student.edu', role: 'Student', status: 'Invited' },
 ]
 
-function AdminShell({ children, active = 'dashboard' }: { children: ReactNode; active?: string }) {
+export function AdminShell({ children, active = 'dashboard' }: { children: ReactNode; active?: string }) {
   const navigate = useNavigate()
   const logout = useAuthStore((state) => state.logout)
 
@@ -31,11 +31,12 @@ function AdminShell({ children, active = 'dashboard' }: { children: ReactNode; a
 
   return <div className={styles.adminRoot}>
     <nav className={styles.adminNav}>
-      <div className={styles.adminBrand}><ShieldCheck size={20} /> Cortex Admin</div>
+      <div className={styles.adminBrand}><Logo variant="horizontal" height={30} /></div>
       <div className={styles.adminLinks}>
         <button className={`${styles.adminLink} ${active === 'dashboard' ? styles.adminLinkActive : ''}`} onClick={() => navigate('/admin/dashboard')}>Overview</button>
         <button className={`${styles.adminLink} ${active === 'accounts' ? styles.adminLinkActive : ''}`} onClick={() => navigate('/admin/accounts')}>Accounts</button>
-        <button className={styles.adminLink} onClick={() => navigate('/admin/evaluation')}>Validation</button>
+        <button className={`${styles.adminLink} ${active === 'schools' ? styles.adminLinkActive : ''}`} onClick={() => navigate('/admin/schools')}>Schools</button>
+        <button className={`${styles.adminLink} ${active === 'analysis' ? styles.adminLinkActive : ''}`} onClick={() => navigate('/admin/analysis')}>Research analysis</button>
         <button className={styles.adminLink} onClick={handleLogout}>Sign out</button>
       </div>
     </nav>{children}

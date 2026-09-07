@@ -21,6 +21,7 @@ import ClassDetail from '../pages/student/ClassDetail'
 import ClassPackageLessons from '../pages/student/ClassPackageLessons'
 import StudentSessions from '../pages/student/Sessions'
 import FreeLessonSelect from '../pages/student/FreeLessonSelect'
+import { AudioJournal, DrawingJournal } from '../pages/student/JournalMedia'
 
 import Dashboard from '../pages/teacher/Dashboard'
 import ClassOverview from '../pages/teacher/ClassOverview'
@@ -33,12 +34,17 @@ import TeacherProfile from '../pages/teacher/Profile'
 import TeacherClasses from '../pages/teacher/Classes'
 import TeacherClassSetup from '../pages/teacher/ClassSetup'
 import TeacherJournals from '../pages/teacher/Journals'
+import Reports from '../pages/teacher/Reports'
+import AdvancedReports from '../pages/teacher/AdvancedReports'
+import ResearchAnalysis from '../pages/admin/ResearchAnalysis'
+import AdminSchools from '../pages/admin/Schools'
+import AdminDashboardPage from '../pages/admin/Dashboard'
+import AdminAccountsPage from '../pages/admin/Accounts'
 import {
-  AdminDashboard, AdminAccounts, StudentRegistration, TeacherRegistration,
+  StudentRegistration, TeacherRegistration,
   ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
-  HardwareRequired, Reports, Enrollment,
+  HardwareRequired, Enrollment,
   SessionControl, StudentHistory, Evaluation,
-  DrawingJournal, AudioJournal,
 } from '../pages/prototype'
 
 export default function AppRouter() {
@@ -112,6 +118,7 @@ export default function AppRouter() {
       <Route path="/teacher/profile" element={<TeacherProfile />} />
       <Route path="/teacher/journals" element={<TeacherJournals />} />
       <Route path="/teacher/reports" element={<Reports />} />
+      <Route path="/teacher/reports/advanced" element={<AdvancedReports />} />
       <Route path="/teacher/classes/new" element={<TeacherClassSetup />} />
       <Route path="/teacher/class/:classId/enroll" element={<Enrollment />} />
       <Route path="/teacher/class/:classId/session" element={<SessionControl />} />
@@ -120,9 +127,11 @@ export default function AppRouter() {
 
       {/* Administrator */}
       <Route element={<ProtectedRoute roles={['admin']} />}>
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/accounts" element={<AdminAccounts />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/accounts" element={<AdminAccountsPage />} />
         <Route path="/admin/evaluation" element={<Evaluation />} />
+        <Route path="/admin/analysis" element={<ResearchAnalysis />} />
+        <Route path="/admin/schools" element={<AdminSchools />} />
       </Route>
       <Route path="/admin/login" element={<Navigate to="/" replace />} />
 

@@ -131,6 +131,7 @@
 .textArea::placeholder { color: var(--color-text-muted); }
 .saveArea { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 22px; }
 .saveArea p { color: var(--color-text-muted); font-size: 12px; max-width: 310px; line-height: 1.5; }
+.errorMessage { margin: 0; color: #a52a2a; font-size: 13px; font-weight: 700; }
 .saveBtn { min-width: 190px; padding: 14px 20px; border: 0; border-radius: 14px; background: var(--color-coral); color: var(--color-white); display: flex; align-items: center; justify-content: center; gap: 9px; font: inherit; font-size: 14px; font-weight: var(--font-weight-semibold); cursor: pointer; box-shadow: 0 8px 18px rgba(239, 111, 85, .2); }
 .saveBtn:hover:not(:disabled) { filter: brightness(.96); transform: translateY(-1px); }
 .saveBtn:disabled { opacity: .6; cursor: wait; }
