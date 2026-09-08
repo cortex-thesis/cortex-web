@@ -11,7 +11,7 @@ import selectionStyles from './FreeLessonSelect.module.css'
 export default function ClassDetail() {
   const { classId = '' } = useParams()
   const navigate = useNavigate()
-  const [classData, setClassData] = useState<StudentClass | null>(() => cachedApiValue<StudentClass>(`/classes/${classId}/`) ?? null)
+  const [classData, setClassData] = useState<StudentClass | null>(() => cachedApiValue<StudentClass>(`/classes/${classId}/?summary=1`) ?? null)
   const [error, setError] = useState('')
   useEffect(() => { void getStudentClass(classId).then(setClassData).catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load class.')) }, [classId])
   if (!classData) return <PlayfulZoneTemplate><div className={styles.body}>{error || 'Loading class...'}</div></PlayfulZoneTemplate>

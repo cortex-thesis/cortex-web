@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Check, GripVertical, Image as ImageIcon, Puzzle, RotateCcw } from 'lucide-react'
 import type { Task, TaskItem } from '../../../types'
 import styles from './TaskInteraction.module.css'
@@ -7,6 +7,7 @@ import CreativeTask from './CreativeTask'
 interface TaskInteractionProps {
   task: Task
   onAnswered?: (correct: boolean, response: string) => void
+  onChanged?: () => void
 }
 
 function ItemVisual({ item }: { item: TaskItem }) {
@@ -15,7 +16,7 @@ function ItemVisual({ item }: { item: TaskItem }) {
     : <span className={styles.imagePlaceholder}><ImageIcon size={26} aria-hidden="true" /></span>
 }
 
-function TaskInteraction({ task, onAnswered }: TaskInteractionProps) {
+function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) {
   const template = task.taskTemplate ?? 'multiple_choice'
   const [selected, setSelected] = useState<string[]>([])
   const [matched, setMatched] = useState<string[]>([])
@@ -24,6 +25,7 @@ function TaskInteraction({ task, onAnswered }: TaskInteractionProps) {
   const [sorted, setSorted] = useState<Record<string, string>>({})
   const [result, setResult] = useState<'correct' | 'incorrect' | null>(null)
   const [dragItem, setDragItem] = useState<string | null>(null)
+  const workArea = useRef<HTMLDivElement>(null)
 
   const items = task.items ?? []
   const expected = task.correctItemIds ?? []
@@ -76,26 +78,34 @@ function TaskInteraction({ task, onAnswered }: TaskInteractionProps) {
   if (template === 'sequence_order' || template === 'picture_puzzle') {
     const available = items.filter((item) => !selected.includes(item.id))
     function addToSequence(itemId: string | null) {
-      if (itemId && !selected.includes(itemId)) setSelected((value) => [...value, itemId])
+      if (itemId && !selected.includes(itemId)) { setSelected((value) => [...value, itemId]); setResult(null); onChanged?.() }
       setDragItem(null)
     }
     function moveBefore(targetId: string) {
-      if (!dragItem || dragItem === targetId || !selected.includes(dragItem)) return
+      if (!dragItem || dragItem === targetId) return
       setSelected((value) => {
         const next = value.filter((id) => id !== dragItem)
         next.splice(next.indexOf(targetId), 0, dragItem)
         return next
       })
       setDragItem(null)
+      setResult(null)
+      onChanged?.()
+    }
+    function returnPiece(id: string) {
+      setSelected((value) => value.filter((item) => item !== id))
+      setDragItem(null)
+      setResult(null)
+      onChanged?.()
     }
     return (
       <div className={styles.stack}>
-        <p className={styles.dragHint}><GripVertical size={15} /> Drag pieces into the work area, or tap them in order.</p>
-        <div className={`${styles.sequenceAnswer} ${template === 'picture_puzzle' ? styles.puzzleBoard : ''}`} aria-label="Your work area" onDragOver={(event) => event.preventDefault()} onDrop={() => addToSequence(dragItem)}>
-          {selected.length ? selected.map((id, index) => <span key={id} draggable onDragStart={() => setDragItem(id)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.stopPropagation(); moveBefore(id) }}><b>{template === 'picture_puzzle' ? <Puzzle size={14} /> : index + 1}</b>{items.find((item) => item.id === id)?.label}</span>) : <em>Move the first piece here.</em>}
+        <p className={styles.dragHint}><GripVertical size={15} /> Drag pieces into the work area, or tap them in order. Drag a piece out or tap it to return it.</p>
+        <div ref={workArea} className={`${styles.sequenceAnswer} ${template === 'picture_puzzle' ? styles.puzzleBoard : ''}`} aria-label="Your work area" onDragOver={(event) => event.preventDefault()} onDrop={() => addToSequence(dragItem)}>
+          {selected.length ? selected.map((id, index) => <span key={id} draggable role="button" tabIndex={0} aria-label={`Return ${items.find((item) => item.id === id)?.label} to options`} onClick={() => returnPiece(id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); returnPiece(id) } }} onDragStart={(event) => { setDragItem(id); event.dataTransfer.setData('text/plain', id) }} onDragEnd={(event) => { const area = workArea.current?.getBoundingClientRect(); if (area && (event.clientX < area.left || event.clientX > area.right || event.clientY < area.top || event.clientY > area.bottom)) returnPiece(id); setDragItem(null) }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.stopPropagation(); moveBefore(id) }}><b>{template === 'picture_puzzle' ? <Puzzle size={14} /> : index + 1}</b>{items.find((item) => item.id === id)?.label}</span>) : <em>Move the first piece here.</em>}
         </div>
-        <div className={styles.itemRow}>{available.map((item) => <button type="button" draggable key={item.id} className={styles.itemButton} onDragStart={() => setDragItem(item.id)} onClick={() => addToSequence(item.id)}><GripVertical size={15} />{item.label}</button>)}</div>
-        <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => { setSelected([]); setResult(null) }}><RotateCcw size={15} /> Reset</button><button type="button" className={styles.check} disabled={selected.length !== items.length || result !== null} onClick={() => finish(JSON.stringify(selected) === JSON.stringify(task.correctOrder ?? []), selected.join(','))}><Check size={15} /> Check {template === 'picture_puzzle' ? 'puzzle' : 'order'}</button></div>
+        <div className={styles.itemRow} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (dragItem) returnPiece(dragItem) }}>{available.map((item) => <button type="button" draggable key={item.id} className={styles.itemButton} onDragStart={(event) => { setDragItem(item.id); event.dataTransfer.setData('text/plain', item.id) }} onDragEnd={() => setDragItem(null)} onClick={() => addToSequence(item.id)}><GripVertical size={15} />{item.label}</button>)}</div>
+        <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => { setSelected([]); setResult(null); onChanged?.() }}><RotateCcw size={15} /> Reset</button><button type="button" className={styles.check} disabled={selected.length !== items.length || result !== null} onClick={() => finish(JSON.stringify(selected) === JSON.stringify(task.correctOrder ?? []), selected.join(','))}><Check size={15} /> Check {template === 'picture_puzzle' ? 'puzzle' : 'order'}</button></div>
       </div>
     )
   }

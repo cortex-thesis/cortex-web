@@ -1,0 +1,28 @@
+.page.page { width: 100%; max-width: 1200px; margin-inline: auto; height: calc(100dvh - 92px); min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; padding-block: 12px; }
+.page > header { flex-shrink: 0; margin-bottom: 12px; }
+.player { width: 100%; max-width: 1100px; max-height: 680px; min-height: 0; flex: 1; display: flex; flex-direction: column; margin: 0 auto; padding: clamp(14px, 2vw, 22px); box-sizing: border-box; border: 1px solid #e5e1f2; border-radius: 22px; background: #fff; box-shadow: 0 12px 36px #40366b0a; }
+.progress { display: grid; flex-shrink: 0; gap: 8px; margin-bottom: 14px; }
+.progressTrack { grid-area: 1 / 1; align-self: center; margin-inline: 12px; height: 7px; background: #eeebf6; border-radius: 20px; overflow: hidden; }
+.progressTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-interface-purple, #534ab7); transition: width .35s ease; }
+.dots { grid-area: 1 / 1; position: relative; display: flex; justify-content: space-between; margin: 0; padding: 0; list-style: none; }
+.dot { box-sizing: border-box; flex: 0 0 24px; width: 24px; height: 24px; display: grid; place-items: center; border: 2px solid #e3deef; border-radius: 50%; background: #f7f5fb; color: #416453; transition: background .25s, border-color .25s, box-shadow .25s; }
+.dot > span { width: 5px; height: 5px; border-radius: 50%; background: #b8afc9; }
+.done { background: #dceee2; border-color: #b6d5c0; }
+.current { border-color: var(--color-interface-purple, #534ab7); box-shadow: 0 0 0 4px #eee7f8; }
+.current > span { background: var(--color-interface-purple, #534ab7); }
+.progressHint { font-size: 12px; color: #71677e; }
+.stage { min-height: 0; flex: 1; overflow: auto; scrollbar-gutter: stable; padding: 4px; }
+.task.task { max-width: 100%; width: 100%; box-sizing: border-box; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.actions { display: flex; flex-shrink: 0; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 12px; margin-top: 12px; border-top: 1px solid #eeeaf5; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 22px; min-height: 48px; border: 1px solid transparent; border-radius: 14px; font: inherit; font-weight: 600; cursor: pointer; transition: background .2s, box-shadow .2s, opacity .2s, transform .2s; }
+.previous { background: #e3eafa; color: #40557b; border-color: #ccd9ef; }
+.retry { background: #fff0d9; color: #785829; border-color: #eed9b5; }
+.next { background: #dceee2; color: #375f48; border-color: #bddcc8; }
+.button:hover:not(:disabled) { box-shadow: 0 4px 12px #40366b15; transform: translateY(-1px); }
+.button:active:not(:disabled) { transform: translateY(0); }
+.button:focus-visible { outline: 3px solid #8970bd; outline-offset: 3px; }
+.button:disabled { opacity: .5; cursor: not-allowed; }
+.complete { min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; text-align: center; color: #375f48; }
+@media (max-width: 600px) { .player { border-radius: 18px; } .actions { gap: 8px; } .button { flex: 1 1 auto; padding: 10px; font-size: 14px; } }
+@media (max-height: 600px) { .page > header h1 { font-size: 20px; } .page > header p { margin-top: 4px; font-size: 12px; } .progress { gap: 6px; margin-bottom: 8px; } .button { min-height: 40px; padding-block: 8px; } }
+@media (prefers-reduced-motion: reduce) { .player *, .player *::before, .player *::after { animation: none !important; transition: none !important; } }

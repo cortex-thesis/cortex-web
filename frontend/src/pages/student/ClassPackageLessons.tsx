@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, ChevronRight, Play } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Circle, CircleCheck } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { PACKAGE_META } from '../../constants/packages'
@@ -7,7 +7,7 @@ import { getStudentClassPackage, PACKAGE_EMOJI, type StudentClass, type StudentL
 import { cachedApiValue } from '../../lib/api'
 import styles from './FreeLessonSelect.module.css'
 
-interface PackageData { class: StudentClass; package: StudentPackage; lessons: StudentLesson[] }
+interface PackageData { class: StudentClass; package: StudentPackage; lessons: (StudentLesson & { progress?: { status: string; percentage: number } })[] }
 
 export default function ClassPackageLessons() {
   const navigate = useNavigate()
@@ -20,8 +20,13 @@ export default function ClassPackageLessons() {
   const pkg = data.package.slug
   return <PlayfulZoneTemplate>
     <div className={styles.page}>
-      <header className={styles.header}><button className={styles.backBtn} onClick={() => navigate(`/student/class/${classId}`)}><ArrowLeft size={18} /></button><span className={styles.packageIcon} style={{ background: PACKAGE_META[pkg].bg }}>{PACKAGE_EMOJI[pkg]}</span><div><span className={styles.eyebrow}>{data.class.name}</span><h1>{data.package.name}</h1><p>Choose one of the lessons below to begin.</p></div></header>
-      <section className={styles.lessonSection}><h2>{data.package.name} lessons</h2>{data.lessons.length === 0 ? <p>No approved lessons have been added to this package yet.</p> : <div className={styles.lessonList}>{data.lessons.map((lesson, index) => <button key={lesson.id} className={styles.lessonCard} onClick={() => navigate('/student/eeg-pairing', { state: { classId: data.class.id, package: pkg, lessonId: lesson.id, lesson: lesson.title } })}><span className={styles.lessonNumber}>{index + 1}</span><span className={styles.lessonName}>{lesson.title}</span><span className={styles.startLabel}><Play size={12} /> Start session</span><ChevronRight size={18} /></button>)}</div>}</section>
+      <header className={styles.header}><button className={styles.backBtn} onClick={() => navigate(`/student/class/${classId}`, { replace: true })} aria-label="Back to class"><ArrowLeft size={18} /></button><span className={styles.packageIcon} style={{ background: PACKAGE_META[pkg].bg }}>{PACKAGE_EMOJI[pkg]}</span><div><span className={styles.eyebrow}>{data.class.name}</span><h1>{data.package.name}</h1><p>Choose one of the lessons below to begin.</p></div></header>
+      <section className={styles.lessonSection}><h2>{data.package.name} lessons</h2>{data.lessons.length === 0 ? <p>No approved lessons have been added to this package yet.</p> : <div className={styles.lessonList}>{data.lessons.map((lesson, index) => <div key={lesson.id} className={styles.lessonRow}>
+        <button className={styles.lessonCard} onClick={() => navigate(`/student/class/${classId}/lesson/${lesson.id}`)}><span className={styles.lessonNumber}>{index + 1}</span><span className={styles.lessonName}>{lesson.title}</span>
+          <span className={styles.lessonProgress}>
+            {lesson.progress?.status === 'completed' ? <CircleCheck className={styles.progressComplete} size={28} aria-label="Completed" /> : lesson.progress?.status === 'in_progress' ? <><svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12" fill="none" stroke="#e5e1ef" strokeWidth="3" /><circle cx="16" cy="16" r="12" fill="none" stroke="var(--color-interface-purple)" strokeWidth="3" pathLength="100" strokeDasharray={`${lesson.progress.percentage} 100`} transform="rotate(-90 16 16)" strokeLinecap="round" /></svg><span>{lesson.progress.percentage}%</span></> : <span className={styles.progressNotStarted}><Circle size={26} />Not started</span>}
+          </span><ChevronRight size={18} /></button>
+      </div>)}</div>}</section>
     </div>
   </PlayfulZoneTemplate>
 }

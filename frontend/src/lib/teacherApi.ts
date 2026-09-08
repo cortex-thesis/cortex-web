@@ -1,4 +1,33 @@
 import { api } from './api'
+import type { CognitiveState } from '../constants/states'
+
+export interface StudentReportSession {
+  id: string
+  started_at: string
+  class_name: string
+  activity: string
+  duration_seconds: number
+  focus: number | null
+  dominant: CognitiveState | null
+  tasks_completed: number
+  tasks_total: number
+  mode_changes: number
+}
+
+export interface TeacherStudentReport extends RosterStudent {
+  classes: TeacherClass[]
+  sessions: StudentReportSession[]
+  session_count: number
+  journal_count: number
+  average_focus: number | null
+  average_duration_seconds: number | null
+  tasks_completed: number
+  tasks_total: number
+  state_distribution: Record<CognitiveState, number> | null
+}
+
+export const getTeacherStudentReport = (classId: string, studentId: string, signal?: AbortSignal) =>
+  api<TeacherStudentReport>(`/teacher/students/${encodeURIComponent(studentId)}/?class_id=${encodeURIComponent(classId)}`, { cache: 'no-store', signal })
 
 export interface TeacherIdentity {
   id: number

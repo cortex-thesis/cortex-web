@@ -16,7 +16,7 @@ from django.core.cache import cache
 from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
 from django.utils.crypto import constant_time_compare
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Count, F, Q
+from django.db.models import Avg, Count, F, Q, OuterRef, Subquery
 from django.http import FileResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -24,6 +24,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import (
+    LessonPracticeProgress,
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
     DataLifecycleRequest, EEGDevice, Enrollment, Intervention, InterventionAlert, JournalEntry,
     LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
@@ -290,7 +291,7 @@ def admin_dashboard(request):
         })
     if not admin.is_school_admin or not admin.school_id:
         return JsonResponse({"detail": "School-administrator scope is required."}, status=403)
-    classes = SchoolClass.objects.filter(school=admin.school).select_related("teacher", "teacher__school").annotate(
+    classes = SchoolClass.objects.filter(school=admin.school).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
         session_count=Count("sessions", distinct=True),
         average_completion=Avg("sessions__completion_percentage"),
@@ -299,7 +300,7 @@ def admin_dashboard(request):
     students = Profile.objects.filter(school=admin.school, role=Profile.Role.STUDENT)
     teachers = Profile.objects.filter(school=admin.school, role=Profile.Role.TEACHER)
     sessions = LearningSession.objects.filter(school_class__school=admin.school)
-    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    packages = _active_packages()
     return JsonResponse({
         "administrator": _profile_data(admin),
         "classes": [_class_data(item, packages=packages) | {
@@ -538,6 +539,15 @@ def admin_research_analysis_detail(request, record_id):
     return JsonResponse(_analysis_record_data(record))
 
 
+def _active_packages():
+    # Reuse these counts across every class in a response, not one query per class.
+    return list(CurriculumPackage.objects.filter(is_active=True).annotate(
+        approved_lesson_count=Count("lessons", filter=Q(
+            lessons__status=Lesson.Status.APPROVED, lessons__archived_at__isnull=True,
+        )),
+    ).order_by("id"))
+
+
 def _class_data(school_class, include_students=False, packages=None):
     if packages is None:
         prefetched = getattr(school_class, "_prefetched_objects_cache", {}).get("class_packages")
@@ -550,7 +560,7 @@ def _class_data(school_class, include_students=False, packages=None):
     student_count = getattr(school_class, "active_student_count", None)
     if student_count is None:
         student_count = school_class.enrollments.filter(removed_at__isnull=True).count()
-    package_ids = [item.pk for item in packages]
+    package_ids = [item.pk for item in packages if not hasattr(item, "approved_lesson_count")]
     lesson_counts = dict(
         Lesson.objects.filter(
             package_id__in=package_ids, status=Lesson.Status.APPROVED,
@@ -563,21 +573,22 @@ def _class_data(school_class, include_students=False, packages=None):
         "status": school_class.status,
         "packages": [{
             "id": item.pk, "slug": item.slug, "name": item.name,
-            "lesson_count": lesson_counts.get(item.pk, 0),
+            "lesson_count": getattr(item, "approved_lesson_count", lesson_counts.get(item.pk, 0)),
         } for item in packages],
         "package_count": len(packages),
         "student_count": student_count,
         "teacher": _profile_data(school_class.teacher),
     }
     if include_students:
-        data["students"] = [_profile_data(item.student) for item in school_class.enrollments.filter(removed_at__isnull=True).select_related("student")]
+        data["students"] = [_profile_data(item.student) for item in school_class.enrollments.filter(removed_at__isnull=True).select_related("student", "student__school", "student__user")]
     return data
 
 
 def _lesson_data(lesson, include_slides=True):
     data = {"id": lesson.pk, "package": lesson.package.slug, "title": lesson.title, "description": lesson.description, "archived": lesson.archived_at is not None}
     if include_slides:
-        data["slides"] = [{"id": slide.pk, "position": slide.position, "title": slide.title, "activity": {"id": slide.activity.pk, "type": slide.activity.type, "title": slide.activity.title, "configuration": slide.activity.configuration, "asset_id": slide.activity.asset_id}} for slide in lesson.slides.select_related("activity")]
+        slides = lesson.slides.all() if "slides" in getattr(lesson, "_prefetched_objects_cache", {}) else lesson.slides.select_related("activity")
+        data["slides"] = [{"id": slide.pk, "position": slide.position, "title": slide.title, "activity": {"id": slide.activity.pk, "type": slide.activity.type, "title": slide.activity.title, "configuration": slide.activity.configuration, "asset_id": slide.activity.asset_id}} for slide in slides]
     return data
 
 
@@ -997,10 +1008,10 @@ def _student_dashboard_data(profile):
     classes_qs = SchoolClass.objects.filter(
         enrollments__student=profile, enrollments__removed_at__isnull=True,
         status=SchoolClass.Status.ACTIVE,
-    ).select_related("teacher", "teacher__school").annotate(
+    ).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
     ).distinct()
-    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    packages = _active_packages()
     return {
         "student": _profile_data(profile),
         "classes": [_class_data(item, packages=packages) for item in classes_qs],
@@ -1053,7 +1064,7 @@ def join_class(request):
     except (KeyError, ValueError):
         return JsonResponse({"detail": "A class code is required."}, status=400)
     try:
-        school_class = SchoolClass.objects.select_related("teacher").get(code__iexact=code, status=SchoolClass.Status.ACTIVE)
+        school_class = SchoolClass.objects.select_related("teacher", "teacher__school", "teacher__user").get(code__iexact=code, status=SchoolClass.Status.ACTIVE)
     except SchoolClass.DoesNotExist:
         return JsonResponse({"detail": "Class code not found. Please check with your teacher."}, status=404)
     if profile.school_id and profile.school_id != school_class.school_id:
@@ -1219,10 +1230,10 @@ def teacher_dashboard(request):
 def _teacher_dashboard_data(profile):
     class_items = list(SchoolClass.objects.filter(
         teacher=profile, status=SchoolClass.Status.ACTIVE,
-    ).select_related("teacher", "teacher__school").annotate(
+    ).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
     ))
-    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    packages = _active_packages()
     student_ids = Enrollment.objects.filter(
         school_class__teacher=profile, school_class__status=SchoolClass.Status.ACTIVE,
         removed_at__isnull=True,
@@ -1250,20 +1261,76 @@ def teacher_students(request):
     return JsonResponse({"students": [_profile_data(item) for item in students.select_related("school").order_by("display_name")]})
 
 
+@require_http_methods(["GET"])
 def teacher_student_detail(request, student_id):
     profile, error = _require_profile(request, {Profile.Role.TEACHER})
     if error:
         return error
-    student = get_object_or_404(Profile, pk=student_id, role=Profile.Role.STUDENT)
+    student = get_object_or_404(Profile.objects.select_related("user", "school"), pk=student_id, role=Profile.Role.STUDENT)
     enrollments = Enrollment.objects.filter(
         student=student, school_class__teacher=profile, removed_at__isnull=True,
-    ).select_related("school_class", "school_class__teacher")
-    if not enrollments.exists():
+    )
+    class_id = request.GET.get("class_id")
+    if class_id:
+        if not class_id.isdecimal():
+            return JsonResponse({"detail": "Invalid class ID."}, status=400)
+        enrollments = enrollments.filter(school_class_id=class_id)
+    class_ids = list(enrollments.values_list("school_class_id", flat=True))
+    if not class_ids:
         return JsonResponse({"detail": "This student is not enrolled in one of your classes."}, status=403)
+    class_items = SchoolClass.objects.filter(pk__in=class_ids).select_related(
+        "teacher", "teacher__user", "teacher__school",
+    ).annotate(active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True)))
+    # Independent scalar aggregates avoid multiplying predictions by responses,
+    # slides and adaptation events in a large multi-table join.
+    def session_count(relation, **filters):
+        return Subquery(LearningSession.objects.filter(pk=OuterRef("pk")).order_by().annotate(
+            total=Count(relation, filter=Q(**filters), distinct=True),
+        ).values("total")[:1])
+
+    sessions = LearningSession.objects.filter(
+        student=student, school_class_id__in=class_ids, ended_at__isnull=False,
+    ).select_related("school_class", "lesson", "analytics").annotate(
+        tasks_completed=session_count("activity_responses__activity"),
+        tasks_total=session_count("lesson__slides__activity"),
+        adaptation_total=session_count("adaptation_events"),
+        override_total=session_count("manual_overrides"),
+        **{f"{state}_count": session_count("state_predictions", state_predictions__state=state)
+           for state in StatePrediction.State.values},
+    ).order_by("-started_at", "-pk")
+    rows = []
+    for session in sessions:
+        counts = {state: getattr(session, f"{state}_count") for state in StatePrediction.State.values}
+        total = sum(counts.values())
+        analytics = getattr(session, "analytics", None)
+        distribution = None
+        if analytics and sum(float(getattr(analytics, f"{state}_percentage")) for state in counts) > 0:
+            distribution = {state: float(getattr(analytics, f"{state}_percentage")) for state in counts}
+        elif total:
+            distribution = {state: count * 100 / total for state, count in counts.items()}
+        rows.append({
+            "id": str(session.pk), "started_at": session.started_at,
+            "class_name": session.school_class.name,
+            "activity": session.lesson.title if session.lesson_id else "No lesson recorded",
+            "duration_seconds": max(0, int((session.ended_at - session.started_at).total_seconds())),
+            "focus": round(distribution["focused"]) if distribution else None,
+            "dominant": max(distribution, key=distribution.get) if distribution else None,
+            "state_distribution": distribution,
+            "tasks_completed": session.tasks_completed, "tasks_total": session.tasks_total,
+            "mode_changes": analytics.adaptation_count + analytics.manual_override_count if analytics else session.adaptation_total + session.override_total,
+        })
+    measured = [row for row in rows if row["state_distribution"] is not None]
+    packages = _active_packages()
     data = _profile_data(student)
     data.update({
-        "classes": [_class_data(item.school_class) for item in enrollments],
-        "session_count": 0, "journal_count": 0, "average_focus": None,
+        "classes": [_class_data(item, packages=packages) for item in class_items],
+        "sessions": rows, "session_count": len(rows),
+        "journal_count": JournalEntry.objects.filter(student=student, session__school_class_id__in=class_ids, shared_with_teacher=True).count(),
+        "average_focus": round(sum(row["state_distribution"]["focused"] for row in measured) / len(measured)) if measured else None,
+        "average_duration_seconds": round(sum(row["duration_seconds"] for row in rows) / len(rows)) if rows else None,
+        "tasks_completed": sum(row["tasks_completed"] for row in rows),
+        "tasks_total": sum(row["tasks_total"] for row in rows),
+        "state_distribution": {state: round(sum(row["state_distribution"][state] for row in measured) / len(measured)) for state in StatePrediction.State.values} if measured else None,
     })
     return JsonResponse(data)
 
@@ -1290,7 +1357,7 @@ def teacher_journals(request):
         return JsonResponse({"detail": "Method not allowed."}, status=405)
     class_items = list(SchoolClass.objects.filter(
         teacher=profile, status=SchoolClass.Status.ACTIVE,
-    ).select_related("teacher", "teacher__school").annotate(
+    ).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
     ).order_by("name"))
     selected_class = None
@@ -1311,7 +1378,7 @@ def teacher_journals(request):
         ).select_related("student", "student__school", "session", "asset").annotate(
             tasks_completed_count=Count("session__activity_responses", distinct=True),
         ).distinct().order_by("-created_at")
-    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    packages = _active_packages()
     return JsonResponse({
         "classes": [_class_data(item, packages=packages) for item in class_items],
         "selected_class_id": selected_class.pk if selected_class else None,
@@ -1486,8 +1553,8 @@ def classes(request):
         queryset = SchoolClass.objects.filter(enrollments__student=profile, enrollments__removed_at__isnull=True).distinct()
     else:
         queryset = SchoolClass.objects.all() if profile.is_super_admin else SchoolClass.objects.filter(school=profile.school)
-    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
-    queryset = queryset.select_related("teacher", "teacher__school").annotate(
+    packages = _active_packages()
+    queryset = queryset.select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
     )
     return JsonResponse({"classes": [_class_data(item, packages=packages) for item in queryset]})
@@ -1498,7 +1565,7 @@ def class_detail(request, class_id):
     profile, error = _require_profile(request, {Profile.Role.STUDENT, Profile.Role.TEACHER, Profile.Role.ADMIN})
     if error:
         return error
-    school_class = get_object_or_404(SchoolClass.objects.select_related("teacher"), pk=class_id)
+    school_class = get_object_or_404(SchoolClass.objects.select_related("teacher", "teacher__school", "teacher__user"), pk=class_id)
     if profile.role == Profile.Role.ADMIN and not _admin_can_manage(profile, school_class):
         return JsonResponse({"detail": "You cannot manage this school's class."}, status=403)
     if profile.role == Profile.Role.STUDENT and not Enrollment.objects.filter(school_class=school_class, student=profile, removed_at__isnull=True).exists():
@@ -1526,7 +1593,7 @@ def class_detail(request, class_id):
             return JsonResponse({"detail": "Class values are invalid."}, status=400)
         _audit(profile, "class_updated", school_class)
     data = _class_data(school_class, include_students=profile.role != Profile.Role.STUDENT)
-    if profile.role == Profile.Role.STUDENT:
+    if profile.role == Profile.Role.STUDENT and request.GET.get("summary") != "1":
         lessons = Lesson.objects.filter(
             archived_at__isnull=True, status=Lesson.Status.APPROVED,
             package__is_active=True,
@@ -1546,7 +1613,7 @@ def student_class_package(request, class_id, package_slug):
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
     school_class = get_object_or_404(
-        SchoolClass.objects.select_related("teacher", "teacher__school"),
+        SchoolClass.objects.select_related("teacher", "teacher__school", "teacher__user"),
         pk=class_id, status=SchoolClass.Status.ACTIVE,
     )
     if not Enrollment.objects.filter(
@@ -1560,12 +1627,51 @@ def student_class_package(request, class_id, package_slug):
     )
     lessons = Lesson.objects.filter(
         package=package, status=Lesson.Status.APPROVED, archived_at__isnull=True,
-    ).order_by("id")
+    ).select_related('package').prefetch_related('slides').order_by("id")
+    progress = {item.lesson_id: item for item in LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson__package=package)}
     return JsonResponse({
         "class": _class_data(school_class),
         "package": {"id": package.pk, "slug": package.slug, "name": package.name},
-        "lessons": [_lesson_data(lesson, include_slides=False) for lesson in lessons],
+        "lessons": [_lesson_data(lesson, include_slides=False) | {"progress": _practice_progress_data(lesson, progress.get(lesson.pk))} for lesson in lessons],
     })
+
+
+def _practice_progress_data(lesson, progress):
+    slide_ids = {slide.pk for slide in lesson.slides.all()}
+    completed = slide_ids.intersection(progress.completed_slide_ids) if progress else set()
+    return {"status": 'not_started' if progress is None else 'completed' if slide_ids and completed == slide_ids else 'in_progress',
+            "percentage": round(len(completed) * 100 / len(slide_ids)) if slide_ids else 0,
+            "completed_slide_ids": sorted(completed)}
+
+
+@require_http_methods(["GET", "POST"])
+def student_practice_lesson(request, class_id, lesson_id):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    school_class = get_object_or_404(SchoolClass, pk=class_id, status=SchoolClass.Status.ACTIVE)
+    if not Enrollment.objects.filter(school_class=school_class, student=profile, removed_at__isnull=True).exists():
+        return JsonResponse({"detail": "You are not enrolled in this class."}, status=403)
+    lesson = get_object_or_404(Lesson.objects.select_related('package').prefetch_related('slides__activity'),
+        pk=lesson_id, status=Lesson.Status.APPROVED, archived_at__isnull=True,
+        package__is_active=True, package__class_assignments__school_class=school_class)
+    if request.method == 'POST':
+        try:
+            payload = _body(request)
+            slide_id = payload.get('slide_id')
+            if slide_id is not None and (type(slide_id) is not int or slide_id not in {slide.pk for slide in lesson.slides.all()}):
+                raise ValueError
+        except (ValueError, TypeError, AttributeError):
+            return JsonResponse({'detail': 'A valid lesson slide is required.'}, status=400)
+        with transaction.atomic():
+            progress, _ = LessonPracticeProgress.objects.get_or_create(student=profile, school_class=school_class, lesson=lesson)
+            progress = LessonPracticeProgress.objects.select_for_update().get(pk=progress.pk)
+            if slide_id is not None:
+                progress.completed_slide_ids = sorted(set(progress.completed_slide_ids) | {slide_id})
+                progress.save(update_fields=['completed_slide_ids', 'updated_at'])
+    else:
+        progress = LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson=lesson).first()
+    return JsonResponse(_lesson_data(lesson) | {'progress': _practice_progress_data(lesson, progress)})
 
 
 def _new_class_code():

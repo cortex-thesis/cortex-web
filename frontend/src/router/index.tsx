@@ -19,6 +19,8 @@ import Profile from '../pages/student/Profile'
 import Classes from '../pages/student/Classes'
 import ClassDetail from '../pages/student/ClassDetail'
 import ClassPackageLessons from '../pages/student/ClassPackageLessons'
+import PracticeLesson from '../pages/student/PracticeLesson'
+import LessonModeSelect from '../pages/student/LessonModeSelect'
 import StudentSessions from '../pages/student/Sessions'
 import FreeLessonSelect from '../pages/student/FreeLessonSelect'
 import { AudioJournal, DrawingJournal } from '../pages/student/JournalMedia'
@@ -86,6 +88,8 @@ export default function AppRouter() {
       <Route path="/student/sessions" element={<StudentSessions />} />
       <Route path="/student/class/:classId" element={<ClassDetail />} />
       <Route path="/student/class/:classId/package/:packageSlug" element={<ClassPackageLessons />} />
+      <Route path="/student/class/:classId/lesson/:lessonId/practice" element={<PracticeLesson />} />
+      <Route path="/student/class/:classId/lesson/:lessonId" element={<LessonModeSelect />} />
       <Route path="/student/calibration" element={<StudentCalibration />} />
       <Route path="/student/eeg-diagnostics" element={<EEGDiagnostics />} />
       <Route path="/student/hardware-required" element={<HardwareRequired />} />

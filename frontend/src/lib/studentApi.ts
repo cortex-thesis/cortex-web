@@ -45,8 +45,8 @@ export function classPresentation(item: StudentClass) {
 
 export const getStudentDashboard = () => api<DashboardData>('/student/dashboard/')
 export const getStudentClasses = () => api<{ classes: StudentClass[] }>('/classes/')
-export const getStudentClass = (id: string) => api<StudentClass & { activities: Array<{ id: string; title: string; done: boolean }> }>(`/classes/${id}/`)
-export const getStudentClassPackage = (classId: string, packageSlug: string) => api<{ class: StudentClass; package: StudentPackage; lessons: StudentLesson[] }>(`/student/classes/${classId}/packages/${packageSlug}/`)
+export const getStudentClass = (id: string) => api<StudentClass>(`/classes/${id}/?summary=1`)
+export const getStudentClassPackage = (classId: string, packageSlug: string) => api<{ class: StudentClass; package: StudentPackage; lessons: StudentLesson[] }>(`/student/classes/${classId}/packages/${packageSlug}/`, { cache: 'no-store' })
 export const getStudentSessions = () => api<StudentSessionsData>('/student/sessions/')
 export const startStudentSession = (data: { class_id: number; lesson_id?: number; control_mode: 'teacher' | 'free' }) =>
   api<{ id: string; class_id: number; lesson_id: number | null; control_mode: string; started_at: string }>('/sessions/start/', { method: 'POST', body: JSON.stringify(data) })

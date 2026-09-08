@@ -181,6 +181,16 @@
   .packageGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+.lessonRow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.lessonProgress { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; color: var(--color-interface-purple); font-size: 13px; }
+.progressNotStarted { display: inline-flex; align-items: center; gap: 8px; color: #92909b; }
+.progressComplete { color: #26855c; }
+.lessonRow > .lessonCard { flex: 1; min-width: min(100%, 280px); }
+.sessionButton { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 16px; background: var(--color-white); color: var(--color-interface-purple); cursor: pointer; font: inherit; }
+.practiceActions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.practiceActions > .lessonCard { width: auto; }
+.practiceActions > .lessonCard:disabled { opacity: .5; cursor: not-allowed; }
+
 @media (max-width: 680px) {
   .page { padding-inline: var(--space-4); }
   .packageGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -837,6 +837,16 @@ class JournalEntry(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class LessonPracticeProgress(TimeStampedModel):
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='lesson_practice_progress')
+    school_class = models.ForeignKey(SchoolClass, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    completed_slide_ids = models.JSONField(default=list)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=('student', 'school_class', 'lesson'), name='unique_student_class_practice')]
+
+
 class DataLifecycleRequest(TimeStampedModel):
     class RequestType(models.TextChoices):
         EXPORT = "export", "Export"

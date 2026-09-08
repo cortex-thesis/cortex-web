@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { User } from '../types'
-import { api, primeApiCache } from '../lib/api'
+import { api, clearApiCache, primeApiCache } from '../lib/api'
 import type { TeacherDashboardData } from '../lib/teacherApi'
 import type { DashboardData, StudentLesson } from '../lib/studentApi'
 import type { CurriculumPackage } from '../constants/states'
@@ -67,7 +67,7 @@ function primeStudentBootstrap(bootstrap: StudentBootstrapData) {
   primeApiCache('/student/preferences/', bootstrap.preferences)
   primeApiCache('/student/profile/', bootstrap.profile)
   for (const classItem of bootstrap.dashboard.classes) {
-    primeApiCache(`/classes/${classItem.id}/`, classItem)
+    primeApiCache(`/classes/${classItem.id}/?summary=1`, classItem)
     for (const packageItem of classItem.packages) {
       primeApiCache(`/student/classes/${classItem.id}/packages/${packageItem.slug}/`, {
         class: classItem,
@@ -88,6 +88,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   error: null,
 
   initialize: async () => {
+    clearApiCache()
     try {
       const [, authUser] = await Promise.all([api('/auth/csrf/'), api<AuthUser>('/auth/me/')])
       if (authUser.student_bootstrap) primeStudentBootstrap(authUser.student_bootstrap)
@@ -99,6 +100,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       storeUser(user)
       set({ user, isAuthenticated: true, isInitialized: true })
     } catch {
+      clearApiCache()
       storeUser(null)
       set({ user: null, isAuthenticated: false, isInitialized: true })
     }
@@ -114,19 +116,6 @@ export const useAuthStore = create<AuthState>()((set) => ({
       if (response.dashboard) {
         primeApiCache('/teacher/dashboard/', response.dashboard)
         primeApiCache('/classes/', { classes: response.dashboard.classes })
-        const classRequests = response.dashboard.classes.flatMap((item) => [
-          api(`/classes/${item.id}/`),
-          api(`/teacher/classes/${item.id}/analytics/`),
-          api(`/teacher/journals/?class_id=${item.id}`),
-        ])
-        await Promise.allSettled([
-          api('/teacher/journals/'),
-          api('/teacher/notifications/'),
-          api('/teacher/preferences/'),
-          api('/teacher/profile/'),
-          api('/teacher/students/'),
-          ...classRequests,
-        ])
       }
       if (response.student_bootstrap) {
         primeStudentBootstrap(response.student_bootstrap)

@@ -32,8 +32,8 @@ export default function Classes() {
       <div className={styles.topBar}>
         <button
           className={styles.backBtn}
-          onClick={() => navigate(-1)}
-          aria-label="Go back"
+          onClick={() => navigate('/student/home', { replace: true })}
+          aria-label="Back to home"
         >
           <ChevronLeft size={18} strokeWidth={1.75} />
         </button>

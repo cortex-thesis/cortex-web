@@ -17,6 +17,7 @@ interface TaskCardProps {
   nudgeText?: string
   showNudge?: boolean
   className?: string
+  showProgress?: boolean
   deliveryStrategy?: 'steady_instruction' | 'attention_reengagement' | 'gentle_reactivation' | 'sensory_cooldown'
 }
 
@@ -26,6 +27,7 @@ function TaskCard({
   nudgeText = 'Focus music playing softly. Keep going!',
   showNudge = false,
   className,
+  showProgress = true,
   deliveryStrategy = 'steady_instruction',
 }: TaskCardProps) {
   const [selected, setSelected] = useState<string | null>(null)
@@ -36,7 +38,6 @@ function TaskCard({
   function handleInteraction(correct: boolean, response: string) {
     setInteractionResult(correct ? 'correct' : 'incorrect')
     onAnswered?.(correct, response)
-    if (!correct) setTimeout(() => setInteractionResult(null), 900)
   }
 
   function handleSelect(choice: string) {
@@ -112,12 +113,12 @@ function TaskCard({
 
   return (
     <div className={`${styles.card} ${styles[deliveryStrategy]} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy}>
-      <ProgressBar
+      {showProgress && <ProgressBar
         value={progress}
         state="focused"
         size="xs"
         ariaLabel={`Task ${task.index} of ${task.total}`}
-      />
+      />}
 
       <div className={styles.contentHeading}>
         <div><span className={styles.typeLabel}>{templateLabel}</span><h2>{task.title}</h2></div>
@@ -132,22 +133,10 @@ function TaskCard({
         </div>
       )}
 
-      <div className={styles.meta}>
-        <span className={styles.counter}>
-          Task {task.index} of {task.total}
-          {task.package && (
-            <span className={styles.package}>
-              {' '}
-              — {task.package.replace('_', ' ')}
-            </span>
-          )}
-        </span>
-      </div>
-
       {hasTaskInteraction ? (
         <>
           <p className={styles.question}>{task.question}</p>
-          <TaskInteraction task={task} onAnswered={handleInteraction} />
+          <TaskInteraction task={task} onAnswered={handleInteraction} onChanged={() => { setInteractionResult(null); onAnswered?.(false, '') }} />
           {interactionResult && <div className={`${styles.feedback} ${styles[interactionResult]}`} role="status">{interactionResult === 'correct' ? (task.correctFeedback ?? 'Nice work! You found it.') : (task.retryFeedback ?? 'Almost. Try another move.')}</div>}
         </>
       ) : isKnowledgeCheck ? (

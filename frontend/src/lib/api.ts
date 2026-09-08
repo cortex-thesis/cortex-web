@@ -1,10 +1,10 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
-// Keep preloaded workspace data for a full login day. Mutations and logout clear
-// this cache immediately, so normal changes still force fresh server data.
-const GET_CACHE_TTL_MS = 12 * 60 * 60_000
-const SESSION_CACHE_PREFIX = 'cortex-api-v2:'
+// Briefly reuse navigation data; never keep another user's changes hidden all day.
+const GET_CACHE_TTL_MS = 30_000
+const SESSION_CACHE_PREFIX = 'cortex-api-v3:'
 const getCache = new Map<string, { expiresAt: number; value: unknown }>()
 const pendingGets = new Map<string, Promise<unknown>>()
+let cacheGeneration = 0
 
 export class ApiError extends Error {
   status: number
@@ -22,6 +22,8 @@ function csrfToken(): string {
 
 export function cachedApiValue<T>(path: string): T | undefined {
   if (path.startsWith('/auth/')) return undefined
+  const memory = getCache.get(path)
+  if (memory && memory.expiresAt > Date.now()) return memory.value as T
   try {
     const raw = localStorage.getItem(`${SESSION_CACHE_PREFIX}${path}`)
     if (!raw) return undefined
@@ -36,11 +38,16 @@ export function cachedApiValue<T>(path: string): T | undefined {
   }
 }
 
-function clearSessionCache() {
-  for (let index = localStorage.length - 1; index >= 0; index -= 1) {
-    const key = localStorage.key(index)
-    if (key?.startsWith(SESSION_CACHE_PREFIX)) localStorage.removeItem(key)
-  }
+export function clearApiCache() {
+  cacheGeneration += 1
+  getCache.clear()
+  pendingGets.clear()
+  try {
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index)
+      if (key?.startsWith('cortex-api-')) localStorage.removeItem(key)
+    }
+  } catch { /* Storage may be unavailable. */ }
 }
 
 export function primeApiCache(path: string, value: unknown) {
@@ -53,31 +60,34 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   const headers = new Headers(options.headers)
   const method = (options.method ?? 'GET').toUpperCase()
   const isProfileRequest = path === '/student/profile/' || path === '/teacher/profile/'
-  if (method === 'GET' && !isProfileRequest) {
+  const cacheable = method === 'GET' && !isProfileRequest && !path.startsWith('/auth/') && options.cache !== 'no-store'
+  if (cacheable) {
     const cached = getCache.get(path)
     if (cached && cached.expiresAt > Date.now()) return cached.value as T
     const stored = cachedApiValue<T>(path)
     if (stored !== undefined) {
-      getCache.set(path, { expiresAt: Date.now() + GET_CACHE_TTL_MS, value: stored })
       return stored
     }
+  }
+  if (method === 'GET' && !options.signal) {
     const pending = pendingGets.get(path)
     if (pending) return pending as Promise<T>
-  } else {
+  } else if (method !== 'GET') {
     // Mutations can affect dashboard counts, rosters, notifications, and profiles.
-    getCache.clear()
-    clearSessionCache()
+    clearApiCache()
   }
+  const generation = cacheGeneration
   const request = performRequest<T>(path, options, headers, method)
-  if (method !== 'GET') return request
-  pendingGets.set(path, request)
+  if (method !== 'GET') {
+    try { return await request } finally { clearApiCache() }
+  }
+  if (!options.signal) pendingGets.set(path, request)
   try {
     const value = await request
-    if (!path.startsWith('/auth/') && !isProfileRequest) primeApiCache(path, value)
-    else getCache.set(path, { expiresAt: Date.now() + GET_CACHE_TTL_MS, value })
+    if (cacheable && generation === cacheGeneration) primeApiCache(path, value)
     return value
   } finally {
-    pendingGets.delete(path)
+    if (pendingGets.get(path) === request) pendingGets.delete(path)
   }
 }
 

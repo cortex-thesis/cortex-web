@@ -1,0 +1,709 @@
+[
+  {
+    "lesson_id": "ENRICH-01",
+    "title": "Different Kinds of Talents and Skills",
+    "competency_code": "ENRICH-01",
+    "description": "Integrated enrichment lesson for student practice and teacher review.",
+    "slides": [
+      {
+        "title": "Express & Discover: Talent Gallery",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "People can create, perform, participate, and develop abilities in different ways.",
+          "steps": [
+            {
+              "id": "music",
+              "title": "Music Studio",
+              "description": "Singing and playing instruments.",
+              "image_url": "/assets/pre-vocational/common/music.png",
+              "alt_text": "Music symbol"
+            },
+            {
+              "id": "visual",
+              "title": "Creative Space",
+              "description": "Drawing, painting, and creating visual work.",
+              "image_url": "/assets/pre-vocational/common/drawing-interest.png",
+              "alt_text": "Person drawing"
+            },
+            {
+              "id": "performance",
+              "title": "Performance Space",
+              "description": "Performing arts and expressive participation.",
+              "image_url": "/assets/pre-vocational/common/movie-recreation.png",
+              "alt_text": "Performance reel"
+            },
+            {
+              "id": "sports",
+              "title": "Sports Area",
+              "description": "Physical and sport skills. PNG/video needed.",
+              "alt_text": "Sports activity placeholder"
+            }
+          ],
+          "action_label": "Enter the gallery",
+          "layout": {
+            "size": "wide",
+            "preferred_columns": 4
+          }
+        }
+      },
+      {
+        "title": "Explore Different Talent Areas",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "Short locally validated demonstrations are still needed for each gallery space.",
+          "steps": [
+            {
+              "id": "sing",
+              "title": "Make music",
+              "description": "Use the voice or an instrument.",
+              "image_url": "/assets/pre-vocational/common/music.png",
+              "alt_text": "Music"
+            },
+            {
+              "id": "create",
+              "title": "Create visual art",
+              "description": "Draw, paint, design, or make a handicraft.",
+              "image_url": "/assets/pre-vocational/common/handicrafts.png",
+              "alt_text": "Handicraft materials"
+            },
+            {
+              "id": "perform",
+              "title": "Perform",
+              "description": "Use movement, theater, or another approved performance form.",
+              "image_url": "/assets/pre-vocational/common/movie-recreation.png",
+              "alt_text": "Performance"
+            },
+            {
+              "id": "move",
+              "title": "Participate in sport",
+              "description": "Develop approved physical or sport skills."
+            }
+          ],
+          "action_label": "Continue",
+          "layout": {
+            "size": "wide",
+            "preferred_columns": 4
+          }
+        }
+      },
+      {
+        "title": "Identify the Talent Area",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "Identify what the person is doing rather than ranking the talent.",
+          "steps": [
+            {
+              "id": "instrument",
+              "title": "Playing an instrument → Music",
+              "image_url": "/assets/pre-vocational/common/music.png",
+              "alt_text": "Musical activity"
+            },
+            {
+              "id": "drawing",
+              "title": "Creating a drawing → Visual Arts",
+              "image_url": "/assets/pre-vocational/common/drawing-interest.png",
+              "alt_text": "Drawing activity"
+            }
+          ],
+          "action_label": "Try sorting"
+        }
+      },
+      {
+        "title": "Talent Sort",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Sort each activity into the taught talent or skill area.",
+          "choices": [],
+          "answer": "",
+          "task_template": "sort_groups",
+          "items": [
+            {
+              "id": "singing",
+              "label": "Singing",
+              "image_url": "/assets/pre-vocational/common/music.png"
+            },
+            {
+              "id": "painting",
+              "label": "Creating a painting",
+              "image_url": "/assets/pre-vocational/common/drawing-interest.png"
+            },
+            {
+              "id": "acting",
+              "label": "Performing in a scene",
+              "image_url": "/assets/pre-vocational/common/movie-recreation.png"
+            },
+            {
+              "id": "sport",
+              "label": "Participating in a sport"
+            }
+          ],
+          "categories": [
+            {
+              "id": "music",
+              "label": "Music"
+            },
+            {
+              "id": "visual",
+              "label": "Visual Arts"
+            },
+            {
+              "id": "performing",
+              "label": "Performing Arts"
+            },
+            {
+              "id": "sports",
+              "label": "Sports"
+            }
+          ],
+          "sort_answers": {
+            "singing": "music",
+            "painting": "visual",
+            "acting": "performing",
+            "sport": "sports"
+          },
+          "correct_feedback": "Correct. You identified different talent and skill areas.",
+          "retry_feedback": "Look at whether the person is making music, creating art, performing, or participating in sport.",
+          "layout": {
+            "size": "wide",
+            "preferred_columns": 4
+          }
+        }
+      },
+      {
+        "title": "More Than One Skill",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Can one activity involve more than one skill?",
+          "choices": [
+            "Yes",
+            "No"
+          ],
+          "answer": "Yes",
+          "task_template": "yes_no",
+          "correct_feedback": "Correct. Activities may combine several abilities.",
+          "retry_feedback": "Think about a performance that uses movement, timing, and cooperation."
+        }
+      },
+      {
+        "title": "Which Area Is Shown?",
+        "type": "interactive",
+        "configuration": {
+          "image_url": "/assets/pre-vocational/common/music.png",
+          "question": "A person is playing a musical instrument. Which area is shown?",
+          "choices": [
+            "Music",
+            "Visual Arts",
+            "Sports"
+          ],
+          "answer": "Music",
+          "task_template": "multiple_choice",
+          "correct_feedback": "Correct. Playing an instrument is a music skill.",
+          "retry_feedback": "Look at what the person is using to create sound."
+        }
+      },
+      {
+        "title": "An Area I Would Like to Explore",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Choose one or more areas you would like to explore.",
+          "choices": [],
+          "answer": "",
+          "task_template": "picture_choice",
+          "selection_mode": "multiple",
+          "scored": false,
+          "items": [
+            {
+              "id": "music",
+              "label": "Music",
+              "image_url": "/assets/pre-vocational/common/music.png"
+            },
+            {
+              "id": "arts",
+              "label": "Arts",
+              "image_url": "/assets/pre-vocational/common/handicrafts.png"
+            },
+            {
+              "id": "sports",
+              "label": "Sports"
+            },
+            {
+              "id": "other",
+              "label": "Another activity I enjoy"
+            }
+          ],
+          "correct_item_ids": [],
+          "correct_feedback": "Your interests have been saved for exploration.",
+          "retry_feedback": "Choose any area you would like to explore.",
+          "content_description": "Preference responses are not verified talents or scored answers.",
+          "layout": {
+            "size": "wide",
+            "preferred_columns": 4
+          }
+        }
+      },
+      {
+        "title": "Talent Gallery Explored",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "No type of talent is presented as better than another.",
+          "steps": [
+            {
+              "id": "summary",
+              "title": "Many ways to participate and create",
+              "description": "People can develop talents and skills in different areas.",
+              "image_url": "/assets/pre-vocational/common/skills.png",
+              "alt_text": "Different skills"
+            }
+          ],
+          "action_label": "Finish gallery"
+        }
+      }
+    ]
+  },
+  {
+    "lesson_id": "ENRICH-02",
+    "title": "My Music Skills",
+    "competency_code": "ENRICH-02",
+    "description": "Integrated enrichment lesson for student practice and teacher review.",
+    "slides": [
+      {
+        "title": "My Music Studio",
+        "type": "audio",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "content_label": "Audio needed: brief approved music sample",
+          "content_description": "How might a person participate in making music?",
+          "duration_seconds": 12,
+          "action_label": "Enter the studio"
+        }
+      },
+      {
+        "title": "Ways to Make Music",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "People may participate through voice, instruments, and appropriate group music activities.",
+          "steps": [
+            {
+              "id": "voice",
+              "title": "Singing",
+              "description": "Use the voice to make music.",
+              "image_url": "/assets/pre-vocational/common/music.png",
+              "alt_text": "Music and singing"
+            },
+            {
+              "id": "instrument",
+              "title": "Playing an instrument",
+              "description": "Use an approved instrument to make music.",
+              "image_url": "/assets/pre-vocational/common/music.png",
+              "alt_text": "Musical instrument"
+            }
+          ],
+          "action_label": "Visit the stations"
+        }
+      },
+      {
+        "title": "Station 1: Voice",
+        "type": "video",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "instructional_video",
+          "content_label": "Video needed: brief age-respectful singing demonstration",
+          "content_description": "Learners may participate through an appropriate alternative communication or music mode.",
+          "duration_seconds": 25,
+          "action_label": "Continue"
+        }
+      },
+      {
+        "title": "Station 2: Instrument",
+        "type": "video",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "instructional_video",
+          "content_label": "Video needed: familiar approved instrument demonstration",
+          "content_description": "Tapping an on-screen instrument does not prove instrumental proficiency.",
+          "duration_seconds": 25,
+          "action_label": "Continue"
+        }
+      },
+      {
+        "title": "Station 3: Follow the Sound",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Follow the short pattern: tap, tap, pause, tap.",
+          "choices": [],
+          "answer": "",
+          "task_template": "sequence_order",
+          "items": [
+            {
+              "id": "tap-1",
+              "label": "Tap"
+            },
+            {
+              "id": "tap-2",
+              "label": "Tap"
+            },
+            {
+              "id": "pause",
+              "label": "Pause"
+            },
+            {
+              "id": "tap-3",
+              "label": "Tap"
+            }
+          ],
+          "correct_order": [
+            "tap-1",
+            "tap-2",
+            "pause",
+            "tap-3"
+          ],
+          "correct_feedback": "You followed the pattern.",
+          "retry_feedback": "Listen again and follow one sound at a time.",
+          "content_description": "Audio pattern needed; one trial must not be used as a talent rating."
+        }
+      },
+      {
+        "title": "What Music Skill Is This?",
+        "type": "interactive",
+        "configuration": {
+          "image_url": "/assets/pre-vocational/common/music.png",
+          "question": "A person is using their voice to make music. Which skill is shown?",
+          "choices": [
+            "Singing",
+            "Painting",
+            "Gardening"
+          ],
+          "answer": "Singing",
+          "task_template": "multiple_choice",
+          "correct_feedback": "Correct. The person is using their voice to sing.",
+          "retry_feedback": "Is the person using their voice, creating visual art, or gardening?"
+        }
+      },
+      {
+        "title": "My Music Skill Board",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Place the activities where they fit for you. There are no wrong personal responses.",
+          "choices": [],
+          "answer": "",
+          "task_template": "sort_groups",
+          "scored": false,
+          "items": [
+            {
+              "id": "sing",
+              "label": "Singing"
+            },
+            {
+              "id": "instrument",
+              "label": "Playing an instrument"
+            },
+            {
+              "id": "pattern",
+              "label": "Following a simple pattern"
+            },
+            {
+              "id": "group",
+              "label": "Participating with others"
+            }
+          ],
+          "categories": [
+            {
+              "id": "can",
+              "label": "I can do this"
+            },
+            {
+              "id": "practise",
+              "label": "I am practising this"
+            },
+            {
+              "id": "try",
+              "label": "I would like to try this"
+            }
+          ],
+          "sort_answers": {},
+          "correct_feedback": "Your music reflection has been saved.",
+          "retry_feedback": "Place each activity in the category that fits you.",
+          "content_description": "Teacher observation may supplement this non-scored self-reflection.",
+          "layout": {
+            "size": "wide"
+          }
+        }
+      },
+      {
+        "title": "Music Studio Session Complete",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "Participation and teacher observation provide better evidence than screen selection alone.",
+          "steps": [
+            {
+              "id": "summary",
+              "title": "Listen, try, notice, choose",
+              "description": "Music skills can be explored through participation and practice.",
+              "image_url": "/assets/pre-vocational/common/music.png",
+              "alt_text": "Music"
+            }
+          ],
+          "action_label": "Finish studio"
+        }
+      }
+    ]
+  },
+  {
+    "lesson_id": "ENRICH-03",
+    "title": "Move to the Beat",
+    "competency_code": "ENRICH-03",
+    "description": "Integrated enrichment lesson for student practice and teacher review.",
+    "slides": [
+      {
+        "title": "Move Lab: Check Before Moving",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Has a teacher confirmed that the movement is appropriate and the space is clear?",
+          "choices": [
+            "Yes",
+            "No"
+          ],
+          "answer": "Yes",
+          "task_template": "yes_no",
+          "correct_feedback": "Ready. Use the approved movement or an appropriate adapted version.",
+          "retry_feedback": "Pause and ask the teacher to confirm movement readiness and safe space.",
+          "content_description": "Teacher confirmation is required before physical participation."
+        }
+      },
+      {
+        "title": "Watch the Whole Movement",
+        "type": "video",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "instructional_video",
+          "content_label": "Video needed: full teacher-approved movement sequence",
+          "content_description": "Watch first. Notice where and how the demonstrator moves.",
+          "duration_seconds": 35,
+          "action_label": "I watched first"
+        }
+      },
+      {
+        "title": "Break It Down",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "Movement videos/cards needed after Panorama approves the accessible movement set.",
+          "steps": [
+            {
+              "id": "one",
+              "title": "Movement 1",
+              "description": "Watch at normal and slow speed, then try an appropriate version."
+            },
+            {
+              "id": "two",
+              "title": "Movement 2",
+              "description": "Watch, replay if needed, then try."
+            },
+            {
+              "id": "three",
+              "title": "Movement 3 — if appropriate",
+              "description": "Include only when approved for the learner and sequence."
+            }
+          ],
+          "action_label": "Start mirror practice",
+          "layout": {
+            "size": "wide",
+            "preferred_columns": 3
+          }
+        }
+      },
+      {
+        "title": "Mirror Practice",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "The screen coaches while the learner performs away from the primary interaction surface.",
+          "steps": [
+            {
+              "id": "watch",
+              "title": "Watch",
+              "description": "View one movement demonstration."
+            },
+            {
+              "id": "turn",
+              "title": "Your turn",
+              "description": "Try the approved or adapted movement."
+            },
+            {
+              "id": "next",
+              "title": "Ready for next?",
+              "description": "Replay or continue when ready."
+            }
+          ],
+          "action_label": "Continue",
+          "layout": {
+            "size": "wide",
+            "preferred_columns": 3
+          }
+        }
+      },
+      {
+        "title": "Put the Movements Together",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Arrange the approved movement cards in the demonstrated order.",
+          "choices": [],
+          "answer": "",
+          "task_template": "sequence_order",
+          "items": [
+            {
+              "id": "move-1",
+              "label": "Movement 1"
+            },
+            {
+              "id": "move-2",
+              "label": "Movement 2"
+            },
+            {
+              "id": "move-3",
+              "label": "Movement 3"
+            }
+          ],
+          "correct_order": [
+            "move-1",
+            "move-2",
+            "move-3"
+          ],
+          "correct_feedback": "Correct. You arranged the demonstrated movements in order.",
+          "retry_feedback": "Replay the demonstration and watch what comes next.",
+          "content_description": "PLACEHOLDER: cards and final order depend on the approved movement sequence."
+        }
+      },
+      {
+        "title": "Your Turn: Perform",
+        "type": "video",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "instructional_video",
+          "content_label": "Teacher-observed performance checkpoint",
+          "content_description": "Perform the approved sequence independently or with appropriate prompts/support. Screen completion alone is not mastery.",
+          "duration_seconds": 45,
+          "action_label": "Teacher records observation"
+        }
+      },
+      {
+        "title": "A Movement I Enjoyed",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Choose one approved movement you enjoyed or would like to repeat.",
+          "choices": [],
+          "answer": "",
+          "task_template": "picture_choice",
+          "scored": false,
+          "items": [
+            {
+              "id": "move-1",
+              "label": "Movement 1"
+            },
+            {
+              "id": "move-2",
+              "label": "Movement 2"
+            },
+            {
+              "id": "move-3",
+              "label": "Movement 3"
+            },
+            {
+              "id": "pause",
+              "label": "I would like to pause"
+            }
+          ],
+          "correct_item_ids": [],
+          "correct_feedback": "Your choice has been saved.",
+          "retry_feedback": "Choose a movement or the option to pause.",
+          "content_description": "This preference is non-scored, and adapted/seated participation may be used when approved.",
+          "layout": {
+            "size": "wide",
+            "preferred_columns": 4
+          }
+        }
+      },
+      {
+        "title": "Move Lab Complete",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "content_description": "Movement-contaminated EEG is not reliable evidence of distraction or overstimulation; teacher override is especially important.",
+          "steps": [
+            {
+              "id": "summary",
+              "title": "Watch, practise, sequence, perform",
+              "description": "Actual appropriately supported movement is the primary competency evidence."
+            }
+          ],
+          "action_label": "Finish lab"
+        }
+      }
+    ]
+  }
+]
