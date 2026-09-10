@@ -243,6 +243,44 @@ class WorkflowTests(TestCase):
         response = self.client.post("/api/sessions/start/", data=json.dumps({"class_id": school_class.pk}), content_type="application/json")
         self.assertEqual(response.status_code, 403)
 
+    def test_package_progress_counts_unique_slides_and_sorts_recent_activity(self):
+        from .models import LessonPracticeProgress
+        packages = [CurriculumPackage.objects.get_or_create(slug=slug, defaults={"name": slug})[0]
+                    for slug in ("care", "life", "pre_vocational", "livelihood", "functional_academics", "career", "enrichment")]
+        school_class = SchoolClass.objects.create(name="Progress", code="PROG1", teacher=self.teacher)
+        lessons = [Lesson.objects.create(package=package, title=package.name, created_by=self.teacher, status=Lesson.Status.APPROVED) for package in packages[:2]]
+        slides = [Slide.objects.create(lesson=lessons[0], position=i, title=str(i), activity=Activity.objects.create(type=Activity.ActivityType.INTERACTIVE, title=str(i))) for i in range(2)]
+        old = timezone.now() - timedelta(days=1)
+        progress = LessonPracticeProgress.objects.create(student=self.student, school_class=school_class, lesson=lessons[0], completed_slide_ids=[slides[0].pk, 999999])
+        LessonPracticeProgress.objects.filter(pk=progress.pk).update(updated_at=old)
+        session = LearningSession.objects.create(student=self.student, school_class=school_class, lesson=lessons[0])
+        LearningSession.objects.filter(pk=session.pk).update(started_at=old, ended_at=old)
+        SessionSlideExposure.objects.create(session=session, slide=slides[0], entered_at=old, exited_at=old)
+        LessonPracticeProgress.objects.create(student=self.other_student, school_class=school_class, lesson=lessons[0], completed_slide_ids=[slides[1].pk])
+        LearningSession.objects.create(student=self.student, school_class=school_class, lesson=lessons[1])
+        self._login(self.student)
+        response = self.client.get("/api/student/package-progress/")
+        self.assertEqual(response.status_code, 200)
+        items = response.json()["packages"]
+        self.assertEqual(len(items), 7)
+        self.assertEqual([item["slug"] for item in items[:2]], ["life", "care"])
+        self.assertEqual(response.json()["completed_lessons"], 0)
+        self.assertFalse(items[1]["is_completed"])
+        progress.completed_slide_ids = [slide.pk for slide in slides]
+        progress.save()
+        earned = self.client.get("/api/student/package-progress/").json()
+        self.assertEqual(earned["completed_lessons"], 1)
+        self.assertIn("lessons-1", earned["badge_unlocks"])
+        self.assertIn("care", earned["badge_unlocks"])
+        self.assertNotIn("lessons-3", earned["badge_unlocks"])
+        progress.save()
+        refreshed = self.client.get("/api/student/package-progress/").json()
+        self.assertEqual(refreshed["badge_unlocks"], earned["badge_unlocks"])
+        self.assertTrue(next(item for item in earned["packages"] if item["slug"] == "care")["is_completed"])
+        self.assertEqual(items[1]["percentage"], 50)
+        self.assertEqual(items[0]["percentage"], 0)
+        self.assertIsNone(items[-1]["last_interacted_at"])
+
     def test_student_sessions_returns_only_owned_history_and_summary(self):
         school_class = SchoolClass.objects.create(name="Life Skills", code="HIST1", teacher=self.teacher)
         other_class = SchoolClass.objects.create(name="Other Class", code="HIST2", teacher=self.teacher)
@@ -423,11 +461,33 @@ class WorkflowTests(TestCase):
         self.assertEqual(self.student.user.first_name, "Updated")
         self.assertEqual(self.student.user.last_name, "Student")
 
+    def test_registration_lists_all_schools_without_contact_details(self):
+        school = School.objects.create(name="Registered School", contact_email="office@example.test")
+        inactive = School.objects.create(name="Inactive School", is_active=False)
+        response = self.client.get("/api/auth/schools/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["schools"], [
+            {"id": str(inactive.pk), "name": inactive.name},
+            {"id": str(school.pk), "name": school.name},
+        ])
+
+    def test_registration_rejects_missing_or_invalid_school(self):
+        for school_id in (None, "invalid", "00000000-0000-0000-0000-000000000000"):
+            response = self.client.post("/api/auth/register/", data=json.dumps({
+                "username": "invalid-school", "school_id": school_id,
+                "password": "a-very-long-test-password", "confirm_password": "a-very-long-test-password",
+                "name": "Student",
+            }), content_type="application/json")
+            self.assertEqual(response.status_code, 400)
+        self.assertFalse(User.objects.filter(username="invalid-school").exists())
+
     def test_public_registration_is_available_without_authentication(self):
+        school = School.objects.create(name="Registration School", contact_email="office@example.test")
         response = self.client.post(
             "/api/auth/register/",
             data=json.dumps({
                 "username": "newstudent",
+                "school_id": str(school.pk),
                 "email": "newstudent@example.test",
                 "password": "a-very-long-test-password",
                 "name": "New Student",
@@ -439,9 +499,9 @@ class WorkflowTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
-        self.assertTrue(User.objects.filter(username="newstudent", email="newstudent@example.test").exists())
-        self.assertTrue(Profile.objects.filter(user__username="newstudent", role=Profile.Role.STUDENT).exists())
-        login = self.client.post("/api/auth/login/", data=json.dumps({"email": "newstudent@example.test", "password": "a-very-long-test-password"}), content_type="application/json")
+        self.assertTrue(User.objects.filter(username="newstudent", email="office@example.test").exists())
+        self.assertTrue(Profile.objects.filter(user__username="newstudent", role=Profile.Role.STUDENT, school=school).exists())
+        login = self.client.post("/api/auth/login/", data=json.dumps({"username": "newstudent", "password": "a-very-long-test-password"}), content_type="application/json")
         self.assertEqual(login.status_code, 200)
 
     def test_student_joins_class_and_receives_notification(self):
@@ -574,10 +634,11 @@ class WorkflowTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_public_teacher_registration_requires_school_admin_approval(self):
+        school = School.objects.create(name="Teacher School", contact_email="office@example.test")
         response = self.client.post(
             "/api/auth/register/",
             data=json.dumps({
-                "username": "pending-teacher", "email": "pending@example.test",
+                "username": "pending-teacher", "school_id": str(school.pk),
                 "password": "a-very-long-test-password", "confirm_password": "a-very-long-test-password",
                 "name": "Pending Teacher", "role": Profile.Role.TEACHER,
             }),
@@ -588,7 +649,7 @@ class WorkflowTests(TestCase):
         self.assertEqual(pending.account_status, Profile.AccountStatus.PENDING)
         denied = self.client.post(
             "/api/auth/login/",
-            data=json.dumps({"email": "pending@example.test", "password": "a-very-long-test-password"}),
+            data=json.dumps({"username": "pending-teacher", "password": "a-very-long-test-password"}),
             content_type="application/json",
         )
         self.assertEqual(denied.status_code, 403)

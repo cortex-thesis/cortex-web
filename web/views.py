@@ -26,7 +26,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import (
-    LessonPracticeProgress,
+    LessonPracticeProgress, StudentBadge,
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
     DataLifecycleRequest, EEGDevice, Enrollment, Intervention, InterventionAlert, JournalEntry,
     LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
@@ -771,12 +771,22 @@ def content_assignment(request, lesson_id):
     return JsonResponse({"id": assignment.pk, "lesson_id": lesson.pk, "class_id": school_class.pk, "student_id": student.pk if student else None}, status=201)
 
 
+@require_http_methods(["GET"])
+def registration_schools(request):
+    schools = School.objects.order_by("name", "id").values("id", "name")
+    return JsonResponse({"schools": list(schools)})
+
+
 @require_POST
 def register(request):
     try:
         data = _body(request)
         username = str(data["username"]).strip()
-        email = str(data.get("email") or "").strip()
+        try:
+            school = School.objects.get(pk=data.get("school_id"))
+        except (School.DoesNotExist, ValidationError, ValueError, TypeError):
+            return JsonResponse({"detail": "Choose a registered school."}, status=400)
+        email = school.contact_email
         password = str(data["password"])
         confirm_password = str(data.get("confirm_password") or "")
         name = str(data["name"]).strip()
@@ -790,7 +800,7 @@ def register(request):
         with transaction.atomic():
             user = User.objects.create_user(username=username, email=email or None, password=password)
             status = Profile.AccountStatus.PENDING if role == Profile.Role.TEACHER else Profile.AccountStatus.ACTIVE
-            profile = Profile.objects.create(user=user, role=role, display_name=name, account_status=status)
+            profile = Profile.objects.create(user=user, role=role, display_name=name, account_status=status, school=school)
         _audit(profile, "account_created", profile, {"role": role})
         return JsonResponse(_profile_data(profile), status=201)
     except (KeyError, ValueError):
@@ -1863,6 +1873,72 @@ def _student_session_data(session, now):
         "tasks_total": session.tasks_total,
         "state_distribution": state_distribution,
     }
+
+
+@require_http_methods(["GET"])
+def student_package_progress(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
+    totals = {package.pk: set() for package in packages}
+    completed = {package.pk: set() for package in packages}
+    recent = {}
+    lesson_slides = {}
+    completed_at = {}
+
+    def record_completion(slide_id, timestamp):
+        if slide_id not in completed_at or timestamp < completed_at[slide_id]:
+            completed_at[slide_id] = timestamp
+    for slide_id, package_id, lesson_id in Slide.objects.filter(
+        lesson__package__is_active=True, lesson__status=Lesson.Status.APPROVED,
+        lesson__archived_at__isnull=True,
+    ).values_list("id", "lesson__package_id", "lesson_id"):
+        totals[package_id].add(slide_id)
+        lesson_slides.setdefault((package_id, lesson_id), set()).add(slide_id)
+
+    def touch(package_id, timestamp):
+        if timestamp and (package_id not in recent or timestamp > recent[package_id]):
+            recent[package_id] = timestamp
+
+    for progress in LessonPracticeProgress.objects.filter(student=profile).select_related("lesson"):
+        package_id = progress.lesson.package_id
+        if package_id in completed:
+            completed[package_id].update(progress.completed_slide_ids)
+            for slide_id in progress.completed_slide_ids:
+                record_completion(slide_id, progress.updated_at)
+            touch(package_id, progress.updated_at)
+    for package_id, started, ended in LearningSession.objects.filter(
+        student=profile, lesson__isnull=False,
+    ).values_list("lesson__package_id", "started_at", "ended_at"):
+        touch(package_id, ended or started)
+    for package_id, slide_id, entered, exited in SessionSlideExposure.objects.filter(
+        session__student=profile,
+    ).values_list("slide__lesson__package_id", "slide_id", "entered_at", "exited_at"):
+        if package_id in completed:
+            if exited:
+                completed[package_id].add(slide_id)
+                record_completion(slide_id, exited)
+            touch(package_id, exited or entered)
+    items = [{
+        "slug": package.slug, "name": package.name,
+        "percentage": round(len(completed[package.pk] & totals[package.pk]) * 100 / len(totals[package.pk])) if totals[package.pk] else 0,
+        "is_completed": bool(totals[package.pk]) and totals[package.pk] <= completed[package.pk],
+        "last_interacted_at": recent.get(package.pk),
+    } for package in packages]
+    items.sort(key=lambda item: item["last_interacted_at"].timestamp() if item["last_interacted_at"] else float("-inf"), reverse=True)
+    completed_lessons = sum(slide_ids <= completed[package_id] for (package_id, _), slide_ids in lesson_slides.items())
+    lesson_dates = sorted(max(completed_at[slide_id] for slide_id in slide_ids)
+                          for (package_id, _), slide_ids in lesson_slides.items()
+                          if slide_ids <= completed[package_id])
+    awards = {f"lessons-{count}": lesson_dates[count - 1] for count in (1, 3, 12) if len(lesson_dates) >= count}
+    for package in packages:
+        if totals[package.pk] and totals[package.pk] <= completed[package.pk]:
+            awards[package.slug] = max(completed_at[slide_id] for slide_id in totals[package.pk])
+    for key, unlocked_at in awards.items():
+        StudentBadge.objects.get_or_create(student=profile, key=key, defaults={"unlocked_at": unlocked_at})
+    badge_dates = dict(StudentBadge.objects.filter(student=profile).values_list("key", "unlocked_at"))
+    return JsonResponse({"packages": items, "completed_lessons": completed_lessons, "badge_unlocks": badge_dates})
 
 
 def student_sessions(request):

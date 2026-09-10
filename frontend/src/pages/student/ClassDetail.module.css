@@ -59,9 +59,10 @@
   margin: 0 auto;
   padding: var(--space-4) var(--space-10) var(--space-8);
   max-width: var(--student-shell-width);
-  display: flex;
-  gap: var(--space-6);
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: var(--space-3) var(--space-6);
+  align-items: start;
 }
 
 .main {
@@ -73,6 +74,7 @@
 }
 
 .sectionLabel {
+  grid-column: 1 / -1;
   font-family: var(--font-family);
   font-size: 12px;
   font-weight: var(--font-weight-medium);
@@ -198,7 +200,7 @@
 
 @media (max-width: 760px) {
   .body {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar {

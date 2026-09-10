@@ -55,9 +55,9 @@ export default function UnifiedLogin() {
 
           <form className={styles.form} onSubmit={handleSubmit} noValidate>
             <InputField
-              label="Email address"
-              type="email"
-              placeholder="you@cortex.edu"
+              label="Username or email address"
+              type="text"
+              placeholder="Enter your username or email"
               value={email}
               onChange={(event) => {
                 setEmail(event.target.value)
@@ -66,7 +66,7 @@ export default function UnifiedLogin() {
               leftIcon={<Mail size={16} strokeWidth={1.75} />}
               fieldState={error ? 'error' : 'default'}
               required
-              autoComplete="email"
+              autoComplete="username"
             />
             <InputField
               label="Password"

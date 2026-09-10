@@ -74,10 +74,21 @@ export function Registration({ role }: { role:'student'|'teacher' }) {
 function AccountRegistration() {
   const navigate = useNavigate()
   const [role, setRole] = useState<'student' | 'teacher'>('student')
-  const [form, setForm] = useState({ username: '', firstName: '', middleName: '', lastName: '', email: '', password: '', confirmPassword: '', studentNumber: '', birthdate: '', gender: '', guardianName: '', guardianContact: '', guardianEmail: '', notes: '' })
+  const [form, setForm] = useState({ username: '', firstName: '', middleName: '', lastName: '', schoolId: '', password: '', confirmPassword: '', studentNumber: '', birthdate: '', gender: '', guardianName: '', guardianContact: '', guardianEmail: '' })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([])
+  const [schoolsLoading, setSchoolsLoading] = useState(true)
+  const [schoolsError, setSchoolsError] = useState('')
+  useEffect(() => {
+    let cancelled = false
+    api<{ schools: { id: string; name: string }[] }>('/auth/schools/')
+      .then((data) => { if (!cancelled) setSchools(data.schools) })
+      .catch(() => { if (!cancelled) setSchoolsError('Unable to load schools. Please reload and try again.') })
+      .finally(() => { if (!cancelled) setSchoolsLoading(false) })
+    return () => { cancelled = true }
+  }, [])
   const update = (field: keyof typeof form, value: string) => setForm((current) => ({ ...current, [field]: value }))
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -91,7 +102,7 @@ function AccountRegistration() {
         method: 'POST',
         body: JSON.stringify({
           username: form.username,
-          email: form.email,
+          school_id: form.schoolId,
           password: form.password,
           confirm_password: form.confirmPassword,
           name,
@@ -105,7 +116,6 @@ function AccountRegistration() {
           guardian_name: form.guardianName,
           guardian_contact: form.guardianContact,
           guardian_email: form.guardianEmail,
-          notes: form.notes,
         }),
       })
       setSaved(true)
@@ -119,7 +129,7 @@ function AccountRegistration() {
   return <PlayfulZoneTemplate showNav={false}><div className={styles.pageNarrow}>
     <button className={styles.ghost} onClick={() => navigate('/')}><ArrowLeft size={14}/> Back to login</button>
     <div className={styles.card} style={{ marginTop: 12 }}>
-      {saved ? <div className={styles.center}><div className={styles.heroIcon}><Check size={32}/></div><h1 className={styles.title}>Account saved</h1><p className={styles.subtitle} style={{ margin: '8px auto 20px' }}>Your {role} account is ready. You can now sign in.</p><button className={styles.primary} onClick={() => navigate('/', { replace: true })}>Continue to login</button></div> : <form onSubmit={submit}>
+      {saved ? <div className={styles.center}><div className={styles.heroIcon}><Check size={32}/></div><h1 className={styles.title}>Account saved</h1><p className={styles.subtitle} style={{ margin: '8px auto 20px' }}>{role === 'teacher' ? 'Your account is awaiting school administrator approval.' : 'Your account is ready.'} Sign in with your username once your account is active.</p><button className={styles.primary} onClick={() => navigate('/', { replace: true })}>Continue to login</button></div> : <form onSubmit={submit}>
         <span className={styles.eyebrow}>{role} access</span><h1 className={styles.title}>Create your {role} account</h1><p className={styles.subtitle}>Enter your details to save a secure Cortex profile.</p><div className={styles.divider}/>
         <div className={styles.formGrid}>
           <label className={styles.field}><span className={styles.label}>Username</span><input required className={styles.input} value={form.username} onChange={(event) => update('username', event.target.value)} /></label>
@@ -127,7 +137,7 @@ function AccountRegistration() {
           <label className={styles.field}><span className={styles.label}>First name</span><input required className={styles.input} value={form.firstName} onChange={(event) => update('firstName', event.target.value)} /></label>
           <label className={styles.field}><span className={styles.label}>Middle name</span><input className={styles.input} value={form.middleName} onChange={(event) => update('middleName', event.target.value)} /></label>
           <label className={styles.field}><span className={styles.label}>Last name</span><input required className={styles.input} value={form.lastName} onChange={(event) => update('lastName', event.target.value)} /></label>
-          <label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>School email</span><input required className={styles.input} type="email" value={form.email} onChange={(event) => update('email', event.target.value)} /></label>
+          <label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>Choose school</span><select required className={styles.select} value={form.schoolId} onChange={(event) => update('schoolId', event.target.value)} disabled={schoolsLoading || !!schoolsError || schools.length === 0}><option value="">{schoolsLoading ? 'Loading schools?' : 'Choose a school'}</option>{schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}</select>{schoolsError && <span role="alert">{schoolsError}</span>}{!schoolsLoading && !schoolsError && schools.length === 0 && <span>No schools are registered yet.</span>}</label>
           {role === 'student' && <>
             <label className={styles.field}><span className={styles.label}>Student number</span><input className={styles.input} value={form.studentNumber} onChange={(event) => update('studentNumber', event.target.value)} /></label>
             <label className={styles.field}><span className={styles.label}>Birthdate</span><input className={styles.input} type="date" value={form.birthdate} onChange={(event) => update('birthdate', event.target.value)} /></label>
@@ -135,13 +145,12 @@ function AccountRegistration() {
             <label className={styles.field}><span className={styles.label}>Guardian name</span><input className={styles.input} value={form.guardianName} onChange={(event) => update('guardianName', event.target.value)} /></label>
             <label className={styles.field}><span className={styles.label}>Guardian contact</span><input className={styles.input} value={form.guardianContact} onChange={(event) => update('guardianContact', event.target.value)} /></label>
             <label className={styles.field}><span className={styles.label}>Guardian email</span><input className={styles.input} type="email" value={form.guardianEmail} onChange={(event) => update('guardianEmail', event.target.value)} /></label>
-            <label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>Notes</span><textarea className={styles.textarea} value={form.notes} onChange={(event) => update('notes', event.target.value)} /></label>
           </>}
           <label className={styles.field}><span className={styles.label}>Password</span><input required minLength={12} className={styles.input} type="password" value={form.password} onChange={(event) => update('password', event.target.value)} /></label>
           <label className={styles.field}><span className={styles.label}>Confirm password</span><input required minLength={12} className={styles.input} type="password" value={form.confirmPassword} onChange={(event) => update('confirmPassword', event.target.value)} /></label>
         </div>
         {error && <p className={styles.subtitle} role="alert" style={{ color: 'var(--color-danger)', marginTop: 12 }}>{error}</p>}
-        <button className={styles.primary} style={{ width: '100%', marginTop: 18 }} disabled={saving}>{saving ? 'Saving account…' : 'Create account'}</button>
+        <button className={styles.primary} style={{ width: '100%', marginTop: 18 }} disabled={saving || schoolsLoading || !!schoolsError || !form.schoolId}>{saving ? 'Saving account…' : 'Create account'}</button>
       </form>}
     </div>
   </div></PlayfulZoneTemplate>

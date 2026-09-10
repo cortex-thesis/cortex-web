@@ -888,3 +888,12 @@ class DataLifecycleRequest(TimeStampedModel):
     reason = models.TextField(blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     resolution_notes = models.TextField(blank=True)
+
+
+class StudentBadge(models.Model):
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="badges")
+    key = models.CharField(max_length=60)
+    unlocked_at = models.DateTimeField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=("student", "key"), name="unique_student_badge")]

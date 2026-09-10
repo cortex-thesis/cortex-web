@@ -7,8 +7,8 @@
 .editBtn, .textBtn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-interface-purple); font: 500 12px var(--font-family); cursor: pointer; }
 .editBtn { min-height: 40px; padding: 0 15px; }
 .textBtn { border: 0; background: transparent; padding: 7px; }
-.statsGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
-.statCard { min-height: 116px; display: flex; align-items: center; gap: 14px; padding: 18px; border: 1px solid var(--color-border); border-radius: 16px; background: white; box-shadow: var(--shadow-card); }
+.statsGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+.statCard { min-height: 88px; display: flex; align-items: center; gap: 14px; padding: 10px 18px; border: 1px solid var(--color-border); border-radius: 16px; background: white; box-shadow: var(--shadow-card); }
 .statIcon { width: 48px; height: 48px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 14px; }
 .statValue, .statLabel, .statDetail { display: block; }
 .statValue { color: var(--color-deep-purple); font-size: 22px; font-weight: 600; }
@@ -25,10 +25,8 @@
 .badge strong, .badge small { display: block; }
 .badge strong { color: var(--color-deep-purple); font-size: 12px; }
 .badge small { margin-top: 4px; color: var(--color-text-secondary); font-size: 9px; line-height: 1.35; }
-.progressList { display: flex; flex-direction: column; gap: 17px; }
-.progressItem { display: flex; flex-direction: column; gap: 7px; }
-.progressMeta { display: flex; justify-content: space-between; color: var(--color-text-primary); font-size: 11px; }
-.progressMeta strong { color: var(--color-deep-purple); }
+.progressList { display: flex; flex-direction: column; gap: 17px; max-height: 243px; overflow-y: auto; scrollbar-gutter: stable; padding-right: 8px; }
+.progressItem { display: grid; grid-template-columns: 36px minmax(0, 1.2fr) minmax(40px, 1fr) 34px; align-items: center; gap: 10px; flex: 0 0 48px; }
 .progressTrack { height: 9px; overflow: hidden; border-radius: 999px; background: var(--color-surface-1); }
 .progressFill { height: 100%; border-radius: inherit; }
 .sessionsCard { margin-top: 18px; }
@@ -49,3 +47,24 @@
 .journalBanner small { margin-top: 4px; color: var(--color-text-secondary); font-size: 10px; }
 @media (max-width: 1000px) { .statsGrid { grid-template-columns: repeat(2, 1fr); } .dashboardGrid { grid-template-columns: 1fr; } }
 @media (max-width: 650px) { .page { padding: 18px 16px 90px; } .profileHero { align-items: flex-start; flex-direction: column; } .statsGrid, .badgeGrid { grid-template-columns: 1fr; } .sessionRow { grid-template-columns: 42px 1fr auto; } .sessionRow > :nth-child(3), .focusScore { display: none; } }
+
+.statContent { min-width: 0; }
+.statValueCompact { font-size: 16px; line-height: 1.3; overflow-wrap: break-word; }
+.currentProgress { min-height: 88px; padding: 10px 18px; border-radius: 16px; box-shadow: var(--shadow-card); }
+
+.packageName { min-width: 0; color: var(--color-text-primary); font-size: 11px; line-height: 1.3; overflow-wrap: break-word; }
+.packageIcon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; font-size: 21px; }
+.badgeLocked { background: #f3f4f6; border-color: #e2e4e8; }
+.badgeLocked .badgeEmoji { background: #e5e7eb; color: #6b7280; }
+.badgeLocked strong, .badgeLocked small { color: #626873; }
+.badgeEmoji { color: var(--color-interface-purple); }
+.badgeStatus { font-weight: 600; }
+
+.dashboardGrid > .card { min-width: 0; }
+.badgeGrid { grid-template-columns: none; grid-template-rows: repeat(2, minmax(100px, auto)); grid-auto-flow: column; grid-auto-columns: calc((100% - 10px) / 2); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+.badge { min-width: 0; scroll-snap-align: start; }
+.badgeLocked .badgeEmoji { filter: grayscale(1); }
+.carouselControls { display: flex; justify-content: flex-end; margin: -12px 0 6px; }
+@media (max-width: 650px) { .badge { flex-direction: column; align-items: flex-start; padding: 10px; } }
+
+.progressPercent { color: var(--color-deep-purple); font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }

@@ -2,6 +2,7 @@ import styles from './StreakCard.module.css'
 import clsx from 'clsx'
 
 interface StreakCardProps {
+  label?: string
   score: number
   className?: string
 }
@@ -13,19 +14,19 @@ function getPerformance(score: number): { emoji: string; phrase: string } {
   return { emoji: '✨', phrase: 'Finding your rhythm' }
 }
 
-function StreakCard({ score, className }: StreakCardProps) {
+function StreakCard({ score, className, label = "Today's performance" }: StreakCardProps) {
   const { emoji, phrase } = getPerformance(score)
 
   return (
     <div
       className={clsx(styles.card, className)}
-      aria-label={`Today's performance: ${phrase}`}
+      aria-label={`${label}: ${phrase}`}
     >
       <div className={styles.icon} aria-hidden="true">
         {emoji}
       </div>
       <div className={styles.info}>
-        <span className={styles.label}>Today's performance</span>
+        <span className={styles.label}>{label}</span>
         <span className={styles.phrase}>{phrase}</span>
       </div>
     </div>
