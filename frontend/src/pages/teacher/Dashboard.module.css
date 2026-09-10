@@ -51,6 +51,16 @@
   color: var(--color-text-muted);
   font-size: 11px;
 }
+.liveGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.monitorLayout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(280px, .75fr); gap: var(--space-4); align-items: start; }
+.emptyLive { margin: 8px 0 0; padding: 20px; border-radius: 12px; background: var(--color-surface-1); color: var(--color-text-muted); font-size: 12px; text-align: center; }
+.liveCard { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--teacher-border, var(--color-border)); border-radius: 12px; background: #faf9fd; }
+.liveCard > div:first-child { display: grid; gap: 2px; }
+.liveCard > div:first-child span, .liveCard small { color: var(--color-text-muted); font-size: 11px; }
+.liveCard > b { width: fit-content; padding: 3px 8px; border-radius: 20px; background: #e7f5ef; color: #167354; font-size: 11px; text-transform: capitalize; }
+.liveBands { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.liveBands span { display: grid; color: var(--color-text-muted); font-size: 8px; text-transform: uppercase; }
+.liveBands strong { color: var(--color-text-primary); font-size: 11px; }
 
 .compactLiveGrid {
   gap: var(--space-3);
@@ -170,6 +180,7 @@
     align-items: flex-start;
     flex-direction: column;
   }
+  .monitorLayout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 700px) {

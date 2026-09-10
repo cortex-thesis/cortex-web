@@ -78,6 +78,12 @@
   font-size: var(--text-caption);
   text-align: center;
 }
+.liveStudent { display: grid; gap: 5px; padding: 11px; border: 1px solid var(--color-border); border-radius: 11px; }
+.liveStudent > span, .liveStudent small { color: var(--color-text-muted); font-size: 11px; }
+.liveStudent > b { width: fit-content; padding: 3px 7px; border-radius: 20px; background: #e7f5ef; color: #167354; font-size: 11px; text-transform: capitalize; }
+.liveBands { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+.liveBands span { display: grid; gap: 1px; color: var(--color-text-muted); font-size: 8px; text-transform: uppercase; }
+.liveBands strong { font-size: 10px; color: var(--color-text-primary); }
 
 @media (max-width: 1000px) {
   .statsRow {

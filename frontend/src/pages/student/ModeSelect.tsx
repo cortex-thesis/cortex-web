@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { CalmZoneTemplate } from '../../components/templates'
 import styles from './ModeSelect.module.css'
 import { startStudentSession } from '../../lib/studentApi'
+import { api } from '../../lib/api'
 
 type SessionMode = 'teacher' | 'free'
 
@@ -46,6 +47,8 @@ export default function ModeSelect() {
   const [selected, setSelected] = useState<SessionMode>('teacher')
   const [isStarting, setIsStarting] = useState(false)
   const [error, setError] = useState('')
+  const [needsConsent, setNeedsConsent] = useState(false)
+  const [consentChecked, setConsentChecked] = useState(false)
 
   async function handleStart() {
     const context = (location.state as { classId?: number; lessonId?: number; sessionId?: string } | null) ?? {}
@@ -55,6 +58,7 @@ export default function ModeSelect() {
     }
     setIsStarting(true)
     setError('')
+    setNeedsConsent(false)
     try {
       if (context.sessionId) {
         navigate('/student/eeg-live', { replace: true, state: { ...context, mode: selected } })
@@ -66,7 +70,24 @@ export default function ModeSelect() {
         state: { ...context, mode: selected, sessionId: session.id },
       })
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Unable to start the session.')
+      const message = reason instanceof Error ? reason.message : 'Unable to start the session.'
+      if (message.includes('EEG-processing consent')) {
+        setNeedsConsent(true)
+        setError('Before recording, Cortex needs permission to save your processed Muse 2 brainwave values with this lesson session.')
+      } else setError(message)
+      setIsStarting(false)
+    }
+  }
+
+  async function grantConsentAndStart() {
+    if (!consentChecked) return
+    setIsStarting(true); setError('')
+    try {
+      await api('/auth/consent/', { method: 'POST', body: JSON.stringify({ consent_type: 'eeg_processing', version: '1', granted: true, subject: 'student' }) })
+      setNeedsConsent(false)
+      await handleStart()
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to save EEG recording permission.')
       setIsStarting(false)
     }
   }
@@ -133,7 +154,8 @@ export default function ModeSelect() {
           ))}
         </div>
 
-        {error && <p className={styles.hint} role="alert">{error}</p>}
+        {error && <p className={styles.consentError} role="alert">{error}</p>}
+        {needsConsent && <section className={styles.consentBox} aria-label="Muse data recording permission"><strong>Allow Muse 2 session recording</strong><p>This is permission to store processed brainwave values with your lesson. It is not another lesson or content requirement. Raw EEG remains outside the application database.</p><label><input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} /> I understand and allow Cortex to record processed EEG values for this learning session.</label><button disabled={!consentChecked || isStarting} onClick={() => void grantConsentAndStart()}>{isStarting ? 'Saving…' : 'Allow and start session'}</button></section>}
         <button className={styles.startBtn} disabled={isStarting} onClick={() => void handleStart()}>
           {isStarting ? 'Starting...' : 'Start session'}
         </button>

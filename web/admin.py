@@ -5,7 +5,7 @@ from .models import (
     CalibrationProfile, ClassPackage, ClassSession, ConsentRecord, DataLifecycleRequest,
     EEGConnection, EEGDevice, EEGEpoch, EEGFeature, EEGRecording, Enrollment,
     JournalEntry, LearningSession, ManualOverride, ModelVersion, Profile,
-    School, SchoolClass, SessionAnalytics, StatePrediction,
+    School, SchoolClass, SessionAnalytics, SessionEEGSample, StatePrediction,
 )
 
 
@@ -50,7 +50,7 @@ class AuditLogAdmin(admin.ModelAdmin):
 admin.site.register([
     School, ClassSession, EEGDevice, CalibrationProfile, EEGConnection,
     EEGRecording, EEGEpoch, EEGFeature, ModelVersion, StatePrediction,
-    AdaptationRule, AdaptationEvent, ManualOverride, SessionAnalytics, Alert,
+    AdaptationRule, AdaptationEvent, ManualOverride, SessionAnalytics, SessionEEGSample, Alert,
     ActivityResponse, JournalEntry, DataLifecycleRequest,
     ClassPackage,
 ])

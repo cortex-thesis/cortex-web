@@ -48,7 +48,7 @@ export function EEGWaveDisplay({
       </div>
 
       <div className={styles.channels} role="img" aria-label={`EEG channel waveforms - ${state ?? 'no signal'}`}>
-        {['F3', 'F4', 'C3', 'C4'].map((channel, channelIndex) => (
+        {['TP9', 'AF7', 'AF8', 'TP10'].map((channel, channelIndex) => (
           <div className={styles.channel} key={channel}>
             <span>{channel}</span>
             <svg viewBox="0 0 160 20" preserveAspectRatio="none">

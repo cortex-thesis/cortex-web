@@ -393,6 +393,27 @@ class SessionSlideExposure(models.Model):
         ]
 
 
+class SessionEEGSample(models.Model):
+    """A processed Muse window linked to the lesson slide being viewed."""
+    session = models.ForeignKey(LearningSession, on_delete=models.CASCADE, related_name="eeg_samples")
+    slide = models.ForeignKey(Slide, null=True, blank=True, on_delete=models.PROTECT, related_name="eeg_samples")
+    recorded_at = models.DateTimeField(default=timezone.now)
+    bands = models.JSONField(default=dict)
+    absolute_bands = models.JSONField(default=dict)
+    relative_bands = models.JSONField(default=dict)
+    signal_quality = models.JSONField(default=list)
+    accepted_channels = models.PositiveSmallIntegerField(default=0)
+    battery_level = models.PositiveSmallIntegerField(null=True, blank=True)
+    state = models.CharField(max_length=30, choices=(
+        ("focused", "Focused"), ("relaxed", "Relaxed"),
+        ("distracted", "Distracted"), ("overstimulated", "Overstimulated"),
+    ))
+
+    class Meta:
+        ordering = ("recorded_at",)
+        indexes = [models.Index(fields=("session", "-recorded_at")), models.Index(fields=("slide", "recorded_at"))]
+
+
 class ResearchAnalysisRecord(TimeStampedModel):
     class Phase(models.TextChoices):
         PHASE_2 = "phase_2", "Phase 2 - Data Collection and Modeling"

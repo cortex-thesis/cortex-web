@@ -38,7 +38,8 @@
 .channels { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) 0; border-top: 1px solid var(--color-surface-1); border-bottom: 1px solid var(--color-surface-1); }
 .channel { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); font: 500 var(--text-micro, 10px) var(--font-mono); }
 .channel svg { width: 100%; height: 20px; overflow: visible; }
-.channel path { fill: none; stroke: var(--color-interface-purple); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.channel path { fill: none; stroke: var(--color-interface-purple); stroke-width: 1.25; stroke-dasharray: 55 4; vector-effect: non-scaling-stroke; animation: cortexWave 3.4s linear infinite; }
+@keyframes cortexWave { to { stroke-dashoffset: -118; } }
 .quality { display: flex; align-items: center; gap: 5px; color: var(--color-text-secondary); font-size: var(--text-micro, 10px); }
 .quality strong { color: var(--color-text-primary); }
 .qualityDot { width: 7px; height: 7px; border-radius: 50%; }
@@ -95,7 +96,7 @@
 }
 
 .alpha {
-  background: var(--color-interface-blue);
+  background: #897fce;
 }
 
 .beta {
@@ -103,8 +104,10 @@
 }
 
 .gamma {
-  background: var(--state-distracted);
+  background: var(--color-coral);
 }
+
+@media (prefers-reduced-motion: reduce) { .channel path { animation: none; } }
 
 /* TBR (Theta/Beta Ratio) Section */
 .tbrRow {

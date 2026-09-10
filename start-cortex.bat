@@ -4,6 +4,11 @@ setlocal
 rem Always use the folder containing this launcher as the project folder.
 set "PROJECT_DIR=%~dp0"
 set "FRONTEND_DIR=%~dp0frontend"
+set "VITE_TEMPLATE_ONLY=false"
+
+rem Mirror the root Django flag into Vite so React can select mock screens too.
+findstr /I /R /C:"^[ ]*CORTEX_TEMPLATE_ONLY[ ]*=[ ]*true[ ]*$" "%PROJECT_DIR%.env" >nul 2>&1
+if not errorlevel 1 set "VITE_TEMPLATE_ONLY=true"
 
 if not exist "%PROJECT_DIR%manage.py" (
     echo ERROR: manage.py was not found in:
@@ -34,7 +39,7 @@ if errorlevel 1 (
 )
 
 start "Cortex Backend" /D "%PROJECT_DIR%" cmd /k python manage.py runserver 127.0.0.1:8000
-start "Cortex Frontend" /D "%FRONTEND_DIR%" cmd /k npm run dev
+start "Cortex Frontend" /D "%FRONTEND_DIR%" cmd /k "set VITE_TEMPLATE_ONLY=%VITE_TEMPLATE_ONLY%&& npm run dev"
 
 echo Starting Cortex. Waiting for the frontend to become ready...
 set /a WAITED=0

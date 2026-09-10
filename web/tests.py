@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Activity, AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, Enrollment, Intervention, JournalEntry, LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School, SchoolClass, SessionAnalytics, SessionSlideExposure, Slide, UserPreference
+from .models import Activity, AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, Enrollment, Intervention, JournalEntry, LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School, SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, UserPreference
 
 
 class WorkflowTests(TestCase):
@@ -172,6 +172,54 @@ class WorkflowTests(TestCase):
         self.assertEqual(payload["lessons"][0]["title"], "Measured Lesson")
         self.assertEqual(payload["lessons"][0]["slides"][0]["title"], "Measured Slide")
         self.assertEqual(payload["students"][0]["sessions"][0]["slides"][0]["content_title"], "Measured Content")
+
+    def test_muse_values_are_stored_live_for_teacher_and_summarized_when_session_ends(self):
+        school_class = SchoolClass.objects.create(name="Live Muse Class", code="MUSE1", teacher=self.teacher)
+        Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
+        package = CurriculumPackage.objects.filter(is_active=True).first()
+        lesson = Lesson.objects.create(package=package, title="Live lesson", status=Lesson.Status.APPROVED, created_by=self.admin)
+        activity = Activity.objects.create(type=Activity.ActivityType.INTERACTIVE, title="Live content")
+        slide = Slide.objects.create(lesson=lesson, activity=activity, position=1, title="Live slide")
+        session = LearningSession.objects.create(school_class=school_class, student=self.student, lesson=lesson)
+        self._login(self.student)
+        response = self.client.post(f"/api/sessions/{session.pk}/eeg/", data=json.dumps({
+            "slide_id": slide.pk,
+            "bands": {"delta": 0.8, "theta": 0.9, "alpha": 1.0, "beta": 1.4, "gamma": 0.7},
+            "absolute_bands": {"delta": 2, "theta": 2, "alpha": 2, "beta": 3, "gamma": 1},
+            "relative_bands": {"delta": .2, "theta": .2, "alpha": .2, "beta": .3, "gamma": .1},
+            "signal_quality": [2, 2, 2, 2], "accepted_channels": 4, "battery_level": 80,
+        }), content_type="application/json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["state"], "focused")
+        self.assertEqual(SessionEEGSample.objects.filter(session=session, slide=slide).count(), 1)
+
+        self._login(self.teacher)
+        live = self.client.get(f"/api/teacher/classes/{school_class.pk}/live/")
+        self.assertEqual(live.status_code, 200)
+        self.assertEqual(live.json()["active_sessions"][0]["latest"]["bands"]["beta"], 1.4)
+        dashboard = self.client.get("/api/teacher/dashboard/")
+        self.assertEqual(dashboard.json()["active_sessions"], 1)
+        self.assertEqual(dashboard.json()["live_sessions"][0]["class_name"], "Live Muse Class")
+
+        self._login(self.student)
+        self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "enter"}), content_type="application/json")
+        self.assertEqual(self.client.post(f"/api/sessions/{session.pk}/end/").status_code, 200)
+        session.refresh_from_db()
+        self.assertEqual(float(session.completion_percentage), 100)
+        self.assertEqual(float(session.analytics.focused_percentage), 100)
+
+    def test_teacher_dashboard_hides_stale_unfinished_muse_session(self):
+        school_class = SchoolClass.objects.create(name="Stale Class", code="STALE", teacher=self.teacher)
+        session = LearningSession.objects.create(school_class=school_class, student=self.student)
+        sample = SessionEEGSample.objects.create(
+            session=session, bands={"delta": 1, "theta": 1, "alpha": 1, "beta": 1, "gamma": 1},
+            signal_quality=[2, 2, 2, 2], accepted_channels=4, state="focused",
+        )
+        SessionEEGSample.objects.filter(pk=sample.pk).update(recorded_at=timezone.now() - timedelta(minutes=2))
+        self._login(self.teacher)
+        dashboard = self.client.get("/api/teacher/dashboard/").json()
+        self.assertEqual(dashboard["active_sessions"], 0)
+        self.assertEqual(dashboard["live_sessions"], [])
 
     def test_student_can_start_only_an_enrolled_session_and_owner_can_end(self):
         school_class = SchoolClass.objects.create(name="Life Skills", code="LIFE2", teacher=self.teacher)

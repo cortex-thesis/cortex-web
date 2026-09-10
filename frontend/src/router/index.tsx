@@ -47,11 +47,15 @@ import SuperAdminAccounts from '../pages/superAdmin/Accounts'
 import SuperAdminDashboard from '../pages/superAdmin/Dashboard'
 import SuperAdminRequests from '../pages/superAdmin/Requests'
 import {
+  AdminDashboard as TemplateAdminDashboard, AdminAccounts as TemplateAdminAccounts,
+  TeacherJournals as TemplateTeacherJournals, Reports as TemplateReports, ClassSetup as TemplateClassSetup,
   StudentRegistration, TeacherRegistration,
   ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
   HardwareRequired, Enrollment,
   SessionControl, StudentHistory, Evaluation,
 } from '../pages/prototype'
+
+const templateOnly = import.meta.env.VITE_TEMPLATE_ONLY === 'true'
 
 export default function AppRouter() {
   return (
@@ -124,10 +128,10 @@ export default function AppRouter() {
       <Route path="/teacher/notifications" element={<TeacherNotifications />} />
       <Route path="/teacher/settings" element={<TeacherSettings />} />
       <Route path="/teacher/profile" element={<TeacherProfile />} />
-      <Route path="/teacher/journals" element={<TeacherJournals />} />
-      <Route path="/teacher/reports" element={<Reports />} />
+      <Route path="/teacher/journals" element={templateOnly ? <TemplateTeacherJournals /> : <TeacherJournals />} />
+      <Route path="/teacher/reports" element={templateOnly ? <TemplateReports /> : <Reports />} />
       <Route path="/teacher/reports/advanced" element={<AdvancedReports />} />
-      <Route path="/teacher/classes/new" element={<TeacherClassSetup />} />
+      <Route path="/teacher/classes/new" element={templateOnly ? <TemplateClassSetup /> : <TeacherClassSetup />} />
       <Route path="/teacher/class/:classId/enroll" element={<Enrollment />} />
       <Route path="/teacher/class/:classId/session" element={<SessionControl />} />
       <Route path="/teacher/student/:studentId/analytics" element={<StudentHistory />} />
@@ -143,8 +147,8 @@ export default function AppRouter() {
 
       {/* Super administrator */}
       <Route element={<ProtectedRoute roles={['super_admin']} />}>
-        <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
-        <Route path="/admin/accounts" element={<SuperAdminAccounts />} />
+        <Route path="/admin/dashboard" element={templateOnly ? <TemplateAdminDashboard /> : <SuperAdminDashboard />} />
+        <Route path="/admin/accounts" element={templateOnly ? <TemplateAdminAccounts /> : <SuperAdminAccounts />} />
         <Route path="/admin/requests" element={<SuperAdminRequests />} />
         <Route path="/admin/evaluation" element={<Evaluation />} />
         <Route path="/admin/analysis" element={<ResearchAnalysis />} />

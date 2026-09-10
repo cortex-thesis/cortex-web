@@ -68,7 +68,7 @@ def _postgres_database_from_environment():
         return None
     sslmode = os.environ.get("DB_SSLMODE", "require")
     return {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "cortex.db_backends.postgresql",
         "NAME": os.environ.get("DB_NAME", "postgres"),
         "USER": os.environ.get("DB_USER", "postgres"),
         "PASSWORD": os.environ.get("DB_PASSWORD", ""),
@@ -99,6 +99,7 @@ elif DATABASE_URL and not TEMPLATE_ONLY:
             ssl_require=os.environ.get("DB_SSLMODE", "require") == "require",
         )
     }
+    DATABASES["default"]["ENGINE"] = "cortex.db_backends.postgresql"
     # Compatible with Supabase's transaction-mode connection pooler.
     DATABASES["default"].setdefault("OPTIONS", {}).update({
         "prepare_threshold": None,

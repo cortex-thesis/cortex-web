@@ -60,6 +60,7 @@ export interface TeacherClass {
   packages: GlobalPackage[]
   teacher: TeacherIdentity
   students?: RosterStudent[]
+  average_focus?: number | null
 }
 
 export interface TeacherDashboardData {
@@ -70,11 +71,23 @@ export interface TeacherDashboardData {
   unread_notifications: number
   active_sessions: number
   total_sessions: number
+  average_focus: number | null
+  state_distribution: Record<CognitiveState, number>
+  live_sessions: Array<LiveSession & { class_id: number; class_name: string }>
 }
 
-export const getTeacherDashboard = () => api<TeacherDashboardData>('/teacher/dashboard/')
+export const getTeacherDashboard = () => api<TeacherDashboardData>('/teacher/dashboard/', { cache: 'no-store' })
 export const getTeacherClasses = () => api<{ classes: TeacherClass[] }>('/classes/')
 export const getTeacherClass = (id: string) => api<TeacherClass>(`/classes/${id}/`)
+export interface LiveSession {
+  id: string
+  student: RosterStudent
+  lesson: string
+  started_at: string
+  focus_score: number
+  latest: null | { recorded_at: string; bands: Record<'delta' | 'theta' | 'alpha' | 'beta' | 'gamma', number>; state: CognitiveState; accepted_channels: number; battery_level: number | null }
+}
+export const getTeacherClassLive = (id: string) => api<{ active_sessions: LiveSession[] }>(`/teacher/classes/${id}/live/`, { cache: 'no-store' })
 export const createTeacherClass = (data: { name: string; description?: string; school_year?: string }) =>
   api<TeacherClass>('/classes/', { method: 'POST', body: JSON.stringify(data) })
 export const updateTeacherClass = (id: string, data: Partial<Pick<TeacherClass, 'name' | 'description' | 'school_year'>>) =>

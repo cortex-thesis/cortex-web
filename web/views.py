@@ -1,11 +1,13 @@
 import json
 import hashlib
+import math
 import os
 import secrets
 import string
 import sys
 from datetime import timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
@@ -28,7 +30,7 @@ from .models import (
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
     DataLifecycleRequest, EEGDevice, Enrollment, Intervention, InterventionAlert, JournalEntry,
     LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
-    SchoolClass, SessionAnalytics, SessionSlideExposure, Slide, StatePrediction,
+    SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction,
     UserPreference,
 )
 from .activity_templates import ACTIVITY_TEMPLATES, LAYOUT_OPTIONS, TASK_TEMPLATES, validate_activity_configuration
@@ -1010,6 +1012,7 @@ def _student_dashboard_data(profile):
         status=SchoolClass.Status.ACTIVE,
     ).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
+        average_focus=Avg("sessions__analytics__focused_percentage"),
     ).distinct()
     packages = _active_packages()
     return {
@@ -1232,20 +1235,50 @@ def _teacher_dashboard_data(profile):
         teacher=profile, status=SchoolClass.Status.ACTIVE,
     ).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
+        average_focus=Avg("sessions__analytics__focused_percentage"),
     ))
     packages = _active_packages()
     student_ids = Enrollment.objects.filter(
         school_class__teacher=profile, school_class__status=SchoolClass.Status.ACTIVE,
         removed_at__isnull=True,
     ).values_list("student_id", flat=True).distinct()
+    sessions = LearningSession.objects.filter(school_class__teacher=profile)
+    active_session_rows = []
+    for session in sessions.filter(ended_at__isnull=True).select_related("student", "lesson", "school_class"):
+        latest = session.eeg_samples.order_by("-recorded_at").first()
+        if not _session_is_live(session, latest):
+            continue
+        recent_states = list(session.eeg_samples.order_by("-recorded_at").values_list("state", flat=True)[:30])
+        focus_score = round(100 * recent_states.count("focused") / len(recent_states)) if recent_states else 0
+        active_session_rows.append({
+            "id": str(session.pk), "class_id": session.school_class_id,
+            "class_name": session.school_class.name, "student": _profile_data(session.student),
+            "lesson": session.lesson.title if session.lesson_id else "No lesson selected",
+            "started_at": session.started_at, "focus_score": focus_score,
+            "latest": _eeg_sample_data(latest) if latest else None,
+        })
+    analytics_averages = SessionAnalytics.objects.filter(
+        session__in=sessions, session__ended_at__isnull=False,
+    ).aggregate(**{
+        f"{state}_average": Avg(f"{state}_percentage")
+        for state in ("focused", "relaxed", "distracted", "overstimulated")
+    })
     return {
         "teacher": _profile_data(profile),
-        "classes": [_class_data(item, packages=packages) for item in class_items],
+        "classes": [_class_data(item, packages=packages) | {
+            "average_focus": round(float(item.average_focus), 1) if item.average_focus is not None else None,
+        } for item in class_items],
         "class_count": len(class_items),
         "student_count": student_ids.count(),
         "unread_notifications": profile.notifications.filter(read_at__isnull=True).count(),
-        "active_sessions": 0,
-        "total_sessions": 0,
+        "active_sessions": len(active_session_rows),
+        "total_sessions": sessions.count(),
+        "average_focus": round(float(analytics_averages["focused_average"]), 1) if analytics_averages["focused_average"] is not None else None,
+        "state_distribution": {
+            state: round(float(analytics_averages[f"{state}_average"] or 0), 1)
+            for state in ("focused", "relaxed", "distracted", "overstimulated")
+        },
+        "live_sessions": active_session_rows,
     }
 
 
@@ -1340,12 +1373,18 @@ def teacher_class_analytics(request, class_id):
     if error:
         return error
     school_class = get_object_or_404(SchoolClass, pk=class_id, teacher=profile)
+    sessions = LearningSession.objects.filter(school_class=school_class)
+    completed = sessions.filter(ended_at__isnull=False)
+    analytics = SessionAnalytics.objects.filter(session__in=completed)
     return JsonResponse({
         "class": _class_data(school_class),
         "student_count": school_class.enrollments.filter(removed_at__isnull=True).count(),
-        "session_count": 0, "average_focus": None, "completion_rate": None,
+        "session_count": sessions.count(),
+        "active_sessions": sessions.filter(ended_at__isnull=True).count(),
+        "average_focus": round(float(analytics.aggregate(value=Avg("focused_percentage"))["value"] or 0), 1),
+        "completion_rate": round(float(completed.aggregate(value=Avg("completion_percentage"))["value"] or 0), 1),
         "students": [], "timeline": [],
-        "message": "Analytics will appear after learning sessions are recorded.",
+        "message": "Analytics are calculated from stored learning sessions and processed Muse windows.",
     })
 
 
@@ -1434,6 +1473,15 @@ def teacher_advanced_reports(request):
     predictions_by_session = {}
     for prediction in StatePrediction.objects.filter(session_id__in=session_map).order_by("classified_at"):
         predictions_by_session.setdefault(prediction.session_id, []).append(prediction)
+    # Browser-side Muse processing stores privacy-conscious feature windows without
+    # pretending that the research ML model produced them. They still feed the
+    # descriptive per-slide report with confidence marked as 1.0 for the rule label.
+    for sample in SessionEEGSample.objects.filter(session_id__in=session_map).order_by("recorded_at"):
+        predictions_by_session.setdefault(sample.session_id, []).append(SimpleNamespace(
+            state=sample.state, confidence_score=1.0, classified_at=sample.recorded_at,
+        ))
+    for values in predictions_by_session.values():
+        values.sort(key=lambda item: item.classified_at)
 
     def empty_totals():
         return ({state: 0 for state in StatePrediction.State.values}, {state: 0.0 for state in StatePrediction.State.values})
@@ -1752,6 +1800,14 @@ def start_session(request):
     control_mode = str(data.get("control_mode", LearningSession.ControlMode.AUTOMATIC))
     if control_mode not in LearningSession.ControlMode.values:
         return JsonResponse({"detail": "A valid control_mode is required."}, status=400)
+    existing = LearningSession.objects.filter(student=profile, ended_at__isnull=True).first()
+    if existing is not None:
+        latest = existing.eeg_samples.order_by("-recorded_at").first()
+        if not _session_is_live(existing, latest):
+            existing.ended_at = timezone.now()
+            existing.status = LearningSession.Status.INTERRUPTED
+            existing.slide_exposures.filter(exited_at__isnull=True).update(exited_at=existing.ended_at)
+            existing.save(update_fields=["ended_at", "status"])
     try:
         session = LearningSession.objects.create(
             school_class=school_class, student=profile, lesson=lesson, control_mode=control_mode,
@@ -1772,11 +1828,18 @@ def _student_session_data(session, now):
         "overstimulated": session.overstimulated_count,
     }
     prediction_total = sum(state_counts.values())
-    if prediction_total:
+    analytics = getattr(session, "analytics", None)
+    if not prediction_total and analytics is not None:
         state_distribution = {
-            state: round(count * 100 / prediction_total)
-            for state, count in state_counts.items()
+            "focused": round(float(analytics.focused_percentage)),
+            "relaxed": round(float(analytics.relaxed_percentage)),
+            "distracted": round(float(analytics.distracted_percentage)),
+            "overstimulated": round(float(analytics.overstimulated_percentage)),
         }
+        prediction_total = -1
+    if prediction_total:
+        if prediction_total > 0:
+            state_distribution = {state: round(count * 100 / prediction_total) for state, count in state_counts.items()}
     else:
         state_distribution = {state: 0 for state in state_counts}
         fallback_state = {"focus": "focused", "relax": "relaxed"}.get(session.active_presentation_mode, "focused")
@@ -1810,9 +1873,9 @@ def student_sessions(request):
         return JsonResponse({"detail": "Method not allowed."}, status=405)
     sessions = list(
         LearningSession.objects.filter(student=profile)
-        .select_related("school_class", "lesson")
+        .select_related("school_class", "lesson", "analytics")
         .annotate(
-            tasks_completed=Count("activity_responses__activity", distinct=True),
+            tasks_completed=Count("slide_exposures__slide", distinct=True),
             tasks_total=Count("lesson__slides", distinct=True),
             focused_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.FOCUSED), distinct=True),
             relaxed_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.RELAXED), distinct=True),
@@ -1834,6 +1897,112 @@ def student_sessions(request):
         },
         "sessions": items,
     })
+
+
+def _eeg_sample_data(sample):
+    return {
+        "id": sample.pk, "session_id": str(sample.session_id), "slide_id": sample.slide_id,
+        "recorded_at": sample.recorded_at, "bands": sample.bands,
+        "absolute_bands": sample.absolute_bands, "relative_bands": sample.relative_bands,
+        "signal_quality": sample.signal_quality, "accepted_channels": sample.accepted_channels,
+        "battery_level": sample.battery_level, "state": sample.state,
+    }
+
+
+def _session_is_live(session, latest_sample=None):
+    """A live session needs a fresh Muse heartbeat after initial calibration."""
+    now = timezone.now()
+    if session.ended_at is not None:
+        return False
+    if latest_sample is not None:
+        return latest_sample.recorded_at >= now - timedelta(seconds=8)
+    return session.started_at >= now - timedelta(seconds=60)
+
+
+def _classify_muse_window(bands):
+    theta, alpha, beta, gamma = (bands[key] for key in ("theta", "alpha", "beta", "gamma"))
+    if gamma >= 1.45 and gamma > alpha:
+        return "overstimulated"
+    if alpha >= 1.15 and alpha >= beta and alpha >= theta:
+        return "relaxed"
+    if theta >= 1.3 and theta > beta * 1.15:
+        return "distracted"
+    return "focused"
+
+
+@require_http_methods(["GET", "POST"])
+def session_eeg_samples(request, session_id):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT, Profile.Role.TEACHER})
+    if error:
+        return error
+    session = get_object_or_404(LearningSession.objects.select_related("school_class", "student", "lesson"), pk=session_id)
+    if profile.role == Profile.Role.STUDENT and session.student_id != profile.pk:
+        return JsonResponse({"detail": "You do not own this session."}, status=403)
+    if profile.role == Profile.Role.TEACHER and session.school_class.teacher_id != profile.pk:
+        return JsonResponse({"detail": "You do not teach this class."}, status=403)
+    if request.method == "GET":
+        latest = session.eeg_samples.select_related("slide").order_by("-recorded_at").first()
+        return JsonResponse({
+            "session": _student_session_data(session, timezone.now()) if hasattr(session, "focused_count") else {
+                "id": str(session.pk), "class_id": session.school_class_id, "lesson_id": session.lesson_id,
+                "title": session.lesson.title if session.lesson_id else session.school_class.name,
+                "status": "in_progress" if session.ended_at is None else "completed",
+            },
+            "lesson": _lesson_data(session.lesson) if session.lesson_id else None,
+            "latest": _eeg_sample_data(latest) if latest else None,
+        })
+    if profile.role != Profile.Role.STUDENT or session.ended_at is not None:
+        return JsonResponse({"detail": "Only the student can record an active session."}, status=403)
+    try:
+        data = _body(request)
+        required = ("delta", "theta", "alpha", "beta", "gamma")
+        bands = {key: float(data["bands"][key]) for key in required}
+        absolute = {key: float(data.get("absolute_bands", {}).get(key, 0)) for key in required}
+        relative = {key: float(data.get("relative_bands", {}).get(key, 0)) for key in required}
+        if not all(math.isfinite(value) and 0 <= value <= 1_000_000 for group in (bands, absolute, relative) for value in group.values()):
+            raise ValueError
+        quality = [int(value) for value in data.get("signal_quality", [])]
+        if len(quality) != 4 or any(value not in (0, 1, 2) for value in quality):
+            raise ValueError
+        accepted = int(data.get("accepted_channels", 0))
+        battery = data.get("battery_level")
+        battery = int(battery) if battery is not None else None
+        if accepted not in range(5) or (battery is not None and battery not in range(101)):
+            raise ValueError
+        slide = None
+        if data.get("slide_id") is not None:
+            slide = Slide.objects.get(pk=data["slide_id"], lesson_id=session.lesson_id)
+        sample = SessionEEGSample.objects.create(
+            session=session, slide=slide, bands=bands, absolute_bands=absolute,
+            relative_bands=relative, signal_quality=quality, accepted_channels=accepted,
+            battery_level=battery, state=_classify_muse_window(bands),
+        )
+    except (KeyError, TypeError, ValueError, Slide.DoesNotExist):
+        return JsonResponse({"detail": "Valid processed Muse values are required."}, status=400)
+    return JsonResponse(_eeg_sample_data(sample), status=201)
+
+
+@require_http_methods(["GET"])
+def teacher_class_live(request, class_id):
+    teacher, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    school_class = get_object_or_404(SchoolClass, pk=class_id, teacher=teacher)
+    sessions = LearningSession.objects.filter(school_class=school_class, ended_at__isnull=True).select_related("student", "lesson")
+    rows = []
+    for session in sessions:
+        latest = session.eeg_samples.order_by("-recorded_at").first()
+        if not _session_is_live(session, latest):
+            continue
+        recent_states = list(session.eeg_samples.order_by("-recorded_at").values_list("state", flat=True)[:30])
+        focus_score = round(100 * recent_states.count("focused") / len(recent_states)) if recent_states else 0
+        rows.append({
+            "id": str(session.pk), "student": _profile_data(session.student),
+            "lesson": session.lesson.title if session.lesson_id else "No lesson selected",
+            "started_at": session.started_at, "focus_score": focus_score,
+            "latest": _eeg_sample_data(latest) if latest else None,
+        })
+    return JsonResponse({"active_sessions": rows})
 
 
 def teacher_reports(request):
@@ -2042,7 +2211,19 @@ def end_session(request, session_id):
     session.ended_at = timezone.now()
     session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=session.ended_at)
     session.status = LearningSession.Status.COMPLETED
-    session.save(update_fields=["ended_at", "status"])
+    slide_count = session.lesson.slides.count() if session.lesson_id else 0
+    viewed = session.slide_exposures.values("slide_id").distinct().count()
+    session.completion_percentage = round(viewed * 100 / slide_count, 2) if slide_count else 0
+    session.save(update_fields=["ended_at", "status", "completion_percentage"])
+    counts = {state: session.eeg_samples.filter(state=state).count() for state in ("focused", "relaxed", "distracted", "overstimulated")}
+    total = sum(counts.values())
+    duration = max(0, int((session.ended_at - session.started_at).total_seconds()))
+    SessionAnalytics.objects.update_or_create(session=session, defaults={
+        "total_duration_seconds": duration,
+        **{f"{state}_seconds": round(duration * count / total) if total else 0 for state, count in counts.items()},
+        **{f"{state}_percentage": round(count * 100 / total, 3) if total else 0 for state, count in counts.items()},
+        "state_transition_count": max(0, total - 1),
+    })
     _audit(profile, "session_ended", session)
     return JsonResponse({"id": str(session.id), "ended_at": session.ended_at})
 
