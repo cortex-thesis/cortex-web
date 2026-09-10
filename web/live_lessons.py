@@ -62,3 +62,7 @@ LIVE_LESSONS = [
         ],
     },
 ]
+
+
+from .lesson_assets import attach_definitions
+attach_definitions(LIVE_LESSONS)

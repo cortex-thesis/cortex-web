@@ -64,3 +64,7 @@ PREV_LESSONS = [
         ],
     },
 ]
+
+
+from .lesson_assets import attach_definitions
+attach_definitions(PREV_LESSONS)

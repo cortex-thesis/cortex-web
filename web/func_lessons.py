@@ -62,3 +62,7 @@ FUNC_LESSONS = [
         ],
     },
 ]
+
+
+from .lesson_assets import attach_definitions
+attach_definitions(FUNC_LESSONS)

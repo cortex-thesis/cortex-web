@@ -64,3 +64,7 @@ LIFE_LESSONS = [
     },
 ]
 
+
+
+from .lesson_assets import attach_definitions
+attach_definitions(LIFE_LESSONS)

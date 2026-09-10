@@ -62,3 +62,7 @@ CAREER_LESSONS = [
         ],
     },
 ]
+
+
+from .lesson_assets import attach_definitions
+attach_definitions(CAREER_LESSONS)

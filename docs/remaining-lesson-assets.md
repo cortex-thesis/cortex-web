@@ -1,0 +1,155 @@
+# Remaining lesson media gaps
+
+Unmatched visual items and missing video/audio sources. Existing media is preserved.
+
+- TPCS_HC-hh-NG-3 / Wash Hands Step by Step / configuration.steps[0]: Today’s goal
+- TPCS_NU-hl-NG-1 / Healthy Food Choices / configuration.steps[0]: Today’s goal
+- TPCS_GG-gp-NG-2 / Tools for Good Grooming / configuration.steps[0]: Today’s goal
+- TPLS_CM-cm-NG-2 / Safety Signs in My Community / configuration.steps[0]: Signs guide safe action
+- TPPV-LE-NG-1 / Livelihood Activities Around Us / configuration.steps[0]: Look around the community
+- TPPV-OL-NG-1 / Livelihood Opportunities in My Community / configuration.steps[0]: Need → Product or service → Opportunity
+- TC_LPGA-BGC-NG-2 / Garden Mission 1: Why Gardening Matters / configuration.steps[0]: How could this garden help?
+- TP_CP-cp-NG-1 / Career Profile — Step 1 / configuration.steps[0]: What can I do?
+- ENRICH-02 / My Music Studio: audio needed
+- TPLS_CM-cm-NG-2 / Common Community Signs / configuration.steps[3]: Emergency Exit
+- TPLS_FL-pm-NG-2 / Check, Pay, Receive, Check / configuration.steps[3]: Receive any change
+- TPPV-OL-NG-1 / Activity and Opportunity / configuration.steps[0]: Activity
+- TPPV-OL-NG-1 / Activity and Opportunity / configuration.steps[1]: Opportunity
+- TC_LPGA-GSC-NG-2 / Inspect → Compare → Select / configuration.steps[1]: Compare
+- TP_EFP-0lf-NG-1 / Everyday Expression Stations / configuration.steps[1]: Communicating needs
+- TP_MFP-me-NG-2 / Read Digital Time / configuration.steps[0]: 8:15 a.m.
+- TP_MFP-me-NG-2 / Read Digital Time / configuration.steps[1]: 2:30 p.m.
+- TP_CP-cp-NG-1 / Build the Career Profile / configuration.steps[0]: I can do this
+- TP_CP-cp-NG-1 / Build the Career Profile / configuration.steps[1]: I am developing this
+- TP_CP-cp-NG-1 / Build the Career Profile / configuration.steps[2]: I would like to explore this
+- TP_CP-cp-NG-2 / Skill → Possible Opportunities / configuration.steps[1]: Possible work contexts
+- TP_CP-cv-NG-1 / Helpful Attitudes in Context / configuration.steps[0]: Responsibility and punctuality
+- TP_CP-cv-NG-1 / Helpful Attitudes in Context / configuration.steps[1]: Diligence and effort
+- TP_CP-cv-NG-1 / Helpful Attitudes in Context / configuration.steps[2]: Cooperation and respect
+- TP_CP-cv-NG-1 / Helpful Attitudes in Context / configuration.steps[3]: Willingness to learn
+- ENRICH-01 / Explore Different Talent Areas / configuration.steps[3]: Participate in sport
+- ENRICH-03 / Watch the Whole Movement: video needed
+- TPCS_HC-hh-NG-3 / Choose What You Need / configuration.items[3]: Pencil
+- TPCS_NU-hl-NG-1 / Healthful and Less Healthful / configuration.steps[0]: Healthful
+- TPCS_NU-hl-NG-1 / Healthful and Less Healthful / configuration.steps[1]: Less healthful
+- TPLS_CS-li-NG-4 / Pencil and Notebook: audio needed
+- TPLS_FL-pm-NG-2 / ₱12 Item, ₱20 Payment / configuration.steps[0]: ₱20 − ₱12 = ₱8
+- TC_LPGA-TES-NG-1 / Task → Function → Tool / configuration.steps[0]: Task
+- TC_LPGA-TES-NG-1 / Task → Function → Tool / configuration.steps[1]: Function needed
+- TC_LPGA-TES-NG-1 / Task → Function → Tool / configuration.steps[2]: Choose
+- TC_LPGA-GSC-NG-2 / Inspection Demonstration: video needed
+- TP_MFP-me-NG-2 / Read an Analog Clock / configuration.steps[0]: Short hand
+- TP_MFP-me-NG-2 / Read an Analog Clock / configuration.steps[1]: Long hand
+- TP_MFP-me-NG-2 / Read an Analog Clock / configuration.steps[2]: Clock numbers
+- ENRICH-02 / Station 1: Voice: video needed
+- ENRICH-03 / Break It Down / configuration.steps[0]: Movement 1
+- ENRICH-03 / Break It Down / configuration.steps[1]: Movement 2
+- ENRICH-03 / Break It Down / configuration.steps[2]: Movement 3 — if appropriate
+- TPCS_HC-hh-NG-3 / Watch the Handwashing Routine: video needed
+- TPLS_CS-li-NG-4 / Cup, Table, Plate: video needed
+- TPLS_CM-cm-NG-2 / Match Each Sign to Its Meaning / configuration.pairs[0].left: Emergency Exit
+- TPLS_CM-cm-NG-2 / Match Each Sign to Its Meaning / configuration.pairs[0].right: Way to leave during an emergency
+- TPLS_CM-cm-NG-2 / Match Each Sign to Its Meaning / configuration.pairs[1].right: Do not enter
+- TPLS_CM-cm-NG-2 / Match Each Sign to Its Meaning / configuration.pairs[2].right: Designated place to cross
+- TPPV-LE-NG-1 / Match the Livelihood Activity / configuration.pairs[3].left: Food processing
+- TPPV-LE-NG-1 / Match the Livelihood Activity / configuration.pairs[3].right: Food product
+- TC_LPGA-BGC-NG-2 / Why Does This Garden Matter? / configuration.pairs[0].right: Helps provide food
+- TC_LPGA-BGC-NG-2 / Why Does This Garden Matter? / configuration.pairs[1].right: May provide a product to sell
+- TC_LPGA-BGC-NG-2 / Why Does This Garden Matter? / configuration.pairs[2].right: Develops practical skills
+- TP_MFP-me-NG-2 / Match Analog and Digital Time / configuration.pairs[0].left: Analog clock: 7:00
+- TP_MFP-me-NG-2 / Match Analog and Digital Time / configuration.pairs[0].right: 7:00 a.m.
+- TP_MFP-me-NG-2 / Match Analog and Digital Time / configuration.pairs[1].left: Analog clock: 12:00
+- TP_MFP-me-NG-2 / Match Analog and Digital Time / configuration.pairs[1].right: 12:00 p.m.
+- TP_MFP-me-NG-2 / Match Analog and Digital Time / configuration.pairs[2].left: Analog clock: 3:00
+- TP_MFP-me-NG-2 / Match Analog and Digital Time / configuration.pairs[2].right: 3:00 p.m.
+- TP_CP-cp-NG-1 / Strength, Skill, or Developing Area? / configuration.items[0]: Can follow a three-step work instruction
+- TP_CP-cp-NG-1 / Strength, Skill, or Developing Area? / configuration.items[1]: Still learning a computer program
+- ENRICH-01 / Talent Sort / configuration.items[3]: Participating in a sport
+- ENRICH-02 / Station 2: Instrument: video needed
+- ENRICH-03 / Mirror Practice / configuration.steps[0]: Watch
+- ENRICH-03 / Mirror Practice / configuration.steps[1]: Your turn
+- ENRICH-03 / Mirror Practice / configuration.steps[2]: Ready for next?
+- TPCS_HC-hh-NG-3 / The Steps in Order / configuration.steps[0]: Wet
+- TPCS_HC-hh-NG-3 / The Steps in Order / configuration.steps[1]: Apply soap
+- TPCS_HC-hh-NG-3 / The Steps in Order / configuration.steps[2]: Rub thoroughly
+- TPCS_HC-hh-NG-3 / The Steps in Order / configuration.steps[3]: Rinse
+- TPCS_HC-hh-NG-3 / The Steps in Order / configuration.steps[4]: Dry
+- TPCS_GG-gp-NG-2 / Match the Grooming Materials / configuration.pairs[0].right: Clean teeth
+- TPCS_GG-gp-NG-2 / Match the Grooming Materials / configuration.pairs[1].right: Arrange hair
+- TPCS_GG-gp-NG-2 / Match the Grooming Materials / configuration.pairs[2].right: Trim nails
+- TPCS_GG-gp-NG-2 / Match the Grooming Materials / configuration.pairs[3].right: Dry after washing
+- TPLS_CS-li-NG-4 / Toothbrush and Toothpaste / configuration.items[1]: Place it beside the toothpaste
+- TPLS_FL-pm-NG-2 / Choose the Payment / configuration.items[2]: ₱1
+- TPPV-LE-NG-1 / Livelihood or Recreation? / configuration.items[0]: Selling baked goods
+- TC_LPGA-BGC-NG-2 / Useful or Not Related? / configuration.items[3]: Makes a phone charge faster
+- TC_LPGA-GSC-NG-2 / Compare Two Seeds / configuration.steps[0]: Validation required
+- TP_MFP-me-NG-2 / A.M. or P.M.? / configuration.items[0]: Breakfast at 7:00 a.m.
+- TP_MFP-me-NG-2 / A.M. or P.M.? / configuration.items[1]: Morning activity at 8:00 a.m.
+- TP_MFP-me-NG-2 / A.M. or P.M.? / configuration.items[2]: Afternoon activity at 3:00 p.m.
+- TP_MFP-me-NG-2 / A.M. or P.M.? / configuration.items[3]: Getting ready to sleep at 9:00 p.m.
+- TP_CP-cp-NG-1 / Things I Can Do / configuration.items[5]: Not sure yet
+- TP_CP-cp-NG-2 / One Skill, Multiple Possibilities / configuration.items[3]: A role with no computer tasks
+- ENRICH-02 / Station 3: Follow the Sound / configuration.items[0]: Tap
+- ENRICH-02 / Station 3: Follow the Sound / configuration.items[1]: Tap
+- ENRICH-02 / Station 3: Follow the Sound / configuration.items[2]: Pause
+- ENRICH-02 / Station 3: Follow the Sound / configuration.items[3]: Tap
+- ENRICH-03 / Put the Movements Together / configuration.items[0]: Movement 1
+- ENRICH-03 / Put the Movements Together / configuration.items[1]: Movement 2
+- ENRICH-03 / Put the Movements Together / configuration.items[2]: Movement 3
+- TPCS_HC-hh-NG-3 / Put the Steps in Order / configuration.items[0]: Rub thoroughly
+- TPCS_HC-hh-NG-3 / Put the Steps in Order / configuration.items[1]: Dry hands
+- TPCS_HC-hh-NG-3 / Put the Steps in Order / configuration.items[2]: Wet hands
+- TPCS_HC-hh-NG-3 / Put the Steps in Order / configuration.items[3]: Rinse hands
+- TPCS_HC-hh-NG-3 / Put the Steps in Order / configuration.items[4]: Apply soap
+- TPLS_CS-li-NG-4 / Folder and Paper / configuration.items[0]: Choose the red folder
+- TPLS_CS-li-NG-4 / Folder and Paper / configuration.items[1]: Open the folder
+- TPLS_CS-li-NG-4 / Folder and Paper / configuration.items[2]: Select the paper
+- TC_LPGA-BGC-NG-2 / A Garden at Home or School / configuration.items[1]: Grow herbs
+- TC_LPGA-GSC-NG-2 / Seed Inspection Tray / configuration.steps[0]: Assessment locked
+- TP_CP-cv-NG-1 / Match Attitudes to Effects / configuration.pairs[0].left: Punctuality
+- TP_CP-cv-NG-1 / Match Attitudes to Effects / configuration.pairs[0].right: Ready when work begins
+- TP_CP-cv-NG-1 / Match Attitudes to Effects / configuration.pairs[1].left: Diligence
+- TP_CP-cv-NG-1 / Match Attitudes to Effects / configuration.pairs[1].right: Careful and continued effort
+- TP_CP-cv-NG-1 / Match Attitudes to Effects / configuration.pairs[2].left: Repeatedly ignoring instructions
+- TP_CP-cv-NG-1 / Match Attitudes to Effects / configuration.pairs[2].right: May interfere with safe completion
+- ENRICH-03 / Your Turn: Perform: video needed
+- TPLS_CS-li-NG-4 / Comb and Grooming Kit / configuration.items[1]: Place it in the kit
+- TPLS_CS-li-NG-4 / Comb and Grooming Kit / configuration.items[2]: Close the kit
+- TPPV-LE-NG-1 / Livelihoods in My Community / configuration.items[0]: Food selling
+- TC_LPGA-GSC-NG-2 / Prepare Seeds for a Small Garden / configuration.steps[0]: Planting space is limited
+- TC_LPGA-GSC-NG-2 / Prepare Seeds for a Small Garden / configuration.steps[1]: Use real samples
+- TP_CP-cp-NG-1 / One Skill, Several Workplaces / configuration.items[0]: Office files
+- TP_CP-cp-NG-1 / One Skill, Several Workplaces / configuration.items[1]: Stock room
+- TP_CP-cp-NG-1 / One Skill, Several Workplaces / configuration.items[3]: Workshop materials
+- TP_CP-cv-NG-1 / An Attitude I Want to Practise / configuration.items[0]: Arriving prepared
+- TP_CP-cv-NG-1 / An Attitude I Want to Practise / configuration.items[3]: Cooperating
+- TP_CP-cv-NG-1 / An Attitude I Want to Practise / configuration.items[4]: Trying again after a mistake
+- ENRICH-01 / An Area I Would Like to Explore / configuration.items[2]: Sports
+- ENRICH-01 / An Area I Would Like to Explore / configuration.items[3]: Another activity I enjoy
+- ENRICH-02 / My Music Skill Board / configuration.items[0]: Singing
+- ENRICH-02 / My Music Skill Board / configuration.items[1]: Playing an instrument
+- ENRICH-02 / My Music Skill Board / configuration.items[2]: Following a simple pattern
+- ENRICH-02 / My Music Skill Board / configuration.items[3]: Participating with others
+- ENRICH-03 / A Movement I Enjoyed / configuration.items[0]: Movement 1
+- ENRICH-03 / A Movement I Enjoyed / configuration.items[1]: Movement 2
+- ENRICH-03 / A Movement I Enjoyed / configuration.items[2]: Movement 3
+- ENRICH-03 / A Movement I Enjoyed / configuration.items[3]: I would like to pause
+- TPCS_NU-hl-NG-1 / Remember Your Choices / configuration.steps[0]: Choose with care
+- TPLS_CM-cm-NG-2 / Signs Give Important Information / configuration.steps[0]: Look, understand, follow
+- TPPV-ST-NG-2 / Know Your Strengths and Interests / configuration.steps[0]: Choose, practise, improve
+- TPPV-LE-NG-1 / Goods, Services, and Livelihood / configuration.steps[0]: People use many kinds of skills
+- TPPV-OL-NG-1 / Needs Can Point to Opportunities / configuration.steps[0]: Observe, connect, evaluate
+- TC_LPGA-BGC-NG-2 / Garden Mission Complete / configuration.steps[0]: Grow, care, use
+- TC_LPGA-TES-NG-1 / Tool Bench Mission Complete / configuration.steps[0]: Match the tool to the task
+- TC_LPGA-GSC-NG-2 / Seed Inspection Complete / configuration.steps[0]: Inspect, compare, select
+- TP_EFP-0lf-NG-1 / Everyday Communication Complete / configuration.steps[0]: Match words to what you need
+- TP_MFP-nv-NG-31 / Money Recognition Complete / configuration.steps[0]: See the money, recognize its value
+- TP_MFP-me-NG-2 / Daily Schedule Complete / configuration.steps[0]: Know when activities happen
+- TP_CP-cp-NG-1 / Career Profile Step 1 Complete / configuration.steps[0]: Know strengths and developing skills
+- TP_CP-cp-NG-2 / Career Match Complete / configuration.steps[0]: Explore more than one possibility
+- TP_CP-cv-NG-1 / Career Scenario Lab Complete / configuration.steps[0]: Learn, cooperate, complete
+- ENRICH-03 / Move Lab Complete / configuration.steps[0]: Watch, practise, sequence, perform
+- TPCS_HC-hh-NG-3 / Remember the Routine / configuration.steps[0]: Wash properly
+- TPCS_HC-hh-NG-3 / Remember the Routine / configuration.steps[1]: Show the routine
+- TPCS_GG-gp-NG-2 / Choose the Material for the Task / configuration.steps[0]: Different tasks need different materials
+- TPLS_FL-pm-NG-2 / Pay Carefully / configuration.steps[0]: Check the price, pay, and check change

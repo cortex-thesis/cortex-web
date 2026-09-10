@@ -5,6 +5,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
+from web.lesson_assets import attach_definitions
 from web.activity_templates import validate_activity_configuration
 from web.models import Activity, ClassPackage, CurriculumPackage, Lesson, Profile, SchoolClass, Slide
 
@@ -25,6 +26,7 @@ class Command(BaseCommand):
             raise CommandError('A content owner is required.')
         package, _ = CurriculumPackage.objects.update_or_create(slug='enrichment', defaults={'name': 'Enrichment', 'is_active': True})
         definitions = json.loads((Path(__file__).resolve().parents[2] / 'enrichment_lessons.json').read_text(encoding='utf-8'))
+        attach_definitions(definitions)
         for definition in definitions:
             lesson, _ = Lesson.objects.get_or_create(package=package, competency_code=definition['competency_code'], defaults={'created_by': owner, 'title': definition['title']})
             lesson.title = definition['title']
