@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, CalendarDays, Clock3, Download, FileCheck2, Target, TrendingUp } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
+import { DetailSkeleton } from '../../components/molecules'
 import { Avatar, StateBadge } from '../../components/atoms'
 import { getTeacherStudentReport, type TeacherStudentReport } from '../../lib/teacherApi'
 import { useAuthStore } from '../../store/authStore'
@@ -30,7 +31,7 @@ export default function StudentProfile() {
   const error = failure?.key === key ? failure.message : ''
   if (!student) return <TeacherDashboardTemplate user={user}><article className={styles.reportPage}>
     <button className={styles.backButton} onClick={() => navigate(`/teacher/class/${classId}/students`)} aria-label="Back to class students"><ArrowLeft size={17} /></button>
-    <p role={error ? 'alert' : 'status'}>{error || 'Loading student profile...'}</p>
+    {error ? <p role="alert">{error}</p> : <DetailSkeleton />}
     {error && <button className={styles.printButton} onClick={() => setAttempt((value) => value + 1)}>Try again</button>}
   </article></TeacherDashboardTemplate>
   const classData = student.classes.find((item) => String(item.id) === classId)!

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { TeacherTabTemplate } from '../../components/templates'
+import { TableSkeleton } from '../../components/molecules'
 import { Avatar } from '../../components/atoms'
 import { getTeacherClass, type TeacherClass } from '../../lib/teacherApi'
 import { useAuthStore } from '../../store/authStore'
@@ -34,7 +35,7 @@ export default function ClassStudents() {
           <div className={styles.searchWrap}><Search size={14} strokeWidth={1.75} className={styles.searchIcon} /><input className={styles.searchInput} placeholder="Search students..." value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Search students" /></div>
         </div>
         {error && <p>{error}</p>}
-        <div className={styles.table}>
+        {!classData && !error ? <TableSkeleton rows={7} columns={6} /> : <div className={styles.table}>
           <div className={styles.tableHeader}><span className={styles.th}>Student</span><span className={styles.th}>Student number</span><span className={styles.th}>Sessions</span><span className={styles.th}>Last state</span><span className={styles.th}>Journal entries</span><span className={styles.th}></span></div>
           {students.map((student) => (
             <div key={student.id} className={styles.tableRow}>
@@ -44,7 +45,7 @@ export default function ClassStudents() {
             </div>
           ))}
           {!error && students.length === 0 && <div className={styles.tableRow}><span className={styles.tdMuted}>No students enrolled in this section.</span></div>}
-        </div>
+        </div>}
       </div>
     </TeacherTabTemplate>
   )

@@ -2095,6 +2095,18 @@ def teacher_reports(request):
     if class_id and selected_class is None:
         return JsonResponse({"detail": "Class not found."}, status=404)
 
+    student_items = list(
+        Profile.objects.filter(
+            enrollments__school_class=selected_class,
+            enrollments__removed_at__isnull=True,
+            role=Profile.Role.STUDENT,
+        ).select_related("user").distinct().order_by("display_name", "user__username")
+    ) if selected_class else []
+    student_id = request.GET.get("student_id")
+    selected_student = next((item for item in student_items if str(item.pk) == student_id), None) if student_id else None
+    if student_id and selected_student is None:
+        return JsonResponse({"detail": "Student is not enrolled in this class."}, status=404)
+
     range_key = request.GET.get("range", "month")
     if range_key not in {"week", "month", "term"}:
         return JsonResponse({"detail": "range must be week, month, or term."}, status=400)
@@ -2107,6 +2119,8 @@ def teacher_reports(request):
         ).select_related("student", "analytics").prefetch_related("state_predictions")
         if start_date:
             sessions = sessions.filter(started_at__date__gte=start_date)
+        if selected_student:
+            sessions = sessions.filter(student=selected_student)
     sessions = list(sessions.order_by("started_at"))
 
     state_percentage_totals = {state: 0.0 for state in StatePrediction.State.values}
@@ -2152,7 +2166,10 @@ def teacher_reports(request):
     }
     return JsonResponse({
         "classes": [{"id": item.pk, "name": item.name} for item in class_items],
+        "students": [{"id": item.pk, "name": item.display_name or item.user.username} for item in student_items],
         "selected_class_id": selected_class.pk if selected_class else None,
+        "selected_student_id": selected_student.pk if selected_student else None,
+        "selected_student_name": (selected_student.display_name or selected_student.user.username) if selected_student else None,
         "class_name": selected_class.name if selected_class else None,
         "school_year": selected_class.school_year if selected_class else "",
         "range": range_key, "start_date": start_date, "end_date": today,

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Clock, TrendingUp, Users } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
-import { StatSummaryCard } from '../../components/molecules'
+import { DetailSkeleton, StatSummaryCard } from '../../components/molecules'
 import { StateBadge } from '../../components/atoms'
 import { EEGWaveDisplay } from '../../components/molecules/EEGWaveDisplay/EEGWaveDisplay'
 import { LiveDashboardGrid } from '../../components/organisms/teacher'
@@ -55,6 +55,7 @@ export default function Dashboard() {
     <div className={analyticsStyles.content}>
       <h1 className={analyticsStyles.title}>Analytics</h1>
       {error && <p role="alert">{error}</p>}
+      {!data && !error ? <DetailSkeleton /> : <>
       <div className={analyticsStyles.statsRow}>
         <StatSummaryCard value={data?.class_count ?? 0} label="Classes" icon={<BookOpen size={18} color="#534AB7" />} iconBg="var(--color-cool-surface)" />
         <StatSummaryCard value={data?.student_count ?? 0} label="Students" icon={<Users size={18} color="#1D9E75" />} iconBg="var(--color-cool-surface)" />
@@ -70,6 +71,7 @@ export default function Dashboard() {
       </div>
       <div className={analyticsStyles.stateCard}><span className={analyticsStyles.chartTitle}>Time in each cognitive state</span><div className={analyticsStyles.stateBars}>{states.map((state) => <div className={analyticsStyles.stateRow} key={state}><StateBadge state={state} size="sm" /><div className={analyticsStyles.stateTrack}><div className={analyticsStyles.stateFill} style={{ width: `${distribution[state]}%`, background: COGNITIVE_STATES[state].color }} /></div><span className={analyticsStyles.statePct}>{distribution[state]}%</span></div>)}</div></div>
       <section className={styles.liveSection}><div className={styles.liveSectionHeader}><div><span className={styles.analyticsEyebrow}>Live classroom</span><h2 className={styles.liveSectionTitle}>{live.length ? `${live.length} session${live.length === 1 ? '' : 's'} in progress` : 'No session in progress'}</h2></div><span className={styles.liveSectionNote}>Live database updates every four seconds</span></div>{liveStudents.length ? <div className={styles.monitorLayout}><LiveDashboardGrid compact students={liveStudents} selectedId={selectedStudent?.id} onSelectStudent={setSelectedId} sessionLabel="Recorded lesson sessions" /><EEGWaveDisplay state={selectedStudent?.currentState} bandPowers={selectedStudent?.bandPowers} signalQuality={selectedStudent?.signalQuality} connectionStatus={selectedStudent?.connectionStatus} /></div> : <p className={styles.emptyLive}>A student appears here only while fresh Muse epochs are reaching the database.</p>}</section>
+      </>}
     </div>
   </TeacherDashboardTemplate>
 }

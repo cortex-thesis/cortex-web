@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Settings, Plus, Brain, BarChart2, BookOpen, Star, UserRound, LogOut } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
-import { SessionCard, ClassTile, StreakCard, QuickActionCard } from '../../components/molecules'
+import { CardGridSkeleton, SessionCard, ClassTile, StreakCard, QuickActionCard } from '../../components/molecules'
 import { Avatar, Logo } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
 import { classPresentation, getStudentDashboard } from '../../lib/studentApi'
@@ -23,8 +23,10 @@ export default function Home() {
   const logout = useAuthStore((state) => state.logout)
   const menuRef = useRef<HTMLDivElement>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cachedApiValue<DashboardData>('/student/dashboard/')?.classes ?? []).map(classPresentation))
-  useEffect(() => { void getStudentDashboard().then((data) => setClasses(data.classes.map(classPresentation))) }, [])
+  const cachedDashboard = cachedApiValue<DashboardData>('/student/dashboard/')
+  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cachedDashboard?.classes ?? []).map(classPresentation))
+  const [classesLoading, setClassesLoading] = useState(!cachedDashboard)
+  useEffect(() => { void getStudentDashboard().then((data) => setClasses(data.classes.map(classPresentation))).finally(() => setClassesLoading(false)) }, [])
   useEffect(() => {
     function closeMenu(event: MouseEvent) {
       if (!menuRef.current?.contains(event.target as Node)) setIsMenuOpen(false)
@@ -66,7 +68,7 @@ export default function Home() {
           <div className={styles.greeting}><span className={styles.greetingSub}>{getGreeting()}</span><h1 className={styles.greetingName}>Welcome back, <span className={styles.greetingAccent}>{student.name.split(' ')[0]}!</span></h1></div>
           <SessionCard session={null} onStart={() => navigate('/student/classes')} />
           <div className={styles.classesHeader}><span className={styles.classesLabel}>My Classes</span><button className={styles.seeAllBtn} onClick={() => navigate('/student/classes')}>See all</button></div>
-          <div className={styles.classesGrid}>{classes.map((item) => <ClassTile key={item.id} name={item.name} iconEmoji={item.iconEmoji} iconBg={item.iconBg} onClick={() => navigate(`/student/class/${item.id}`)} />)}</div>
+          {classesLoading ? <CardGridSkeleton count={2} /> : <div className={styles.classesGrid}>{classes.map((item) => <ClassTile key={item.id} name={item.name} iconEmoji={item.iconEmoji} iconBg={item.iconBg} onClick={() => navigate(`/student/class/${item.id}`)} />)}</div>}
         </div>
         <div className={styles.right}>
           <StreakCard score={0} />

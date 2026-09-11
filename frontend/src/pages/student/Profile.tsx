@@ -11,7 +11,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
-import { StreakCard } from '../../components/molecules'
+import { ListSkeleton, StreakCard } from '../../components/molecules'
 import { Avatar, StateBadge } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
 import { PACKAGE_EMOJI, getStudentSessions, type StudentSessionsData } from '../../lib/studentApi'
@@ -142,7 +142,7 @@ export default function Profile() {
               <TrendingUp size={20} color="#1D9E75" />
             </div>
             <div className={styles.progressList} tabIndex={0} role="region" aria-label="Package progress, most recently interacted first">
-              {!packageProgress && !progressError && <p role="status">Loading package progress...</p>}
+              {!packageProgress && !progressError && <ListSkeleton rows={4} />}
               {progressError && <p role="alert">{progressError}</p>}
               {(packageProgress ?? []).map((item) => (
                 <div className={styles.progressItem} key={item.slug}>
@@ -162,7 +162,7 @@ export default function Profile() {
             <button className={styles.textBtn} onClick={() => navigate('/student/sessions')}>View all <ArrowRight size={14}/></button>
           </div>
           <div className={styles.sessionList}>
-            {!sessionData && !sessionsError && <p role="status">Loading recent sessions...</p>}
+            {!sessionData && !sessionsError && <ListSkeleton rows={3} />}
             {sessionsError && <p role="alert">{sessionsError}</p>}
             {sessionData && recentSessions.length === 0 && <p>No completed sessions yet.</p>}
             {recentSessions.map((session) => (

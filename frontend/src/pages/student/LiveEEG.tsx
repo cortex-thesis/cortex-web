@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, BatteryMedium, Bluetooth, Check, Radio } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { TaskCard } from '../../components/molecules'
+import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molecules'
 import { api } from '../../lib/api'
 import { endStudentSession, getStudentSessions, trackStudentSlide } from '../../lib/studentApi'
 import { MUSE_CHANNELS, useMuseStore, type BandPowers } from '../../store/museStore'
@@ -84,7 +84,7 @@ export default function LiveEEG() {
 
   return <main className={styles.sessionPage}>
     <header className={styles.compactHeader}>
-      <div><span className={styles.eyebrow}>Recorded Muse 2 lesson</span><h1>{lesson?.title ?? 'Loading lesson…'}</h1></div>
+      <div><span className={styles.eyebrow}>Recorded Muse 2 lesson</span><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>
       <div className={styles.device}><Radio size={15} />{deviceName || 'Muse 2'}<span><BatteryMedium size={15} />{battery == null ? '—' : `${battery}%`}</span></div>
     </header>
     <section className={styles.eegBar} aria-label="Live processed brainwave values">
@@ -96,7 +96,7 @@ export default function LiveEEG() {
     {error && <p className={styles.error}>{error}</p>}
     <section className={styles.lessonContainer}>
       {lesson && <div className={styles.lessonProgress}><span style={{ width: `${Math.min(100, (position + 1) * 100 / Math.max(lesson.slides.length, 1))}%` }} /></div>}
-      <div className={styles.lessonStage}>{!lesson ? <p>Loading the selected lesson…</p> : !slide ? <div className={styles.complete}><Check size={40} /><h2>Lesson complete</h2><button onClick={() => void finish()}>Save and finish session</button></div> : task && <TaskCard showProgress={false} task={task} onAnswered={setAnswered} />}</div>
+      <div className={styles.lessonStage}>{!lesson ? <DetailSkeleton /> : !slide ? <div className={styles.complete}><Check size={40} /><h2>Lesson complete</h2><button onClick={() => void finish()}>Save and finish session</button></div> : task && <TaskCard showProgress={false} task={task} onAnswered={setAnswered} />}</div>
       {slide && <nav className={styles.lessonActions}><button disabled={position === 0} onClick={() => { setPosition((value) => value - 1); setAnswered(false) }}><ArrowLeft size={17} /> Previous</button><button disabled={!answered} onClick={() => { setPosition((value) => value + 1); setAnswered(false) }}>{position === lesson!.slides.length - 1 ? 'Complete lesson' : 'Next'} <ArrowRight size={17} /></button></nav>}
     </section>
     <button className={styles.endSession} onClick={() => void finish()}>End and save session</button>

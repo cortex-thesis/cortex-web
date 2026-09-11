@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Plus, ChevronRight } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
+import { CardGridSkeleton } from '../../components/molecules'
 import { useAuthStore } from '../../store/authStore'
 import { getTeacherClasses, type TeacherClass } from '../../lib/teacherApi'
 import { cachedApiValue } from '../../lib/api'
@@ -11,11 +12,13 @@ export default function Classes() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)!
   const [search, setSearch] = useState('')
-  const [classes, setClasses] = useState<TeacherClass[]>(() => cachedApiValue<{ classes: TeacherClass[] }>('/classes/')?.classes ?? [])
+  const cached = cachedApiValue<{ classes: TeacherClass[] }>('/classes/')
+  const [classes, setClasses] = useState<TeacherClass[]>(() => cached?.classes ?? [])
+  const [loading, setLoading] = useState(!cached)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    getTeacherClasses().then((data) => setClasses(data.classes)).catch((reason: Error) => setError(reason.message))
+    getTeacherClasses().then((data) => setClasses(data.classes)).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false))
   }, [])
 
   const filtered = classes.filter((item) => item.status === 'active' && item.name.toLowerCase().includes(search.toLowerCase()))
@@ -34,7 +37,7 @@ export default function Classes() {
           </div>
         </div>
         {error && <div className={styles.emptyState}><p>{error}</p></div>}
-        {filtered.length > 0 ? (
+        {loading ? <CardGridSkeleton count={4} /> : filtered.length > 0 ? (
           <div className={styles.grid}>
             {filtered.map((item) => (
               <button key={item.id} className={styles.card} onClick={() => navigate(`/teacher/class/${item.id}/overview`)}>

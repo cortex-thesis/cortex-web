@@ -27,7 +27,7 @@ export default function ClassOverview() {
     return () => window.clearInterval(timer)
   }, [classId])
 
-  return <TeacherTabTemplate user={user} tabs={CLASS_TABS(classId)} title={`Class · ${classData?.name ?? 'Loading'}`}>
+  return <TeacherTabTemplate user={user} tabs={CLASS_TABS(classId)} title={`Class · ${classData?.name ?? ''}`}>
     <div className={styles.content}>
       {error && <p>{error}</p>}
       <div className={styles.statsRow}>

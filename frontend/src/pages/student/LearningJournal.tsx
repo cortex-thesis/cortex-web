@@ -17,6 +17,7 @@ import {
   Target,
 } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
+import { InlineSkeleton } from '../../components/molecules'
 import type { JournalResponseType, MoodOption } from '../../types'
 import styles from './LearningJournal.module.css'
 import { getStudentJournal, saveStudentJournal, type StudentJournalData } from '../../lib/studentApi'
@@ -126,11 +127,11 @@ export default function LearningJournal() {
         <section className={styles.sessionStrip} aria-label="Session summary">
           <div className={styles.summaryItem}>
             <span className={`${styles.summaryIcon} ${styles.purpleIcon}`}><BookOpen size={22} /></span>
-            <span><strong>Session complete</strong><small>{journalData?.session.title ?? 'Loading session...'}</small></span>
+            <span><strong>Session complete</strong><small>{journalData?.session.title ?? <InlineSkeleton width={150} height={10} />}</small></span>
           </div>
           <div className={styles.summaryItem}>
             <span className={`${styles.summaryIcon} ${styles.yellowIcon}`}><Clock3 size={22} /></span>
-            <span><strong>{journalData ? `${Math.max(1, Math.round(journalData.session.duration_seconds / 60))} minutes` : '--'}</strong><small>Learning time</small></span>
+            <span><strong>{journalData ? `${Math.max(1, Math.round(journalData.session.duration_seconds / 60))} minutes` : <InlineSkeleton width={70} height={14} />}</strong><small>Learning time</small></span>
           </div>
           <div className={styles.summaryItem}>
             <span className={`${styles.summaryIcon} ${styles.coralIcon}`}><Target size={22} /></span>

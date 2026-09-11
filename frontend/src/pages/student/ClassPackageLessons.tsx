@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, ChevronRight, Circle, CircleCheck } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PlayfulZoneTemplate } from '../../components/templates'
+import { DetailSkeleton } from '../../components/molecules'
 import { PACKAGE_META } from '../../constants/packages'
 import { getStudentClassPackage, PACKAGE_EMOJI, type StudentClass, type StudentLesson, type StudentPackage } from '../../lib/studentApi'
 import { cachedApiValue } from '../../lib/api'
@@ -16,7 +17,7 @@ export default function ClassPackageLessons() {
   const [data, setData] = useState<PackageData | null>(() => cachedApiValue<PackageData>(cachePath) ?? null)
   const [error, setError] = useState('')
   useEffect(() => { void getStudentClassPackage(classId, packageSlug).then(setData).catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load lessons.')) }, [classId, packageSlug])
-  if (!data) return <PlayfulZoneTemplate><div className={styles.page}>{error || 'Loading lessons...'}</div></PlayfulZoneTemplate>
+  if (!data) return <PlayfulZoneTemplate><div className={styles.page}>{error || <DetailSkeleton />}</div></PlayfulZoneTemplate>
   const pkg = data.package.slug
   return <PlayfulZoneTemplate>
     <div className={styles.page}>

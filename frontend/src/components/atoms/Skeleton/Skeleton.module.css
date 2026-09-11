@@ -8,6 +8,7 @@
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 @keyframes shimmer {
@@ -17,4 +18,8 @@
   100% {
     background-position: 400px 0;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
 }

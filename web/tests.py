@@ -150,6 +150,24 @@ class WorkflowTests(TestCase):
         self._login(self.teacher)
         self.assertEqual(self.client.get(f"/api/teacher/reports/?class_id={other_class.pk}").status_code, 404)
 
+    def test_teacher_can_filter_report_to_an_enrolled_student(self):
+        school_class = SchoolClass.objects.create(name="Filtered Report", code="FLTR1", teacher=self.teacher)
+        Enrollment.objects.create(school_class=school_class, student=self.student, enrolled_by=self.teacher)
+        Enrollment.objects.create(school_class=school_class, student=self.other_student, enrolled_by=self.teacher)
+        for student in (self.student, self.other_student):
+            session = LearningSession.objects.create(school_class=school_class, student=student)
+            LearningSession.objects.filter(pk=session.pk).update(ended_at=timezone.now(), status=LearningSession.Status.COMPLETED)
+        self._login(self.teacher)
+
+        response = self.client.get(f"/api/teacher/reports/?class_id={school_class.pk}&range=term&student_id={self.student.pk}")
+
+        self.assertEqual(response.status_code, 200)
+        report = response.json()
+        self.assertEqual(report["selected_student_id"], self.student.pk)
+        self.assertEqual(report["summary"]["sessions"], 1)
+        self.assertEqual(report["sessions"][0]["student"]["name"], self.student.display_name)
+        self.assertEqual(len(report["students"]), 2)
+
     def test_session_slide_timeline_feeds_advanced_teacher_report(self):
         school_class = SchoolClass.objects.create(name="Advanced Report", code="RPRT3", teacher=self.teacher)
         package = CurriculumPackage.objects.filter(is_active=True).first()

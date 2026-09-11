@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, QrCode } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
-import { CodeInput, AlertBanner } from '../../components/molecules'
+import { CodeInput, AlertBanner, InlineSkeleton } from '../../components/molecules'
 import { api } from '../../lib/api'
 import type { StudentClass } from '../../lib/studentApi'
 import { PACKAGE_EMOJI } from '../../lib/studentApi'
@@ -37,7 +37,7 @@ export default function JoinClass() {
         {status === 'error' && <AlertBanner variant="error" message={errorMsg} className={styles.alert} />}
         {status === 'success' && foundClass && <AlertBanner variant="success" title={`Joined ${PACKAGE_EMOJI[foundClass.packages?.[0]?.slug ?? 'life']} ${foundClass.name}`} message="Opening your class..." className={styles.alert} />}
         <CodeInput value={code} onChange={(value) => { setCode(value); if (status === 'error') setStatus('idle') }} onComplete={handleComplete} fieldState={status === 'error' ? 'error' : status === 'success' ? 'success' : 'default'} errorText={errorMsg} successText={foundClass ? `Joined ${foundClass.name}` : undefined} hint="Enter the code your teacher gave you" disabled={status === 'loading' || status === 'success'} />
-        {status === 'loading' && <p className={styles.loadingText}>Looking up your class...</p>}
+        {status === 'loading' && <div className={styles.loadingText}><InlineSkeleton width={180} height={13} /></div>}
         <div className={styles.divider}><span className={styles.dividerLine} /><span className={styles.dividerText}>or</span><span className={styles.dividerLine} /></div>
         <button className={styles.qrBtn} disabled aria-label="QR scanning is coming soon"><QrCode size={16} strokeWidth={1.75} />Scan QR code</button>
       </div>

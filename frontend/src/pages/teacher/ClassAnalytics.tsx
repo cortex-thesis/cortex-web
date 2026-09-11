@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { TeacherTabTemplate } from '../../components/templates'
-import { StatSummaryCard } from '../../components/molecules'
+import { InlineSkeleton, StatSummaryCard } from '../../components/molecules'
 import { TrendingUp, Clock, Target, Award } from 'lucide-react'
 import { api } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
@@ -26,12 +26,12 @@ export default function ClassAnalytics() {
       <div className={styles.content}>
         {error && <p>{error}</p>}
         <div className={styles.statsRow}>
-          <StatSummaryCard value={data?.average_focus == null ? '—' : `${data.average_focus}%`} label="Avg focus score" icon={<TrendingUp size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" />
-          <StatSummaryCard value={data?.session_count ?? 0} label="Total sessions" icon={<Clock size={18} color="var(--color-interface-purple)" />} iconBg="var(--color-cool-surface)" />
-          <StatSummaryCard value={data?.completion_rate == null ? '—' : `${data.completion_rate}%`} label="Completion rate" icon={<Target size={18} color="var(--color-coral)" />} iconBg="var(--color-cream)" />
-          <StatSummaryCard value={data?.student_count ?? 0} label="Students" icon={<Award size={18} color="#534AB7" />} iconBg="#EEEDFE" />
+          <StatSummaryCard value={!data ? <InlineSkeleton width={64} height={22} /> : data.average_focus == null ? '—' : `${data.average_focus}%`} label="Avg focus score" icon={<TrendingUp size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" />
+          <StatSummaryCard value={!data ? <InlineSkeleton width={50} height={22} /> : data.session_count} label="Total sessions" icon={<Clock size={18} color="var(--color-interface-purple)" />} iconBg="var(--color-cool-surface)" />
+          <StatSummaryCard value={!data ? <InlineSkeleton width={64} height={22} /> : data.completion_rate == null ? '—' : `${data.completion_rate}%`} label="Completion rate" icon={<Target size={18} color="var(--color-coral)" />} iconBg="var(--color-cream)" />
+          <StatSummaryCard value={!data ? <InlineSkeleton width={50} height={22} /> : data.student_count} label="Students" icon={<Award size={18} color="#534AB7" />} iconBg="#EEEDFE" />
         </div>
-        <section className={styles.chartCard}><h2>Class analytics</h2><p>{data?.message ?? 'Loading analytics…'}</p></section>
+        <section className={styles.chartCard}><h2>Class analytics</h2>{data ? <p>{data.message}</p> : <><InlineSkeleton width="72%" /><br /><InlineSkeleton width="54%" /></>}</section>
       </div>
     </TeacherTabTemplate>
   )

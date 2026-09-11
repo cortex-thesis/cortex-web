@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, RotateCcw, Check } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { PlayfulZoneTemplate } from '../../components/templates'
-import { TaskCard } from '../../components/molecules'
+import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molecules'
 import { api } from '../../lib/api'
 import type { Task } from '../../types'
 import styles from './FreeLessonSelect.module.css'
@@ -82,7 +82,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
   return <PlayfulZoneTemplate><div className={`${styles.page} ${playerStyles.page}`}>
     <header className={styles.header}>
       <button className={styles.backBtn} onClick={back} aria-label="Back to lessons"><ArrowLeft size={18} /></button>
-      <div><span className={styles.eyebrow}>Lesson practice</span><h1>{lesson?.title ?? 'Loading lesson'}</h1><p>Your lesson progress is saved as you continue. Practice stays separate from EEG session history.</p></div>
+      <div><span className={styles.eyebrow}>Lesson practice</span><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1><p>Your lesson progress is saved as you continue. Practice stays separate from EEG session history.</p></div>
     </header>
     <section className={playerStyles.player} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
@@ -97,7 +97,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       <div className={playerStyles.stage}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={task ? `${task.id}/${retry}` : error ? 'error' : complete ? 'complete' : 'loading'} initial={{ opacity: reduceMotion ? 1 : 0 }} animate={{ opacity: 1 }} exit={{ opacity: reduceMotion ? 1 : 0 }} transition={{ duration: reduceMotion ? 0 : .18 }}>
-            {error ? <p role="alert">{error}</p> : !lesson ? <p role="status">Loading lesson...</p> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? <TaskCard className={playerStyles.task} showProgress={false} task={task} onAnswered={(correct) => { setAnswered(correct); if (correct) setCompleted((previous) => new Set(previous).add(position)) }} /> : <div className={playerStyles.complete}><Check size={40} /><h2>Practice complete</h2><p>You reached the end of this lesson.</p><button className={`${playerStyles.button} ${playerStyles.next}`} onClick={back}>Back to lessons</button></div>}
+            {error ? <p role="alert">{error}</p> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? <TaskCard className={playerStyles.task} showProgress={false} task={task} onAnswered={(correct) => { setAnswered(correct); if (correct) setCompleted((previous) => new Set(previous).add(position)) }} /> : <div className={playerStyles.complete}><Check size={40} /><h2>Practice complete</h2><p>You reached the end of this lesson.</p><button className={`${playerStyles.button} ${playerStyles.next}`} onClick={back}>Back to lessons</button></div>}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -1,0 +1,14 @@
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; width: 100%; }
+.card, .panel { display: grid; gap: 12px; min-height: 132px; padding: 18px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface-1); }
+.cardHead, .hero, .row { display: flex; align-items: center; gap: 12px; }
+.grow { display: grid; flex: 1; gap: 9px; min-width: 0; }
+.list, .detail { display: grid; gap: 12px; width: 100%; }
+.row { min-height: 68px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface-1); }
+.table { overflow: hidden; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface-1); }
+.tableRow { display: grid; gap: 18px; padding: 15px 18px; border-bottom: 1px solid var(--color-border); }
+.tableRow:last-child { border-bottom: 0; }
+.hero { min-height: 96px; padding: 18px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface-1); }
+.panel { min-height: 150px; }
+.inline { display: inline-block; min-width: 1px; vertical-align: middle; }
+@media (prefers-reduced-motion: reduce) { .grid *, .list *, .table *, .detail *, .inline * { animation: none !important; } }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .tableRow { grid-template-columns: 1fr 1fr !important; } }

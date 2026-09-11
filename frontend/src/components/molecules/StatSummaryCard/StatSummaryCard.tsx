@@ -3,7 +3,7 @@ import styles from './StatSummaryCard.module.css'
 import clsx from 'clsx'
 
 interface StatSummaryCardProps {
-  value: string | number
+  value: ReactNode
   label: string
   icon: ReactNode
   iconBg?: string

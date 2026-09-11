@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Brain, CalendarDays, ChevronRight, Clock, Play, Search } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
+import { CardGridSkeleton, ListSkeleton } from '../../components/molecules'
 import { StateBadge } from '../../components/atoms'
 import { getStudentSessions, type StudentSessionsData } from '../../lib/studentApi'
 import styles from './Sessions.module.css'
@@ -57,11 +58,11 @@ export default function Sessions() {
           </button>
         </header>
 
-        <div className={styles.summaryGrid}>
+        {!data && !error ? <CardGridSkeleton count={3} /> : <div className={styles.summaryGrid}>
           <div className={styles.summaryCard}><span className={styles.summaryIcon}><CalendarDays size={19}/></span><span><strong>{completed}</strong><small>Sessions completed</small></span></div>
           <div className={styles.summaryCard}><span className={styles.summaryIcon} aria-hidden="true">{getFocusEmoji(averageFocus)}</span><span><strong>{completed ? getFocusDescription(averageFocus) : 'No sessions yet'}</strong><small>Overall performance</small></span></div>
           <div className={styles.summaryCard}><span className={styles.summaryIcon}><Clock size={19}/></span><span><strong>{learningTime}</strong><small>Learning time</small></span></div>
-        </div>
+        </div>}
 
         <div className={styles.toolbar}>
           <div className={styles.searchWrap}>
@@ -74,7 +75,7 @@ export default function Sessions() {
         </div>
 
         <div className={styles.list}>
-          {!data && !error && <div className={styles.empty}>Loading your sessions...</div>}
+          {!data && !error && <ListSkeleton rows={5} />}
           {error && <div className={styles.empty}>{error}</div>}
           {sessions.map((session) => (
             <article className={styles.sessionCard} key={session.id}>

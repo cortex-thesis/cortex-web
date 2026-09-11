@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
+import { DetailSkeleton } from '../../components/molecules'
 import { PACKAGE_META } from '../../constants/packages'
 import { PACKAGE_EMOJI, getStudentClass, type StudentClass } from '../../lib/studentApi'
 import { cachedApiValue } from '../../lib/api'
@@ -14,7 +15,7 @@ export default function ClassDetail() {
   const [classData, setClassData] = useState<StudentClass | null>(() => cachedApiValue<StudentClass>(`/classes/${classId}/?summary=1`) ?? null)
   const [error, setError] = useState('')
   useEffect(() => { void getStudentClass(classId).then(setClassData).catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load class.')) }, [classId])
-  if (!classData) return <PlayfulZoneTemplate><div className={styles.body}>{error || 'Loading class...'}</div></PlayfulZoneTemplate>
+  if (!classData) return <PlayfulZoneTemplate><div className={styles.body}>{error || <DetailSkeleton />}</div></PlayfulZoneTemplate>
   return <PlayfulZoneTemplate>
     <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate('/student/classes', { replace: true })} aria-label="Back to classes"><ChevronLeft size={18} /></button><span className={styles.classIconSm} style={{ background: '#EEEDFE' }}>🏫</span><h1 className={styles.className}>{classData.name}</h1><span className={styles.packagePill}>{classData.package_count} learning packages</span></div>
     <div className={styles.body}>

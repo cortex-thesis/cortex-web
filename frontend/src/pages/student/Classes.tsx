@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Search } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
-import { ClassTile } from '../../components/molecules'
+import { CardGridSkeleton, ClassTile } from '../../components/molecules'
 import { CURRICULUM_PACKAGES } from '../../constants/states'
 import type { CurriculumPackage } from '../../constants/states'
 import { PACKAGE_META } from '../../constants/packages'
@@ -18,8 +18,10 @@ export default function Classes() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<PackageFilter>('all')
 
-  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cachedApiValue<{ classes: StudentClass[] }>('/classes/')?.classes ?? []).map(classPresentation))
-  useEffect(() => { void getStudentClasses().then((data) => setClasses(data.classes.map(classPresentation))) }, [])
+  const cached = cachedApiValue<{ classes: StudentClass[] }>('/classes/')
+  const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cached?.classes ?? []).map(classPresentation))
+  const [loading, setLoading] = useState(!cached)
+  useEffect(() => { void getStudentClasses().then((data) => setClasses(data.classes.map(classPresentation))).finally(() => setLoading(false)) }, [])
 
   const filtered = classes.filter((c) => {
     const matchesFilter = filter === 'all' || c.package === filter
@@ -76,7 +78,7 @@ export default function Classes() {
           ))}
         </div>
 
-        {filtered.length > 0 ? (
+        {loading ? <CardGridSkeleton count={4} /> : filtered.length > 0 ? (
           <div className={styles.grid}>
             {filtered.map((cls) => (
               <div key={cls.id} className={styles.tileWrap}>
