@@ -1,14 +1,25 @@
 .panel { width: 100%; min-width: 0; box-sizing: border-box; min-height: 100px; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-3); display: flex; align-items: center; gap: var(--space-4); background: var(--color-surface-1); }
 .videoPanel { background: linear-gradient(135deg, #eeedfe, #e6f1fb); }
 .video { width: 100%; min-width: 0; height: var(--activity-video-height, min(40dvh, 320px)); border-radius: var(--radius-md); background: #151326; object-fit: contain; }
+.youtubePanel { width: 100%; min-height: 0; align-self: center; flex-direction: column; align-items: stretch; padding: 0; border: 0; background: transparent; }
+.youtubePanel .video { width: 100%; height: auto; min-height: 0; aspect-ratio: 16 / 9; border: 0; }
 .panel audio { width: 100%; min-width: 0; }
+.readingAudio { width: 100%; min-height: 42px; flex-shrink: 0; }
+.stepCopy { min-width: 0; }
+.stepAudio { width: 100%; height: 36px; margin-top: 10px; display: block; }
 .mediaButton { width: 52px; height: 52px; display: grid; place-items: center; flex-shrink: 0; border: 0; border-radius: var(--radius-full); background: var(--color-interface-purple); color: var(--color-white); cursor: pointer; }
 .mediaButton:focus-visible { outline: 3px solid var(--color-interface-blue); outline-offset: 3px; }
 .mediaCopy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
 .mediaCopy strong, .calmingVisual strong, .reengagement strong { color: var(--color-text-primary); font: var(--font-weight-semibold) var(--text-body-d)/1.4 var(--font-family); }
 .mediaCopy span, .calmingVisual span, .reengagement span, .duration { color: var(--color-text-secondary); font: var(--font-weight-regular) var(--text-caption)/1.45 var(--font-family); }
 .steps { display: grid; grid-template-columns: repeat(var(--activity-columns, auto-fit), minmax(min(100%, 150px), 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
-.step { position: relative; display: flex; flex-direction: column; gap: 8px; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+.step { position: relative; display: flex; flex-direction: column; gap: 8px; padding: var(--space-3); overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: linear-gradient(180deg, var(--color-white), #fcfbff); animation: stepReveal .48s cubic-bezier(.2, .75, .25, 1) both; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
+.step:nth-child(2) { animation-delay: 70ms; }
+.step:nth-child(3) { animation-delay: 140ms; }
+.step:nth-child(4) { animation-delay: 210ms; }
+.step:nth-child(5) { animation-delay: 280ms; }
+.step::after { content: ''; position: absolute; inset: auto 0 0; height: 3px; background: linear-gradient(90deg, var(--color-interface-purple), var(--state-focused)); opacity: .55; transform: scaleX(0); transform-origin: left; animation: stepAccent .5s ease forwards; animation-delay: inherit; }
+.step:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--color-interface-purple) 38%, var(--color-border)); box-shadow: 0 8px 22px rgba(64, 54, 107, .1); }
 .stepVisual { position: relative; width: 100%; height: var(--activity-step-image-height, clamp(80px, 20dvh, 150px)); min-height: 0; display: grid; place-items: center; border-radius: 8px; background: #eef6ff; color: var(--color-interface-purple); }
 .stepVisual img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; box-sizing: border-box; padding: 8px; object-fit: contain; }
 .step:only-child { min-height: 0; display: grid; grid-template-columns: minmax(100px, 220px) minmax(0, 1fr); align-items: center; gap: clamp(12px, 2vw, 24px); padding: var(--space-3); }
@@ -32,14 +43,18 @@
 @keyframes gentlePulse { 50% { transform: scale(1.08); } }
 @keyframes calmFloat { 50% { transform: translateY(-7px) scale(1.04); } }
 @keyframes wave { to { transform: scaleY(.45); } }
-@media (prefers-reduced-motion: reduce) { .spark, .calmOrb, .waveform span { animation: none; } }
+@keyframes stepReveal { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes stepAccent { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .spark, .calmOrb, .waveform span, .step, .step::after { animation: none; transition: none; } .step:hover { transform: none; } }
 @media (max-width: 620px) { .panel { align-items: flex-start; } .waveform { display: none; } .steps { grid-template-columns: 1fr; } .step, .step:only-child { display: grid; grid-template-columns: minmax(64px, 24%) minmax(0, 1fr); align-items: center; } .stepVisual { height: min(var(--activity-step-image-height, 100px), 100px); } }
 
 /* Let lesson illustrations use the space left after the heading and step text.
    Absolutely positioned images cannot enlarge the grid through intrinsic size. */
 .lessonSteps { flex: 1; min-height: 0; grid-auto-rows: minmax(min-content, 1fr); }
-.lessonSteps .step { min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(64px, 1fr) auto; }
-.lessonSteps .stepVisual { height: 100%; min-height: 64px; max-width: 100%; }
+.lessonSteps .step { min-width: 0; min-height: 0; display: grid; }
+.lessonSteps .step:not(:only-child) { grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
+.lessonSteps .step:not(:only-child) .stepVisual { height: clamp(120px, 22dvh, 190px); min-height: 120px; max-width: 100%; }
+.lessonSteps .step:not(:only-child) > div:last-child { align-self: start; }
 .lessonSteps .step:only-child { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(64px, 1fr); }
 @media (max-width: 620px) {
   .lessonSteps .step, .lessonSteps .step:only-child { grid-template-columns: minmax(64px, 30%) minmax(0, 1fr); grid-template-rows: minmax(64px, 1fr); }

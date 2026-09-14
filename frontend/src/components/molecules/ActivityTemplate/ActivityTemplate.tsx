@@ -17,14 +17,102 @@ function MediaButton({ playing, label, onClick }: { playing: boolean; label: str
   )
 }
 
+function youtubeEmbedUrl(value?: string | null) {
+  if (!value) return null
+  try {
+    const url = new URL(value)
+    const id = url.hostname === 'youtu.be'
+      ? url.pathname.slice(1).split('/')[0]
+      : url.hostname.endsWith('youtube.com')
+        ? url.pathname.startsWith('/embed/') ? url.pathname.split('/')[2] : url.searchParams.get('v')
+        : null
+    const origin = typeof window === 'undefined' ? '' : `&origin=${encodeURIComponent(window.location.origin)}`
+    return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}?rel=0&enablejsapi=1${origin}` : null
+  } catch {
+    return null
+  }
+}
+
+interface YouTubePlayer {
+  getCurrentTime: () => number
+  getDuration: () => number
+  destroy: () => void
+}
+
+declare global {
+  interface Window {
+    YT?: { Player: new (element: HTMLIFrameElement, options: { events: { onReady: () => void } }) => YouTubePlayer }
+    onYouTubeIframeAPIReady?: () => void
+  }
+}
+
+let youtubeApiPromise: Promise<NonNullable<Window['YT']>> | null = null
+function loadYouTubeApi() {
+  if (window.YT?.Player) return Promise.resolve(window.YT)
+  if (youtubeApiPromise) return youtubeApiPromise
+  youtubeApiPromise = new Promise((resolve) => {
+    const previousReady = window.onYouTubeIframeAPIReady
+    window.onYouTubeIframeAPIReady = () => {
+      previousReady?.()
+      if (window.YT) resolve(window.YT)
+    }
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const script = document.createElement('script')
+      script.src = 'https://www.youtube.com/iframe_api'
+      document.head.appendChild(script)
+    }
+  })
+  return youtubeApiPromise
+}
+
+function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: string; onHalfWatched?: () => void }) {
+  const frameRef = useRef<HTMLIFrameElement | null>(null)
+  const completedRef = useRef(false)
+  const callbackRef = useRef(onHalfWatched)
+  callbackRef.current = onHalfWatched
+
+  useEffect(() => {
+    let player: YouTubePlayer | null = null
+    let timer: number | null = null
+    let cancelled = false
+    void loadYouTubeApi().then((YT) => {
+      if (cancelled || !frameRef.current) return
+      player = new YT.Player(frameRef.current, { events: { onReady: () => {
+        timer = window.setInterval(() => {
+          if (!player || completedRef.current) return
+          const duration = player.getDuration()
+          if (duration > 0 && player.getCurrentTime() / duration >= 0.5) {
+            completedRef.current = true
+            callbackRef.current?.()
+          }
+        }, 750)
+      } } })
+    })
+    return () => {
+      cancelled = true
+      if (timer !== null) window.clearInterval(timer)
+      player?.destroy()
+    }
+  }, [])
+
+  return <iframe ref={frameRef} className={styles.video} src={src} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+}
+
 function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
   const [playing, setPlaying] = useState(false)
   const template = task.template ?? 'multiple_choice'
+  const youtubeUrl = youtubeEmbedUrl(task.mediaUrl)
   const mediaRef = useRef<HTMLMediaElement | null>(null)
   useEffect(() => {
     const media = mediaRef.current
     return () => { media?.pause() }
   }, [])
+
+  if (youtubeUrl) {
+    return <section className={`${styles.panel} ${styles.youtubePanel}`}>
+      <YouTubeVideo src={youtubeUrl} title={task.contentLabel ?? task.title} onHalfWatched={onCompleted} />
+    </section>
+  }
 
   if (onCompleted && task.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || template === 'instructional_video' || template === 'calming_soundscape')) {
     return <section className={styles.panel}>
@@ -54,17 +142,24 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
 
   if (template === 'visual_narrative') {
     return (
-      <ol className={`${styles.steps} ${onCompleted ? styles.lessonSteps : ''}`} aria-label="Step-by-step visual narrative">
-        {(task.steps ?? []).map((step, index) => (
-          <li className={styles.step} key={step.id}>
-            <div className={styles.stepVisual}>
-              {step.imageUrl ? <img src={step.imageUrl} alt={step.altText ?? ''} /> : <ImageIcon size={28} aria-hidden="true" />}
-            </div>
-            <span className={styles.stepNumber}>{index + 1}</span>
-            <div><strong>{step.title}</strong>{step.description && <span>{step.description}</span>}</div>
-          </li>
-        ))}
-      </ol>
+      <>
+        {task.mediaUrl && <audio className={styles.readingAudio} src={task.mediaUrl} controls preload="metadata" aria-label={task.contentLabel ?? `${task.title} narration`} />}
+        <ol className={`${styles.steps} ${onCompleted ? styles.lessonSteps : ''}`} aria-label="Step-by-step visual narrative">
+          {(task.steps ?? []).map((step, index) => (
+            <li className={styles.step} key={step.id}>
+              <div className={styles.stepVisual}>
+                {step.imageUrl ? <img src={step.imageUrl} alt={step.altText ?? ''} /> : <ImageIcon size={28} aria-hidden="true" />}
+              </div>
+              <span className={styles.stepNumber}>{index + 1}</span>
+              <div className={styles.stepCopy}>
+                <strong>{step.title}</strong>
+                {step.description && <span>{step.description}</span>}
+                {step.audioUrl && <audio className={styles.stepAudio} src={step.audioUrl} controls preload="metadata" aria-label={`${step.title} narration`} />}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </>
     )
   }
 

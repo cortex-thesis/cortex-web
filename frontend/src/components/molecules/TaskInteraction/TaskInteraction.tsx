@@ -21,6 +21,7 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
   const [selected, setSelected] = useState<string[]>([])
   const [matched, setMatched] = useState<string[]>([])
   const [activePair, setActivePair] = useState<string | null>(null)
+  const [attemptedRight, setAttemptedRight] = useState<string | null>(null)
   const [sortItem, setSortItem] = useState<string | null>(null)
   const [sorted, setSorted] = useState<Record<string, string>>({})
   const [result, setResult] = useState<'correct' | 'incorrect' | null>(null)
@@ -38,15 +39,23 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
   function finish(correct: boolean, response: string) {
     setResult(correct ? 'correct' : 'incorrect')
     onAnswered?.(correct, response)
-    if (!correct) setTimeout(() => setResult(null), 900)
+  }
+
+  const feedback = result && <div className={`${styles.feedback} ${styles[result]}`} role="status">
+    {result === 'correct' ? (task.correctFeedback ?? 'Nice work! You found it.') : (task.retryFeedback ?? 'Almost. Try another move.')}
+  </div>
+
+  function resultClass(isPicked: boolean) {
+    return isPicked && result ? styles[result] : ''
   }
 
   if (template === 'multiple_choice' || template === 'yes_no') {
     return (
-      <div className={styles.choiceGrid}>
-        {task.choices.map((choice) => (
-          <button key={choice} type="button" className={`${styles.choice} ${selected.includes(choice) ? styles.selected : ''}`} aria-pressed={selected.includes(choice)} disabled={result !== null} onClick={() => { setSelected([choice]); finish(choice === task.answer, choice) }}>{choice}</button>
-        ))}
+      <div className={styles.stack}>
+        <div className={styles.choiceGrid}>{task.choices.map((choice) => (
+          <button key={choice} type="button" className={`${styles.choice} ${selected.includes(choice) ? styles.selected : ''} ${resultClass(selected.includes(choice))}`} aria-pressed={selected.includes(choice)} disabled={result !== null} onClick={() => { setSelected([choice]); finish(choice === task.answer, choice) }}>{choice}</button>
+        ))}</div>
+        {feedback}
       </div>
     )
   }
@@ -65,12 +74,12 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
       <div className={styles.stack}>
         <div className={`${styles.pictureGrid} ${template === 'tap_target' ? styles.targetGrid : ''}`}>
           {items.map((item) => (
-            <button key={item.id} type="button" className={`${styles.pictureChoice} ${selected.includes(item.id) ? styles.selected : ''}`} disabled={result !== null} onClick={() => choosePicture(item.id)}>
+            <button key={item.id} type="button" className={`${styles.pictureChoice} ${selected.includes(item.id) ? styles.selected : ''} ${resultClass(selected.includes(item.id))}`} disabled={result !== null} onClick={() => choosePicture(item.id)}>
               <ItemVisual item={item} /><strong>{item.label}</strong>
             </button>
           ))}
         </div>
-        {multiple && <div className={styles.actions}><button type="button" className={styles.check} disabled={!selected.length || result !== null} onClick={() => finish(task.scored === false || expected.length === 0 || (selected.length === expected.length && selected.every((id) => expected.includes(id))), selected.join(','))}><Check size={15} /> {task.scored === false || expected.length === 0 ? 'Save choices' : 'Check choices'}</button></div>}
+        <div className={styles.actions}>{feedback}{multiple && <button type="button" className={styles.check} disabled={!selected.length || result !== null} onClick={() => finish(task.scored === false || expected.length === 0 || (selected.length === expected.length && selected.every((id) => expected.includes(id))), selected.join(','))}><Check size={15} /> {task.scored === false || expected.length === 0 ? 'Save choices' : 'Check my choices'}</button>}</div>
       </div>
     )
   }
@@ -101,11 +110,11 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
     return (
       <div className={styles.stack}>
         <p className={styles.dragHint}><GripVertical size={15} /> Drag pieces into the work area, or tap them in order. Drag a piece out or tap it to return it.</p>
-        <div ref={workArea} className={`${styles.sequenceAnswer} ${template === 'picture_puzzle' ? styles.puzzleBoard : ''}`} aria-label="Your work area" onDragOver={(event) => event.preventDefault()} onDrop={() => addToSequence(dragItem)}>
+        <div ref={workArea} className={`${styles.sequenceAnswer} ${template === 'picture_puzzle' ? styles.puzzleBoard : ''} ${result ? styles[result] : ''}`} aria-label="Your work area" onDragOver={(event) => event.preventDefault()} onDrop={() => addToSequence(dragItem)}>
           {selected.length ? selected.map((id, index) => <span key={id} draggable role="button" tabIndex={0} aria-label={`Return ${items.find((item) => item.id === id)?.label} to options`} onClick={() => returnPiece(id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); returnPiece(id) } }} onDragStart={(event) => { setDragItem(id); event.dataTransfer.setData('text/plain', id) }} onDragEnd={(event) => { const area = workArea.current?.getBoundingClientRect(); if (area && (event.clientX < area.left || event.clientX > area.right || event.clientY < area.top || event.clientY > area.bottom)) returnPiece(id); setDragItem(null) }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.stopPropagation(); moveBefore(id) }}><b>{template === 'picture_puzzle' ? <Puzzle size={14} /> : index + 1}</b>{items.find((item) => item.id === id)?.label}</span>) : <em>Move the first piece here.</em>}
         </div>
         <div className={styles.itemRow} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (dragItem) returnPiece(dragItem) }}>{available.map((item) => <button type="button" draggable key={item.id} className={styles.itemButton} onDragStart={(event) => { setDragItem(item.id); event.dataTransfer.setData('text/plain', item.id) }} onDragEnd={() => setDragItem(null)} onClick={() => addToSequence(item.id)}><GripVertical size={15} />{item.label}</button>)}</div>
-        <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => { setSelected([]); setResult(null); onChanged?.() }}><RotateCcw size={15} /> Reset</button><button type="button" className={styles.check} disabled={selected.length !== items.length || result !== null} onClick={() => finish(JSON.stringify(selected) === JSON.stringify(task.correctOrder ?? []), selected.join(','))}><Check size={15} /> Check {template === 'picture_puzzle' ? 'puzzle' : 'order'}</button></div>
+        <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => { setSelected([]); setResult(null); onChanged?.() }}><RotateCcw size={15} /> Reset</button>{feedback}<button type="button" className={styles.check} disabled={selected.length !== items.length || result !== null} onClick={() => finish(JSON.stringify(selected) === JSON.stringify(task.correctOrder ?? []), selected.join(','))}><Check size={15} /> Check {template === 'picture_puzzle' ? 'puzzle' : 'order'}</button></div>
       </div>
     )
   }
@@ -120,15 +129,15 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
         setActivePair(null)
         if (next.length === pairs.length) finish(true, next.join(','))
       } else {
-        setResult('incorrect')
-        setTimeout(() => { setResult(null); setActivePair(null) }, 700)
+        setAttemptedRight(pairId)
+        finish(false, `${activePair},${pairId}`)
       }
     }
     return (
-      <div className={styles.matchGrid}>
-        <div>{pairs.map((pair) => <button type="button" draggable key={pair.id} disabled={matched.includes(pair.id)} className={`${styles.matchButton} ${pair.left.imageUrl ? styles.visualMatchButton : ''} ${activePair === pair.id ? styles.selected : ''}`} onDragStart={() => setActivePair(pair.id)} onClick={() => setActivePair(pair.id)}><GripVertical size={15} />{pair.left.imageUrl && <ItemVisual item={pair.left} />}<strong>{pair.left.label}</strong></button>)}</div>
-        <div>{shuffledRights.map((pair) => <button type="button" key={pair.id} disabled={matched.includes(pair.id)} className={styles.matchButton} onDragOver={(event) => event.preventDefault()} onDrop={() => chooseRight(pair.id)} onClick={() => chooseRight(pair.id)}>{pair.right.label}</button>)}</div>
-      </div>
+      <div className={styles.stack}><div className={styles.matchGrid}>
+        <div>{pairs.map((pair) => <button type="button" draggable key={pair.id} disabled={matched.includes(pair.id) || result !== null} className={`${styles.matchButton} ${pair.left.imageUrl ? styles.visualMatchButton : ''} ${activePair === pair.id ? styles.selected : ''} ${resultClass(activePair === pair.id || matched.includes(pair.id))}`} onDragStart={() => setActivePair(pair.id)} onClick={() => setActivePair(pair.id)}><GripVertical size={15} />{pair.left.imageUrl && <ItemVisual item={pair.left} />}<strong>{pair.left.label}</strong></button>)}</div>
+        <div>{shuffledRights.map((pair) => <button type="button" key={pair.id} disabled={matched.includes(pair.id) || result !== null} className={`${styles.matchButton} ${resultClass(attemptedRight === pair.id || matched.includes(pair.id))}`} onDragOver={(event) => event.preventDefault()} onDrop={() => chooseRight(pair.id)} onClick={() => chooseRight(pair.id)}>{pair.right.label}</button>)}</div>
+      </div>{feedback}</div>
     )
   }
 
@@ -146,7 +155,8 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
     <div className={styles.stack}>
         <div className={styles.itemRow}>{items.filter((item) => !sorted[item.id]).map((item) => <button type="button" draggable key={item.id} className={`${styles.itemButton} ${item.imageUrl ? styles.visualItemButton : ''} ${sortItem === item.id ? styles.selected : ''}`} onDragStart={() => setSortItem(item.id)} onClick={() => setSortItem(item.id)}><GripVertical size={15} />{item.imageUrl && <ItemVisual item={item} />}<strong>{item.label}</strong></button>)}</div>
       <p className={styles.helper}>{sortItem ? 'Move it to a group, or tap a group.' : 'Choose or drag an item to sort.'}</p>
-      <div className={styles.categoryGrid}>{(task.categories ?? []).map((category) => <button type="button" key={category.id} className={styles.category} disabled={result !== null} onDragOver={(event) => event.preventDefault()} onDrop={() => assignCategory(category.id)} onClick={() => assignCategory(category.id)}><strong>{category.label}</strong><span>{Object.entries(sorted).filter(([, value]) => value === category.id).map(([id]) => items.find((item) => item.id === id)?.label).join(', ') || 'Drop items here'}</span></button>)}</div>
+      <div className={styles.categoryGrid}>{(task.categories ?? []).map((category) => <button type="button" key={category.id} className={`${styles.category} ${result ? styles[result] : ''}`} disabled={result !== null} onDragOver={(event) => event.preventDefault()} onDrop={() => assignCategory(category.id)} onClick={() => assignCategory(category.id)}><strong>{category.label}</strong><span>{Object.entries(sorted).filter(([, value]) => value === category.id).map(([id]) => items.find((item) => item.id === id)?.label).join(', ') || 'Drop items here'}</span></button>)}</div>
+      {feedback}
     </div>
   )
 }

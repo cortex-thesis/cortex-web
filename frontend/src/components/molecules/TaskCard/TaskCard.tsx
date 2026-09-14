@@ -35,10 +35,7 @@ function TaskCard({
   const [selected, setSelected] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [interactionResult, setInteractionResult] = useState<'correct' | 'incorrect' | null>(null)
-
   function handleInteraction(correct: boolean, response: string) {
-    setInteractionResult(correct ? 'correct' : 'incorrect')
     onAnswered?.(correct, response)
   }
 
@@ -53,8 +50,7 @@ function TaskCard({
     if (!revealed) {
       return selected === choice ? 'selected' : 'default'
     }
-    if (choice === task.answer) return 'correct'
-    if (choice === selected) return 'incorrect'
+    if (choice === selected) return choice === task.answer ? 'correct' : 'incorrect'
     return 'default'
   }
 
@@ -139,8 +135,7 @@ function TaskCard({
       {hasTaskInteraction ? (
         <>
           <p className={styles.question}>{task.question}</p>
-          <TaskInteraction task={task} onAnswered={handleInteraction} onChanged={() => { setInteractionResult(null); onAnswered?.(false, '') }} />
-          {interactionResult && <div className={`${styles.feedback} ${styles[interactionResult]}`} role="status">{interactionResult === 'correct' ? (task.correctFeedback ?? 'Nice work! You found it.') : (task.retryFeedback ?? 'Almost. Try another move.')}</div>}
+          <TaskInteraction task={task} onAnswered={handleInteraction} />
         </>
       ) : isKnowledgeCheck ? (
         <>

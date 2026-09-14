@@ -96,7 +96,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       <button className={styles.backBtn} onClick={back} aria-label="Back to lessons"><ArrowLeft size={18} /></button>
       <div><span className={styles.eyebrow}>Lesson practice</span><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1><p>Your lesson progress is saved as you continue. Practice stays separate from EEG session history.</p></div>
     </header>
-    <section className={playerStyles.player} aria-label="Lesson activities">
+    <section className={`${playerStyles.player} ${task?.template === 'instructional_video' ? playerStyles.videoPlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Activity position" aria-valuemin={1} aria-valuemax={lesson.slides.length} aria-valuenow={Math.min(position + 1, lesson.slides.length)} aria-valuetext={complete ? 'All activities complete' : `Activity ${position + 1} of ${lesson.slides.length}; ${completed.size} completed`}>
           <span style={{ width: `${complete ? 100 : position / Math.max(lesson.slides.length - 1, 1) * 100}%` }} />
@@ -106,7 +106,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         </li>)}</ol>
         {!isReplay && <span className={playerStyles.progressHint}>{complete ? 'All activities complete' : `${lesson.slides.length - completed.size} activities left`}</span>}
       </div>}
-      <div className={playerStyles.stage}>
+      <div className={`${playerStyles.stage} ${task?.template === 'instructional_video' ? playerStyles.videoStage : ''}`}>
         {tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}>
           <motion.div initial={{ opacity: reduceMotion ? 1 : 0 }} animate={{ opacity: 1 }} transition={{ duration: reduceMotion ? 0 : .18 }}>
             <TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onAnswered={(correct) => {
@@ -120,8 +120,8 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       {saveError && <p role="alert">{saveError}</p>}
       {task && <nav className={playerStyles.actions} aria-label="Activity navigation">
         <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || saving} onClick={() => { setVisited((previous) => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
-        {isActivity && <button className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry((previous) => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered((previous) => ({ ...previous, [position]: false })); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
-        <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || saving} onClick={() => void advance()}>{saving ? 'Saving...' : position === lesson!.slides.length - 1 ? 'Finish practice' : 'Next activity'}<ArrowRight size={18} /></button>
+        {isActivity && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry((previous) => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered((previous) => { const next = { ...previous }; delete next[position]; return next }); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
+        <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || saving} onClick={() => void advance()}>{saving ? 'Saving...' : position === lesson!.slides.length - 1 ? 'Finish practice' : 'Next'}<ArrowRight size={18} /></button>
       </nav>}
     </section>
   </div></PlayfulZoneTemplate>

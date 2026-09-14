@@ -1,4 +1,10 @@
 {
+  "pencil": "/assets/care/care-01/pencil.png",
+  "fried chicken": "/assets/care/care-02/fried-chicken.png",
+  "hot dog": "/assets/care/care-02/hotdog.png",
+  "packaged salty snack": "/assets/care/care-02/packaged-snack.png",
+  "fast-food meal": "/assets/care/care-02/fast-food.png",
+  "healthy living": "/assets/care/care-02/healthy-living.png",
   "ball": "/assets/care/care-01/ball.png",
   "book": "/assets/care/care-01/book.png",
   "shoes": "/assets/care/care-01/shoes.png",

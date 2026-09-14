@@ -95,6 +95,7 @@ export interface ActivityStep {
   description?: string
   imageUrl?: string | null
   altText?: string
+  audioUrl?: string | null
 }
 
 export type TaskTemplateId =

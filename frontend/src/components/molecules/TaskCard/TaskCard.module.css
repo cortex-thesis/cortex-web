@@ -102,7 +102,7 @@
 .feedback { padding: 11px 14px; border-radius: var(--radius-md); font: var(--font-weight-semibold) var(--text-caption)/1.35 var(--font-family); animation: feedbackAppear .25s ease both; transition: background-color .25s, color .25s; }
 @keyframes feedbackAppear { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .card, .feedback { animation: none; transition: none; } }
-.correct { background: #e1f5ee; color: #0f6e56; }.incorrect { background: #fff3d6; color: #854f0b; }
+.correct { background: #e1f5ee; color: #0f6e56; }.incorrect { background: var(--state-overstimulated-fill); color: var(--state-overstimulated-text); }
 
 .nudge {
   display: flex;

@@ -6,45 +6,30 @@
   width: 100%;
   height: 100dvh;
   min-height: 100dvh;
-  background: var(--color-surface-warm, #fbf7ee);
+  background:
+    radial-gradient(
+      circle 266px at -72px -72px,
+      rgba(250, 199, 117, 0.2) 0%,
+      rgba(250, 199, 117, 0) 72%
+    ),
+    radial-gradient(
+      circle 252px at calc(100% + 64px) calc(100% + 64px),
+      rgba(29, 158, 117, 0.16) 0%,
+      rgba(29, 158, 117, 0) 72%
+    ),
+    var(--color-surface-warm, #fbf7ee);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* Converted to soft ambient auras to eliminate visual distraction */
+/* The auras are painted into .root's background so they can never overlay UI. */
 .blob1 {
-  position: absolute;
-  width: 380px;
-  height: 380px;
-  background: radial-gradient(
-    circle,
-    var(--state-distracted, #fac775) 0%,
-    rgba(250, 199, 117, 0) 70%
-  );
-  opacity: 0.35;
-  filter: blur(50px);
-  top: -120px;
-  left: -120px;
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .blob2 {
-  position: absolute;
-  width: 360px;
-  height: 360px;
-  background: radial-gradient(
-    circle,
-    var(--state-focused, #1d9e75) 0%,
-    rgba(29, 158, 117, 0) 70%
-  );
-  opacity: 0.25;
-  filter: blur(60px);
-  bottom: -100px;
-  right: -100px;
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .content {
