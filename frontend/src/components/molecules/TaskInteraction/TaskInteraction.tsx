@@ -1,8 +1,10 @@
 import { useMemo, useRef, useState } from 'react'
 import { Check, GripVertical, Image as ImageIcon, Puzzle, RotateCcw } from 'lucide-react'
 import type { Task, TaskItem } from '../../../types'
+import { playLessonSound } from '../../../lib/lessonSounds'
 import styles from './TaskInteraction.module.css'
 import CreativeTask from './CreativeTask'
+import ToothBrushingTask from './ToothBrushingTask'
 
 interface TaskInteractionProps {
   task: Task
@@ -27,6 +29,8 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
   const [result, setResult] = useState<'correct' | 'incorrect' | null>(null)
   const [dragItem, setDragItem] = useState<string | null>(null)
   const workArea = useRef<HTMLDivElement>(null)
+
+  if (template === 'tooth_brushing') return <ToothBrushingTask task={task} onAnswered={onAnswered} />
 
   const items = task.items ?? []
   const expected = task.correctItemIds ?? []
@@ -128,6 +132,7 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
         setMatched(next)
         setActivePair(null)
         if (next.length === pairs.length) finish(true, next.join(','))
+        else playLessonSound('correct')
       } else {
         setAttemptedRight(pairId)
         finish(false, `${activePair},${pairId}`)

@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 
 from web.activity_templates import validate_activity_configuration
@@ -43,7 +44,16 @@ class Command(BaseCommand):
 
             # Preserve duplicate records for audit/history while ensuring only one active lesson.
             matches.exclude(pk=lesson.pk).update(status=Lesson.Status.ARCHIVED, archived_at=timezone.now())
-            existing_slides = {slide.position: slide for slide in lesson.slides.select_related("activity")}
+            existing_slides = list(lesson.slides.select_related("activity"))
+            slides_by_purpose = {
+                slide.activity.configuration.get("instructional_purpose"): slide
+                for slide in existing_slides
+                if slide.activity.configuration.get("instructional_purpose")
+            }
+            used_slide_ids = set()
+            # Free the ordered positions before purpose-based moves to avoid
+            # temporary unique-position collisions during insertions/removals.
+            lesson.slides.update(position=F("position") + 1000)
             for position, screen in enumerate(definition["slides"]):
                 config = dict(screen["configuration"])
                 config["lesson_metadata"] = {
@@ -56,7 +66,10 @@ class Command(BaseCommand):
                 error = validate_activity_configuration(screen["type"], config)
                 if error:
                     raise CommandError(f'{definition["lesson_id"]} screen {position + 1}: {error}')
-                slide = existing_slides.pop(position, None)
+                purpose = config.get("instructional_purpose")
+                slide = slides_by_purpose.get(purpose)
+                if slide is not None:
+                    used_slide_ids.add(slide.pk)
                 if slide is None:
                     activity = Activity.objects.create(type=screen["type"], title=screen["title"], configuration=config)
                     Slide.objects.create(lesson=lesson, position=position, title=screen["title"], activity=activity)
@@ -68,10 +81,12 @@ class Command(BaseCommand):
                     activity.asset = None
                     activity.save()
                     slide.title = screen["title"]
-                    slide.save(update_fields=["title"])
-            # Definitions currently only grow or remain stable. Refuse to erase an
-            # exposed historical slide if a future definition becomes shorter.
-            if existing_slides:
-                raise CommandError(f'{definition["lesson_id"]} has obsolete slides; archive them through a reviewed migration.')
+                    slide.position = position
+                    slide.save(update_fields=["title", "position"])
+            obsolete_slides = [slide for slide in existing_slides if slide.pk not in used_slide_ids]
+            obsolete_activity_ids = [slide.activity_id for slide in obsolete_slides]
+            if obsolete_slides:
+                Slide.objects.filter(pk__in=[slide.pk for slide in obsolete_slides]).delete()
+                Activity.objects.filter(pk__in=obsolete_activity_ids, slide__isnull=True).delete()
             self.stdout.write(f'{definition["lesson_id"]}: {lesson.title} ({len(definition["slides"])} screens)')
         self.stdout.write(self.style.SUCCESS("CARE-01--CARE-03 synchronized successfully."))

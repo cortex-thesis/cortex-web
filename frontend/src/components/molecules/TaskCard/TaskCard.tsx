@@ -7,6 +7,7 @@ import { ProgressBar } from '../../atoms'
 import ActivityTemplate from '../ActivityTemplate'
 import TaskInteraction from '../TaskInteraction'
 import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../../constants/activityTemplates'
+import { playLessonSound } from '../../../lib/lessonSounds'
 import styles from './TaskCard.module.css'
 
 type AnswerState = 'default' | 'selected' | 'correct' | 'incorrect'
@@ -36,6 +37,7 @@ function TaskCard({
   const [revealed, setRevealed] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   function handleInteraction(correct: boolean, response: string) {
+    playLessonSound(correct ? 'correct' : 'incorrect')
     onAnswered?.(correct, response)
   }
 
@@ -43,7 +45,9 @@ function TaskCard({
     if (revealed) return
     setSelected(choice)
     setRevealed(true)
-    onAnswered?.(choice === task.answer, choice)
+    const correct = choice === task.answer
+    playLessonSound(correct ? 'correct' : 'incorrect')
+    onAnswered?.(correct, choice)
   }
 
   function getAnswerState(choice: string): AnswerState {
@@ -60,7 +64,9 @@ function TaskCard({
   const template = task.template ?? 'multiple_choice'
   const isKnowledgeCheck = template === 'multiple_choice'
   const hasTaskInteraction = Boolean(task.taskTemplate)
-  const templateLabel = task.taskTemplate ? TASK_TEMPLATE_BY_ID[task.taskTemplate].label : ACTIVITY_TEMPLATE_BY_ID[template].label
+  const templateLabel = task.taskTemplate
+    ? (TASK_TEMPLATE_BY_ID[task.taskTemplate]?.label ?? 'Interactive activity')
+    : (ACTIVITY_TEMPLATE_BY_ID[template]?.label ?? 'Learning activity')
   const maxWidths = { compact: '560px', standard: '760px', wide: '1040px', immersive: 'min(1280px, 100%)' }
   const taskStyle = {
     '--activity-max-width': maxWidths[task.layout?.size ?? 'standard'],

@@ -17,6 +17,28 @@ function MediaButton({ playing, label, onClick }: { playing: boolean; label: str
   )
 }
 
+function StepAudioButton({ src, label }: { src: string; label: string }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  function toggle() {
+    const audio = audioRef.current
+    if (!audio) return
+    if (audio.paused) void audio.play()
+    else audio.pause()
+  }
+
+  return (
+    <>
+      <button type="button" className={`${styles.listenButton} ${isPlaying ? styles.listenButtonPlaying : ''}`} onClick={toggle} aria-label={`${isPlaying ? 'Pause' : 'Listen to'} ${label}`}>
+        {isPlaying ? <Pause size={15} fill="currentColor" /> : <Volume2 size={16} />}
+        <span>{isPlaying ? 'Pause' : 'Listen'}</span>
+      </button>
+      <audio className={styles.hiddenAudio} ref={audioRef} src={src} preload="metadata" onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={() => setIsPlaying(false)} />
+    </>
+  )
+}
+
 function youtubeEmbedUrl(value?: string | null) {
   if (!value) return null
   try {
@@ -146,15 +168,17 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
         {task.mediaUrl && <audio className={styles.readingAudio} src={task.mediaUrl} controls preload="metadata" aria-label={task.contentLabel ?? `${task.title} narration`} />}
         <ol className={`${styles.steps} ${onCompleted ? styles.lessonSteps : ''}`} aria-label="Step-by-step visual narrative">
           {(task.steps ?? []).map((step, index) => (
-            <li className={styles.step} key={step.id}>
+            <li className={`${styles.step} ${step.audioUrl ? styles.stepWithAudio : ''}`} key={step.id}>
               <div className={styles.stepVisual}>
                 {step.imageUrl ? <img src={step.imageUrl} alt={step.altText ?? ''} /> : <ImageIcon size={28} aria-hidden="true" />}
               </div>
               <span className={styles.stepNumber}>{index + 1}</span>
               <div className={styles.stepCopy}>
-                <strong>{step.title}</strong>
+                <div className={styles.stepTitleRow}>
+                  <strong>{step.title}</strong>
+                  {step.audioUrl && <StepAudioButton src={step.audioUrl} label={step.title} />}
+                </div>
                 {step.description && <span>{step.description}</span>}
-                {step.audioUrl && <audio className={styles.stepAudio} src={step.audioUrl} controls preload="metadata" aria-label={`${step.title} narration`} />}
               </div>
             </li>
           ))}

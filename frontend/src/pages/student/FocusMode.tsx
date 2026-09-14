@@ -159,7 +159,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
             <span>Screen</span>
             {activeTasks.map((item, index) => (
               <button key={item.id} className={index === taskPosition ? styles.prototypeActive : ''} onClick={() => setTaskPosition(index)}>
-                {item.taskTemplate ? TASK_TEMPLATE_BY_ID[item.taskTemplate].label : ACTIVITY_TEMPLATE_BY_ID[item.template ?? 'multiple_choice'].label}
+                {item.taskTemplate ? (TASK_TEMPLATE_BY_ID[item.taskTemplate]?.label ?? 'Interactive activity') : (ACTIVITY_TEMPLATE_BY_ID[item.template ?? 'multiple_choice']?.label ?? 'Learning activity')}
               </button>
             ))}
           </div>

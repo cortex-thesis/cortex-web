@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molecules'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { api } from '../../lib/api'
+import { playLessonSound } from '../../lib/lessonSounds'
 import { endStudentSession, getStudentSessions, trackStudentSlide } from '../../lib/studentApi'
 import { MUSE_CHANNELS, useMuseStore, type BandPowers } from '../../store/museStore'
 import type { Task } from '../../types'
@@ -24,9 +25,10 @@ const BANDS: Array<{ key: keyof BandPowers; label: string }> = [
   { key: 'alpha', label: 'Alpha' }, { key: 'beta', label: 'Beta' }, { key: 'gamma', label: 'Gamma' },
 ]
 const fieldNames: Record<string, string> = Object.fromEntries([
-  'imageUrl', 'altText', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl', 'actionLabel',
+  'imageUrl', 'altText', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl', 'actionLabel',
   'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'correctFeedback', 'retryFeedback',
   'sceneImageUrl', 'preferredColumns', 'boardMinHeight', 'mediaFit',
+  'dirtyImageUrl', 'cleaningImageUrl', 'cleanImageUrl', 'toolImageUrl',
 ].map((name) => [name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`), name]))
 function taskConfiguration(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(taskConfiguration)
@@ -104,17 +106,17 @@ export default function LiveEEG() {
       <div className={styles.monitorQuality}><span>{acceptedChannels}/4 clean channels</span><span>Baseline {baselineProgress}%</span>{MUSE_CHANNELS.map((channel, index) => <i key={channel} title={`${channel} contact`} className={quality[index] === 2 ? styles.contactGood : quality[index] === 1 ? styles.contactFair : styles.contactPoor} />)}</div>
     </section>
     {error && <p className={styles.error}>{error}</p>}
-    <section className={`${playerStyles.player} ${task?.template === 'instructional_video' ? playerStyles.videoPlayer : ''}`} aria-label="Lesson activities">
+    <section className={`${playerStyles.player} ${task?.template === 'instructional_video' || task?.taskTemplate === 'tooth_brushing' ? playerStyles.videoPlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Activity position" aria-valuemin={1} aria-valuemax={lesson.slides.length} aria-valuenow={Math.min(position + 1, lesson.slides.length)}><span style={{ width: `${complete ? 100 : position / Math.max(lesson.slides.length - 1, 1) * 100}%` }} /></div>
         <ol className={playerStyles.dots}>{lesson.slides.map((item, index) => <li key={item.id} aria-current={!complete && index === position ? 'step' : undefined} className={`${playerStyles.dot} ${completed.has(index) ? playerStyles.done : ''} ${!complete && index === position ? playerStyles.current : ''}`}>{completed.has(index) ? <Check size={12} /> : <span />}</li>)}</ol>
-        <span className={playerStyles.progressHint}>{complete ? 'All activities complete' : `${lesson.slides.length - completed.size} activities left`} · Filled: completed · Ring: current</span>
+        <span className={playerStyles.progressHint}>{complete ? 'All activities complete' : `Activity ${position + 1} of ${lesson.slides.length}`} · Filled: completed · Ring: current</span>
       </div>}
-      <div className={`${playerStyles.stage} ${task?.template === 'instructional_video' ? playerStyles.videoStage : ''}`}>{!lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? <TaskCard key={`${task.id}/${retry}`} className={playerStyles.task} showProgress={false} task={task} onAnswered={(correct) => { setAnswered(correct); if (correct) setCompleted((current) => new Set(current).add(position)) }} /> : <div className={playerStyles.complete}><Check size={40} /><h2>Lesson complete</h2><p>Your recorded session is ready to save.</p><button className={`${playerStyles.button} ${playerStyles.next}`} onClick={() => void finish()}>Save and finish session</button></div>}</div>
+      <div className={`${playerStyles.stage} ${task?.template === 'instructional_video' || task?.taskTemplate === 'tooth_brushing' ? playerStyles.videoStage : ''}`}>{!lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? <TaskCard key={`${task.id}/${retry}`} className={playerStyles.task} showProgress={false} task={task} onAnswered={(correct) => { setAnswered(correct); if (correct) setCompleted((current) => new Set(current).add(position)) }} /> : <div className={playerStyles.complete}><Check size={40} /><h2>Lesson complete</h2><p>Your recorded session is ready to save.</p><button className={`${playerStyles.button} ${playerStyles.next}`} onClick={() => void finish()}>Save and finish session</button></div>}</div>
       {task && <nav className={playerStyles.actions} aria-label="Activity navigation">
-        <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0} onClick={() => { setPosition(position - 1); setAnswered(null) }}><ArrowLeft size={18} />Previous</button>
+        <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0} onClick={() => { playLessonSound('transition'); setPosition(position - 1); setAnswered(null) }}><ArrowLeft size={18} />Previous</button>
         {answered === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} onClick={() => { setRetry(retry + 1); setAnswered(null); setCompleted((current) => { const next = new Set(current); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
-        <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={answered !== true} onClick={() => { setPosition(position + 1); setAnswered(null) }}>{position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next'}<ArrowRight size={18} /></button>
+        <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={answered !== true} onClick={() => { playLessonSound(position === lesson!.slides.length - 1 ? 'finished' : 'transition'); setPosition(position + 1); setAnswered(null) }}>{position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next'}<ArrowRight size={18} /></button>
       </nav>}
     </section>
     {!complete && <button className={styles.endSession} onClick={() => void finish()}>End and save session</button>}

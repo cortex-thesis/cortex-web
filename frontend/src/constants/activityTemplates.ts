@@ -43,6 +43,7 @@ export const TASK_TEMPLATES: TaskTemplateDefinition[] = [
   { id: 'trace_route', label: 'Trace the route', response: 'Move through checkpoints in order', purpose: 'Motor planning and procedural recall' },
   { id: 'memory_flip', label: 'Memory flip', response: 'Turn over and pair hidden cards', purpose: 'Working-memory practice in a controlled set' },
   { id: 'pattern_builder', label: 'Pattern builder', response: 'Complete a visual or functional pattern', purpose: 'Prediction and sequence recognition' },
+  { id: 'tooth_brushing', label: 'Brush the teeth', response: 'Choose a tool and practise brushing', purpose: 'Functional tool recognition and guided motor practice' },
 ]
 
 export const TASK_TEMPLATE_BY_ID = Object.fromEntries(

@@ -62,6 +62,7 @@ TASK_TEMPLATES = {
     "trace_route": {"label": "Trace the route", "required": ("question", "items", "correct_order")},
     "memory_flip": {"label": "Memory flip", "required": ("question", "pairs")},
     "pattern_builder": {"label": "Pattern builder", "required": ("question", "pattern", "items", "answer")},
+    "tooth_brushing": {"label": "Brush the teeth", "required": ("question", "items", "dirty_image_url", "cleaning_image_url", "clean_image_url", "tool_image_url")},
 }
 
 LAYOUT_OPTIONS = {

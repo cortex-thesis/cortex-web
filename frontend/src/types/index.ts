@@ -112,6 +112,7 @@ export type TaskTemplateId =
   | 'trace_route'
   | 'memory_flip'
   | 'pattern_builder'
+  | 'tooth_brushing'
 
 export interface TaskItem {
   id: string
@@ -179,6 +180,10 @@ export interface Task {
   sceneImageUrl?: string | null
   hotspot?: TaskHotspot
   pattern?: TaskItem[]
+  dirtyImageUrl?: string | null
+  cleaningImageUrl?: string | null
+  cleanImageUrl?: string | null
+  toolImageUrl?: string | null
   layout?: TaskLayout
 }
 
