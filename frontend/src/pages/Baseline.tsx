@@ -6,6 +6,8 @@ import { MUSE_CHANNELS, useMuseStore } from '../store/museStore'
 import styles from './Baseline.module.css'
 
 type Recording = { id: string; participant_code: string; condition: string; status: string; started_at: string; epoch_count: number }
+type Epoch = { epoch_number: number; start_offset_ms: number; end_offset_ms: number; sample_count: number; raw_channels: Record<string, number[]>; channel_statistics: Record<string, { mean: number; standard_deviation: number; minimum: number; maximum: number }>; absolute_band_powers: Record<string, number>; relative_band_powers: Record<string, number>; theta_beta_ratio: number | null; signal_quality: number[]; accepted_channels: number; battery_level: number | null; is_usable: boolean }
+type RecordingDetail = { recording: Recording & { age_years: number | null; sex_at_birth: string; device_name: string; sampling_rate_hz: number; planned_duration_seconds: number; epoch_length_seconds: number; selected_variables: string[] }; epochs: Epoch[] }
 const FEATURES = [
   ['raw_channels', 'Raw TP9, AF7, AF8, TP10 (required)'], ['theta_power', 'Theta power (4-8 Hz)'],
   ['alpha_power', 'Alpha power (8-13 Hz)'], ['beta_power', 'Beta power (13-30 Hz)'],
@@ -29,10 +31,15 @@ export default function Baseline() {
   const [elapsed, setElapsed] = useState(0)
   const [savedEpochs, setSavedEpochs] = useState(0)
   const [history, setHistory] = useState<Recording[]>([])
+  const [expandedId, setExpandedId] = useState('')
+  const [details, setDetails] = useState<Record<string, RecordingDetail>>({})
+  const [detailLoading, setDetailLoading] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const startedAt = useRef(0)
   const finishing = useRef(false)
+  const nextEpoch = useRef(1)
+  const captureBusy = useRef(false)
 
   const refresh = () => api<{ recordings: Recording[] }>('/baseline/').then((data) => setHistory(data.recordings)).catch(() => undefined)
   useEffect(() => { void refresh() }, [])
@@ -41,11 +48,18 @@ export default function Baseline() {
     if (!recordingId) return
     const epochMs = epochLength * 1000
     const capture = async () => {
+      if (captureBusy.current || finishing.current) return
       const state = useMuseStore.getState()
-      const epochNumber = Math.floor((Date.now() - startedAt.current) / epochMs)
-      if (epochNumber < 1 || epochNumber > Math.floor(duration / epochLength)) return
+      const epochNumber = nextEpoch.current
+      const totalEpochs = Math.floor(duration / epochLength)
+      const elapsedMs = Date.now() - startedAt.current
+      if (epochNumber > totalEpochs || elapsedMs < epochNumber * epochMs + 600) return
       const count = epochLength * 256
-      if (!state.samples.every((channel) => channel.length >= count)) return setError('Not enough continuous Muse samples for this epoch. Keep the headset still.')
+      if (!state.samples.every((channel) => channel.length >= count)) {
+        if (elapsedMs >= epochNumber * epochMs + 2000) setError('Muse samples are arriving slowly. Keep the headset connected while this epoch finishes buffering.')
+        return
+      }
+      captureBusy.current = true
       try {
         await api(`/baseline/${recordingId}/`, { method: 'POST', body: JSON.stringify({
           action: 'epoch', epoch_number: epochNumber, start_offset_ms: (epochNumber - 1) * epochMs, end_offset_ms: epochNumber * epochMs,
@@ -53,12 +67,16 @@ export default function Baseline() {
           absolute_band_powers: state.absoluteBands, relative_band_powers: state.relativeBands,
           signal_quality: state.quality, accepted_channels: state.acceptedChannels, battery_level: state.battery,
         }) })
+        nextEpoch.current += 1
         setSavedEpochs((value) => Math.max(value, epochNumber)); setError('')
       } catch (reason) { setError(reason instanceof Error ? reason.message : 'Epoch could not be saved.') }
+      finally { captureBusy.current = false }
     }
-    const epochTimer = window.setInterval(() => void capture(), epochMs)
+    // Poll frequently and give Bluetooth packets a short grace period. Muse packets
+    // do not arrive at exact wall-clock epoch boundaries.
+    const epochTimer = window.setInterval(() => void capture(), 200)
     const clock = window.setInterval(() => setElapsed(Math.min(duration, (Date.now() - startedAt.current) / 1000)), 100)
-    const finishTimer = window.setTimeout(() => void finishRecording(), duration * 1000 + 500)
+    const finishTimer = window.setTimeout(() => void finishRecording(), duration * 1000 + 1800)
     return () => { window.clearInterval(epochTimer); window.clearInterval(clock); window.clearTimeout(finishTimer) }
     // The active recording configuration is intentionally frozen at start.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,7 +85,7 @@ export default function Baseline() {
   async function startRecording() {
     if (muse.status !== 'streaming') return setError('Connect Muse 2 before starting.')
     if (!participantCode.trim() || !consent) return setError('Participant code and confirmed consent are required.')
-    setError(''); setMessage(''); setSavedEpochs(0); setElapsed(0); finishing.current = false
+    setError(''); setMessage(''); setSavedEpochs(0); setElapsed(0); finishing.current = false; captureBusy.current = false; nextEpoch.current = 1
     try {
       const result = await api<{ id: string }>('/baseline/', { method: 'POST', body: JSON.stringify({
         participant_code: participantCode, age_years: features.includes('age_years') ? age : '', sex_at_birth: features.includes('sex_at_birth') ? sex : '',
@@ -91,12 +109,23 @@ export default function Baseline() {
   const waveforms = useMemo(() => muse.samples.map((values) => values.filter((_, index) => index % Math.max(1, Math.floor(values.length / 120)) === 0).slice(-120)), [muse.samples])
   const toggle = (key: string) => setFeatures((current) => current.includes(key) ? current.filter((value) => value !== key) : [...current, key])
   const includeFeature = (key: string) => setFeatures((current) => current.includes(key) ? current : [...current, key])
+  const toggleRecording = async (id: string) => {
+    if (expandedId === id) return setExpandedId('')
+    setExpandedId(id)
+    if (details[id]) return
+    setDetailLoading(id)
+    try {
+      const detail = await api<RecordingDetail>(`/baseline/${id}/`)
+      setDetails((current) => ({ ...current, [id]: detail }))
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to load baseline values.') }
+    finally { setDetailLoading('') }
+  }
   return <main className={styles.page}>
     <header className={styles.header}><Logo variant="horizontal" height={31} /><div><span>Research acquisition</span><h1>EEG baseline recorder</h1><p>Capture reproducible Muse 2 epochs for clustering and classification.</p></div><div className={styles.device}><Radio size={16} /> {muse.status === 'streaming' ? muse.deviceName || 'Muse 2' : 'Not connected'} {muse.battery != null && <span><BatteryMedium size={15} /> {muse.battery}%</span>}</div></header>
     <div className={styles.layout}>
       <section className={styles.card}><div className={styles.sectionTitle}><div><span>Live signal</span><h2>TP9, AF7, AF8, TP10</h2></div>{muse.status !== 'streaming' ? <button className={styles.primary} onClick={() => void muse.connect()}><Bluetooth size={16} /> Connect Muse 2</button> : <span className={styles.connected}><CheckCircle2 size={15} /> Streaming</span>}</div>
         <div className={styles.waveBox}>{waveforms.map((values, channel) => <svg key={MUSE_CHANNELS[channel]} viewBox="0 0 600 58" preserveAspectRatio="none"><text x="8" y="14">{MUSE_CHANNELS[channel]}</text><polyline stroke={colors[channel]} points={values.map((value, index) => `${index * 600 / Math.max(values.length - 1, 1)},${29 - Math.max(-25, Math.min(25, value / 8))}`).join(' ')} /></svg>)}</div>
-        <div className={styles.bandGrid}>{Object.entries(muse.absoluteBands).map(([key, value]) => <div key={key}><span>{key}</span><strong>{value.toFixed(4)}</strong></div>)}</div>
+        <div className={styles.bandGrid}>{Object.entries(muse.bands).map(([key, value]) => <div key={key}><span>{key}</span><strong>{value.toFixed(3)}</strong></div>)}</div>
         <div className={styles.quality}>{MUSE_CHANNELS.map((name, index) => <span key={name} data-quality={muse.quality[index]}>{name}: {muse.quality[index] === 2 ? 'good' : muse.quality[index] === 1 ? 'adjust' : 'poor'}</span>)}<strong>{muse.acceptedChannels}/4 clean channels</strong></div>
       </section>
       <aside className={styles.card}><span className={styles.kicker}>Protocol setup</span><h2>Baseline variables</h2>
@@ -110,6 +139,6 @@ export default function Baseline() {
         {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success}>{message}</p>}
       </aside>
     </div>
-    <section className={`${styles.card} ${styles.history}`}><div className={styles.sectionTitle}><div><span>Database</span><h2>Recent baseline recordings</h2></div></div>{history.length ? <div className={styles.table}>{history.map((item) => <div key={item.id}><strong>{item.participant_code}</strong><span>{item.condition.replaceAll('_', ' ')}</span><span>{new Date(item.started_at).toLocaleString()}</span><span>{item.epoch_count} epochs</span><b>{item.status}</b></div>)}</div> : <p>No baseline recordings saved by this account yet.</p>}</section>
+    <section className={`${styles.card} ${styles.history}`}><div className={styles.sectionTitle}><div><span>Database</span><h2>Recent baseline recordings</h2></div></div>{history.length ? <div className={styles.table}>{history.map((item) => <div className={styles.recordingRow} key={item.id}><button className={styles.rowSummary} onClick={() => void toggleRecording(item.id)} aria-expanded={expandedId === item.id}><strong>{item.participant_code}</strong><span>{item.condition.replaceAll('_', ' ')}</span><span>{new Date(item.started_at).toLocaleString()}</span><span>{item.epoch_count} epochs</span><b>{item.status}</b><i>{expandedId === item.id ? 'Hide values' : 'View values'}</i></button>{expandedId === item.id && <div className={styles.detail}>{detailLoading === item.id ? <div className={styles.detailSkeleton} /> : details[item.id] && <><div className={styles.metadata}><span><b>Device</b>{details[item.id].recording.device_name}</span><span><b>Sample rate</b>{details[item.id].recording.sampling_rate_hz} Hz</span><span><b>Epoch length</b>{details[item.id].recording.epoch_length_seconds}s</span><span><b>Age</b>{details[item.id].recording.age_years ?? 'Not collected'}</span><span><b>Sex</b>{details[item.id].recording.sex_at_birth || 'Not collected'}</span></div><div className={styles.epochs}>{details[item.id].epochs.map((epoch) => <article className={styles.epoch} key={epoch.epoch_number}><header><strong>Epoch {epoch.epoch_number}</strong><span>{(epoch.start_offset_ms / 1000).toFixed(1)}–{(epoch.end_offset_ms / 1000).toFixed(1)}s · {epoch.sample_count} samples/channel</span><b data-usable={epoch.is_usable}>{epoch.is_usable ? 'usable' : 'quality flagged'}</b></header><div className={styles.epochBands}>{Object.entries(epoch.absolute_band_powers).map(([band, value]) => <span key={band}><small>{band} absolute</small><strong>{value.toFixed(6)}</strong><small>{((epoch.relative_band_powers[band] ?? 0) * 100).toFixed(2)}% relative</small></span>)}<span><small>theta / beta</small><strong>{epoch.theta_beta_ratio?.toFixed(6) ?? '—'}</strong><small>{epoch.accepted_channels}/4 clean · {epoch.battery_level ?? '—'}% battery</small></span></div><details className={styles.raw}><summary>Show exact raw channel samples and statistics</summary>{Object.entries(epoch.raw_channels).map(([channel, values]) => <div key={channel}><h4>{channel} <small>mean {epoch.channel_statistics[channel]?.mean.toFixed(4)} · SD {epoch.channel_statistics[channel]?.standard_deviation.toFixed(4)} · min {epoch.channel_statistics[channel]?.minimum.toFixed(4)} · max {epoch.channel_statistics[channel]?.maximum.toFixed(4)}</small></h4><code>{values.join(', ')}</code></div>)}</details></article>)}</div></>}</div>}</div>)}</div> : <p>No baseline recordings saved by this account yet.</p>}</section>
   </main>
 }

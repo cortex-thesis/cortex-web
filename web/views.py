@@ -202,12 +202,36 @@ def baseline_recordings(request):
         return JsonResponse({"detail": "Participant code, consent, and valid baseline settings are required."}, status=400)
 
 
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
 def baseline_recording_detail(request, recording_id):
     profile, error = _require_profile(request, {Profile.Role.ADMIN, Profile.Role.TEACHER, Profile.Role.STUDENT})
     if error:
         return error
     recording = get_object_or_404(BaselineRecording, pk=recording_id, recorded_by=profile)
+    if request.method == "GET":
+        return JsonResponse({
+            "recording": {
+                "id": str(recording.pk), "participant_code": recording.participant_code,
+                "age_years": recording.age_years, "sex_at_birth": recording.sex_at_birth,
+                "condition": recording.condition, "label_source": recording.label_source,
+                "selected_variables": recording.selected_variables, "device_name": recording.device_name,
+                "sampling_rate_hz": recording.sampling_rate_hz, "channel_names": recording.channel_names,
+                "planned_duration_seconds": recording.planned_duration_seconds,
+                "epoch_length_seconds": recording.epoch_length_seconds, "started_at": recording.started_at,
+                "ended_at": recording.ended_at, "status": recording.status, "notes": recording.notes,
+            },
+            "epochs": [{
+                "epoch_number": epoch.epoch_number, "start_offset_ms": epoch.start_offset_ms,
+                "end_offset_ms": epoch.end_offset_ms, "captured_at": epoch.captured_at,
+                "sample_count": epoch.sample_count, "raw_channels": epoch.raw_channels,
+                "channel_statistics": epoch.channel_statistics,
+                "absolute_band_powers": epoch.absolute_band_powers,
+                "relative_band_powers": epoch.relative_band_powers,
+                "theta_beta_ratio": epoch.theta_beta_ratio, "signal_quality": epoch.signal_quality,
+                "accepted_channels": epoch.accepted_channels, "battery_level": epoch.battery_level,
+                "is_usable": epoch.is_usable,
+            } for epoch in recording.epochs.all()],
+        })
     try:
         data = _body(request)
         action = data.get("action")

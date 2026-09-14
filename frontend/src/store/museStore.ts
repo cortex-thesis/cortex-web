@@ -80,7 +80,9 @@ export const useMuseStore = create<MuseState>((set, get) => ({
       const smoothedScores = { delta: 1, theta: 1, alpha: 1, beta: 1, gamma: 1 }
       const eeg = client.eegReadings.subscribe((reading: EEGReading) => {
         if (reading.electrode < 0 || reading.electrode >= MUSE_CHANNELS.length) return
-        liveSamples = liveSamples.map((values, index) => index === reading.electrode ? [...values, ...reading.samples].slice(-1280) : values)
+        // Retain 30 seconds so the baseline recorder can produce every epoch
+        // length offered by the protocol (Muse 2 streams at 256 Hz).
+        liveSamples = liveSamples.map((values, index) => index === reading.electrode ? [...values, ...reading.samples].slice(-7680) : values)
         const now = Date.now()
         if (now - lastPublish < 80) return
         const quality = liveSamples.map(contactQuality)
