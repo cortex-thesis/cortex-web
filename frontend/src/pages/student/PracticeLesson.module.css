@@ -11,7 +11,8 @@
 .current { border-color: var(--color-interface-purple, #534ab7); box-shadow: 0 0 0 4px #eee7f8; }
 .current > span { background: var(--color-interface-purple, #534ab7); }
 .progressHint { font-size: 12px; color: #71677e; }
-.stage { min-height: 0; flex: 1; overflow: auto; scrollbar-gutter: stable; padding: 4px; }
+.stage { min-height: 0; flex: 1; overflow: auto; scrollbar-gutter: stable; padding: 4px; container-type: size; }
+.stage > div { height: 100%; --activity-image-height: clamp(64px, 32cqh, 180px); --activity-match-space: calc(100cqh - 150px); --activity-video-height: clamp(100px, calc(100cqh - 100px), 320px); }
 .task.task { max-width: 100%; width: 100%; box-sizing: border-box; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 .actions { display: flex; flex-shrink: 0; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 12px; margin-top: 12px; border-top: 1px solid #eeeaf5; }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 22px; min-height: 48px; border: 1px solid transparent; border-radius: 14px; font: inherit; font-weight: 600; cursor: pointer; transition: background .2s, box-shadow .2s, opacity .2s, transform .2s; }

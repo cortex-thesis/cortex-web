@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Image as ImageIcon, Pause, Play, Sparkles, Volume2 } from 'lucide-react'
 import type { Task } from '../../../types'
 import BreathingGuide from '../BreathingGuide'
@@ -6,6 +6,7 @@ import styles from './ActivityTemplate.module.css'
 
 interface ActivityTemplateProps {
   task: Task
+  onCompleted?: () => void
 }
 
 function MediaButton({ playing, label, onClick }: { playing: boolean; label: string; onClick: () => void }) {
@@ -16,9 +17,22 @@ function MediaButton({ playing, label, onClick }: { playing: boolean; label: str
   )
 }
 
-function ActivityTemplate({ task }: ActivityTemplateProps) {
+function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
   const [playing, setPlaying] = useState(false)
   const template = task.template ?? 'multiple_choice'
+  const mediaRef = useRef<HTMLMediaElement | null>(null)
+  useEffect(() => {
+    const media = mediaRef.current
+    return () => { media?.pause() }
+  }, [])
+
+  if (onCompleted && task.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || template === 'instructional_video' || template === 'calming_soundscape')) {
+    return <section className={styles.panel}>
+      {task.contentType === 'audio' || template === 'calming_soundscape'
+        ? <audio ref={(node) => { mediaRef.current = node }} src={task.mediaUrl} controls preload="metadata" onEnded={onCompleted} aria-label={task.contentLabel ?? task.title} />
+        : <video ref={(node) => { mediaRef.current = node }} className={styles.video} src={task.mediaUrl} controls preload="metadata" onEnded={onCompleted} aria-label={task.contentLabel ?? task.title} />}
+    </section>
+  }
 
   if (template === 'multiple_choice') return null
 
@@ -40,7 +54,7 @@ function ActivityTemplate({ task }: ActivityTemplateProps) {
 
   if (template === 'visual_narrative') {
     return (
-      <ol className={styles.steps} aria-label="Step-by-step visual narrative">
+      <ol className={`${styles.steps} ${onCompleted ? styles.lessonSteps : ''}`} aria-label="Step-by-step visual narrative">
         {(task.steps ?? []).map((step, index) => (
           <li className={styles.step} key={step.id}>
             <div className={styles.stepVisual}>

@@ -45,7 +45,7 @@ function TaskInteraction({ task, onAnswered, onChanged }: TaskInteractionProps) 
     return (
       <div className={styles.choiceGrid}>
         {task.choices.map((choice) => (
-          <button key={choice} type="button" className={styles.choice} disabled={result !== null} onClick={() => finish(choice === task.answer, choice)}>{choice}</button>
+          <button key={choice} type="button" className={`${styles.choice} ${selected.includes(choice) ? styles.selected : ''}`} aria-pressed={selected.includes(choice)} disabled={result !== null} onClick={() => { setSelected([choice]); finish(choice === task.answer, choice) }}>{choice}</button>
         ))}
       </div>
     )

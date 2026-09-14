@@ -18,6 +18,7 @@ interface TaskCardProps {
   showNudge?: boolean
   className?: string
   showProgress?: boolean
+  lessonNavigation?: boolean
   deliveryStrategy?: 'steady_instruction' | 'attention_reengagement' | 'gentle_reactivation' | 'sensory_cooldown'
 }
 
@@ -28,6 +29,7 @@ function TaskCard({
   showNudge = false,
   className,
   showProgress = true,
+  lessonNavigation = false,
   deliveryStrategy = 'steady_instruction',
 }: TaskCardProps) {
   const [selected, setSelected] = useState<string | null>(null)
@@ -69,6 +71,7 @@ function TaskCard({
     '--activity-columns': task.layout?.preferredColumns ?? 'auto-fit',
     '--activity-board-min-height': `${task.layout?.boardMinHeight ?? 220}px`,
     '--activity-media-fit': task.layout?.mediaFit ?? 'contain',
+    '--activity-pair-count': Math.max(task.pairs?.length ?? 0, 1),
   } as CSSProperties
 
   const contentPreview = task.contentType && (
@@ -112,7 +115,7 @@ function TaskCard({
   )
 
   return (
-    <div className={`${styles.card} ${styles[deliveryStrategy]} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy}>
+    <div className={`${styles.card} ${styles[deliveryStrategy]} ${lessonNavigation && template === 'visual_narrative' && !hasTaskInteraction ? styles.fitSteps : ''} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy}>
       {showProgress && <ProgressBar
         value={progress}
         state="focused"
@@ -125,7 +128,7 @@ function TaskCard({
         <span className={styles.contentHint}>{task.contentDescription}</span>
       </div>
 
-      {!hasTaskInteraction && task.template ? <ActivityTemplate task={task} /> : !hasTaskInteraction ? contentPreview : null}
+      {!hasTaskInteraction && task.template ? <ActivityTemplate task={task} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
 
       {task.imageUrl && (
         <div className={styles.imageWrap}>
@@ -149,7 +152,7 @@ function TaskCard({
           </div>
           {revealed && <div className={`${styles.feedback} ${selected === task.answer ? styles.correct : styles.incorrect}`} role="status">{selected === task.answer ? (task.correctFeedback ?? 'Correct.') : (task.retryFeedback ?? 'Try again.')}</div>}
         </>
-      ) : (
+      ) : lessonNavigation ? null : (
         <button type="button" className={styles.continueButton} onClick={() => onAnswered?.(true, 'completed')}>
           {task.actionLabel ?? (template === 'reengagement_prompt' ? "I'm ready" : 'Continue')}
         </button>

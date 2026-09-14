@@ -2,8 +2,13 @@
 
 Students can open **My Classes → a class → a learning package → a lesson → Practice**.
 The player loads the published database lesson and renders its ordered activities.
-Correct answers or the activity's Continue action enable the next activity.
-Students can retry activities or return to the package list.
+Correct answers enable the next activity. Reading slides allow students to use
+Next activity immediately; presented audio and video unlock it when playback ends.
+Visited activities retain their answers, work, and feedback during navigation within
+the open practice lesson. Try again resets only the current interactive activity;
+instructional slides have no retry or separate Continue button.
+The progress display shows activities left on the first pass and hides that count
+when reopening a previously completed lesson for practice.
 
 Practice saves opened/completed activity progress per student, class, and lesson
 when the student continues to the next activity. Package cards show a gray

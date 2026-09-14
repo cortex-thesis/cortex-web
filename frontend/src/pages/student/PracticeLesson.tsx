@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { Activity, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, RotateCcw, Check } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molecules'
 import { api } from '../../lib/api'
@@ -39,8 +39,10 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
   const [lesson, setLesson] = useState<Lesson | null>(null)
   const [error, setError] = useState('')
   const [position, setPosition] = useState(0)
-  const [answered, setAnswered] = useState(false)
-  const [retry, setRetry] = useState(0)
+  const [answered, setAnswered] = useState<Record<number, boolean>>({})
+  const [retry, setRetry] = useState<Record<number, number>>({})
+  const [visited, setVisited] = useState<Set<number>>(() => new Set())
+  const [isReplay, setIsReplay] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const reduceMotion = useReducedMotion()
@@ -55,6 +57,8 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         setCompleted(done)
         const firstPending = data.slides.findIndex((_, index) => !done.has(index))
         setPosition(firstPending < 0 ? 0 : firstPending)
+        setVisited(new Set([firstPending < 0 ? 0 : firstPending]))
+        setIsReplay(data.slides.length > 0 && firstPending < 0)
       }).catch((reason: unknown) => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Unable to load lesson.') })
     return () => controller.abort()
   }, [classId, lessonId])
@@ -67,18 +71,25 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     try {
       await api(`/student/classes/${classId}/lessons/${lessonId}/`, { method: 'POST', body: JSON.stringify({ slide_id: slide.id }) })
       setPosition((value) => value + 1)
-      setAnswered(false)
+      setVisited((previous) => new Set(previous).add(position + 1))
+      setCompleted((previous) => new Set(previous).add(position))
     } catch (reason) {
       setSaveError(reason instanceof Error ? reason.message : 'Progress could not be saved. Please try again.')
     } finally { setSaving(false) }
   }
-  const configuration = slide ? taskConfiguration(slide.activity.configuration) as Partial<Task> : null
-  const task: Task | null = lesson && slide && configuration ? {
+  const tasks: Task[] = lesson ? lesson.slides.map((slide, index) => {
+    const configuration = taskConfiguration(slide.activity.configuration) as Partial<Task>
+    return {
     question: '', choices: [], answer: '', ...configuration,
     imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
-    index: position + 1, total: lesson.slides.length, contentType: slide.activity.type,
-  } : null
+    index: index + 1, total: lesson.slides.length, contentType: slide.activity.type,
+    }
+  }) : []
+  const task = tasks[position]
+  const isActivity = Boolean(task && (task.taskTemplate || (task.template ?? 'multiple_choice') === 'multiple_choice'))
+  const requiresMedia = Boolean(task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
+  const canAdvance = answered[position] || (!isActivity && !requiresMedia)
   const complete = Boolean(lesson?.slides.length && position >= lesson.slides.length)
   return <PlayfulZoneTemplate><div className={`${styles.page} ${playerStyles.page}`}>
     <header className={styles.header}>
@@ -93,20 +104,24 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         <ol className={playerStyles.dots} aria-label="Activity progress">{lesson.slides.map((item, index) => <li key={item.id} aria-current={!complete && index === position ? 'step' : undefined} aria-label={`Activity ${index + 1}: ${!complete && index === position ? 'current' : completed.has(index) ? 'completed' : 'remaining'}`} className={`${playerStyles.dot} ${completed.has(index) ? playerStyles.done : ''} ${!complete && index === position ? playerStyles.current : ''}`}>
           {completed.has(index) ? <Check size={12} aria-hidden="true" /> : <span />}
         </li>)}</ol>
-        <span className={playerStyles.progressHint}>{complete ? 'All activities complete' : `${lesson.slides.length - completed.size} activities left`} · Filled: completed · Ring: current</span>
+        {!isReplay && <span className={playerStyles.progressHint}>{complete ? 'All activities complete' : `${lesson.slides.length - completed.size} activities left`}</span>}
       </div>}
       <div className={playerStyles.stage}>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={task ? `${task.id}/${retry}` : error ? 'error' : complete ? 'complete' : 'loading'} initial={{ opacity: reduceMotion ? 1 : 0 }} animate={{ opacity: 1 }} exit={{ opacity: reduceMotion ? 1 : 0 }} transition={{ duration: reduceMotion ? 0 : .18 }}>
-            {error ? <p role="alert">{error}</p> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? <TaskCard className={playerStyles.task} showProgress={false} task={task} onAnswered={(correct) => { setAnswered(correct); if (correct) setCompleted((previous) => new Set(previous).add(position)) }} /> : <div className={playerStyles.complete}><Check size={40} /><h2>Practice complete</h2><p>You reached the end of this lesson.</p><button className={`${playerStyles.button} ${playerStyles.next}`} onClick={back}>Back to lessons</button></div>}
+        {tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}>
+          <motion.div initial={{ opacity: reduceMotion ? 1 : 0 }} animate={{ opacity: 1 }} transition={{ duration: reduceMotion ? 0 : .18 }}>
+            <TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onAnswered={(correct) => {
+              setAnswered((previous) => ({ ...previous, [index]: correct }))
+              if (correct) setCompleted((previous) => new Set(previous).add(index))
+            }} />
           </motion.div>
-        </AnimatePresence>
+        </Activity>)}
+        {error ? <p role="alert">{error}</p> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : complete ? <div className={playerStyles.complete}><Check size={40} /><h2>Practice complete</h2><p>You reached the end of this lesson.</p><button className={playerStyles.button + ' ' + playerStyles.next} onClick={back}>Back to lessons</button></div> : null}
       </div>
       {saveError && <p role="alert">{saveError}</p>}
       {task && <nav className={playerStyles.actions} aria-label="Activity navigation">
-        <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || saving} onClick={() => { setPosition(position - 1); setAnswered(false) }}><ArrowLeft size={18} />Previous</button>
-        <button className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry(retry + 1); setAnswered(false); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>
-        <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!answered || saving} onClick={() => void advance()}>{saving ? 'Saving...' : position === lesson!.slides.length - 1 ? 'Finish practice' : 'Next activity'}<ArrowRight size={18} /></button>
+        <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || saving} onClick={() => { setVisited((previous) => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
+        {isActivity && <button className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry((previous) => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered((previous) => ({ ...previous, [position]: false })); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
+        <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || saving} onClick={() => void advance()}>{saving ? 'Saving...' : position === lesson!.slides.length - 1 ? 'Finish practice' : 'Next activity'}<ArrowRight size={18} /></button>
       </nav>}
     </section>
   </div></PlayfulZoneTemplate>
