@@ -13,6 +13,7 @@ import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../constants/ac
 import { mockPreviewLessons, mockTasks } from '../../mocks'
 import type { CognitiveState } from '../../constants/states'
 import styles from './FocusMode.module.css'
+import ModeBgm from '../../components/molecules/ModeBgm/ModeBgm'
 
 const NUDGE_MESSAGES = [
   'Focus music playing softly. Keep going!',
@@ -121,10 +122,13 @@ export function FocusMode({ preview = false }: FocusModeProps) {
   // Under elevated intensity (distracted), TaskCard shows it inline
   // instead — closer to the content, more likely to land — so the
   // footer version is suppressed rather than duplicated.
-  const nudgeFooter = isElevated ? undefined : (
+  const nudgeFooter = (
     <div className={styles.nudge}>
+      {!isElevated && <>
       <span className={styles.nudgeDot} aria-hidden="true" />
       <span className={styles.nudgeText}>{NUDGE_MESSAGES[nudgeIndex]}</span>
+      </>}
+      <ModeBgm mode="focus" />
     </div>
   )
 

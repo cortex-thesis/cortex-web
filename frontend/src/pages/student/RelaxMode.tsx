@@ -6,6 +6,7 @@ import { useEEG } from '../../hooks/useEEG'
 import { getDeliveryConfig, getDeliveryMode } from '../../constants/delivery'
 import DevEEGPanel from '../../components/dev/DevEEGPanel/DevEEGPanel'
 import styles from './RelaxMode.module.css'
+import ModeBgm from '../../components/molecules/ModeBgm/ModeBgm'
 
 export default function RelaxMode() {
   const navigate = useNavigate()
@@ -47,6 +48,7 @@ export default function RelaxMode() {
           ? "Let's slow things down. Calming sounds are playing."
           : 'Calming sounds playing softly. Take your time.'}
       </span>
+      <ModeBgm mode="relax" />
     </div>
   )
 
