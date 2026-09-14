@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Activity, AuditLog, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, Enrollment, Intervention, JournalEntry, LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School, SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, UserPreference
+from .models import Activity, AuditLog, BaselineEpoch, BaselineRecording, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, Enrollment, Intervention, JournalEntry, LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School, SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, UserPreference
 
 
 class WorkflowTests(TestCase):
@@ -31,6 +31,30 @@ class WorkflowTests(TestCase):
         enroll = self.client.post(f"/api/classes/{class_id}/students/{self.student.pk}/")
         self.assertEqual(enroll.status_code, 201)
         self.assertTrue(Enrollment.objects.filter(student=self.student, removed_at__isnull=True).exists())
+
+    def test_teacher_records_epoch_level_baseline(self):
+        self._login(self.teacher)
+        started = self.client.post("/api/baseline/", data=json.dumps({
+            "participant_code": "P001", "condition": "neutral_baseline", "consent_confirmed": True,
+            "planned_duration_seconds": 30, "epoch_length_seconds": 2,
+            "selected_variables": ["raw_channels", "absolute_bands", "relative_bands", "theta_beta_ratio"],
+        }), content_type="application/json")
+        self.assertEqual(started.status_code, 201)
+        recording_id = started.json()["id"]
+        channels = {name: [float(index) for index in range(512)] for name in ("TP9", "AF7", "AF8", "TP10")}
+        epoch = self.client.post(f"/api/baseline/{recording_id}/", data=json.dumps({
+            "action": "epoch", "epoch_number": 1, "start_offset_ms": 0, "end_offset_ms": 2000,
+            "raw_channels": channels, "absolute_band_powers": {"delta": 1, "theta": 4, "alpha": 3, "beta": 2, "gamma": 1},
+            "relative_band_powers": {"delta": .1, "theta": .4, "alpha": .3, "beta": .2, "gamma": .1},
+            "signal_quality": [2, 2, 2, 2], "accepted_channels": 4, "battery_level": 80,
+        }), content_type="application/json")
+        self.assertEqual(epoch.status_code, 201)
+        saved = BaselineEpoch.objects.get(recording_id=recording_id)
+        self.assertEqual(saved.sample_count, 512)
+        self.assertEqual(saved.theta_beta_ratio, 2)
+        finished = self.client.post(f"/api/baseline/{recording_id}/", data=json.dumps({"action": "complete"}), content_type="application/json")
+        self.assertEqual(finished.status_code, 200)
+        self.assertEqual(BaselineRecording.objects.get(pk=recording_id).status, BaselineRecording.Status.COMPLETED)
 
     def test_admin_stores_structured_research_analysis(self):
         self.admin.admin_scope = Profile.AdminScope.SUPER

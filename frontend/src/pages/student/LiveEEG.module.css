@@ -46,4 +46,17 @@
 .complete { min-height: 300px; display: grid; place-content: center; justify-items: center; gap: 12px; color: #28664f; }
 .endSession { display: block; margin: 12px auto 0; padding: 9px 18px; border: 1px solid #c7bfd9; border-radius: 10px; background: transparent; color: #5b5367; cursor: pointer; }
 .error { max-width: 1180px; margin: 6px auto; color: #b42318; font-size: 12px; }
+.monitor { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 14px; background: rgba(255,255,255,.92); box-shadow: var(--shadow-card); }
+.monitorDevice, .monitorDevice span, .monitorQuality { display: flex; align-items: center; gap: 7px; }
+.monitorDevice { color: var(--color-interface-purple); font-size: 11px; }
+.monitorDevice span { color: var(--color-text-secondary); }
+.monitorBands { display: grid; grid-template-columns: repeat(5, minmax(52px, 1fr)); gap: 6px; }
+.monitorBands > span { padding: 5px 7px; border-radius: 8px; background: var(--color-cool-surface); text-align: center; }
+.monitorBands small, .monitorBands strong { display: block; }
+.monitorBands small { color: var(--color-text-muted); font-size: 8px; text-transform: uppercase; }
+.monitorBands strong { margin-top: 2px; color: var(--color-deep-purple); font-size: 11px; font-variant-numeric: tabular-nums; }
+.monitorQuality { justify-content: flex-end; color: var(--color-text-secondary); font-size: 9px; white-space: nowrap; }
+.monitorQuality i { width: 8px; height: 8px; border-radius: 999px; }
 @media (max-width: 760px) { .compactHeader { align-items: flex-start; flex-direction: column; }.eegBar { grid-template-columns: repeat(4, 1fr); }.lessonContainer { height: auto; min-height: 500px; }.contactBar { justify-content: flex-start; } }
+@media (max-width: 760px) { .monitor { grid-template-columns: 1fr; gap: 8px; }.monitorBands { grid-template-columns: repeat(5, 1fr); }.monitorQuality { justify-content: flex-start; flex-wrap: wrap; } }
+@media (max-width: 480px) { .monitorBands { grid-template-columns: repeat(3, 1fr); } }

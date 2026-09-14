@@ -897,3 +897,59 @@ class StudentBadge(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=("student", "key"), name="unique_student_badge")]
+
+
+class BaselineRecording(TimeStampedModel):
+    class Status(models.TextChoices):
+        RECORDING = "recording", "Recording"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    participant_code = models.CharField(max_length=80)
+    participant = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.PROTECT, related_name="baseline_recordings")
+    recorded_by = models.ForeignKey(Profile, on_delete=models.PROTECT, related_name="recorded_baselines")
+    age_years = models.PositiveSmallIntegerField(null=True, blank=True)
+    sex_at_birth = models.CharField(max_length=30, blank=True)
+    condition = models.CharField(max_length=40, default="neutral_baseline")
+    label_source = models.CharField(max_length=40, default="protocol")
+    selected_variables = models.JSONField(default=list)
+    device_name = models.CharField(max_length=100, default="Muse 2")
+    sampling_rate_hz = models.PositiveIntegerField(default=256)
+    channel_names = models.JSONField(default=list)
+    planned_duration_seconds = models.PositiveIntegerField(default=30)
+    epoch_length_seconds = models.PositiveIntegerField(default=2)
+    started_at = models.DateTimeField(default=timezone.now)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.RECORDING)
+    consent_confirmed = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("-started_at",)
+        indexes = [models.Index(fields=("participant_code", "-started_at"))]
+
+
+class BaselineEpoch(models.Model):
+    recording = models.ForeignKey(BaselineRecording, on_delete=models.CASCADE, related_name="epochs")
+    epoch_number = models.PositiveIntegerField()
+    start_offset_ms = models.PositiveIntegerField()
+    end_offset_ms = models.PositiveIntegerField()
+    captured_at = models.DateTimeField(default=timezone.now)
+    sample_count = models.PositiveIntegerField(default=0)
+    raw_channels = models.JSONField(default=dict)
+    channel_statistics = models.JSONField(default=dict)
+    absolute_band_powers = models.JSONField(default=dict)
+    relative_band_powers = models.JSONField(default=dict)
+    theta_beta_ratio = models.FloatField(null=True, blank=True)
+    signal_quality = models.JSONField(default=list)
+    accepted_channels = models.PositiveSmallIntegerField(default=0)
+    battery_level = models.PositiveSmallIntegerField(null=True, blank=True)
+    is_usable = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ("recording", "epoch_number")
+        constraints = [
+            models.UniqueConstraint(fields=("recording", "epoch_number"), name="unique_baseline_epoch"),
+            models.CheckConstraint(condition=models.Q(end_offset_ms__gt=models.F("start_offset_ms")), name="valid_baseline_epoch_offsets"),
+        ]

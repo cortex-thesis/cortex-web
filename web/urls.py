@@ -59,9 +59,13 @@ from .views import (
     teacher_advanced_reports,
     teacher_student_detail,
     teacher_students,
+    baseline_recordings,
+    baseline_recording_detail,
 )
 
 urlpatterns = [
+    path("baseline/", baseline_recordings, name="baseline-recordings"),
+    path("baseline/<uuid:recording_id>/", baseline_recording_detail, name="baseline-recording-detail"),
     path("health/", health, name="health"),
     path("auth/csrf/", csrf_cookie, name="csrf-cookie"),
     path("auth/register/", register, name="register"),

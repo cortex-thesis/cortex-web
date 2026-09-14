@@ -3,6 +3,7 @@ import ProtectedRoute from './ProtectedRoute'
 
 import Splash from '../pages/student/Splash'
 import UnifiedLogin from '../pages/Login'
+import Baseline from '../pages/Baseline'
 import Home from '../pages/student/Home'
 import JoinClass from '../pages/student/JoinClass'
 import EEGPairing from '../pages/student/EEGPairing'
@@ -62,6 +63,7 @@ export default function AppRouter() {
     <Routes>
       {/* Student */}
       <Route path="/" element={<UnifiedLogin />} />
+      <Route element={<ProtectedRoute roles={['student', 'teacher', 'super_admin']} />}><Route path="/baseline" element={<Baseline />} /></Route>
       <Route path="/welcome" element={<Splash />} />
       <Route path="/student/login" element={<Navigate to="/" replace />} />
       <Route path="/student/register" element={<StudentRegistration />} />

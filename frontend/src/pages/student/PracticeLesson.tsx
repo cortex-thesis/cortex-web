@@ -14,7 +14,7 @@ interface Lesson {
   id: number
   title: string
   package: Task['package']
-  slides: { id: number; title: string; activity: { type: Task['contentType']; configuration: Record<string, unknown> } }[]
+  slides: { id: number; title: string; activity: { type: Task['contentType']; configuration: Record<string, unknown>; asset_url?: string | null } }[]
 }
 
 const fieldNames: Record<string, string> = Object.fromEntries([
@@ -72,9 +72,10 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       setSaveError(reason instanceof Error ? reason.message : 'Progress could not be saved. Please try again.')
     } finally { setSaving(false) }
   }
-  const task: Task | null = lesson && slide ? {
-    imageUrl: null, question: '', choices: [], answer: '',
-    ...taskConfiguration(slide.activity.configuration) as Partial<Task>,
+  const configuration = slide ? taskConfiguration(slide.activity.configuration) as Partial<Task> : null
+  const task: Task | null = lesson && slide && configuration ? {
+    question: '', choices: [], answer: '', ...configuration,
+    imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
     index: position + 1, total: lesson.slides.length, contentType: slide.activity.type,
   } : null

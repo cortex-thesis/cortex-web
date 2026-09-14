@@ -26,7 +26,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import (
-    LessonPracticeProgress, StudentBadge,
+    LessonPracticeProgress, StudentBadge, BaselineRecording, BaselineEpoch,
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
     DataLifecycleRequest, EEGDevice, Enrollment, Intervention, InterventionAlert, JournalEntry,
     LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
@@ -162,6 +162,95 @@ def _require_profile(request, roles=None):
 
 def _audit(actor, action, obj, metadata=None):
     AuditLog.objects.create(actor=actor, action=action, object_type=obj.__class__.__name__, object_id=str(obj.pk), metadata=metadata or {})
+
+
+@require_http_methods(["GET", "POST"])
+def baseline_recordings(request):
+    profile, error = _require_profile(request, {Profile.Role.ADMIN, Profile.Role.TEACHER, Profile.Role.STUDENT})
+    if error:
+        return error
+    if request.method == "GET":
+        rows = BaselineRecording.objects.filter(recorded_by=profile).annotate(epoch_count=Count("epochs"))[:20]
+        return JsonResponse({"recordings": [{
+            "id": str(item.pk), "participant_code": item.participant_code, "condition": item.condition,
+            "status": item.status, "started_at": item.started_at, "ended_at": item.ended_at,
+            "epoch_count": item.epoch_count, "selected_variables": item.selected_variables,
+        } for item in rows]})
+    try:
+        data = _body(request)
+        participant_code = str(data.get("participant_code", "")).strip()
+        age = data.get("age_years")
+        age = int(age) if age not in (None, "") else None
+        duration = int(data.get("planned_duration_seconds", 30))
+        epoch_length = int(data.get("epoch_length_seconds", 2))
+        selected = data.get("selected_variables", [])
+        if not participant_code or not data.get("consent_confirmed") or age is not None and not 3 <= age <= 100:
+            raise ValueError
+        if duration not in {30, 60, 120, 300, 600} or epoch_length not in {2, 4, 5, 10, 30} or not isinstance(selected, list):
+            raise ValueError
+        item = BaselineRecording.objects.create(
+            participant_code=participant_code, recorded_by=profile, age_years=age,
+            sex_at_birth=str(data.get("sex_at_birth", ""))[:30], condition=str(data.get("condition", "neutral_baseline"))[:40],
+            label_source=str(data.get("label_source", "protocol"))[:40], selected_variables=[str(value)[:50] for value in selected],
+            device_name=str(data.get("device_name", "Muse 2"))[:100], sampling_rate_hz=256,
+            channel_names=["TP9", "AF7", "AF8", "TP10"], planned_duration_seconds=duration,
+            epoch_length_seconds=epoch_length, consent_confirmed=True, notes=str(data.get("notes", ""))[:2000],
+        )
+        _audit(profile, "baseline.start", item, {"participant_code": participant_code})
+        return JsonResponse({"id": str(item.pk), "status": item.status}, status=201)
+    except (TypeError, ValueError):
+        return JsonResponse({"detail": "Participant code, consent, and valid baseline settings are required."}, status=400)
+
+
+@require_http_methods(["POST"])
+def baseline_recording_detail(request, recording_id):
+    profile, error = _require_profile(request, {Profile.Role.ADMIN, Profile.Role.TEACHER, Profile.Role.STUDENT})
+    if error:
+        return error
+    recording = get_object_or_404(BaselineRecording, pk=recording_id, recorded_by=profile)
+    try:
+        data = _body(request)
+        action = data.get("action")
+        if action in {"complete", "cancel"}:
+            recording.status = BaselineRecording.Status.COMPLETED if action == "complete" else BaselineRecording.Status.CANCELLED
+            recording.ended_at = timezone.now()
+            recording.save(update_fields=["status", "ended_at", "updated_at"])
+            _audit(profile, f"baseline.{action}", recording, {"epochs": recording.epochs.count()})
+            return JsonResponse({"id": str(recording.pk), "status": recording.status, "epoch_count": recording.epochs.count()})
+        if action != "epoch" or recording.status != BaselineRecording.Status.RECORDING:
+            return JsonResponse({"detail": "This baseline recording is not accepting epochs."}, status=409)
+        channels = data.get("raw_channels", {})
+        names = recording.channel_names
+        if not isinstance(channels, dict) or set(channels) != set(names):
+            raise ValueError
+        cleaned = {name: [float(value) for value in channels[name]] for name in names}
+        lengths = {len(values) for values in cleaned.values()}
+        if len(lengths) != 1 or not lengths or next(iter(lengths)) < 32 or next(iter(lengths)) > recording.sampling_rate_hz * recording.epoch_length_seconds * 2:
+            raise ValueError
+        if not all(math.isfinite(value) and abs(value) <= 1_000_000 for values in cleaned.values() for value in values):
+            raise ValueError
+        stats = {}
+        for name, values in cleaned.items():
+            mean = sum(values) / len(values)
+            variance = sum((value - mean) ** 2 for value in values) / len(values)
+            stats[name] = {"mean": mean, "standard_deviation": math.sqrt(variance), "minimum": min(values), "maximum": max(values)}
+        absolute = {key: float(data.get("absolute_band_powers", {}).get(key, 0)) for key in ("delta", "theta", "alpha", "beta", "gamma")}
+        relative = {key: float(data.get("relative_band_powers", {}).get(key, 0)) for key in ("delta", "theta", "alpha", "beta", "gamma")}
+        epoch_number = int(data["epoch_number"])
+        start_ms = int(data["start_offset_ms"]); end_ms = int(data["end_offset_ms"])
+        quality = [int(value) for value in data.get("signal_quality", [])]
+        accepted = int(data.get("accepted_channels", 0)); battery = data.get("battery_level"); battery = int(battery) if battery is not None else None
+        if epoch_number < 1 or start_ms < 0 or end_ms <= start_ms or len(quality) != 4 or accepted not in range(5) or battery is not None and battery not in range(101):
+            raise ValueError
+        epoch, created = BaselineEpoch.objects.update_or_create(recording=recording, epoch_number=epoch_number, defaults={
+            "start_offset_ms": start_ms, "end_offset_ms": end_ms, "sample_count": next(iter(lengths)), "raw_channels": cleaned,
+            "channel_statistics": stats, "absolute_band_powers": absolute, "relative_band_powers": relative,
+            "theta_beta_ratio": absolute["theta"] / absolute["beta"] if absolute["beta"] else None,
+            "signal_quality": quality, "accepted_channels": accepted, "battery_level": battery, "is_usable": accepted >= 2,
+        })
+        return JsonResponse({"id": epoch.pk, "epoch_number": epoch.epoch_number, "is_usable": epoch.is_usable}, status=201 if created else 200)
+    except (KeyError, TypeError, ValueError):
+        return JsonResponse({"detail": "A complete, finite four-channel Muse epoch is required."}, status=400)
 
 
 def _same_school(*items):
@@ -590,7 +679,7 @@ def _lesson_data(lesson, include_slides=True):
     data = {"id": lesson.pk, "package": lesson.package.slug, "title": lesson.title, "description": lesson.description, "archived": lesson.archived_at is not None}
     if include_slides:
         slides = lesson.slides.all() if "slides" in getattr(lesson, "_prefetched_objects_cache", {}) else lesson.slides.select_related("activity")
-        data["slides"] = [{"id": slide.pk, "position": slide.position, "title": slide.title, "activity": {"id": slide.activity.pk, "type": slide.activity.type, "title": slide.activity.title, "configuration": slide.activity.configuration, "asset_id": slide.activity.asset_id}} for slide in slides]
+        data["slides"] = [{"id": slide.pk, "position": slide.position, "title": slide.title, "activity": {"id": slide.activity.pk, "type": slide.activity.type, "title": slide.activity.title, "configuration": slide.activity.configuration, "asset_id": slide.activity.asset_id, "asset_url": f"/api/content/assets/{slide.activity.asset_id}/preview/" if slide.activity.asset_id else None}} for slide in slides]
     return data
 
 
