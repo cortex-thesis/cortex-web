@@ -130,11 +130,12 @@ function TaskCard({
         <span className={styles.contentHint}>{task.contentDescription}</span>
       </div>
 
-      {!hasTaskInteraction && task.template ? <ActivityTemplate task={task} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
+      {!hasTaskInteraction && (task.template || task.mediaUrl) ? <ActivityTemplate task={task} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
 
       {task.imageUrl && (
-        <div className={styles.imageWrap}>
-          <img src={task.imageUrl} alt={task.title} className={styles.image} />
+        <div className={`${styles.imageWrap} ${task.priceTag ? styles.pricedItem : ''}`}>
+          <img src={task.imageUrl} alt={task.altText ?? task.title} className={styles.image} />
+          {task.priceTag && <span className={styles.priceTag} aria-label={`Price tag: ${task.priceTag}`}>{task.priceTag}</span>}
         </div>
       )}
 

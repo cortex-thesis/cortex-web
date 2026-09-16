@@ -140,11 +140,26 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
     </section>
   }
 
-  if (onCompleted && task.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || template === 'instructional_video' || template === 'calming_soundscape')) {
+  if (task.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || template === 'instructional_video' || template === 'calming_soundscape')) {
+    if (task.contentType === 'audio' || template === 'calming_soundscape') {
+      return <section className={`${styles.panel} ${styles.audioPanel}`}>
+        <audio ref={(node) => { mediaRef.current = node }} className={styles.hiddenAudio} src={task.mediaUrl} preload="metadata"
+          onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
+          onEnded={() => { setPlaying(false); onCompleted?.() }} />
+        <MediaButton playing={playing} label={task.contentLabel ?? task.title} onClick={() => {
+          const media = mediaRef.current
+          if (!media) return
+          if (media.paused) void media.play().catch(() => setPlaying(false))
+          else media.pause()
+        }} />
+        <div className={styles.mediaCopy}><strong>{task.contentLabel ?? task.title}</strong><span>{task.contentDescription}</span></div>
+        <div className={`${styles.waveform} ${playing ? '' : styles.waveformPaused}`} aria-hidden="true">
+          {[8, 15, 22, 12, 26, 18, 10, 20, 14, 8].map((height, index) => <span key={index} style={{ height, animationDelay: `${index * 80}ms` }} />)}
+        </div>
+      </section>
+    }
     return <section className={styles.panel}>
-      {task.contentType === 'audio' || template === 'calming_soundscape'
-        ? <audio ref={(node) => { mediaRef.current = node }} src={task.mediaUrl} controls preload="metadata" onEnded={onCompleted} aria-label={task.contentLabel ?? task.title} />
-        : <video ref={(node) => { mediaRef.current = node }} className={styles.video} src={task.mediaUrl} controls preload="metadata" onEnded={onCompleted} aria-label={task.contentLabel ?? task.title} />}
+      <video ref={(node) => { mediaRef.current = node }} className={styles.video} src={task.mediaUrl} controls preload="metadata" onEnded={onCompleted} aria-label={task.contentLabel ?? task.title} />
     </section>
   }
 

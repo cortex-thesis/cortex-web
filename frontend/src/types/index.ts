@@ -152,6 +152,8 @@ export interface Task {
   total: number
   title: string
   imageUrl: string | null
+  altText?: string
+  priceTag?: string
   question: string
   choices: string[]
   answer: string

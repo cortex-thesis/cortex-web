@@ -50,3 +50,39 @@ class LifeLessonIntegrationTests(TestCase):
         self.assertIn("insufficient", by_id["LIFE-02"]["assessment"]["digital_scope"])
         self.assertIn("complete simulated transaction", by_id["LIFE-03"]["assessment"]["digital_scope"])
 
+    def test_life01_drawing_video_connects_to_pencil_preparation(self):
+        video = LIFE_LESSONS[0]["slides"][3]
+        self.assertEqual(video["type"], "video")
+        self.assertEqual(video["configuration"]["media_url"], "https://www.youtube.com/embed/lrmOkhuwpzI")
+        self.assertIn("pencil and paper", video["configuration"]["content_description"])
+        self.assertNotIn("asset_placeholders", video["configuration"])
+
+    def test_life02_road_safety_video_and_exit_assets(self):
+        slides = LIFE_LESSONS[1]["slides"]
+        self.assertEqual(slides[2]["configuration"]["media_url"], "https://www.youtube.com/embed/DaqR9Oyf1Zw")
+        self.assertEqual(slides[0]["configuration"]["steps"][0]["image_url"], "/assets/life/life-02/traffic-cone.png")
+        exit_step = next(step for step in slides[1]["configuration"]["steps"] if step["id"] == "exit")
+        self.assertEqual(exit_step["image_url"], "/assets/life/life-02/emergency-exit.png")
+        self.assertEqual(slides[3]["configuration"]["pairs"][0]["left"]["image_url"], exit_step["image_url"])
+
+    def test_uploaded_summary_and_change_assets_and_price_tag(self):
+        self.assertEqual(LIFE_LESSONS[1]["slides"][-1]["configuration"]["steps"][0]["image_url"], "/assets/life/life-02/look-understand-follow.png")
+        slides = LIFE_LESSONS[2]["slides"]
+        self.assertEqual(slides[1]["configuration"]["steps"][3]["image_url"], "/assets/life/life-03/change.png")
+        self.assertEqual(slides[2]["configuration"]["steps"][0]["image_url"], "/assets/life/life-03/compute-change.png")
+        self.assertEqual(slides[5]["configuration"]["image_url"], "/assets/life/life-03/compute-change.png")
+        self.assertEqual(slides[3]["configuration"]["price_tag"], slides[3]["configuration"]["answer"])
+
+    def test_life03_coin_choices_include_uploaded_one_peso(self):
+        items = LIFE_LESSONS[2]["slides"][4]["configuration"]["items"]
+        self.assertEqual([item["image_url"] for item in items], [
+            "/assets/life/life-03/ten-peso-coin-transparent.png",
+            "/assets/life/life-03/five-peso-coin-transparent.png",
+            "/assets/life/life-03/one-peso-coin-transparent.png",
+        ])
+
+    def test_life03_completion_uses_shared_thumbs_up(self):
+        final_step = LIFE_LESSONS[2]["slides"][-1]["configuration"]["steps"][0]
+        self.assertEqual(final_step["image_url"], "/assets/shared/thumbs-up.png")
+        self.assertEqual(LIFE_LESSONS[0]["slides"][-1]["configuration"]["steps"][0]["image_url"], "/assets/life/life-01/completed-directions.png")
+
