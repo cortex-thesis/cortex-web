@@ -1,3 +1,4 @@
+from .class_sessions import class_sessions, class_session_detail, class_session_join, class_session_report, class_session_lessons
 from django.urls import path
 from .views import (
     admin_account_status,
@@ -64,6 +65,11 @@ from .views import (
 )
 
 urlpatterns = [
+    path('class-sessions/', class_sessions, name='class-sessions'),
+    path('class-sessions/<uuid:group_id>/', class_session_detail, name='class-session-detail'),
+    path('class-sessions/<uuid:group_id>/join/', class_session_join, name='class-session-join'),
+    path('class-sessions/<uuid:group_id>/report/', class_session_report, name='class-session-report'),
+    path('teacher/classes/<int:class_id>/session-lessons/', class_session_lessons, name='class-session-lessons'),
     path("baseline/", baseline_recordings, name="baseline-recordings"),
     path("baseline/<uuid:recording_id>/", baseline_recording_detail, name="baseline-recording-detail"),
     path("health/", health, name="health"),

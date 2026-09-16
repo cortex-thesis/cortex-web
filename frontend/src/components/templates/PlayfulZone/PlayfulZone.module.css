@@ -24,7 +24,19 @@
 }
 
 /* The auras are painted into .root's background so they can never overlay UI. */
-.root.calm { background: #eef3ee; }
+.root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #eef3ee;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.4s ease-in-out;
+}
+.root.calm::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .root::before { transition: none; }
+}
 
 .blob1 {
   display: none;

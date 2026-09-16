@@ -27,7 +27,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import (
     LessonPracticeProgress, StudentBadge, BaselineRecording, BaselineEpoch,
-    Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ConsentRecord,
+    Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ActivityResponse, ConsentRecord,
     DataLifecycleRequest, EEGDevice, Enrollment, Intervention, InterventionAlert, JournalEntry,
     LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
     SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction,
@@ -1912,6 +1912,12 @@ def start_session(request):
     latest_consent = profile.consents.filter(consent_type="eeg_processing").order_by("-recorded_at").first()
     if not latest_consent or not latest_consent.granted or latest_consent.withdrawn_at or (latest_consent.expires_at and latest_consent.expires_at <= timezone.now()):
         return JsonResponse({"detail": "Active EEG-processing consent is required before starting a session."}, status=403)
+    if data.get("class_session_id"):
+        from .class_sessions import activate_student
+        try:
+            return activate_student(profile, data)
+        except (ValueError, TypeError, ValidationError):
+            return JsonResponse({'detail': 'A valid class_session_id is required.'}, status=400)
     lesson = None
     if data.get("lesson_id") is not None:
         lesson = Lesson.objects.filter(
@@ -1931,6 +1937,8 @@ def start_session(request):
             existing.status = LearningSession.Status.INTERRUPTED
             existing.slide_exposures.filter(exited_at__isnull=True).update(exited_at=existing.ended_at)
             existing.save(update_fields=["ended_at", "status"])
+    if control_mode == LearningSession.ControlMode.TEACHER:
+        return JsonResponse({'detail': "Join your teacher's class lobby before starting a teacher-led session."}, status=409)
     try:
         session = LearningSession.objects.create(
             school_class=school_class, student=profile, lesson=lesson, control_mode=control_mode,
@@ -1972,6 +1980,7 @@ def _student_session_data(session, now):
     return {
         "id": str(session.pk),
         "class_id": session.school_class_id,
+        "class_session_id": str(session.class_session_id) if session.class_session_id else None,
         "lesson_id": session.lesson_id,
         "control_mode": session.control_mode,
         "title": session.lesson.title if session.lesson_id else session.school_class.name,
@@ -1983,7 +1992,7 @@ def _student_session_data(session, now):
         "state": dominant_state,
         "status": "in_progress" if session.ended_at is None else "completed",
         "tasks_completed": session.tasks_completed,
-        "tasks_total": session.tasks_total,
+        "tasks_total": Slide.objects.filter(lesson_id__in=[item['id'] for item in session.class_session.lesson_history]).count() if session.class_session_id else session.tasks_total,
         "state_distribution": state_distribution,
     }
 
@@ -2025,13 +2034,13 @@ def student_package_progress(request):
         student=profile, lesson__isnull=False,
     ).values_list("lesson__package_id", "started_at", "ended_at"):
         touch(package_id, ended or started)
-    for package_id, slide_id, entered, exited in SessionSlideExposure.objects.filter(
+    for package_id, slide_id, entered, exited, step_completed in SessionSlideExposure.objects.filter(
         session__student=profile,
-    ).values_list("slide__lesson__package_id", "slide_id", "entered_at", "exited_at"):
+    ).values_list("slide__lesson__package_id", "slide_id", "entered_at", "exited_at", "completed_at"):
         if package_id in completed:
-            if exited:
+            if step_completed:
                 completed[package_id].add(slide_id)
-                record_completion(slide_id, exited)
+                record_completion(slide_id, step_completed)
             touch(package_id, exited or entered)
     items = [{
         "slug": package.slug, "name": package.name,
@@ -2064,7 +2073,7 @@ def student_sessions(request):
         LearningSession.objects.filter(student=profile)
         .select_related("school_class", "lesson", "analytics")
         .annotate(
-            tasks_completed=Count("slide_exposures__slide", distinct=True),
+            tasks_completed=Count("slide_exposures__slide", filter=Q(slide_exposures__completed_at__isnull=False), distinct=True),
             tasks_total=Count("lesson__slides", distinct=True),
             focused_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.FOCUSED), distinct=True),
             relaxed_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.RELAXED), distinct=True),
@@ -2103,6 +2112,8 @@ def _session_is_live(session, latest_sample=None):
     now = timezone.now()
     if session.ended_at is not None:
         return False
+    if session.class_session_id and session.last_seen_at and session.last_seen_at >= now - timedelta(seconds=12):
+        return True
     if latest_sample is not None:
         return latest_sample.recorded_at >= now - timedelta(seconds=8)
     return session.started_at >= now - timedelta(seconds=60)
@@ -2142,6 +2153,8 @@ def session_eeg_samples(request, session_id):
         })
     if profile.role != Profile.Role.STUDENT or session.ended_at is not None:
         return JsonResponse({"detail": "Only the student can record an active session."}, status=403)
+    if session.class_session_id and (session.class_session.status != 'active' or session.status == LearningSession.Status.JOINED):
+        return JsonResponse({'detail': 'Wait until your teacher starts or resumes the lesson.'}, status=409)
     try:
         data = _body(request)
         required = ("delta", "theta", "alpha", "beta", "gamma")
@@ -2161,11 +2174,22 @@ def session_eeg_samples(request, session_id):
         slide = None
         if data.get("slide_id") is not None:
             slide = Slide.objects.get(pk=data["slide_id"], lesson_id=session.lesson_id)
-        sample = SessionEEGSample.objects.create(
-            session=session, slide=slide, bands=bands, absolute_bands=absolute,
-            relative_bands=relative, signal_quality=quality, accepted_channels=accepted,
-            battery_level=battery, state=_classify_muse_window(bands),
-        )
+        with transaction.atomic():
+            if session.class_session_id:
+                from .models import ClassSession
+                group = ClassSession.objects.select_for_update().get(pk=session.class_session_id)
+                if group.status != ClassSession.Status.ACTIVE:
+                    return JsonResponse({'detail': 'Your teacher has paused or ended this session.'}, status=409)
+            current_session = LearningSession.objects.select_for_update().get(pk=session.pk)
+            if current_session.ended_at or current_session.status == LearningSession.Status.JOINED:
+                return JsonResponse({'detail': 'This lesson session is not recording.'}, status=409)
+            if slide and current_session.lesson_id != slide.lesson_id:
+                return JsonResponse({'detail': 'Your teacher has changed the lesson.'}, status=409)
+            sample = SessionEEGSample.objects.create(
+                session=session, slide=slide, bands=bands, absolute_bands=absolute,
+                relative_bands=relative, signal_quality=quality, accepted_channels=accepted,
+                battery_level=battery, state=_classify_muse_window(bands),
+            )
     except (KeyError, TypeError, ValueError, Slide.DoesNotExist):
         return JsonResponse({"detail": "Valid processed Muse values are required."}, status=400)
     return JsonResponse(_eeg_sample_data(sample), status=201)
@@ -2414,24 +2438,33 @@ def end_session(request, session_id):
         return JsonResponse({"detail": "You do not own this session."}, status=403)
     if profile.role == Profile.Role.TEACHER and session.school_class.teacher_id != profile.id:
         return JsonResponse({"detail": "You do not teach this class."}, status=403)
-    session.ended_at = timezone.now()
-    session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=session.ended_at)
-    session.status = LearningSession.Status.COMPLETED
-    slide_count = session.lesson.slides.count() if session.lesson_id else 0
-    viewed = session.slide_exposures.values("slide_id").distinct().count()
-    session.completion_percentage = round(viewed * 100 / slide_count, 2) if slide_count else 0
-    session.save(update_fields=["ended_at", "status", "completion_percentage"])
-    counts = {state: session.eeg_samples.filter(state=state).count() for state in ("focused", "relaxed", "distracted", "overstimulated")}
-    total = sum(counts.values())
-    duration = max(0, int((session.ended_at - session.started_at).total_seconds()))
-    SessionAnalytics.objects.update_or_create(session=session, defaults={
-        "total_duration_seconds": duration,
-        **{f"{state}_seconds": round(duration * count / total) if total else 0 for state, count in counts.items()},
-        **{f"{state}_percentage": round(count * 100 / total, 3) if total else 0 for state, count in counts.items()},
-        "state_transition_count": max(0, total - 1),
-    })
-    _audit(profile, "session_ended", session)
-    return JsonResponse({"id": str(session.id), "ended_at": session.ended_at})
+    with transaction.atomic():
+        if session.class_session_id:
+            from .models import ClassSession
+            ClassSession.objects.select_for_update().get(pk=session.class_session_id)
+        session = LearningSession.objects.select_for_update(of=('self',)).select_related('lesson').get(pk=session.pk)
+        if session.ended_at:
+            return JsonResponse({'id': str(session.pk), 'ended_at': session.ended_at})
+        session.ended_at = timezone.now()
+        session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=session.ended_at)
+        session.status = LearningSession.Status.COMPLETED
+        slide_count = session.lesson.slides.count() if session.lesson_id else 0
+        if session.class_session_id:
+            slide_count = Slide.objects.filter(lesson_id__in=[item['id'] for item in session.class_session.lesson_history]).count()
+        viewed = session.slide_exposures.filter(completed_at__isnull=False).values("slide_id").distinct().count()
+        session.completion_percentage = round(viewed * 100 / slide_count, 2) if slide_count else 0
+        session.save(update_fields=["ended_at", "status", "completion_percentage"])
+        counts = {state: session.eeg_samples.filter(state=state).count() for state in ("focused", "relaxed", "distracted", "overstimulated")}
+        total = sum(counts.values())
+        duration = max(0, int((session.ended_at - session.started_at).total_seconds()))
+        SessionAnalytics.objects.update_or_create(session=session, defaults={
+            "total_duration_seconds": duration,
+            **{f"{state}_seconds": round(duration * count / total) if total else 0 for state, count in counts.items()},
+            **{f"{state}_percentage": round(count * 100 / total, 3) if total else 0 for state, count in counts.items()},
+            "state_transition_count": max(0, total - 1),
+        })
+        _audit(profile, "session_ended", session)
+        return JsonResponse({"id": str(session.id), "ended_at": session.ended_at})
 
 
 @require_POST
@@ -2441,13 +2474,60 @@ def session_slide_exposure(request, session_id, slide_id):
         return error
     session = get_object_or_404(LearningSession, pk=session_id, student=profile)
     slide = get_object_or_404(Slide.objects.select_related("lesson"), pk=slide_id)
-    if session.lesson_id != slide.lesson_id:
+    allowed_lesson_ids = {session.lesson_id}
+    if session.class_session_id:
+        allowed_lesson_ids.update(item['id'] for item in session.class_session.lesson_history)
+    if slide.lesson_id not in allowed_lesson_ids:
         return JsonResponse({"detail": "This slide does not belong to the session lesson."}, status=400)
     try:
-        action = str(_body(request).get("action", "enter"))
+        data = _body(request)
+        action = str(data.get("action", "enter"))
     except ValueError:
         return JsonResponse({"detail": "Invalid request body."}, status=400)
     now = timezone.now()
+    if action == "answer":
+        if session.ended_at is not None:
+            return JsonResponse({"detail": "The session has already ended."}, status=409)
+        correct = data.get("correct")
+        selected = data.get("selected")
+        attempt = data.get("attempt", 1)
+        if not isinstance(correct, bool) or not isinstance(selected, str) or len(selected) > 20000 or type(attempt) is not int or not 1 <= attempt <= 32767:
+            return JsonResponse({"detail": "Invalid answer or attempt."}, status=400)
+        with transaction.atomic():
+            if session.class_session_id:
+                from .models import ClassSession
+                locked_group = ClassSession.objects.select_for_update().get(pk=session.class_session_id)
+                if locked_group.ended_at:
+                    return JsonResponse({'detail': 'The class session has ended.'}, status=409)
+            locked_session = LearningSession.objects.select_for_update().get(pk=session.pk)
+            if locked_session.ended_at is not None:
+                return JsonResponse({"detail": "The session has already ended."}, status=409)
+            response, _ = ActivityResponse.objects.update_or_create(
+                session=session, activity=slide.activity, attempt_number=attempt,
+                defaults={"response": {"selected": selected}, "is_correct": correct},
+            )
+        return JsonResponse({"id": str(response.pk), "status": "saved"})
+    if action == 'complete':
+        with transaction.atomic():
+            if session.class_session_id:
+                from .models import ClassSession
+                group = ClassSession.objects.select_for_update().get(pk=session.class_session_id)
+                if group.ended_at:
+                    return JsonResponse({'detail': 'The class session has ended.'}, status=409)
+            locked = LearningSession.objects.select_for_update().get(pk=session.pk)
+            if locked.ended_at:
+                return JsonResponse({'detail': 'The session has already ended.'}, status=409)
+            exposure = locked.slide_exposures.filter(slide=slide).order_by('-entered_at').first()
+            if exposure is None:
+                return JsonResponse({'detail': 'Open the lesson step before completing it.'}, status=409)
+            if not locked.slide_exposures.filter(slide=slide, completed_at__isnull=False).exists():
+                exposure.completed_at = now
+                exposure.save(update_fields=['completed_at'])
+            total = Slide.objects.filter(lesson_id__in=allowed_lesson_ids).count()
+            done = locked.slide_exposures.filter(completed_at__isnull=False).values('slide_id').distinct().count()
+            locked.completion_percentage = round(done * 100 / total, 2) if total else 0
+            locked.save(update_fields=['completion_percentage'])
+        return JsonResponse({'status': 'completed', 'completed_steps': done, 'step_total': total})
     active = session.slide_exposures.filter(exited_at__isnull=True).first()
     if action == "exit":
         if active and active.slide_id == slide.pk:
@@ -2455,7 +2535,7 @@ def session_slide_exposure(request, session_id, slide_id):
             active.save(update_fields=["exited_at"])
         return JsonResponse({"status": "closed", "exited_at": now})
     if action != "enter":
-        return JsonResponse({"detail": "action must be enter or exit."}, status=400)
+        return JsonResponse({"detail": "action must be enter, exit, complete, or answer."}, status=400)
     if session.ended_at is not None:
         return JsonResponse({"detail": "The session has already ended."}, status=409)
     if active and active.slide_id == slide.pk:

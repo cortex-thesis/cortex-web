@@ -7,7 +7,7 @@ import Baseline from '../pages/Baseline'
 import Home from '../pages/student/Home'
 import JoinClass from '../pages/student/JoinClass'
 import EEGPairing from '../pages/student/EEGPairing'
-import LiveEEG from '../pages/student/LiveEEG'
+import EEGSession from '../pages/student/EEGSession'
 import ModeSelect from '../pages/student/ModeSelect'
 import { FocusMode } from '../pages/student/FocusMode'
 import RelaxMode from '../pages/student/RelaxMode'
@@ -27,6 +27,8 @@ import FreeLessonSelect from '../pages/student/FreeLessonSelect'
 import { AudioJournal, DrawingJournal } from '../pages/student/JournalMedia'
 
 import Dashboard from '../pages/teacher/Dashboard'
+import TeacherClassSession from '../pages/teacher/ClassSession'
+import ClassSessionLobby from '../pages/student/ClassSessionLobby'
 import ClassOverview from '../pages/teacher/ClassOverview'
 import ClassStudents from '../pages/teacher/ClassStudents'
 import ClassAnalytics from '../pages/teacher/ClassAnalytics'
@@ -53,7 +55,7 @@ import {
   StudentRegistration, TeacherRegistration,
   ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
   HardwareRequired, Enrollment,
-  SessionControl, StudentHistory, Evaluation,
+  StudentHistory, Evaluation,
 } from '../pages/prototype'
 
 const templateOnly = import.meta.env.VITE_TEMPLATE_ONLY === 'true'
@@ -76,10 +78,11 @@ export default function AppRouter() {
         element={import.meta.env.DEV ? <FocusMode preview /> : <Navigate to="/" replace />}
       />
       <Route element={<ProtectedRoute roles={['student']} />}>
+      <Route path="/student/class-session/:groupId" element={<ClassSessionLobby />} />
       <Route path="/student/home" element={<Home />} />
       <Route path="/student/join-class" element={<JoinClass />} />
       <Route path="/student/eeg-pairing" element={<EEGPairing />} />
-      <Route path="/student/eeg-live" element={<LiveEEG />} />
+      <Route path="/student/eeg-live" element={<EEGSession />} />
       <Route path="/student/mode-select" element={<ModeSelect />} />
       <Route path="/student/free-lesson-select" element={<FreeLessonSelect />} />
       <Route path="/student/focus" element={<FocusMode />} />
@@ -105,6 +108,8 @@ export default function AppRouter() {
 
       {/* Teacher */}
       <Route element={<ProtectedRoute roles={['teacher']} />}>
+      <Route path="/teacher/sessions" element={<TeacherClassSession />} />
+      <Route path="/teacher/class-session/:groupId" element={<TeacherClassSession />} />
       <Route path="/teacher/dashboard" element={<Dashboard />} />
       <Route path="/teacher/classes" element={<TeacherClasses />} />
       <Route
@@ -135,7 +140,7 @@ export default function AppRouter() {
       <Route path="/teacher/reports/advanced" element={<AdvancedReports />} />
       <Route path="/teacher/classes/new" element={templateOnly ? <TemplateClassSetup /> : <TeacherClassSetup />} />
       <Route path="/teacher/class/:classId/enroll" element={<Enrollment />} />
-      <Route path="/teacher/class/:classId/session" element={<SessionControl />} />
+      <Route path="/teacher/class/:classId/session" element={<TeacherClassSession />} />
       <Route path="/teacher/student/:studentId/analytics" element={<StudentHistory />} />
       </Route>
 

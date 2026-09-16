@@ -324,6 +324,11 @@ class ClassSession(TimeStampedModel):
     scheduled_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    presentation_mode = models.CharField(max_length=20, default="focus")
+    lesson_revision = models.PositiveIntegerField(default=0)
+    lesson_history = models.JSONField(default=list, blank=True)
+    control_history = models.JSONField(default=list, blank=True)
+    overview_report = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=("school_class",), condition=models.Q(status="active"), name="one_active_class_session")]
@@ -353,6 +358,7 @@ class LearningSession(models.Model):
     active_presentation_mode = models.CharField(max_length=20, default="focus")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
     joined_at = models.DateTimeField(default=timezone.now)
+    last_seen_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(auto_now_add=True)
     ended_at = models.DateTimeField(null=True, blank=True)
     completion_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
@@ -374,6 +380,7 @@ class SessionSlideExposure(models.Model):
     slide = models.ForeignKey(Slide, on_delete=models.PROTECT, related_name="session_exposures")
     entered_at = models.DateTimeField(default=timezone.now)
     exited_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ("entered_at",)

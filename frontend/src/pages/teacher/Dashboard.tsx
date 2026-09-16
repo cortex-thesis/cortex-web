@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Clock, TrendingUp, Users } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
@@ -54,6 +55,7 @@ export default function Dashboard() {
   return <TeacherDashboardTemplate user={data?.teacher ?? user} hasNotification={Boolean(data?.unread_notifications)}>
     <div className={analyticsStyles.content}>
       <h1 className={analyticsStyles.title}>Analytics</h1>
+      <Link to="/teacher/sessions">Start or manage a teacher-led session</Link>
       {error && <p role="alert">{error}</p>}
       {!data && !error ? <DetailSkeleton /> : <>
       <div className={analyticsStyles.statsRow}>

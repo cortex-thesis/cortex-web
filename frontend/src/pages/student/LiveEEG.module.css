@@ -70,3 +70,19 @@
 .stateChooser button:disabled { opacity: .5; cursor: default; }
 /* Hide nonfunctional text without moving or resizing the lesson card. */
 .quiet > header > div, .quiet .monitorDetails, .quietProgress { visibility: hidden; }
+
+.calibration { min-height: 100dvh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px; background: #f3f6ef; color: #40584b; text-align: center; }
+.calibration h1 { font-size: clamp(24px, 4vw, 34px); }
+.calibration progress { width: min(320px, 100%); accent-color: #527866; }
+.calibration button { padding: 10px 18px; border: 1px solid #bdcbbf; border-radius: 12px; background: white; color: inherit; font: inherit; cursor: pointer; }
+.trivia { width: min(460px, 100%); padding: 24px; box-sizing: border-box; border-radius: 20px; background: #e3ecdf; line-height: 1.7; }
+.trivia span { font-weight: 600; }
+.trivia p { animation: triviaArrive 1s ease both; }
+@keyframes triviaArrive { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .trivia p { animation: none; } }
+
+.returnTransition { min-height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; color: #40584b; text-align: center; animation: returnArrive 1.2s ease-in-out both; }
+.returnTransition h2 { font-size: clamp(22px, 3vw, 28px); font-weight: 500; }
+.focusArrival { animation: returnArrive 1.4s ease-in-out both; }
+@keyframes returnArrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .returnTransition, .focusArrival { animation: none; } }

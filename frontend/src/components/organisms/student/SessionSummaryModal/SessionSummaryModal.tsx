@@ -1,3 +1,4 @@
+import { getFocusPerformance } from '../../../../lib/focusPerformance'
 import type { SessionSummary } from '../../../../types'
 import type { CognitiveState } from '../../../../constants/states'
 import { COGNITIVE_STATES } from '../../../../constants/states'
@@ -23,25 +24,8 @@ function formatDuration(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-function getFocusColor(score: number): string {
-  if (score >= 75) return '#1D9E75'
-  if (score >= 50) return '#EF9F27'
-  return '#D85A30'
-}
 
-function getFocusDescription(score: number): string {
-  if (score >= 80) return 'Excellent focus'
-  if (score >= 70) return 'Steady focus'
-  if (score >= 60) return 'Growing focus'
-  return 'Finding your rhythm'
-}
 
-function getFocusEmoji(score: number): string {
-  if (score >= 80) return '🌟'
-  if (score >= 70) return '💪'
-  if (score >= 60) return '🌱'
-  return '✨'
-}
 
 function SessionSummaryModal({
   summary,
@@ -51,6 +35,8 @@ function SessionSummaryModal({
 }: SessionSummaryModalProps) {
   const { duration, focusScore, stateDistribution, taskCompleted, taskTotal } =
     summary
+
+  const performance = getFocusPerformance(focusScore, stateDistribution)
 
   return (
     <div
@@ -69,13 +55,13 @@ function SessionSummaryModal({
 
       <div className={styles.focusStat}>
         <span className={styles.focusEmoji} aria-hidden="true">
-          {getFocusEmoji(focusScore)}
+          {performance.emoji}
         </span>
         <span
           className={styles.statVal}
-          style={{ color: getFocusColor(focusScore) }}
+          style={{ color: performance.color }}
         >
-          {getFocusDescription(focusScore)}
+          {performance.phrase}
         </span>
         <span className={styles.statLabel}>Focus performance</span>
       </div>

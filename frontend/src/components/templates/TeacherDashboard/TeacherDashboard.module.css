@@ -23,3 +23,5 @@
   --teacher-page-padding: 0;
   --teacher-page-max-width: var(--content-max-width, 1300px);
 }
+
+@media print { .root { background: white; min-height: auto; } .root > nav { display: none; } .content { max-width: none; padding: 0; overflow: visible; } }

@@ -24,12 +24,17 @@ if not exist "%FRONTEND_DIR%\package.json" (
     exit /b 1
 )
 
+set "BACKEND_PYTHON=%PROJECT_DIR%.venv\Scripts\python.exe"
+if exist "%BACKEND_PYTHON%" goto PYTHON_READY
+set "BACKEND_PYTHON=python"
 where python >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Python is not installed or is not available in PATH.
     pause
     exit /b 1
 )
+
+:PYTHON_READY
 
 where npm >nul 2>&1
 if errorlevel 1 (
@@ -38,16 +43,26 @@ if errorlevel 1 (
     exit /b 1
 )
 
-start "Cortex Backend" /D "%PROJECT_DIR%" cmd /k python manage.py runserver 127.0.0.1:8000
+rem Reuse listening development servers instead of creating duplicate listeners.
+netstat -ano | findstr /R /C:":8000 .*LISTENING" >nul
+if not errorlevel 1 goto BACKEND_STARTED
+start "Cortex Backend" /D "%PROJECT_DIR%" cmd /k ""%BACKEND_PYTHON%" -u manage.py runserver 127.0.0.1:8000"
+:BACKEND_STARTED
+netstat -ano | findstr /R /C:":5173 .*LISTENING" >nul
+if not errorlevel 1 goto FRONTEND_STARTED
 start "Cortex Frontend" /D "%FRONTEND_DIR%" cmd /k "set VITE_TEMPLATE_ONLY=%VITE_TEMPLATE_ONLY%&& npm run dev"
+:FRONTEND_STARTED
 
-echo Starting Cortex. Waiting for the frontend to become ready...
+echo Starting Cortex. Waiting for both servers to become ready...
 set /a WAITED=0
 
 :WAIT_FOR_FRONTEND
 netstat -ano | findstr /R /C:":5173 .*LISTENING" >nul
+if errorlevel 1 goto KEEP_WAITING
+powershell -NoProfile -Command "try { $response = Invoke-RestMethod 'http://127.0.0.1:8000/api/health/' -TimeoutSec 2; if ($response.service -eq 'cortex' -and $response.status -eq 'ok') { exit 0 }; exit 1 } catch { exit 1 }" >nul 2>&1
 if not errorlevel 1 goto OPEN_CORTEX
 
+:KEEP_WAITING
 if %WAITED% GEQ 60 goto STARTUP_TIMEOUT
 timeout /t 1 /nobreak >nul
 set /a WAITED+=1
@@ -59,8 +74,8 @@ goto DONE
 
 :STARTUP_TIMEOUT
 echo.
-echo ERROR: The frontend did not start within 60 seconds.
-echo Check the "Cortex Frontend" window for the error message.
+echo ERROR: Both servers were not ready within 60 seconds.
+echo Check the "Cortex Backend" and "Cortex Frontend" windows for errors.
 pause
 
 :DONE

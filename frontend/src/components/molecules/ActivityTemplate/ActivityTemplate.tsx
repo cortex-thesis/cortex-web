@@ -59,6 +59,7 @@ interface YouTubePlayer {
   getCurrentTime: () => number
   getDuration: () => number
   destroy: () => void
+  pauseVideo: () => void
 }
 
 declare global {
@@ -91,12 +92,14 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
   const frameRef = useRef<HTMLIFrameElement | null>(null)
   const completedRef = useRef(false)
   const callbackRef = useRef(onHalfWatched)
-  callbackRef.current = onHalfWatched
+  useEffect(() => { callbackRef.current = onHalfWatched }, [onHalfWatched])
 
   useEffect(() => {
     let player: YouTubePlayer | null = null
     let timer: number | null = null
     let cancelled = false
+    const pause = () => player?.pauseVideo()
+    window.addEventListener('cortex:pause-media', pause)
     void loadYouTubeApi().then((YT) => {
       if (cancelled || !frameRef.current) return
       player = new YT.Player(frameRef.current, { events: { onReady: () => {
@@ -112,6 +115,7 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
     })
     return () => {
       cancelled = true
+      window.removeEventListener('cortex:pause-media', pause)
       if (timer !== null) window.clearInterval(timer)
       player?.destroy()
     }

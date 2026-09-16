@@ -1,3 +1,4 @@
+import { getFocusPerformance } from '../../lib/focusPerformance'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -29,19 +30,7 @@ const mockStats = {
 interface PackageProgress { slug: CurriculumPackage; name: string; percentage: number; is_completed: boolean; last_interacted_at: string | null }
 
 
-function getFocusDescription(score: number) {
-  if (score >= 80) return 'Excellent focus'
-  if (score >= 70) return 'Steady focus'
-  if (score >= 60) return 'Growing focus'
-  return 'Finding your rhythm'
-}
 
-function getFocusEmoji(score: number) {
-  if (score >= 80) return '🌟'
-  if (score >= 70) return '💪'
-  if (score >= 60) return '🌱'
-  return '✨'
-}
 
 export default function Profile() {
   const navigate = useNavigate()
@@ -172,9 +161,9 @@ export default function Profile() {
                 <StateBadge state={session.state} size="sm" />
                 <span className={styles.focusScore}>
                   <span className={styles.focusEmoji} aria-hidden="true">
-                    {getFocusEmoji(session.focus_score)}
+                    {getFocusPerformance(session.focus_score, session.state_distribution).emoji}
                   </span>
-                  <span>{getFocusDescription(session.focus_score)}</span>
+                  <span>{getFocusPerformance(session.focus_score, session.state_distribution).phrase}</span>
                 </span>
                 <ArrowRight size={16} className={styles.chevron}/>
               </button>

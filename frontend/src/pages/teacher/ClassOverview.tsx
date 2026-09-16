@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ClipboardList, Flame, Users, Zap } from 'lucide-react'
 import { TeacherTabTemplate } from '../../components/templates'
 import { StatSummaryCard } from '../../components/molecules'
@@ -29,6 +29,7 @@ export default function ClassOverview() {
 
   return <TeacherTabTemplate user={user} tabs={CLASS_TABS(classId)} title={`Class · ${classData?.name ?? ''}`}>
     <div className={styles.content}>
+      <Link to={`/teacher/class/${classId}/session`}>Start or manage a teacher-led session</Link>
       {error && <p>{error}</p>}
       <div className={styles.statsRow}>
         <StatSummaryCard value={classData?.student_count ?? 0} label="Students" icon={<Users size={18} color="#534AB7" />} iconBg="#EEEDFE" />

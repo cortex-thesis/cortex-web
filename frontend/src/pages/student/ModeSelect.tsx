@@ -5,6 +5,7 @@ import { CalmZoneTemplate } from '../../components/templates'
 import styles from './ModeSelect.module.css'
 import { startStudentSession } from '../../lib/studentApi'
 import { api } from '../../lib/api'
+import { listClassSessions } from '../../lib/classSessionApi'
 
 type SessionMode = 'teacher' | 'free'
 
@@ -44,6 +45,7 @@ const MODES: ModeOption[] = [
 export default function ModeSelect() {
   const navigate = useNavigate()
   const location = useLocation()
+  const classroomContext = (location.state as { classSessionId?: string } | null)?.classSessionId
   const [selected, setSelected] = useState<SessionMode>('teacher')
   const [isStarting, setIsStarting] = useState(false)
   const [error, setError] = useState('')
@@ -51,7 +53,7 @@ export default function ModeSelect() {
   const [consentChecked, setConsentChecked] = useState(false)
 
   async function handleStart() {
-    const context = (location.state as { classId?: number; lessonId?: number; sessionId?: string } | null) ?? {}
+    const context = (location.state as { classId?: number; lessonId?: number; sessionId?: string; classSessionId?: string } | null) ?? {}
     if (!context.classId) {
       setError('Choose a class and lesson before starting a session.')
       return
@@ -60,11 +62,18 @@ export default function ModeSelect() {
     setError('')
     setNeedsConsent(false)
     try {
-      if (context.sessionId) {
+      if (selected === 'teacher' && !context.classSessionId) {
+        const available = await listClassSessions()
+        const classroom = available.sessions.find(item => item.class_id === context.classId)
+        if (!classroom) throw new Error('Your teacher has not opened a session for this class yet. Please wait or choose Free explore.')
+        navigate('/student/class-session/' + classroom.id, { replace: true })
+        return
+      }
+      if (context.sessionId && !context.classSessionId) {
         navigate('/student/eeg-live', { replace: true, state: { ...context, mode: selected } })
         return
       }
-      const session = await startStudentSession({ class_id: context.classId, lesson_id: context.lessonId, control_mode: selected })
+      const session = await startStudentSession({ class_id: context.classId, lesson_id: context.lessonId, class_session_id: context.classSessionId, control_mode: selected })
       navigate('/student/eeg-live', {
         replace: true,
         state: { ...context, mode: selected, sessionId: session.id },
@@ -119,7 +128,7 @@ export default function ModeSelect() {
           role="radiogroup"
           aria-label="Session mode"
         >
-          {MODES.map((mode) => (
+          {MODES.filter(mode => !classroomContext || mode.value === 'teacher').map((mode) => (
             <button
               key={mode.value}
               role="radio"

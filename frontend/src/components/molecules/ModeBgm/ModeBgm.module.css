@@ -1,7 +1,7 @@
 .control { min-height: 36px; margin-left: auto; display: inline-flex; align-items: center; gap: 7px; padding: 4px 5px 4px 11px; border: 1px solid; border-radius: var(--radius-full); font: var(--font-weight-semibold) 12px/1 var(--font-family); }
 .focus { color: #44389d; border-color: #c9c2ee; background: #eeebff; }
 .relax { color: #286451; border-color: #b9ddcf; background: #e1f5ee; }
-.control button { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 50%; background: currentColor; color: white; cursor: pointer; }
+.control button { min-width: 60px; height: 28px; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 20px; background: currentColor; color: white; cursor: pointer; }
 .control button:disabled { opacity: .48; cursor: default; }
 .control button svg { color: white; }
 .control button:focus-visible { outline: 3px solid var(--color-interface-blue); outline-offset: 2px; }

@@ -23,12 +23,17 @@ interface MuseState {
   baselineProgress: number
   acceptedChannels: number
   connectedAt: number | null
-  connect: () => Promise<void>
+  connect: (automatic?: boolean) => Promise<void>
   disconnect: () => void
 }
 
 const emptySamples = () => MUSE_CHANNELS.map(() => [] as number[])
 const emptyBands: BandPowers = { delta: 0, theta: 0, alpha: 0, beta: 0, gamma: 0 }
+
+let savedGatt: BluetoothRemoteGATTServer | null = null
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+let reconnectAttempts = 0
+let connectionGeneration = 0
 
 async function requestMuseGatt() {
   const device = await navigator.bluetooth.requestDevice({
@@ -41,6 +46,7 @@ async function requestMuseGatt() {
     optionalServices: [MUSE_SERVICE],
   })
   if (!device.gatt) throw new Error('The selected Bluetooth device does not provide a GATT connection.')
+  savedGatt = device.gatt
   return device.gatt.connect()
 }
 
@@ -60,19 +66,36 @@ export const useMuseStore = create<MuseState>((set, get) => ({
   client: null, subscriptions: [], status: 'idle', deviceName: '', error: '', battery: null,
   samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands,
   relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, acceptedChannels: 0, connectedAt: null,
-  connect: async () => {
+  connect: async (automatic = false) => {
     if (!window.isSecureContext || !('bluetooth' in navigator)) {
       set({ status: 'error', error: 'Web Bluetooth is unavailable. Use Chrome or Edge on HTTPS/localhost, or Chrome on Android. iPhone and iPad browsers cannot connect directly.' })
       return
     }
-    get().disconnect()
+    if (!automatic) { get().disconnect(); reconnectAttempts = 0 }
+    else {
+      get().subscriptions.forEach(subscription => subscription.unsubscribe())
+      get().client?.disconnect()
+      set({ subscriptions: [] })
+    }
+    const generation = ++connectionGeneration
+    const retry = () => {
+      if (generation !== connectionGeneration) return
+      if (savedGatt && reconnectAttempts < 3) {
+        const delay = 1000 * 2 ** reconnectAttempts++
+        set({ status: 'connecting', error: '', acceptedChannels: 0 })
+        reconnectTimer = setTimeout(() => { reconnectTimer = null; void get().connect(true) }, delay)
+      } else set({ status: 'error', error: 'Automatic reconnection failed. Turn on Muse 2 and choose it again.', acceptedChannels: 0 })
+    }
     const client = new MuseClient()
-    set({ client, status: 'requesting', error: '', samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands, relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, acceptedChannels: 0 })
+    set({ client, status: automatic ? 'connecting' : 'requesting', error: '', samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands, relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, acceptedChannels: 0 })
     try {
-      const gatt = await requestMuseGatt()
+      const gatt = automatic && savedGatt ? await savedGatt.connect() : await requestMuseGatt()
+      if (generation !== connectionGeneration) { gatt.disconnect(); return }
       await client.connect(gatt)
+      if (generation !== connectionGeneration) { client.disconnect(); return }
       set({ status: 'connecting', deviceName: client.deviceName || 'Muse 2' })
       await client.start()
+      if (generation !== connectionGeneration) { client.disconnect(); return }
       let liveSamples = emptySamples()
       let lastPublish = 0
       let lastAnalysis = 0
@@ -112,16 +135,24 @@ export const useMuseStore = create<MuseState>((set, get) => ({
       })
       const telemetry = client.telemetryData.subscribe((value: TelemetryData) => set({ battery: Math.round(value.batteryLevel) }))
       const connection = client.connectionStatus.subscribe((connected) => {
-        if (!connected && get().status === 'streaming') set({ status: 'error', error: 'Muse 2 disconnected. Turn it on and reconnect.' })
+        if (!connected && get().status === 'streaming') retry()
       })
+      reconnectAttempts = 0
       set({ status: 'streaming', connectedAt: Date.now(), subscriptions: [eeg, telemetry, connection] })
     } catch (reason) {
       client.disconnect()
+      if (generation !== connectionGeneration) return
+      if (automatic) { retry(); return }
       const message = reason instanceof Error && reason.name === 'NotFoundError' ? 'Bluetooth selection was cancelled.' : reason instanceof Error ? reason.message : 'Unable to connect to Muse 2.'
       set({ status: 'error', error: message, client: null })
     }
   },
   disconnect: () => {
+    connectionGeneration++
+    if (reconnectTimer) clearTimeout(reconnectTimer)
+    reconnectTimer = null
+    savedGatt = null
+    reconnectAttempts = 0
     const { client, subscriptions } = get()
     subscriptions.forEach((subscription) => subscription.unsubscribe())
     client?.disconnect()

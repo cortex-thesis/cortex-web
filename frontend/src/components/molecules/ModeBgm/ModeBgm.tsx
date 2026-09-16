@@ -3,21 +3,22 @@ import { useEffect, useRef, useState } from 'react'
 import { cachedApiValue } from '../../../lib/api'
 import styles from './ModeBgm.module.css'
 
-interface ModeBgmProps { mode: 'focus' | 'relax' }
+interface ModeBgmProps { mode: 'focus' | 'relax'; suspended?: boolean }
 
-export default function ModeBgm({ mode }: ModeBgmProps) {
+export default function ModeBgm({ mode, suspended = false }: ModeBgmProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [playing, setPlaying] = useState(false)
+  const musicEnabled = useRef(true)
   const soundEnabled = cachedApiValue<{ sound_enabled: boolean }>('/student/preferences/')?.sound_enabled ?? true
   const volume = mode === 'focus' ? 0.1 : 0.13
 
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio || !soundEnabled) return
+    if (!audio || !soundEnabled || suspended || !musicEnabled.current) return
     audio.volume = volume
     void audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
     return () => { audio.pause() }
-  }, [mode, soundEnabled, volume])
+  }, [mode, soundEnabled, volume, suspended])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -39,17 +40,18 @@ export default function ModeBgm({ mode }: ModeBgmProps) {
 
   function toggle() {
     const audio = audioRef.current
-    if (!audio || !soundEnabled) return
-    if (audio.paused) void audio.play()
-    else audio.pause()
+    if (!audio || !soundEnabled || suspended) return
+    if (audio.paused) { musicEnabled.current = true; void audio.play().catch(() => setPlaying(false)) }
+    else { musicEnabled.current = false; audio.pause() }
   }
 
   return <div className={`${styles.control} ${styles[mode]}`}>
     <audio ref={audioRef} src={`/assets/sounds/bgm/${mode}-mode.mp3`} loop preload="auto" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
     <Music2 size={16} aria-hidden="true" />
     <span>{mode === 'focus' ? 'Focus music' : 'Relax music'}</span>
-    <button type="button" onClick={toggle} disabled={!soundEnabled} aria-label={!soundEnabled ? 'Sound is disabled in settings' : playing ? `Pause ${mode} music` : `Play ${mode} music`}>
+    <button type="button" onClick={toggle} aria-pressed={playing} disabled={!soundEnabled || suspended} aria-label={!soundEnabled ? 'Sound is disabled in settings' : playing ? `Pause ${mode} music` : `Play ${mode} music`}>
       {!soundEnabled ? <VolumeX size={16} /> : playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+      <span>{playing ? 'On' : 'Off'}</span>
     </button>
   </div>
 }

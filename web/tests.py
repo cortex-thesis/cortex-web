@@ -249,6 +249,7 @@ class WorkflowTests(TestCase):
 
         self._login(self.student)
         self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "enter"}), content_type="application/json")
+        self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "complete"}), content_type="application/json")
         self.assertEqual(self.client.post(f"/api/sessions/{session.pk}/end/").status_code, 200)
         session.refresh_from_db()
         self.assertEqual(float(session.completion_percentage), 100)

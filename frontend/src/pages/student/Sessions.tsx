@@ -1,3 +1,4 @@
+import { getFocusPerformance } from '../../lib/focusPerformance'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Brain, CalendarDays, ChevronRight, Clock, Play, Search } from 'lucide-react'
@@ -9,19 +10,7 @@ import styles from './Sessions.module.css'
 
 type SessionFilter = 'all' | 'completed' | 'in_progress'
 
-function getFocusDescription(score: number) {
-  if (score >= 80) return 'Excellent focus'
-  if (score >= 70) return 'Steady focus'
-  if (score >= 60) return 'Growing focus'
-  return 'Finding your rhythm'
-}
 
-function getFocusEmoji(score: number) {
-  if (score >= 80) return '🌟'
-  if (score >= 70) return '💪'
-  if (score >= 60) return '🌱'
-  return '✨'
-}
 
 export default function Sessions() {
   const navigate = useNavigate()
@@ -60,7 +49,7 @@ export default function Sessions() {
 
         {!data && !error ? <CardGridSkeleton count={3} /> : <div className={styles.summaryGrid}>
           <div className={styles.summaryCard}><span className={styles.summaryIcon}><CalendarDays size={19}/></span><span><strong>{completed}</strong><small>Sessions completed</small></span></div>
-          <div className={styles.summaryCard}><span className={styles.summaryIcon} aria-hidden="true">{getFocusEmoji(averageFocus)}</span><span><strong>{completed ? getFocusDescription(averageFocus) : 'No sessions yet'}</strong><small>Overall performance</small></span></div>
+          <div className={styles.summaryCard}><span className={styles.summaryIcon} aria-hidden="true">{getFocusPerformance(averageFocus).emoji}</span><span><strong>{completed ? getFocusPerformance(averageFocus).phrase : 'No sessions yet'}</strong><small>Overall performance</small></span></div>
           <div className={styles.summaryCard}><span className={styles.summaryIcon}><Clock size={19}/></span><span><strong>{learningTime}</strong><small>Learning time</small></span></div>
         </div>}
 
@@ -84,10 +73,10 @@ export default function Sessions() {
                 <div className={styles.sessionTop}>
                   <div><span className={styles.className}>{session.class_name}</span><h2>{session.title}</h2></div>
                 </div>
-                <div className={styles.meta}><span>{new Date(session.started_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span><span>{Math.max(1, Math.round(session.duration_seconds / 60))} min</span><span>{session.tasks_completed} of {session.tasks_total} tasks</span><span>{getFocusEmoji(session.focus_score)} {getFocusDescription(session.focus_score)}</span></div>
+                <div className={styles.meta}><span>{new Date(session.started_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span><span>{Math.max(1, Math.round(session.duration_seconds / 60))} min</span><span>{session.tasks_completed} of {session.tasks_total} tasks</span><span>{getFocusPerformance(session.focus_score, session.state_distribution).emoji} {getFocusPerformance(session.focus_score, session.state_distribution).phrase}</span></div>
               </div>
               {session.status === 'in_progress' ? <span className={`${styles.inProgress} ${styles.sessionStatus}`}>Keep going</span> : <StateBadge state={session.state} size="sm" className={styles.sessionStatus}/>} 
-              <button className={styles.openBtn} onClick={() => navigate(session.status === 'in_progress' ? '/student/eeg-pairing' : '/student/session-summary', session.status === 'completed' ? { state: { summary: { sessionId: session.id, duration: session.duration_seconds, focusScore: session.focus_score, stateDistribution: session.state_distribution, taskCompleted: session.tasks_completed, taskTotal: session.tasks_total } } } : { state: { classId: session.class_id, lessonId: session.lesson_id ?? undefined, sessionId: session.id } })} aria-label={`Open ${session.title}`}><ChevronRight size={18}/></button>
+              <button className={styles.openBtn} onClick={() => navigate(session.status === 'in_progress' ? session.class_session_id ? '/student/class-session/' + session.class_session_id : '/student/eeg-pairing' : '/student/session-summary', session.status === 'completed' ? { state: { summary: { sessionId: session.id, duration: session.duration_seconds, focusScore: session.focus_score, stateDistribution: session.state_distribution, taskCompleted: session.tasks_completed, taskTotal: session.tasks_total } } } : { state: { classId: session.class_id, lessonId: session.lesson_id ?? undefined, sessionId: session.id } })} aria-label={`Open ${session.title}`}><ChevronRight size={18}/></button>
             </article>
           ))}
           {data && sessions.length === 0 && <div className={styles.empty}>No sessions match your search.</div>}

@@ -10,6 +10,7 @@ export interface DashboardData { student: StudentIdentity; classes: StudentClass
 export interface StudentSessionItem {
   id: string
   class_id: number
+  class_session_id: string | null
   lesson_id: number | null
   control_mode: 'automatic' | 'teacher' | 'free'
   title: string
@@ -48,11 +49,11 @@ export const getStudentClasses = () => api<{ classes: StudentClass[] }>('/classe
 export const getStudentClass = (id: string) => api<StudentClass>(`/classes/${id}/?summary=1`)
 export const getStudentClassPackage = (classId: string, packageSlug: string) => api<{ class: StudentClass; package: StudentPackage; lessons: StudentLesson[] }>(`/student/classes/${classId}/packages/${packageSlug}/`, { cache: 'no-store' })
 export const getStudentSessions = () => api<StudentSessionsData>('/student/sessions/')
-export const startStudentSession = (data: { class_id: number; lesson_id?: number; control_mode: 'teacher' | 'free' }) =>
+export const startStudentSession = (data: { class_id: number; lesson_id?: number; class_session_id?: string; control_mode: 'teacher' | 'free' }) =>
   api<{ id: string; class_id: number; lesson_id: number | null; control_mode: string; started_at: string }>('/sessions/start/', { method: 'POST', body: JSON.stringify(data) })
 export const endStudentSession = (sessionId: string) =>
   api<{ id: string; ended_at: string }>(`/sessions/${sessionId}/end/`, { method: 'POST' })
-export const trackStudentSlide = (sessionId: string, slideId: number, action: 'enter' | 'exit' = 'enter') =>
+export const trackStudentSlide = (sessionId: string, slideId: number, action: 'enter' | 'exit' | 'complete' = 'enter') =>
   api<{ id?: string; status: string; entered_at?: string; exited_at?: string }>(`/sessions/${sessionId}/slides/${slideId}/`, { method: 'POST', body: JSON.stringify({ action }) })
 export const getStudentJournal = (sessionId?: string) => api<StudentJournalData>(sessionId ? `/student/journals/?session_id=${encodeURIComponent(sessionId)}` : '/student/journals/')
 export const saveStudentJournal = (data: { session_id: string; prompt: string; response_type: 'text'; text_response: string; mood: string; shared_with_teacher: boolean }) =>
