@@ -24,6 +24,8 @@
 }
 
 /* The auras are painted into .root's background so they can never overlay UI. */
+.root.calm { background: #eef3ee; }
+
 .blob1 {
   display: none;
 }
