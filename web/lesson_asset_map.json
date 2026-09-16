@@ -216,5 +216,7 @@
   "someone gives you an item": "/assets/functional-academics/func-01/show-gratitude.png",
   "thank you.": "/assets/functional-academics/func-01/show-gratitude.png",
   "you need assistance": "/assets/functional-academics/func-01/needs-assistance.png",
-  "sports area": "/assets/care/care-01/ball.png"
+  "sports area": "/assets/care/care-01/ball.png",
+  "egg": "/assets/care/care-02/egg.png",
+  "star": "/assets/life/life-01/star.png"
 }

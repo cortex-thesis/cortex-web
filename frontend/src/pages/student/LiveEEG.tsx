@@ -1,5 +1,5 @@
 import { Activity, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, BatteryMedium, Check, Radio, RotateCcw } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BatteryMedium, Radio, RotateCcw } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molecules'
 import { PlayfulZoneTemplate } from '../../components/templates'
@@ -11,6 +11,7 @@ import type { Task } from '../../types'
 import EEGRegulation from './EEGRegulation'
 import { eegSessionPhase, nextEEGMode, sustainedEEGState } from '../../lib/eegTransitions'
 import type { CognitiveState } from '../../constants/states'
+import { getDeliveryConfig } from '../../constants/delivery'
 import { lessonTrivia } from '../../lib/lessonTrivia'
 import styles from './LiveEEG.module.css'
 import shellStyles from './FreeLessonSelect.module.css'
@@ -30,6 +31,7 @@ const BANDS: Array<{ key: keyof BandPowers; label: string }> = [
 ]
 const fieldNames: Record<string, string> = Object.fromEntries([
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl', 'actionLabel',
+  'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
   'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'correctFeedback', 'retryFeedback',
   'sceneImageUrl', 'preferredColumns', 'boardMinHeight', 'mediaFit',
   'dirtyImageUrl', 'cleaningImageUrl', 'cleanImageUrl', 'toolImageUrl',
@@ -221,19 +223,19 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
     <section className={`${playerStyles.player} `} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={`${playerStyles.progress} ${mode !== 'focus' ? styles.quietProgress : ''}`}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}><span style={{ width: `${completed.size / lesson.slides.length * 100}%` }} /></div>
-        <ol className={playerStyles.dots}>{lesson.slides.map((item, index) => <li key={item.id} aria-current={!complete && index === position ? 'step' : undefined} className={`${playerStyles.dot} ${completed.has(index) ? playerStyles.done : ''} ${!complete && index === position ? playerStyles.current : ''}`}>{completed.has(index) ? <Check size={12} /> : <span />}</li>)}</ol>
+        <ol className={playerStyles.dots}>{lesson.slides.map((item, index) => <li key={item.id} aria-current={!complete && index === position ? 'step' : undefined} className={`${playerStyles.dot} ${completed.has(index) ? playerStyles.done : ''} ${!complete && index === position ? playerStyles.current : ''}`}>{completed.has(index) ? <span aria-hidden="true" /> : <span />}</li>)}</ol>
         <span className={playerStyles.progressHint}>{complete ? 'All activities complete' : `Activity ${position + 1} of ${lesson.slides.length}`} · Filled: completed · Ring: current</span>
       </div>}
       {phase !== 'complete' && (mode === 'breathing' || mode === 'refocus') && <EEGRegulation key={mode} mode={mode} paused={teacherControl?.paused} allowResume={adaptive} state={currentState} transitionState={adaptive ? transitionState : () => 'distracted'} onResume={() => setMode('returning')} onBreathing={() => setMode('breathing')} />}
-      {phase !== 'complete' && mode === 'returning' && <div className={styles.returnTransition} role="status"><Check size={40} aria-hidden="true" /><h2>Let's ease back into your lesson</h2><p>One activity at a time. You can go at your own pace.</p></div>}
+      {phase !== 'complete' && mode === 'returning' && <div className={styles.returnTransition} role="status"><span aria-hidden="true" /><h2>Let's ease back into your lesson</h2><p>One activity at a time. You can go at your own pace.</p></div>}
       <Activity mode={mode === 'focus' || phase === 'complete' ? 'visible' : 'hidden'}>
-      <div className={`${playerStyles.stage} ${mode === 'focus' ? styles.focusArrival : ''}`}>{phase === 'complete' ? <div className={playerStyles.complete}><Check size={40} /><h2>{ending ? 'Session complete' : 'Lesson complete'}</h2><p role="status">{savingSession ? 'Saving your recorded session...' : teacherControl && !ending ? 'Wait here for your teacher to choose the next lesson or end the session.' : 'Your recorded session is ready to save.'}</p>{(!teacherControl || ending) && <button disabled={savingSession} className={`${playerStyles.button} ${playerStyles.next}`} onClick={() => void finish()}>{savingSession ? 'Saving...' : 'Save and finish session'}</button>}</div> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}><TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onAnswered={(correct, selected) => {
+      <div className={`${playerStyles.stage} ${mode === 'focus' ? styles.focusArrival : ''}`}>{phase === 'complete' ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>{ending ? 'Session complete' : 'Lesson complete'}</h2><p role="status">{savingSession ? 'Saving your recorded session...' : teacherControl && !ending ? 'Wait here for your teacher to choose the next lesson or end the session.' : 'Your recorded session is ready to save.'}</p>{(!teacherControl || ending) && <button disabled={savingSession} className={`${playerStyles.button} ${playerStyles.next}`} onClick={() => void finish()}>{savingSession ? 'Saving...' : 'Save and finish session'}</button>}</div> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}><TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} deliveryStrategy={getDeliveryConfig(currentState ?? 'focused').strategy} onChanged={() => setAnswered(previous => { const next = { ...previous }; delete next[index]; return next })} onAnswered={(correct, selected) => {
         setAnswered(previous => ({ ...previous, [index]: correct }))
         saveAnswer(index, correct, selected)
       }} /></Activity>) : null}</div>
       {phase !== 'complete' && task && <nav className={playerStyles.actions} aria-label="Activity navigation">
         <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || savingStep} onClick={() => { playLessonSound('transition'); setVisited(previous => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
-        {isActivity && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} onClick={() => { setRetry(previous => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered(previous => { const next = { ...previous }; delete next[position]; return next }) }}><RotateCcw size={18} />Try again</button>}
+        {isActivity && !['audio_sequence', 'memory_flip'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} onClick={() => { setRetry(previous => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered(previous => { const next = { ...previous }; delete next[position]; return next }) }}><RotateCcw size={18} />Try again</button>}
         <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || savingStep} onClick={() => void advance()}>{savingStep ? 'Saving progress…' : position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next activity'}<ArrowRight size={18} /></button>
       </nav>}
       </Activity>

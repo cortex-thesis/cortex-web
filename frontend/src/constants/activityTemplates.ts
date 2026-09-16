@@ -30,6 +30,10 @@ export interface TaskTemplateDefinition {
 }
 
 export const TASK_TEMPLATES: TaskTemplateDefinition[] = [
+  { id: 'word_search', label: 'Word Hunt', response: 'Find words in a letter grid', purpose: 'Supporting vocabulary practice' },
+  { id: 'find_it', label: 'Find It', response: 'Choose objects in a workspace', purpose: 'Functional object selection' },
+  { id: 'audio_sequence', label: 'Listen and Tap', response: 'Follow a spoken sequence', purpose: 'Spoken-direction practice with prompts' },
+  { id: 'shopping', label: 'Shopping Challenge', response: 'Find, pay, receive and check change', purpose: 'Simulated complete transactions' },
   { id: 'multiple_choice', label: 'Multiple choice', response: 'Choose one text answer', purpose: 'Recognition and knowledge checks' },
   { id: 'picture_choice', label: 'Picture choice', response: 'Choose one picture', purpose: 'Visual recognition with reduced reading demand' },
   { id: 'yes_no', label: 'Yes or no', response: 'Choose between two answers', purpose: 'Simple decisions and safety checks' },

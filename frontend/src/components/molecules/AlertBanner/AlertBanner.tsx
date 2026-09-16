@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react'
+import { XCircle, AlertTriangle, Info, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import styles from './AlertBanner.module.css'
 import clsx from 'clsx'
@@ -16,7 +16,7 @@ interface AlertBannerProps {
 }
 
 const ICONS: Record<AlertVariant, ReactNode> = {
-  success: <CheckCircle size={18} strokeWidth={1.75} />,
+  success: <span aria-hidden="true" />,
   error: <XCircle size={18} strokeWidth={1.75} />,
   warning: <AlertTriangle size={18} strokeWidth={1.75} />,
   info: <Info size={18} strokeWidth={1.75} />,

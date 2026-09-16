@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Check, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { CURRICULUM_PACKAGES, type CurriculumPackage } from '../../constants/states'
@@ -105,7 +105,7 @@ export default function FreeLessonSelect() {
 
         {selectedPackage && (
           <div className={styles.selectedPackage}>
-            <Check size={15} /> {PACKAGE_META[selectedPackage].label} selected
+            <span aria-hidden="true" /> {PACKAGE_META[selectedPackage].label} selected
           </div>
         )}
       </div>

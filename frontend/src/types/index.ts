@@ -99,6 +99,10 @@ export interface ActivityStep {
 }
 
 export type TaskTemplateId =
+  | 'word_search'
+  | 'find_it'
+  | 'audio_sequence'
+  | 'shopping'
   | 'multiple_choice'
   | 'picture_choice'
   | 'yes_no'
@@ -117,6 +121,8 @@ export type TaskTemplateId =
 export interface TaskItem {
   id: string
   label: string
+  symbol?: string
+  price?: number
   imageUrl?: string | null
   altText?: string
 }
@@ -154,6 +160,21 @@ export interface Task {
   imageUrl: string | null
   altText?: string
   priceTag?: string
+  evidenceRole?: string
+  grid?: string[][]
+  targets?: { word: string; displayLabel: string; cells: number[][]; revealImage?: string; followUpQuestion?: { question: string; choices: string[]; answer: string } }[]
+  rounds?: { direction: string; correctOrder: string[]; audioUrl?: string }[]
+  workspaceLabel?: string
+  allowSubset?: boolean
+  minimumSelections?: number
+  hideImageLabels?: boolean
+  immediateFeedback?: boolean
+  targetItemId?: string
+  paymentOptions?: number[]
+  moneyItems?: TaskItem[]
+  payment?: number
+  givenChange?: number
+  changeOptions?: number[]
   question: string
   choices: string[]
   answer: string

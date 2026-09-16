@@ -67,4 +67,6 @@ LIFE_LESSONS = [
 
 
 from .lesson_assets import attach_definitions
+from .lesson_games import upgrade
+upgrade(LIFE_LESSONS)
 attach_definitions(LIFE_LESSONS)

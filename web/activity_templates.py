@@ -49,6 +49,10 @@ ACTIVITY_TEMPLATES = {
 }
 
 TASK_TEMPLATES = {
+    "word_search": {"label": "Word Hunt", "required": ("question", "grid", "targets")},
+    "find_it": {"label": "Find It", "required": ("question", "items", "correct_item_ids")},
+    "audio_sequence": {"label": "Listen and Tap", "required": ("question", "items", "rounds")},
+    "shopping": {"label": "Shopping Challenge", "required": ("question", "items", "target_item_id", "payment_options", "payment", "given_change", "change_options")},
     "multiple_choice": {"label": "Multiple choice", "required": ("question", "choices", "answer")},
     "picture_choice": {"label": "Picture choice", "required": ("question", "items", "correct_item_ids")},
     "yes_no": {"label": "Yes or no", "required": ("question", "choices", "answer")},
@@ -130,4 +134,7 @@ def validate_activity_configuration(activity_type, configuration):
             return f"{task_id} requires correct_item_ids contained in items."
     if template_id == "visual_narrative" and not isinstance(configuration["steps"], list):
         return "visual_narrative steps must be a list."
+    if task_id in {"word_search", "find_it", "audio_sequence", "shopping"}:
+        from .game_validation import validate_game
+        return validate_game(configuration)
     return None

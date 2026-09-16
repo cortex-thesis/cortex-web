@@ -1,0 +1,43 @@
+.game { display: grid; gap: 12px; min-width: 0; }
+.game button { min-height: 44px; border: 1.5px solid var(--color-border); border-radius: 12px; padding: 10px 14px; background: var(--color-white); color: var(--color-text-primary); font: inherit; cursor: pointer; }
+.game button:focus-visible { outline: 3px solid var(--color-interface-purple); outline-offset: 3px; }
+.game button:disabled { cursor: default; opacity: .7; }
+.game button:hover:not(:disabled) { border-color: var(--color-interface-purple); }
+.workspace { padding: 14px; border: 1px solid var(--color-border); border-radius: 18px; background: linear-gradient(135deg, #eff6fc, #f4f1fa); }
+.workspaceTitle { display: block; margin-bottom: 12px; color: var(--color-interface-purple); font-weight: 600; }
+.objects { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 125px), 1fr)); gap: 10px; }
+.object { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.object img, .checkout img { width: 100%; max-width: 120px; height: clamp(68px, 13dvh, 112px); object-fit: contain; }
+.symbol { display: grid; place-items: center; font-size: 38px; min-height: 68px; }
+.builtinIcon { width: 68px; height: 68px; color: var(--color-interface-purple); stroke-width: 1.6; }
+.blueFolder { color: #286aaf; fill: #e5f2ff; }
+.redFolder { color: #b74949; fill: #ffe8e8; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.game .primary, .game .listen { background: var(--color-interface-purple); color: white; }
+.game .selected { border-color: var(--color-interface-purple); background: #efedfc; }
+.game .correct, .found { background: #e1f4e9; border-color: #238461; color: #19634a; }
+.game .incorrect { background: #ffebe9; border-color: #b64646; color: #973434; }
+.feedback { flex: 1; margin: 0; padding: 10px 12px; border-radius: 10px; min-width: min(100%, 180px); }
+.wordLayout { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 20px; }
+.letters { display: grid; gap: 4px; width: min(100%, 380px); touch-action: none; user-select: none; }
+.letters button { min-width: 0; min-height: 44px; padding: 0; aspect-ratio: 1; font-size: clamp(17px, 3vw, 23px); font-weight: 600; }
+.game .letters button.found { background: #d4efe2; border: 2px solid #238461; color: #14543e; opacity: 1; box-shadow: inset 0 -3px 0 #238461; }
+.wordList > span.found { background: #d4efe2; border: 1.5px solid #238461; color: #14543e; font-weight: 700; }
+.foundBadge { margin-left: auto; font-size: 12px; white-space: nowrap; }
+.flipGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 850px; width: 100%; min-width: 0; margin-inline: auto; }
+@media (max-width: 600px) { .flipGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.game .flipCard { min-height: 165px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 14px; background: #eeecfa; border: 2px solid #c8c0eb; }
+.game .flipCard.revealed { background: white; border-color: var(--color-interface-purple); }
+.game .flipCard.correct { background: #e1f4e9; border-color: #238461; opacity: 1; }
+.flipCard img { width: 100%; max-width: 105px; height: 95px; object-fit: contain; }
+.cardBack { font-size: 32px; color: var(--color-interface-purple); }
+.wordList { display: grid; gap: 8px; min-width: 140px; }
+.wordList > span { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 7px; }
+.wordList img { width: 44px; height: 44px; object-fit: contain; }
+.followUp { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--color-border); border-radius: 14px; }
+.followUp img { width: 110px; height: 100px; object-fit: contain; }
+.checkout { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px; padding: 16px; background: #f2f1f8; border-radius: 16px; }
+.tag { background: #fff6db; color: #574319; border: 1px solid #dcc784; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 22px; }
+.mission { margin: 0; color: var(--color-interface-purple); }
+.prompt { background: #efedfc; border-radius: 12px; padding: 12px; }
+@media (max-width: 380px) { .letters { gap: 2px; } .letters button { min-height: 38px; } }

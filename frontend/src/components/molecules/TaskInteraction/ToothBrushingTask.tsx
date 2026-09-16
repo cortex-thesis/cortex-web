@@ -1,4 +1,4 @@
-import { Check, MoveHorizontal } from 'lucide-react'
+import { MoveHorizontal } from 'lucide-react'
 import { useRef, useState } from 'react'
 import type { Task } from '../../../types'
 import styles from './TaskInteraction.module.css'
@@ -51,7 +51,7 @@ export default function ToothBrushingTask({ task, onAnswered }: { task: Task; on
         <div className={styles.brushFooter}>
           <div className={styles.brushProgress} role="progressbar" aria-label="Brushing progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}><span style={{ width: `${progress}%` }} /></div>
           {complete
-            ? <div className={`${styles.feedback} ${styles.correct}`} role="status"><Check size={16} /> {task.correctFeedback}</div>
+            ? <div className={`${styles.feedback} ${styles.correct}`} role="status"><span aria-hidden="true" /> {task.correctFeedback}</div>
             : <button type="button" className={styles.brushButton} onClick={() => addProgress(20)}><MoveHorizontal size={17} /> Brush the teeth</button>}
         </div>
       </>}

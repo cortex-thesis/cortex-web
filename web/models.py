@@ -870,6 +870,7 @@ class LessonPracticeProgress(TimeStampedModel):
     school_class = models.ForeignKey(SchoolClass, on_delete=models.CASCADE)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     completed_slide_ids = models.JSONField(default=list)
+    activity_evidence = models.JSONField(default=dict)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=('student', 'school_class', 'lesson'), name='unique_student_class_practice')]

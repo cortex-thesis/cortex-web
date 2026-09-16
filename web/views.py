@@ -1812,7 +1812,8 @@ def _practice_progress_data(lesson, progress):
     completed = slide_ids.intersection(progress.completed_slide_ids) if progress else set()
     return {"status": 'not_started' if progress is None else 'completed' if slide_ids and completed == slide_ids else 'in_progress',
             "percentage": round(len(completed) * 100 / len(slide_ids)) if slide_ids else 0,
-            "completed_slide_ids": sorted(completed)}
+            "completed_slide_ids": sorted(completed),
+            "activity_evidence": progress.activity_evidence if progress else {}}
 
 
 @require_http_methods(["GET", "POST"])
@@ -1838,8 +1839,22 @@ def student_practice_lesson(request, class_id, lesson_id):
             progress, _ = LessonPracticeProgress.objects.get_or_create(student=profile, school_class=school_class, lesson=lesson)
             progress = LessonPracticeProgress.objects.select_for_update().get(pk=progress.pk)
             if slide_id is not None:
+                selected = payload.get('selected')
+                if selected is not None:
+                    if not isinstance(selected, str) or len(selected) > 20000:
+                        return JsonResponse({'detail': 'Invalid activity evidence.'}, status=400)
+                    activity = next(slide.activity for slide in lesson.slides.all() if slide.pk == slide_id)
+                    config = activity.configuration
+                    from .game_validation import evaluate_game
+                    evaluated = evaluate_game(config, selected)
+                    if evaluated is False:
+                        return JsonResponse({'detail': 'Complete the activity before continuing.'}, status=400)
+                    progress.activity_evidence = progress.activity_evidence | {str(slide_id): {
+                        'selected': selected, 'evidence_role': config.get('evidence_role', 'supporting'),
+                        'digital_mastery_claim': False,
+                    }}
                 progress.completed_slide_ids = sorted(set(progress.completed_slide_ids) | {slide_id})
-                progress.save(update_fields=['completed_slide_ids', 'updated_at'])
+                progress.save(update_fields=['completed_slide_ids', 'activity_evidence', 'updated_at'])
     else:
         progress = LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson=lesson).first()
     return JsonResponse(_lesson_data(lesson) | {'progress': _practice_progress_data(lesson, progress)})
@@ -2493,6 +2508,12 @@ def session_slide_exposure(request, session_id, slide_id):
         attempt = data.get("attempt", 1)
         if not isinstance(correct, bool) or not isinstance(selected, str) or len(selected) > 20000 or type(attempt) is not int or not 1 <= attempt <= 32767:
             return JsonResponse({"detail": "Invalid answer or attempt."}, status=400)
+        config = slide.activity.configuration
+        from .game_validation import evaluate_game
+        evaluated = evaluate_game(config, selected)
+        if evaluated is not None:
+            correct = evaluated
+        evidence_role = config.get('evidence_role')
         with transaction.atomic():
             if session.class_session_id:
                 from .models import ClassSession
@@ -2504,7 +2525,9 @@ def session_slide_exposure(request, session_id, slide_id):
                 return JsonResponse({"detail": "The session has already ended."}, status=409)
             response, _ = ActivityResponse.objects.update_or_create(
                 session=session, activity=slide.activity, attempt_number=attempt,
-                defaults={"response": {"selected": selected}, "is_correct": correct},
+                defaults={"response": {"selected": selected} if evidence_role is None else {"selected": selected, "evidence_role": evidence_role,
+                    "practice_correct": correct, "digital_mastery_claim": False},
+                    "is_correct": None if evidence_role == 'supporting' else correct},
             )
         return JsonResponse({"id": str(response.pk), "status": "saved"})
     if action == 'complete':

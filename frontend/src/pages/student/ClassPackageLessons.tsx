@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, ChevronRight, Circle, CircleCheck } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Circle } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { DetailSkeleton } from '../../components/molecules'
@@ -25,7 +25,7 @@ export default function ClassPackageLessons() {
       <section className={styles.lessonSection}><h2>{data.package.name} lessons</h2>{data.lessons.length === 0 ? <p>No approved lessons have been added to this package yet.</p> : <div className={styles.lessonList}>{data.lessons.map((lesson, index) => <div key={lesson.id} className={styles.lessonRow}>
         <button className={styles.lessonCard} onClick={() => navigate(`/student/class/${classId}/lesson/${lesson.id}`)}><span className={styles.lessonNumber}>{index + 1}</span><span className={styles.lessonName}>{lesson.title}</span>
           <span className={styles.lessonProgress}>
-            {lesson.progress?.status === 'completed' ? <CircleCheck className={styles.progressComplete} size={28} aria-label="Completed" /> : lesson.progress?.status === 'in_progress' ? <><svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12" fill="none" stroke="#e5e1ef" strokeWidth="3" /><circle cx="16" cy="16" r="12" fill="none" stroke="var(--color-interface-purple)" strokeWidth="3" pathLength="100" strokeDasharray={`${lesson.progress.percentage} 100`} transform="rotate(-90 16 16)" strokeLinecap="round" /></svg><span>{lesson.progress.percentage}%</span></> : <span className={styles.progressNotStarted}><Circle size={26} />Not started</span>}
+            {lesson.progress?.status === 'completed' ? <span className={styles.progressComplete}>Completed</span> : lesson.progress?.status === 'in_progress' ? <><svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12" fill="none" stroke="#e5e1ef" strokeWidth="3" /><circle cx="16" cy="16" r="12" fill="none" stroke="var(--color-interface-purple)" strokeWidth="3" pathLength="100" strokeDasharray={`${lesson.progress.percentage} 100`} transform="rotate(-90 16 16)" strokeLinecap="round" /></svg><span>{lesson.progress.percentage}%</span></> : <span className={styles.progressNotStarted}><Circle size={26} />Not started</span>}
           </span><ChevronRight size={18} /></button>
       </div>)}</div>}</section>
     </div>

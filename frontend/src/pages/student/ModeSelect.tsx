@@ -156,7 +156,7 @@ export default function ModeSelect() {
               </span>
               {selected === mode.value && (
                 <span className={styles.checkmark} aria-hidden="true">
-                  ✓
+                  
                 </span>
               )}
             </button>

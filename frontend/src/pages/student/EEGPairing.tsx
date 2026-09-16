@@ -1,4 +1,4 @@
-import { ArrowLeft, Bluetooth, CheckCircle2, Radio, Wifi } from 'lucide-react'
+import { ArrowLeft, Bluetooth, Radio, Wifi } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { CalmZoneTemplate } from '../../components/templates'
 import { AlertBanner } from '../../components/molecules'
@@ -9,7 +9,7 @@ const STEPS = [
   { label: 'Bluetooth', icon: Bluetooth },
   { label: 'Muse 2', icon: Wifi },
   { label: 'Signal', icon: Radio },
-  { label: 'Ready', icon: CheckCircle2 },
+  { label: 'Ready', icon: Radio },
 ]
 
 export default function EEGPairing() {
@@ -31,7 +31,7 @@ export default function EEGPairing() {
           <div className={styles.headbandArc}>
             {MUSE_CHANNELS.map((channel, index) => <div key={channel} className={`${styles.sensor} ${quality[index] === 2 ? styles.sensorGood : quality[index] === 1 ? styles.sensorFair : ''}`}><span>{channel}</span><small>{quality[index] === 2 ? 'Good' : quality[index] === 1 ? 'Adjust' : 'Waiting'}</small></div>)}
           </div>
-          <div className={styles.centerStatus}>{ready ? <CheckCircle2 size={48} /> : <Bluetooth size={42} />}</div>
+          <div className={styles.centerStatus}>{ready ? <span aria-hidden="true" /> : <Bluetooth size={42} />}</div>
         </div>
         <div className={styles.textBlock}><h1 className={styles.title}>{ready ? 'Sensors are ready' : status === 'streaming' ? 'Adjust the sensor contact' : busy ? 'Connecting to Muse 2' : 'Connect your Muse 2'}</h1><p className={styles.sub}>{ready ? `${deviceName} is streaming real EEG data.` : status === 'streaming' ? 'Wear the headband snugly and move hair away from TP9, AF7, AF8, and TP10.' : 'Turn on the headband, then choose it from the Bluetooth window.'}</p></div>
         <div className={styles.waveProgress} role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={4}><svg className={styles.waveLine} viewBox="4 0 292 44" preserveAspectRatio="none"><path className={styles.waveTrack} pathLength="100" d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" /><path className={`${styles.waveFill} ${ready ? styles.waveSuccess : ''}`} pathLength="100" strokeDasharray={`${progress} 100`} d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" /></svg><div className={styles.stepNodes}>{STEPS.map((step, index) => { const Icon = step.icon; const number = index + 1; return <span key={step.label} className={`${styles.stepNode} ${number < currentStep ? styles.stepComplete : ''} ${number === currentStep ? styles.stepActive : ''}`}><Icon size={14} /></span> })}</div></div>

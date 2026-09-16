@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Image as ImageIcon, Pause, Play, Sparkles, Volume2 } from 'lucide-react'
+import { Image as ImageIcon, Pause, Play, Sparkles, Volume2 } from 'lucide-react'
 import type { Task } from '../../../types'
 import BreathingGuide from '../BreathingGuide'
 import styles from './ActivityTemplate.module.css'
@@ -235,7 +235,7 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
       <MediaButton playing={playing} label="calming soundscape" onClick={() => setPlaying((value) => !value)} />
       <div className={styles.mediaCopy}><strong>{task.contentLabel ?? 'Calming soundscape'}</strong><span>{task.contentDescription}</span></div>
       <div className={styles.waveform} aria-hidden="true">{[8, 15, 22, 12, 26, 18, 10].map((height, index) => <span key={index} style={{ height }} />)}</div>
-      {playing && <Check className={styles.playingMark} size={18} aria-label="Soundscape playing" />}
+      {playing && <span aria-hidden="true" />}
     </section>
   )
 }

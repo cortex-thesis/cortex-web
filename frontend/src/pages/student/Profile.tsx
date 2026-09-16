@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   BookOpen,
-  CheckCircle2,
   Clock3,
   Pencil,
   TrendingUp,
@@ -100,7 +99,7 @@ export default function Profile() {
 
         <section className={styles.statsGrid} aria-label="Learning statistics">
           <StreakCard score={sessionData?.summary.average_focus_score ?? 0} label="Current progress" className={styles.currentProgress} />
-          <Stat icon={<CheckCircle2 size={22}/>} color="#534AB7" bg="#EEEDFE" value={mockStats.sessionsCompleted} label="Sessions completed" detail="4 sessions this week" />
+          <Stat icon={<span aria-hidden="true" />} color="#534AB7" bg="#EEEDFE" value={mockStats.sessionsCompleted} label="Sessions completed" detail="4 sessions this week" />
           <Stat icon={<Clock3 size={22}/>} color="#D4537E" bg="#FBEAF0" value={mockStats.learningTime} label="Total learning time" detail="Current school term" />
         </section>
 

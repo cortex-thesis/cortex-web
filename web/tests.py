@@ -581,7 +581,11 @@ class WorkflowTests(TestCase):
         template_catalog = self.client.get("/api/content/activity-templates/")
         self.assertEqual(template_catalog.status_code, 200)
         self.assertEqual(len(template_catalog.json()["presentation_templates"]), 7)
-        self.assertEqual(len(template_catalog.json()["task_templates"]), 13)
+        from .activity_templates import TASK_TEMPLATES
+        self.assertEqual(
+            {template["id"] for template in template_catalog.json()["task_templates"]},
+            set(TASK_TEMPLATES),
+        )
         self.assertEqual(template_catalog.json()["layout_options"]["sizes"], ["compact", "standard", "wide", "immersive"])
         slide = self.client.post(f"/api/content/lessons/{lesson_id}/slides/", data=json.dumps({
             "type": "interactive", "title": "Choose the first step", "position": 0,

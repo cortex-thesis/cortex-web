@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Bell, Volume2, Vibrate, LogOut, UserCircle2, Mail, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, Bell, Volume2, Vibrate, LogOut, UserCircle2, Mail} from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { Button } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
@@ -214,7 +214,7 @@ export default function Settings() {
           {!isEditing && !showPasswordPrompt && <Button onClick={() => { setShowPasswordPrompt(true); setError('') }} fullWidth>Edit profile</Button>}
           {showPasswordPrompt && <form className={styles.verifyForm} onSubmit={handleVerifyPassword}><label className={styles.formField}><span>Enter your current password to edit</span><input autoFocus required type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /></label><div className={styles.formActions}><Button type="submit" loading={isVerifying}>Verify password</Button><Button type="button" variant="secondary" onClick={() => { setShowPasswordPrompt(false); setCurrentPassword(''); setError('') }}>Cancel</Button></div></form>}
           {error ? <p style={{ color: '#d4537e', margin: 0 }}>{error}</p> : null}
-          {saveState === 'success' ? <p style={{ color: '#1d9e75', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}><CheckCircle2 size={16} /> Profile updated</p> : null}
+          {saveState === 'success' ? <p style={{ color: '#1d9e75', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" /> Profile updated</p> : null}
           {isEditing && <Button onClick={handleSaveProfile} fullWidth loading={saveState === 'saving'}><Mail size={16} strokeWidth={1.75} />Save profile</Button>}
           <div className={styles.divider} />
           <button

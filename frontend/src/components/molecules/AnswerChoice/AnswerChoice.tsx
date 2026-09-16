@@ -1,4 +1,4 @@
-import { Check, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import styles from './AnswerChoice.module.css'
 import clsx from 'clsx'
 
@@ -42,14 +42,6 @@ function AnswerChoice({
             : ''
       }`}
     >
-      {answerState === 'correct' && (
-        <span
-          className={clsx(styles.icon, styles.iconCorrect)}
-          aria-hidden="true"
-        >
-          <Check size={12} strokeWidth={3} />
-        </span>
-      )}
       {answerState === 'incorrect' && (
         <span
           className={clsx(styles.icon, styles.iconIncorrect)}

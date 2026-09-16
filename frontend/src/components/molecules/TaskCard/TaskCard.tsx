@@ -15,6 +15,7 @@ type AnswerState = 'default' | 'selected' | 'correct' | 'incorrect'
 interface TaskCardProps {
   task: Task
   onAnswered?: (correct: boolean, selected: string) => void
+  onChanged?: () => void
   nudgeText?: string
   showNudge?: boolean
   className?: string
@@ -26,6 +27,7 @@ interface TaskCardProps {
 function TaskCard({
   task,
   onAnswered,
+  onChanged,
   nudgeText = 'Focus music playing softly. Keep going!',
   showNudge = false,
   className,
@@ -37,7 +39,7 @@ function TaskCard({
   const [revealed, setRevealed] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   function handleInteraction(correct: boolean, response: string) {
-    playLessonSound(correct ? 'correct' : 'incorrect')
+    if (deliveryStrategy !== 'sensory_cooldown') playLessonSound(correct ? 'correct' : 'incorrect')
     onAnswered?.(correct, response)
   }
 
@@ -126,7 +128,7 @@ function TaskCard({
       />}
 
       <div className={styles.contentHeading}>
-        <div><span className={styles.typeLabel}>{templateLabel}</span><h2>{task.title}</h2></div>
+        <div>{templateLabel.toLowerCase() !== task.title.toLowerCase() && <span className={styles.typeLabel}>{templateLabel}</span>}<h2>{task.title}</h2></div>
         <span className={styles.contentHint}>{task.contentDescription}</span>
       </div>
 
@@ -142,7 +144,7 @@ function TaskCard({
       {hasTaskInteraction ? (
         <>
           <p className={styles.question}>{task.question}</p>
-          <TaskInteraction task={task} onAnswered={handleInteraction} />
+          <TaskInteraction task={task} onAnswered={handleInteraction} onChanged={onChanged} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement'} />
         </>
       ) : isKnowledgeCheck ? (
         <>

@@ -18,6 +18,9 @@
 }
 
 .fitSteps { height: 100%; min-height: 0; }
+.card[data-delivery-strategy="attention_reengagement"] .question { border-left: 3px solid var(--color-interface-purple); padding-left: 10px; }
+.card[data-delivery-strategy="sensory_cooldown"] *, .card[data-delivery-strategy="sensory_cooldown"] *::before, .card[data-delivery-strategy="sensory_cooldown"] *::after { animation: none !important; transition: none !important; }
+.card[data-delivery-strategy="sensory_cooldown"] { box-shadow: none; }
 .fitSteps > :not(ol) { flex-shrink: 0; }
 .contentHeading { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
 .contentHeading > div { display: flex; flex-direction: column; gap: 4px; }

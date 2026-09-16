@@ -206,4 +206,6 @@ CARE_LESSONS = [
 
 
 from .lesson_assets import attach_definitions
+from .lesson_games import upgrade
+upgrade(CARE_LESSONS)
 attach_definitions(CARE_LESSONS)

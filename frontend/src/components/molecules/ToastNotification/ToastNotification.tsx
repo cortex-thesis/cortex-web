@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Check, X, AlertTriangle, Info } from 'lucide-react'
+import { X, AlertTriangle, Info } from 'lucide-react'
 import styles from './ToastNotification.module.css'
 import clsx from 'clsx'
 
@@ -14,7 +14,7 @@ interface ToastNotificationProps {
 }
 
 const ICONS: Record<ToastVariant, React.ReactNode> = {
-  success: <Check size={11} strokeWidth={3} />,
+  success: <span aria-hidden="true" />,
   error: <X size={11} strokeWidth={3} />,
   warning: <AlertTriangle size={11} strokeWidth={3} />,
   info: <Info size={11} strokeWidth={3} />,

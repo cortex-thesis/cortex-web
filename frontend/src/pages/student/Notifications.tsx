@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Trophy, BookOpen, Users, Bell, CheckCheck } from 'lucide-react'
+import { ChevronLeft, Trophy, BookOpen, Users, Bell} from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { ListSkeleton } from '../../components/molecules'
 import { api, cachedApiValue } from '../../lib/api'
@@ -27,7 +27,7 @@ export default function Notifications() {
   function markRead(id: string) { setNotifications((items) => items.map((item) => item.id === id ? { ...item, read: true } : item)); void api('/student/notifications/', { method: 'POST', body: JSON.stringify({ notification_id: id }) }) }
   return (
     <PlayfulZoneTemplate>
-      <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Go back"><ChevronLeft size={18} strokeWidth={1.75} /></button><h1 className={styles.title}>Notifications</h1>{unreadCount ? <button className={styles.markAllBtn} onClick={markAllRead}><CheckCheck size={14} strokeWidth={1.75} />Mark all read</button> : <span className={styles.spacer} />}</div>
+      <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Go back"><ChevronLeft size={18} strokeWidth={1.75} /></button><h1 className={styles.title}>Notifications</h1>{unreadCount ? <button className={styles.markAllBtn} onClick={markAllRead}><span aria-hidden="true" />Mark all read</button> : <span className={styles.spacer} />}</div>
       <div className={styles.body}>{loading ? <ListSkeleton rows={6} /> : notifications.length === 0 ? <div className={styles.empty}><Bell size={28} strokeWidth={1.5} /><p>You're all caught up. New updates will show up here.</p></div> : <ul className={styles.list}>{notifications.map((item) => <li key={item.id}><button className={styles.item} data-unread={!item.read} onClick={() => markRead(item.id)}><span className={styles.icon} style={{ background: kindBg[item.kind] }}>{kindIcon[item.kind]}</span><span className={styles.itemBody}><span className={styles.itemTitle}>{item.title}</span><span className={styles.itemText}>{item.body}</span><span className={styles.itemTime}>{timeAgo(item.createdAt)}</span></span>{!item.read && <span className={styles.dot} aria-hidden />}</button></li>)}</ul>}</div>
     </PlayfulZoneTemplate>
   )

@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   BookOpen,
-  Check,
   Clock3,
   Frown,
   HelpCircle,
@@ -215,7 +214,7 @@ export default function LearningJournal() {
               <ul className={styles.tasksList}>
                 {tasksDone.map((task, index) => (
                   <li key={`${task}-${index}`}>
-                    <span className={styles.taskCheck}><Check size={15} /></span>
+                    <span className={styles.taskCheck}><span aria-hidden="true" /></span>
                     <span><strong>{task}</strong><small>Completed</small></span>
                   </li>
                 ))}
