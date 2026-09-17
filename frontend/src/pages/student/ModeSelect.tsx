@@ -46,7 +46,7 @@ export default function ModeSelect() {
   const navigate = useNavigate()
   const location = useLocation()
   const classroomContext = (location.state as { classSessionId?: string } | null)?.classSessionId
-  const [selected, setSelected] = useState<SessionMode>('teacher')
+  const [selected, setSelected] = useState<SessionMode>(import.meta.env.DEV && (location.state as { devBypass?: boolean } | null)?.devBypass ? 'free' : 'teacher')
   const [isStarting, setIsStarting] = useState(false)
   const [error, setError] = useState('')
   const [needsConsent, setNeedsConsent] = useState(false)

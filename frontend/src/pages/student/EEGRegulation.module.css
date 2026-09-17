@@ -1,7 +1,9 @@
 .stage { container-type: size; }
 .content { width: min(100%, 900px); min-height: 100%; box-sizing: border-box; margin-inline: auto; padding: 8px; color: #435b54; text-align: center; display: flex; flex-direction: column; justify-content: center; }
 .content h1 { font-size: clamp(20px, 3vw, 28px); font-weight: 500; margin: 8px 0 16px; }
-.breathing { position: relative; justify-content: center; padding-top: 64px; }
+.breathing { position: relative; justify-content: center; padding: 64px 16px 16px; border-radius: 20px; background: #fff5e6; color: #685342; }
+.breathing .orb { background: #edd6b7; }
+.breathing button { background: #f2e1c9; border-color: #d9c3a4; color: #685342; }
 .content p { line-height: 1.7; }
 .eyebrow { font-size: 13px; letter-spacing: .06em; }
 .orb { width: 150px; height: 150px; margin: 36px auto; border-radius: 50%; background: #d4e5df; animation: breathe 12s ease-in-out infinite; }

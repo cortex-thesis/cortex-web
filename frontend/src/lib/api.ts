@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
+export const apiMediaUrl = (url: string) => url.startsWith('/api/') ? `${API_BASE.replace(/\/$/, '')}/${url.slice(5)}` : url
 // Briefly reuse navigation data; never keep another user's changes hidden all day.
 const GET_CACHE_TTL_MS = 30_000
 const SESSION_CACHE_PREFIX = 'cortex-api-v3:'

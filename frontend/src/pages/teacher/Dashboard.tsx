@@ -13,6 +13,7 @@ import { cachedApiValue } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import styles from './Dashboard.module.css'
 import analyticsStyles from './Analytics.module.css'
+import buttonStyles from '../prototype/Prototype.module.css'
 
 const states: CognitiveState[] = ['focused', 'relaxed', 'distracted', 'overstimulated']
 
@@ -55,7 +56,7 @@ export default function Dashboard() {
   return <TeacherDashboardTemplate user={data?.teacher ?? user} hasNotification={Boolean(data?.unread_notifications)}>
     <div className={analyticsStyles.content}>
       <h1 className={analyticsStyles.title}>Analytics</h1>
-      <Link to="/teacher/sessions">Start or manage a teacher-led session</Link>
+      <Link className={buttonStyles.primary} to="/teacher/sessions">Start a teacher-led session</Link>
       {error && <p role="alert">{error}</p>}
       {!data && !error ? <DetailSkeleton /> : <>
       <div className={analyticsStyles.statsRow}>

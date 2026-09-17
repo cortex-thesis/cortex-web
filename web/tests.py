@@ -243,6 +243,7 @@ class WorkflowTests(TestCase):
         }), content_type="application/json")
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["state"], "focused")
+        self.assertEqual(response.json()["focus_score"], 100)
         self.assertEqual(SessionEEGSample.objects.filter(session=session, slide=slide).count(), 1)
 
         self._login(self.teacher)

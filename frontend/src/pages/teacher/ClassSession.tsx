@@ -32,7 +32,7 @@ export default function TeacherClassSession() {
     void getTeacherClasses().then(data => setClasses(data.classes.filter(item => item.status === 'active'))).catch(reason => setError(reason.message))
     void listClassSessions().then(data => setHistory(data.sessions)).catch(reason => setError(reason.message))
   }, [])
-  const lessonClass = session ? String(session.class_id) : selectedClass
+  const lessonClass = session ? String(session.class_id) : ''
   useEffect(() => {
     if (!lessonClass) return
     let cancelled = false
@@ -56,7 +56,7 @@ export default function TeacherClassSession() {
   async function openLobby() {
     setBusy(true); setError('')
     try {
-      const data = await openClassSession(Number(selectedClass), selectedLesson ? Number(selectedLesson) : undefined)
+      const data = await openClassSession(Number(selectedClass))
       setSession(data); navigate(`/teacher/class-session/${data.id}`)
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to open the lobby.') }
     finally { setBusy(false) }
@@ -75,13 +75,12 @@ export default function TeacherClassSession() {
   const ended = session?.status === 'completed' || session?.status === 'cancelled'
   const report = session?.report
   return <TeacherDashboardTemplate user={user}><div className={styles.page}>
-    <header className={styles.header}><div><span className={styles.eyebrow}>Live classroom</span><h1>Teacher-led session</h1><p>{session ? `${session.class_name} · ${session.status === 'scheduled' ? 'Lobby open' : session.status}` : 'Choose a class and lesson, then invite your students into the lobby.'}</p></div><Link to="/teacher/sessions">All class sessions</Link></header>
+    <header className={styles.header}><div><span className={styles.eyebrow}>Live classroom</span><h1>Teacher-led session</h1><p>{session ? `${session.class_name} · ${session.status === 'scheduled' ? 'Lobby open' : session.status}` : 'Choose a class, then invite your students into the lobby and select a lesson.'}</p></div><Link to="/teacher/sessions">All class sessions</Link></header>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {connectionError && <p className={styles.connection} role="status">{connectionError}</p>}
     {!groupId ? <>
       <section className={styles.panel}><h2>Prepare your classroom</h2><div className={styles.fields}>
         <label>Class<select value={selectedClass} onChange={event => setSelectedClass(event.target.value)}><option value="">Choose a class</option>{classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-        <label>Lesson<select value={selectedLesson} disabled={!selectedClass} onChange={event => setSelectedLesson(event.target.value)}><option value="">Choose a lesson later</option>{lessons.map(item => <option key={item.id} value={item.id}>{item.package} · {item.title}</option>)}</select></label>
       </div><button className={styles.primary} disabled={!selectedClass || busy} onClick={() => void openLobby()}>{busy ? 'Opening…' : 'Open lobby and invite students'}</button><p>Students receive an invitation and wait until you start the lesson.</p></section>
       <section className={styles.panel}><h2>Recent sessions and reports</h2>{history.length ? history.map(item => <Link className={styles.history} key={item.id} to={`/teacher/class-session/${item.id}`}><strong>{item.class_name}</strong><span>{item.lesson_title ?? 'Lesson not selected'}</span><span>{item.status === 'completed' ? 'View overview report' : item.status === 'scheduled' ? 'Reopen lobby' : item.status}</span></Link>) : <p>No teacher-led sessions yet.</p>}</section>
     </> : !session ? <p role="status">Loading classroom…</p> : ended ? <section className={styles.panel}>

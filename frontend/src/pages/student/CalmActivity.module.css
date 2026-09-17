@@ -1,0 +1,13 @@
+.activity { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.activity h1, .activity p { margin: 0; }
+.workspace { width: min(100%, 560px); min-height: 190px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px; }
+.choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.choices button { min-width: 64px; }
+.scene { width: min(100%, 360px); max-height: 150px; }
+.track { width: min(100%, 320px); height: 70px; position: relative; }
+.circle { position: absolute; top: 15px; left: 0; width: 40px; height: 40px; border-radius: 50%; background: #8fac9e; animation: drift 12s ease-in-out infinite alternate; }
+.workspace * { animation-play-state: inherit; }
+.count { animation: arrive 1.8s ease both; }
+@keyframes drift { to { left: calc(100% - 40px); } }
+@keyframes arrive { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .circle { animation: none; left: calc(50% - 20px); } .count { animation: none; } }

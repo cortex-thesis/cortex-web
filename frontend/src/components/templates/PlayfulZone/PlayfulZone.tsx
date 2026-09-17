@@ -6,15 +6,21 @@ interface PlayfulZoneTemplateProps {
   children: ReactNode
   showNav?: boolean
   calm?: boolean
+  spotlight?: boolean
+  quietNav?: boolean
+  cool?: boolean
 }
 
 export function PlayfulZoneTemplate({
   children,
   showNav = true,
   calm = false,
+  spotlight = false,
+  quietNav = false,
+  cool = false,
 }: PlayfulZoneTemplateProps) {
   return (
-    <div className={`${styles.root} ${calm ? styles.calm : ''}`}>
+    <div className={`${styles.root} ${calm ? styles.calm : ''} ${cool ? styles.cool : ''} ${spotlight ? styles.spotlight : ''} ${quietNav ? styles.quietNav : ''}`}>
       <div className={styles.blob1} aria-hidden="true" />
       <div className={styles.blob2} aria-hidden="true" />
       <main className={styles.content}>{children}</main>

@@ -15,6 +15,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.core.cache import cache
+from django.core.files.storage import FileSystemStorage
 from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
 from django.utils.crypto import constant_time_compare
 from django.db import IntegrityError, transaction
@@ -26,7 +27,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import (
-    LessonPracticeProgress, StudentBadge, BaselineRecording, BaselineEpoch,
+    LessonPracticeProgress, StudentBadge, AdaptationEvent, BaselineRecording, BaselineEpoch,
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ActivityResponse, ConsentRecord,
     DataLifecycleRequest, EEGDevice, Enrollment, Intervention, InterventionAlert, JournalEntry,
     LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
@@ -868,7 +869,17 @@ def content_asset_preview(request, asset_id):
             ).exists()
         if not content_access and not journal_access:
             return JsonResponse({"detail": "You do not have access to this asset."}, status=403)
-    return FileResponse(asset.file.open("rb"), content_type=asset.mime_type)
+    if hasattr(asset.file.storage, 'bucket_name'):
+        # Let private storage serve the signed object directly instead of
+        # downloading the entire drawing through the Django worker.
+        return redirect(asset.file.url)
+    try:
+        response = FileResponse(asset.file.open("rb"), content_type=asset.mime_type)
+    except FileNotFoundError:
+        return JsonResponse({'detail': 'This media file is missing from storage. Restore the original file or save the journal again.'}, status=404)
+    response['Cache-Control'] = 'private, max-age=300'
+    response['Vary'] = 'Cookie'
+    return response
 
 
 @require_POST
@@ -1477,8 +1488,8 @@ def teacher_student_detail(request, student_id):
     ).select_related("school_class", "lesson", "analytics").annotate(
         tasks_completed=session_count("activity_responses__activity"),
         tasks_total=session_count("lesson__slides__activity"),
-        adaptation_total=session_count("adaptation_events"),
-        override_total=session_count("manual_overrides"),
+        adaptation_total=session_count("adaptation_events", adaptation_events__previous_mode='focus', adaptation_events__new_mode='relax'),
+        override_total=session_count("manual_overrides", manual_overrides__previous_presentation_mode='focus', manual_overrides__new_presentation_mode='relax'),
         **{f"{state}_count": session_count("state_predictions", state_predictions__state=state)
            for state in StatePrediction.State.values},
     ).order_by("-started_at", "-pk")
@@ -1501,7 +1512,7 @@ def teacher_student_detail(request, student_id):
             "dominant": max(distribution, key=distribution.get) if distribution else None,
             "state_distribution": distribution,
             "tasks_completed": session.tasks_completed, "tasks_total": session.tasks_total,
-            "mode_changes": analytics.adaptation_count + analytics.manual_override_count if analytics else session.adaptation_total + session.override_total,
+            "mode_changes": session.adaptation_total + session.override_total,
         })
     measured = [row for row in rows if row["state_distribution"] is not None]
     packages = _active_packages()
@@ -1519,6 +1530,7 @@ def teacher_student_detail(request, student_id):
     return JsonResponse(data)
 
 
+@require_http_methods(['GET'])
 def teacher_class_analytics(request, class_id):
     profile, error = _require_profile(request, {Profile.Role.TEACHER})
     if error:
@@ -1527,14 +1539,53 @@ def teacher_class_analytics(request, class_id):
     sessions = LearningSession.objects.filter(school_class=school_class)
     completed = sessions.filter(ended_at__isnull=False)
     analytics = SessionAnalytics.objects.filter(session__in=completed)
+    states = StatePrediction.State.values
+    distribution = analytics.aggregate(**{state: Avg(f'{state}_percentage') for state in states})
+    recent_sessions = [{
+        'id': str(item.pk), 'student': _profile_data(item.student),
+        'lesson': item.lesson.title if item.lesson_id else 'No lesson selected',
+        'package': item.lesson.package.slug if item.lesson_id else None,
+        'started_at': item.started_at, 'ended_at': item.ended_at,
+        'completion_percentage': float(item.completion_percentage),
+    } for item in sessions.select_related('student', 'student__school', 'lesson__package').order_by('-started_at', '-pk')[:3]]
+    student_ids = school_class.enrollments.filter(removed_at__isnull=True).values_list('student_id', flat=True)
+    badges = [{ 'key': item.key, 'student': _profile_data(item.student), 'unlocked_at': item.unlocked_at }
+        for item in StudentBadge.objects.filter(student_id__in=student_ids).select_related('student', 'student__school').order_by('-unlocked_at', '-pk')[:3]]
+    students = [{ 'id': item.student_id, 'name': item.student.display_name,
+        'average_focus': round(float(item.average_focus), 1) if item.average_focus is not None else None }
+        for item in school_class.enrollments.filter(removed_at__isnull=True).select_related('student').annotate(
+            average_focus=Avg('student__learning_sessions__analytics__focused_percentage',
+                filter=Q(student__learning_sessions__school_class=school_class, student__learning_sessions__ended_at__isnull=False)))]
+    lessons = list(Lesson.objects.filter(Q(learning_sessions__school_class=school_class) | Q(slides__eeg_samples__session__school_class=school_class)).distinct().order_by('id').values('id', 'title'))
+    selected_lesson = request.GET.get('lesson_id')
+    if selected_lesson and not any(str(item['id']) == selected_lesson for item in lessons):
+        return JsonResponse({'detail': 'Lesson not found in this class.'}, status=404)
+    selected_lesson = int(selected_lesson) if selected_lesson else (lessons[0]['id'] if lessons else None)
+    slides = list(Slide.objects.filter(lesson_id=selected_lesson).order_by('position', 'pk').values('id', 'title', 'position')) if selected_lesson else []
+    # Keep separate attempts as separate lines so repeated sessions do not blur a trend.
+    grouped = {}
+    for row in SessionEEGSample.objects.filter(session__school_class=school_class, slide__lesson_id=selected_lesson).order_by().values(
+            'session_id', 'session__student_id', 'session__student__display_name', 'session__started_at', 'slide_id', 'state').annotate(count=Count('id')) if selected_lesson else []:
+        key = str(row['session_id'])
+        line = grouped.setdefault(key, {'session_id': key, 'student_id': row['session__student_id'],
+            'name': row['session__student__display_name'], 'started_at': row['session__started_at'], 'counts': {}})
+        line['counts'].setdefault(row['slide_id'], {})[row['state']] = row['count']
+    timeline = []
+    for line in grouped.values():
+        counts = line.pop('counts')
+        line['points'] = [{'slide_id': slide['id'], 'state': max(counts[slide['id']], key=counts[slide['id']].get) if slide['id'] in counts else None,
+            'samples': sum(counts.get(slide['id'], {}).values())} for slide in slides]
+        timeline.append(line)
     return JsonResponse({
         "class": _class_data(school_class),
         "student_count": school_class.enrollments.filter(removed_at__isnull=True).count(),
         "session_count": sessions.count(),
         "active_sessions": sessions.filter(ended_at__isnull=True).count(),
-        "average_focus": round(float(analytics.aggregate(value=Avg("focused_percentage"))["value"] or 0), 1),
-        "completion_rate": round(float(completed.aggregate(value=Avg("completion_percentage"))["value"] or 0), 1),
-        "students": [], "timeline": [],
+        "average_focus": round(float(distribution['focused']), 1) if distribution['focused'] is not None else None,
+        "completion_rate": round(float(completed.aggregate(value=Avg("completion_percentage"))["value"]), 1) if completed.exists() else None,
+        "students": students, "timeline": timeline, 'slides': slides, 'lessons': lessons,
+        'selected_lesson_id': selected_lesson, 'recent_sessions': recent_sessions, 'recent_badges': badges,
+        'state_distribution': {state: round(float(distribution[state] or 0), 1) for state in states},
         "message": "Analytics are calculated from stored learning sessions and processed Muse windows.",
     })
 
@@ -1581,6 +1632,7 @@ def teacher_journals(request):
             "text_response": item.text_response,
             "mood": item.mood,
             "asset_url": f"/api/content/assets/{item.asset_id}/preview/" if item.asset_id else None,
+            "asset_missing": bool(item.asset_id and isinstance(item.asset.file.storage, FileSystemStorage) and not item.asset.file.storage.exists(item.asset.file.name)),
             "created_at": item.created_at,
             "duration_seconds": max(0, int((item.session.ended_at - item.session.started_at).total_seconds())) if item.session.ended_at else None,
             "tasks_completed": item.tasks_completed_count,
@@ -1883,6 +1935,7 @@ def student_practice_lesson(request, class_id, lesson_id):
                     }}
                 progress.completed_slide_ids = sorted(set(progress.completed_slide_ids) | {slide_id})
                 progress.save(update_fields=['completed_slide_ids', 'activity_evidence', 'updated_at'])
+                _student_package_progress_data(profile)
     else:
         progress = LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson=lesson).first()
     return JsonResponse(_lesson_data(lesson) | {'progress': _practice_progress_data(lesson, progress)})
@@ -2045,6 +2098,10 @@ def student_package_progress(request):
     profile, error = _require_profile(request, {Profile.Role.STUDENT})
     if error:
         return error
+    return JsonResponse(_student_package_progress_data(profile))
+
+
+def _student_package_progress_data(profile):
     packages = list(CurriculumPackage.objects.filter(is_active=True).order_by("id"))
     totals = {package.pk: set() for package in packages}
     completed = {package.pk: set() for package in packages}
@@ -2103,7 +2160,7 @@ def student_package_progress(request):
     for key, unlocked_at in awards.items():
         StudentBadge.objects.get_or_create(student=profile, key=key, defaults={"unlocked_at": unlocked_at})
     badge_dates = dict(StudentBadge.objects.filter(student=profile).values_list("key", "unlocked_at"))
-    return JsonResponse({"packages": items, "completed_lessons": completed_lessons, "badge_unlocks": badge_dates})
+    return {"packages": items, "completed_lessons": completed_lessons, "badge_unlocks": badge_dates}
 
 
 def student_sessions(request):
@@ -2235,7 +2292,9 @@ def session_eeg_samples(request, session_id):
             )
     except (KeyError, TypeError, ValueError, Slide.DoesNotExist):
         return JsonResponse({"detail": "Valid processed Muse values are required."}, status=400)
-    return JsonResponse(_eeg_sample_data(sample), status=201)
+    recent_states = list(session.eeg_samples.filter(accepted_channels__gt=0).order_by('-recorded_at', '-pk').values_list('state', flat=True)[:30])
+    focus_score = round(100 * recent_states.count('focused') / len(recent_states)) if recent_states else None
+    return JsonResponse(_eeg_sample_data(sample) | {'focus_score': focus_score}, status=201)
 
 
 @require_http_methods(["GET"])
@@ -2338,7 +2397,7 @@ def teacher_reports(request):
             "id": str(session.pk), "date": timezone.localtime(session.started_at).date(),
             "student": _profile_data(session.student), "duration_seconds": duration,
             "focus_percentage": focus, "tasks_completed": session.activity_responses.count(),
-            "mode_changes": session.adaptation_events.count() + session.manual_overrides.count(),
+            "mode_changes": session.adaptation_events.filter(previous_mode='focus', new_mode='relax').count() + session.manual_overrides.filter(previous_presentation_mode='focus', new_presentation_mode='relax').count(),
         })
     distribution = {
         state: round(total / sessions_with_state_data) if sessions_with_state_data else 0
@@ -2511,6 +2570,31 @@ def end_session(request, session_id):
 
 
 @require_POST
+def session_mode(request, session_id):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    try:
+        mode = _body(request).get('mode')
+    except ValueError:
+        mode = None
+    if mode not in ('focus', 'relax'):
+        return JsonResponse({'detail': 'Choose focus or relax mode.'}, status=400)
+    with transaction.atomic():
+        session = get_object_or_404(LearningSession.objects.select_for_update(), pk=session_id, student=profile)
+        if session.ended_at:
+            return JsonResponse({'detail': 'The session has ended.'}, status=409)
+        previous = session.active_presentation_mode
+        if previous != mode:
+            AdaptationEvent.objects.create(session=session, source=AdaptationEvent.Source.AUTOMATIC,
+                previous_mode=previous, new_mode=mode, action_type='set_mode',
+                triggered_at=timezone.now(), was_successful=True)
+            session.active_presentation_mode = mode
+            session.save(update_fields=['active_presentation_mode'])
+    return JsonResponse({'mode': mode})
+
+
+@require_POST
 def session_slide_exposure(request, session_id, slide_id):
     profile, error = _require_profile(request, {Profile.Role.STUDENT})
     if error:
@@ -2578,6 +2662,7 @@ def session_slide_exposure(request, session_id, slide_id):
             done = locked.slide_exposures.filter(completed_at__isnull=False).values('slide_id').distinct().count()
             locked.completion_percentage = round(done * 100 / total, 2) if total else 0
             locked.save(update_fields=['completion_percentage'])
+            _student_package_progress_data(profile)
         return JsonResponse({'status': 'completed', 'completed_steps': done, 'step_total': total})
     active = session.slide_exposures.filter(exited_at__isnull=True).first()
     if action == "exit":

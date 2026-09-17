@@ -1,5 +1,5 @@
 .card {
-  transition: border-color .3s ease, background-color .3s ease, box-shadow .3s ease;
+  transition: border-color 1.6s ease, background-color 1.6s ease, color 1.6s ease, box-shadow 1.6s ease;
   background: var(--color-white);
   border-radius: var(--radius-xl, 16px);
   border: 1px solid var(--color-border);
@@ -19,7 +19,7 @@
 
 .fitSteps { height: 100%; min-height: 0; }
 .card[data-delivery-strategy="attention_reengagement"] .question { border-left: 3px solid var(--color-interface-purple); padding-left: 10px; }
-.card[data-delivery-strategy="sensory_cooldown"] *, .card[data-delivery-strategy="sensory_cooldown"] *::before, .card[data-delivery-strategy="sensory_cooldown"] *::after { animation: none !important; transition: none !important; }
+.card[data-delivery-strategy="sensory_cooldown"] *, .card[data-delivery-strategy="sensory_cooldown"] *::before, .card[data-delivery-strategy="sensory_cooldown"] *::after { animation: none !important; }
 .card[data-delivery-strategy="sensory_cooldown"] { box-shadow: none; }
 .fitSteps > :not(ol) { flex-shrink: 0; }
 .contentHeading { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
@@ -148,3 +148,30 @@
   .contentHint { max-width: none; text-align: left; }
   .waveform { display: none; }
 }
+.card { position: relative; }
+.focusContent { display: contents; }
+.adaptiveText { position: relative; }
+/* Keep text metrics identical when support changes so activities do not reflow. */
+.anchorWord { font-weight: inherit; text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 2px; text-underline-offset: 4px; transition: color 1.8s ease, text-decoration-color 1.8s ease, text-shadow 1.8s ease; }
+.supportTypography:not(.restTheme) .anchorWord { color: #534ab7; text-decoration-color: #9784ba; text-shadow: .25px 0 currentColor; }
+.question, .contentHeading { transition: box-shadow 1.8s ease; }
+.anchorPulse .question, .anchorPulse .contentHeading { animation: softAnchorPulse 6s ease-in-out infinite; }
+.sentence { opacity: 1; transition: opacity 1.8s ease; }
+.hiddenSentence { opacity: 0; pointer-events: none; user-select: none; }
+.card.restTheme { background: #fff5e6; color: #685342; }
+.maskedWord, .chunkNext { border: 0; border-radius: 4px; background: #f0e9fa; color: #534276; font: inherit; padding: 0; cursor: pointer; }
+.maskedWord { position: relative; }
+.maskedOriginal { visibility: hidden; }
+.maskDots { position: absolute; inset: 0; overflow: hidden; }
+.chunkNext { position: absolute; right: 0; bottom: 0; z-index: 1; padding: 2px 6px; font-size: 12px; }
+.microGate { position: absolute; inset: 0; z-index: 5; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; overflow-y: auto; padding: clamp(12px, 2vw, 24px); border-radius: 16px; background: rgba(255, 253, 248, .98); text-align: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 1.6s ease, visibility 0s 1.6s; }
+.microGateVisible { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity 1.6s ease, visibility 0s; }
+.microGate h3, .microGate p { margin: 0; max-width: 600px; }
+.microGate button { min-height: 40px; padding: 8px 14px; border: 1px solid #c6badc; border-radius: 10px; color: #534276; background: #f0e9fa; font: inherit; cursor: pointer; }
+.microGate button:focus-visible, .maskedWord:focus-visible, .chunkNext:focus-visible { outline: 3px solid #8970bd; outline-offset: 3px; }
+.microChoices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.flippedRecall { animation: recallFlip 1.4s ease-in-out both; }
+@keyframes softAnchorPulse { 0%, 100% { box-shadow: 0 0 0 0 #9f8ac400; } 50% { box-shadow: 0 0 14px 4px #9f8ac426; } }
+@keyframes focusWordGlow { 0%, 100% { color: #534ab7; } 50% { color: #177b65; } }
+@keyframes recallFlip { from { opacity: .4; transform: perspective(800px) rotateY(65deg); } to { opacity: 1; transform: perspective(800px) rotateY(0); } }
+@media (prefers-reduced-motion: reduce) { .supportTypography .anchorWord, .anchorPulse .question, .anchorPulse .contentHeading, .flippedRecall { animation: none; } }

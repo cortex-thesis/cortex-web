@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { CognitiveState } from '../constants/states'
+import type { CognitiveState, CurriculumPackage } from '../constants/states'
 
 export interface StudentReportSession {
   id: string
@@ -88,6 +88,24 @@ export interface LiveSession {
   latest: null | { recorded_at: string; bands: Record<'delta' | 'theta' | 'alpha' | 'beta' | 'gamma', number>; state: CognitiveState; accepted_channels: number; battery_level: number | null }
 }
 export const getTeacherClassLive = (id: string) => api<{ active_sessions: LiveSession[] }>(`/teacher/classes/${id}/live/`, { cache: 'no-store' })
+export interface ClassAnalyticsData {
+  class: TeacherClass
+  student_count: number
+  session_count: number
+  active_sessions: number
+  average_focus: number | null
+  completion_rate: number | null
+  state_distribution: Record<CognitiveState, number>
+  students: Array<{ id: number; name: string; average_focus: number | null }>
+  recent_sessions: Array<{ id: string; student: RosterStudent; lesson: string; package: CurriculumPackage | null; started_at: string; ended_at: string | null; completion_percentage: number }>
+  recent_badges: Array<{ key: string; student: RosterStudent; unlocked_at: string }>
+  lessons: Array<{ id: number; title: string }>
+  selected_lesson_id: number | null
+  slides: Array<{ id: number; title: string; position: number }>
+  timeline: Array<{ session_id: string; student_id: number; name: string; started_at: string; points: Array<{ slide_id: number; state: CognitiveState | null; samples: number }> }>
+}
+export const getClassAnalytics = (id: string, lessonId = '', signal?: AbortSignal) =>
+  api<ClassAnalyticsData>(`/teacher/classes/${id}/analytics/${lessonId ? `?lesson_id=${encodeURIComponent(lessonId)}` : ''}`, { cache: 'no-store', signal })
 export const createTeacherClass = (data: { name: string; description?: string; school_year?: string }) =>
   api<TeacherClass>('/classes/', { method: 'POST', body: JSON.stringify(data) })
 export const updateTeacherClass = (id: string, data: Partial<Pick<TeacherClass, 'name' | 'description' | 'school_year'>>) =>

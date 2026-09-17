@@ -3,6 +3,18 @@
   flex-direction: column;
   gap: var(--space-5);
 }
+.recentGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.recentGrid h2 { font-size: 15px; margin: 0 0 12px; }
+.recentCard { min-width: 0; padding: 20px; background: var(--color-white); border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
+.recentList { max-height: 240px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.recentList:focus-visible { outline: 2px solid var(--color-interface-purple); outline-offset: 4px; }
+.recentItem { display: flex; align-items: center; gap: 12px; min-height: 94px; padding: 14px 6px 14px 0; border-bottom: 1px solid var(--color-border); }
+.recentItem:last-child { border-bottom: 0; }
+.itemIcon { flex: 0 0 44px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--color-cool-surface); font-size: 26px; }
+.itemDetails { min-width: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+.itemDetails strong { color: var(--color-text-primary); }
+.recentItem small { color: var(--color-text-secondary); }
+@media (max-width: 700px) { .recentGrid { grid-template-columns: 1fr; } }
 
 .statsRow {
   display: grid;

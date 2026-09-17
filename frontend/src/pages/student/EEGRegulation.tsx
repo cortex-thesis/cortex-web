@@ -2,10 +2,11 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { Apple, Banana, Cherry, Grape, Cat, Dog, Bird, Fish, Bus, Car, Bike, TrainFront, Circle, Square, Triangle, Star } from 'lucide-react'
 import type { CognitiveState } from '../../constants/states'
 import { playLessonSound } from '../../lib/lessonSounds'
-import { nextEEGMode } from '../../lib/eegTransitions'
+import { breathingResumeUnlocked, nextEEGMode } from '../../lib/eegTransitions'
 import styles from './EEGRegulation.module.css'
 import playerStyles from './PracticeLesson.module.css'
-import ModeBgm from '../../components/molecules/ModeBgm/ModeBgm'
+import BinauralAmbient from './BinauralAmbient'
+import CalmActivity from './CalmActivity'
 
 const WORDS = [
   { answer: 'FRUIT', pictures: [Apple, Banana, Cherry, Grape], labels: ['Apple', 'Banana', 'Cherries', 'Grapes'] },
@@ -38,10 +39,10 @@ interface Props {
   transitionState: () => CognitiveState | null
   onResume: () => void
   onBreathing: () => void
+  nextCalmActivity: () => number
 }
 
-export default function EEGRegulation({ mode, state, transitionState, onResume, onBreathing, allowResume = true, paused = false }: Props) {
-  const [phase, setPhase] = useState(0)
+export default function EEGRegulation({ mode, state, transitionState, onResume, onBreathing, nextCalmActivity, allowResume = true, paused = false }: Props) {
   const [round, setRound] = useState(() => Math.floor(Math.random() * 4) * 5)
   const [intro, setIntro] = useState(true)
   const kind = round % 5
@@ -58,7 +59,17 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
   const [feedback, setFeedback] = useState('')
   const [celebrating, setCelebrating] = useState(false)
   const completionLocked = useRef(false)
-  const recovered = state === 'focused' || state === 'relaxed'
+  const [breathingSeconds, setBreathingSeconds] = useState(0)
+  const [continueUnlocked, setContinueUnlocked] = useState(false)
+  const recovered = breathingResumeUnlocked(continueUnlocked, state, breathingSeconds)
+  useEffect(() => {
+    if (recovered) setContinueUnlocked(true)
+  }, [recovered])
+  useEffect(() => {
+    if (mode !== 'breathing' || paused || intro || breathingSeconds >= 15) return
+    const timer = window.setTimeout(() => setBreathingSeconds(value => value + 1), 1000)
+    return () => window.clearTimeout(timer)
+  }, [mode, paused, intro, breathingSeconds])
   const continueAfterSuccess = useEffectEvent(() => {
     const nextMode = nextEEGMode(transitionState(), 'refocus')
     setCelebrating(false)
@@ -76,11 +87,6 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
     const timer = window.setTimeout(() => continueAfterSuccess(), 1600)
     return () => window.clearTimeout(timer)
   }, [celebrating, paused])
-  useEffect(() => {
-    if (mode !== 'breathing' || recovered || paused) return
-    const timer = window.setInterval(() => setPhase(value => (value + 1) % 3), 4000)
-    return () => window.clearInterval(timer)
-  }, [mode, recovered, paused])
   function finishActivity(nextLetters = pickedLetters, nextText = text, nextSorted = sorted) {
     if (completionLocked.current) return
     const correct = kind === 0 ? nextLetters.map(index => letters[index]).join('') === word.answer
@@ -99,12 +105,13 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
   return <>
     <div className={`${playerStyles.stage} ${styles.stage}`}>
     <section className={`${styles.content} ${mode === 'breathing' ? styles.breathing : ''}`} aria-label={mode === 'breathing' ? 'Breathing break' : 'Refocusing activity'}>
-      {intro ? <div className={styles.intro} role="status"><div className={styles.orb} aria-hidden="true" /><h1>Let's take a gentle pause</h1><p>{mode === 'breathing' ? 'Slow down with a few comfortable breaths.' : 'Try a small activity, one step at a time.'}</p></div> : mode === 'breathing' ? <>
-        <div className={`${styles.orb} ${recovered ? styles.still : ''}`} aria-hidden="true" />
-        <h1 key={recovered ? 'ready' : phase} className={recovered ? styles.ready : styles.breath} aria-live="polite">{recovered ? 'Ready to continue' : ['Breathe in gently', 'Breathe out slowly', 'Rest and soften your shoulders'][phase]}</h1>
+      {intro ? <div className={styles.intro} role="status"><h1>Let's take a gentle pause</h1><p>Try a small activity, one step at a time.</p></div> : mode === 'breathing' ? <>
+        <CalmActivity paused={paused} nextActivity={nextCalmActivity} />
+        {recovered && <p className={styles.ready} role="status">Ready to continue</p>}
         {recovered && allowResume && <div className={styles.actions}><button className={`${playerStyles.button} ${playerStyles.next}`} onClick={onResume}>Continue</button></div>}
         {recovered && !allowResume && <p>Your teacher will continue the lesson when the class is ready.</p>}
-        <div className={styles.music}><ModeBgm mode="relax" suspended={paused} /></div>
+        {breathingSeconds < 15 && <p role="status">A gentle calm pause · {15 - breathingSeconds}s</p>}
+        <div className={styles.music}><BinauralAmbient paused={paused} /></div>
       </> : celebrating ? <div className={styles.success} role="status">
         <svg className={styles.successMark} viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" /><path d="M28 51 L43 66 L73 35" pathLength="1" /></svg>
         <h1>Good job!</h1>

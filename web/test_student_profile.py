@@ -7,7 +7,7 @@ from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from .models import (
-    Activity, ActivityResponse, CurriculumPackage, Enrollment, JournalEntry,
+    Activity, ActivityResponse, AdaptationEvent, CurriculumPackage, Enrollment, JournalEntry,
     LearningSession, Lesson, Profile, SchoolClass, SessionAnalytics, Slide,
 )
 from .views import _teacher_dashboard_data
@@ -44,6 +44,9 @@ class StudentProfileTests(TestCase):
         ActivityResponse.objects.create(session=session, activity=activity, attempt_number=1)
         ActivityResponse.objects.create(session=session, activity=activity, attempt_number=2)
         SessionAnalytics.objects.create(session=session, focused_percentage=75, relaxed_percentage=25, adaptation_count=3, manual_override_count=1)
+        for previous, new in [('focus', 'relax'), ('relax', 'focus'), ('focus', 'focus'), ('focus', 'relax')]:
+            AdaptationEvent.objects.create(session=session, source='automatic', previous_mode=previous,
+                new_mode=new, action_type='set_mode', triggered_at=timezone.now())
         self.session(self.other_class)
         JournalEntry.objects.create(session=session, student=self.student, shared_with_teacher=True)
         JournalEntry.objects.create(session=session, student=self.student, shared_with_teacher=False)
@@ -59,7 +62,7 @@ class StudentProfileTests(TestCase):
         self.assertEqual(data['tasks_total'], 1)
         self.assertEqual(data['sessions'][0]['activity'], 'Actual Lesson')
         self.assertEqual(data['sessions'][0]['dominant'], 'focused')
-        self.assertEqual(data['sessions'][0]['mode_changes'], 4)
+        self.assertEqual(data['sessions'][0]['mode_changes'], 2)
 
     def test_empty_and_missing_measurements_are_not_fabricated(self):
         data = self.client.get(self.url).json()

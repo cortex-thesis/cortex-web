@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { ListSkeleton } from '../../components/molecules'
 import { Skeleton } from '../../components/atoms'
-import { api, cachedApiValue } from '../../lib/api'
+import { api, apiMediaUrl, cachedApiValue } from '../../lib/api'
 import type { TeacherClass } from '../../lib/teacherApi'
 import { useAuthStore } from '../../store/authStore'
 import styles from '../prototype/Prototype.module.css'
@@ -18,12 +18,29 @@ interface JournalEntry {
   text_response: string
   mood: string
   asset_url: string | null
+  asset_missing?: boolean
   created_at: string
   duration_seconds: number | null
   tasks_completed: number
 }
 
 interface JournalPayload { classes: TeacherClass[]; selected_class_id: number | null; entries: JournalEntry[] }
+
+function JournalDrawing({ entry }: { entry: JournalEntry }) {
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    if (status !== 'loading') return
+    const timer = window.setTimeout(() => setStatus('error'), 15000)
+    return () => window.clearTimeout(timer)
+  }, [status, attempt])
+  const source = apiMediaUrl(entry.asset_url!)
+  return <><div className={styles.journalDrawing}>
+    {status === 'loading' && <Skeleton className={styles.journalDrawingSkeleton} width="100%" height="100%" />}
+    {status === 'error' && <p role="alert">Unable to load this drawing. <button onClick={() => { setAttempt(value => value + 1); setStatus('loading') }}>Retry</button> <a href={source} target="_blank" rel="noreferrer">Open drawing</a></p>}
+    {status !== 'error' && <img key={attempt} className={status === 'loaded' ? styles.journalDrawingLoaded : styles.journalDrawingLoading} src={`${source}${attempt ? `${source.includes('?') ? '&' : '?'}retry=${attempt}` : ''}`} alt={`${entry.student.name}'s journal drawing`} decoding="async" fetchPriority="high" onLoad={() => setStatus('loaded')} onError={() => setStatus('error')} />}
+  </div></>
+}
 
 function durationLabel(seconds: number | null) {
   if (seconds == null) return 'Session duration unavailable'
@@ -39,7 +56,6 @@ export default function Journals() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(!cached)
   const [visibleDrawings, setVisibleDrawings] = useState<Set<string>>(() => new Set())
-  const [loadedDrawings, setLoadedDrawings] = useState<Set<string>>(() => new Set())
 
   const toggleDrawing = (entryId: string) => {
     setVisibleDrawings((current) => {
@@ -51,17 +67,19 @@ export default function Journals() {
   }
 
   useEffect(() => {
-    api<JournalPayload>(`/teacher/journals/${classId ? `?class_id=${classId}` : ''}`)
-      .then((payload) => { setData(payload); if (!classId && payload.selected_class_id) setClassId(String(payload.selected_class_id)) })
-      .catch((reason: Error) => setError(reason.message))
-      .finally(() => setLoading(false))
+    const controller = new AbortController()
+    api<JournalPayload>(`/teacher/journals/${classId ? `?class_id=${classId}` : ''}`, { cache: 'no-store', signal: controller.signal })
+      .then(setData)
+      .catch((reason: Error) => { if (!controller.signal.aborted) setError(reason.message) })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    return () => controller.abort()
   }, [classId])
 
   return <TeacherDashboardTemplate user={user}>
     <div className={styles.page}>
       <div className={styles.header}>
         <div><span className={styles.eyebrow}>Student reflections</span><h1 className={styles.title}>Learning journals</h1><p className={styles.subtitle}>Review post-session reflections, moods, drawings, and audio entries by class.</p></div>
-        <label className={styles.field} style={{ width: 230 }}><span className={styles.label}>Class / section</span><select className={styles.select} value={classId} onChange={(event) => { setLoading(true); setError(''); setClassId(event.target.value) }}><option value="" disabled>Select a class</option>{data.classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label className={styles.field} style={{ width: 230 }}><span className={styles.label}>Class / section</span><select className={styles.select} value={classId || String(data.selected_class_id ?? '')} onChange={(event) => { setLoading(true); setError(''); setClassId(event.target.value) }}><option value="" disabled>Select a class</option>{data.classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       </div>
       {error && <div className={`${styles.alert} ${styles.alertDanger}`}>{error}</div>}
       {loading && <ListSkeleton rows={5} />}
@@ -73,12 +91,9 @@ export default function Journals() {
         {entry.response_type === 'text' && <p className={styles.quote}>“{entry.text_response}”</p>}
         {entry.response_type === 'drawing' && entry.asset_url && <div className={styles.journalMediaSection}>
           <button type="button" className={styles.ghost} onClick={() => toggleDrawing(entry.id)} aria-expanded={visibleDrawings.has(entry.id)}>{visibleDrawings.has(entry.id) ? <EyeOff size={14} /> : <FileImage size={14} />} {visibleDrawings.has(entry.id) ? 'Hide drawing' : 'Show drawing'}</button>
-          {visibleDrawings.has(entry.id) && <div className={styles.journalDrawing}>
-            {!loadedDrawings.has(entry.id) && <Skeleton className={styles.journalDrawingSkeleton} width="100%" height="100%" />}
-            <img className={loadedDrawings.has(entry.id) ? styles.journalDrawingLoaded : styles.journalDrawingLoading} src={entry.asset_url} alt={`${entry.student.name}'s journal drawing`} onLoad={() => setLoadedDrawings((current) => new Set(current).add(entry.id))} />
-          </div>}
+          {visibleDrawings.has(entry.id) && (entry.asset_missing ? <p role="alert">The original drawing is missing from storage. Restore the file or have the student save the drawing again.</p> : <JournalDrawing entry={entry} />)}
         </div>}
-        {entry.response_type === 'audio' && entry.asset_url && <audio controls preload="metadata" src={entry.asset_url}><a href={entry.asset_url}>Open audio reflection</a></audio>}
+        {entry.response_type === 'audio' && entry.asset_url && <audio controls preload="metadata" src={apiMediaUrl(entry.asset_url)}><a href={apiMediaUrl(entry.asset_url)}>Open audio reflection</a></audio>}
         <div className={styles.actions} style={{ marginTop: 12 }}><span className={styles.badge}>{entry.response_type === 'audio' && <Headphones size={10} />}{entry.response_type !== 'audio' && <Check size={10} />} {entry.tasks_completed} tasks completed</span><button type="button" className={styles.ghost} onClick={() => navigate(`/teacher/class/${data.selected_class_id}/student/${entry.student.id}?session=${encodeURIComponent(entry.session_id)}`)}>Session record <ChevronRight size={12} /></button></div>
       </article>)}</div>
     </div>

@@ -3,6 +3,7 @@ import { Image as ImageIcon, Pause, Play, Sparkles, Volume2 } from 'lucide-react
 import type { Task } from '../../../types'
 import BreathingGuide from '../BreathingGuide'
 import styles from './ActivityTemplate.module.css'
+import { AdaptiveLessonText } from '../TaskCard/FocusSupport'
 
 interface ActivityTemplateProps {
   task: Task
@@ -194,10 +195,10 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
               <span className={styles.stepNumber}>{index + 1}</span>
               <div className={styles.stepCopy}>
                 <div className={styles.stepTitleRow}>
-                  <strong>{step.title}</strong>
+                  <strong><AdaptiveLessonText text={step.title} /></strong>
                   {step.audioUrl && <StepAudioButton src={step.audioUrl} label={step.title} />}
                 </div>
-                {step.description && <span>{step.description}</span>}
+                {step.description && <span><AdaptiveLessonText text={step.description} /></span>}
               </div>
             </li>
           ))}
@@ -210,7 +211,7 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
     return (
       <section className={`${styles.panel} ${styles.reengagement}`} aria-live="polite">
         <span className={styles.spark}><Sparkles size={30} aria-hidden="true" /></span>
-        <div><strong>{task.instruction ?? 'Look here for the next small step.'}</strong><span>{task.contentDescription}</span></div>
+        <div><strong><AdaptiveLessonText text={task.instruction ?? 'Look here for the next small step.'} /></strong><span><AdaptiveLessonText text={task.contentDescription} /></span></div>
         <Volume2 size={22} aria-label="Audio cue available" />
       </section>
     )

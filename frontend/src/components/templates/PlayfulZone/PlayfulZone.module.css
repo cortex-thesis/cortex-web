@@ -31,11 +31,17 @@
   background: #eef3ee;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 1.4s ease-in-out;
+  transition: opacity 2.4s ease-in-out, background-color 2.4s ease-in-out;
 }
 .root.calm::before { opacity: 1; }
+.root.cool::before { opacity: 1; background-color: #e9f3f8; }
+.root > nav { transition: opacity 1.8s ease, visibility 0s; }
+.spotlight > nav { opacity: .3; }
+.spotlight > nav:focus-within, .spotlight > nav:hover { opacity: 1; }
+.quietNav > nav { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 1.8s ease, visibility 0s 1.8s; }
 @media (prefers-reduced-motion: reduce) {
   .root::before { transition: none; }
+  .root > nav { transition: none; }
 }
 
 .blob1 {

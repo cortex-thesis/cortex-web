@@ -75,7 +75,7 @@ def _postgres_database_from_environment():
         "HOST": os.environ["DB_HOST"],
         "PORT": os.environ.get("DB_PORT", "5432"),
         "CONN_MAX_AGE": int(os.environ.get("DATABASE_CONN_MAX_AGE", "120")),
-        "CONN_HEALTH_CHECKS": os.environ.get("DATABASE_CONN_HEALTH_CHECKS", "false").lower() == "true",
+        "CONN_HEALTH_CHECKS": os.environ.get("DATABASE_CONN_HEALTH_CHECKS", "true").lower() == "true",
         "OPTIONS": {
             "sslmode": sslmode,
             "connect_timeout": 10,
@@ -95,7 +95,7 @@ elif DATABASE_URL and not TEMPLATE_ONLY:
             # Reuse the Supabase pooler connection instead of paying for a
             # new TCP/TLS/PostgreSQL handshake on every API request.
             conn_max_age=int(os.environ.get("DATABASE_CONN_MAX_AGE", "120")),
-            conn_health_checks=os.environ.get("DATABASE_CONN_HEALTH_CHECKS", "false").lower() == "true",
+            conn_health_checks=os.environ.get("DATABASE_CONN_HEALTH_CHECKS", "true").lower() == "true",
             ssl_require=os.environ.get("DB_SSLMODE", "require") == "require",
         )
     }

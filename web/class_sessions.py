@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .models import (
-    ClassSession, Enrollment, LearningSession, Lesson, Notification, Profile,
+    AdaptationEvent, ClassSession, Enrollment, LearningSession, Lesson, Notification, Profile,
     SchoolClass, SessionAnalytics, SessionSlideExposure, Slide,
 )
 from .views import _audit, _body, _lesson_data, _require_profile, _session_is_live
@@ -210,7 +210,12 @@ def class_session_detail(request, group_id):
             if data.get('mode') not in ('focus', 'breathing', 'refocus', 'adaptive'):
                 return JsonResponse({'detail': 'Choose focus, breathing, refocus, or adaptive.'}, status=400)
             group.presentation_mode = data['mode']
-            group.student_sessions.filter(ended_at__isnull=True).update(active_presentation_mode='focus' if data['mode'] in ('focus', 'adaptive') else 'relax')
+            next_mode = 'focus' if data['mode'] in ('focus', 'adaptive') else 'relax'
+            for learner in group.student_sessions.filter(ended_at__isnull=True).exclude(active_presentation_mode=next_mode):
+                AdaptationEvent.objects.create(session=learner, source=AdaptationEvent.Source.TEACHER,
+                    previous_mode=learner.active_presentation_mode, new_mode=next_mode,
+                    action_type='set_mode', triggered_at=timezone.now(), was_successful=True)
+            group.student_sessions.filter(ended_at__isnull=True).update(active_presentation_mode=next_mode)
         elif action == 'start':
             if not group.lesson_id or group.status != ClassSession.Status.SCHEDULED:
                 return JsonResponse({'detail': 'Choose a lesson before starting the lobby session.'}, status=409)

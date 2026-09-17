@@ -41,6 +41,7 @@ export default function EEGPairing() {
         {status !== 'streaming' && <button className={styles.startBtn} disabled={busy} onClick={() => void connect()}>{busy ? 'Connecting…' : 'Choose Muse 2'}</button>}
         {status === 'streaming' && !ready && <button className={styles.retryBtn} onClick={disconnect}>Disconnect</button>}
         {ready && <button className={styles.startBtn} onClick={() => navigate('/student/mode-select', { state: location.state })}>Continue</button>}
+        {import.meta.env.DEV && <button className={styles.retryBtn} onClick={() => navigate('/student/mode-select', { state: { ...(location.state ?? {}), devBypass: true } })}>Development: test without a headset</button>}
       </div>
       <p className={styles.compatibility}>Works directly in Chrome/Edge on Windows, macOS, and Android over HTTPS or localhost. Direct browser Bluetooth is unavailable on iPhone/iPad.</p>
     </div>

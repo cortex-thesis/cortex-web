@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { GripVertical, Image as ImageIcon, Pause, Play, Volume2 } from 'lucide-react'
 import type { Task } from '../../../types'
@@ -9,6 +9,8 @@ import TaskInteraction from '../TaskInteraction'
 import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../../constants/activityTemplates'
 import { playLessonSound } from '../../../lib/lessonSounds'
 import styles from './TaskCard.module.css'
+import type { FocusTemplate } from '../../../lib/eegTransitions'
+import { AdaptiveLessonText, anchorTerms, FocusSupportContext } from './FocusSupport'
 
 type AnswerState = 'default' | 'selected' | 'correct' | 'incorrect'
 
@@ -21,6 +23,9 @@ interface TaskCardProps {
   className?: string
   showProgress?: boolean
   lessonNavigation?: boolean
+  focusTemplate?: FocusTemplate
+  focusHolding?: boolean
+  onFocusGateChange?: (blocked: boolean) => void
   deliveryStrategy?: 'steady_instruction' | 'attention_reengagement' | 'gentle_reactivation' | 'sensory_cooldown'
 }
 
@@ -34,10 +39,38 @@ function TaskCard({
   showProgress = true,
   lessonNavigation = false,
   deliveryStrategy = 'steady_instruction',
+  focusTemplate = 'none',
+  focusHolding = false,
+  onFocusGateChange,
 }: TaskCardProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [microDone, setMicroDone] = useState(false)
+  const [flipped, setFlipped] = useState(false)
+  const [checkSeconds, setCheckSeconds] = useState(3)
+  const [microFeedback, setMicroFeedback] = useState('')
+  const microKind = task.index % 3
+  const blocked = focusTemplate === 'active' && (!microDone || (microKind === 1 && checkSeconds > 0))
+  const notifyGate = useEffectEvent(() => onFocusGateChange?.(blocked))
+  useEffect(() => { notifyGate() }, [blocked, focusTemplate])
+  useEffect(() => {
+    if (focusTemplate === 'none' || focusTemplate === 'rest') return
+    playLessonSound('nudge')
+  }, [focusTemplate])
+  useEffect(() => {
+    if (focusTemplate !== 'active' || microKind !== 1 || checkSeconds <= 0) return
+    const timer = window.setTimeout(() => setCheckSeconds(value => value - 1), 1000)
+    return () => window.clearTimeout(timer)
+  }, [focusTemplate, microKind, checkSeconds])
+  const cueText = task.instruction || task.question || task.steps?.[0]?.description || task.steps?.[0]?.title || task.contentDescription || task.title
+  const terms = anchorTerms(cueText)
+  const recall = task.steps && task.steps.length > 1
+    ? { question: 'Which step comes first?', choices: task.steps.slice(0, 3).map(step => step.title), answer: task.steps[0].title }
+    : task.question && task.answer && task.choices.includes(task.answer)
+      ? { question: task.question, choices: task.choices, answer: task.answer }
+      : { question: 'What is the goal of this step?', choices: [task.title], answer: task.title }
+  function revealCue() { setMicroDone(true); playLessonSound('nudge') }
   function handleInteraction(correct: boolean, response: string) {
     if (deliveryStrategy !== 'sensory_cooldown') playLessonSound(correct ? 'correct' : 'incorrect')
     onAnswered?.(correct, response)
@@ -119,7 +152,14 @@ function TaskCard({
   )
 
   return (
-    <div className={`${styles.card} ${styles[deliveryStrategy]} ${lessonNavigation && template === 'visual_narrative' && !hasTaskInteraction ? styles.fitSteps : ''} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy}>
+    <FocusSupportContext.Provider value={{ level: focusTemplate, holding: focusHolding, terms, masked: blocked && microKind === 0, reveal: revealCue }}>
+    <div className={`${styles.card} ${styles[deliveryStrategy]} ${focusTemplate !== 'none' ? styles.supportTypography : ''} ${focusTemplate === 'passive' ? styles.anchorPulse : ''} ${focusTemplate === 'rest' ? styles.restTheme : ''} ${lessonNavigation && template === 'visual_narrative' && !hasTaskInteraction ? styles.fitSteps : ''} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy} data-focus-template={focusTemplate}>
+      <section className={`${styles.microGate} ${blocked ? styles.microGateVisible : ''} ${flipped ? styles.flippedRecall : ''}`} aria-hidden={!blocked} inert={!blocked} aria-label="A quick focus check">
+        {microKind === 0 ? <><h3>Tap to reveal your next action</h3><p><AdaptiveLessonText text={cueText} /></p>{!terms.length && <button onClick={revealCue}>Reveal instruction</button>}</>
+          : microKind === 2 && !flipped ? <><h3>A quick recall</h3><p>Think about the step you are working on.</p><button onClick={() => { setFlipped(true); playLessonSound('nudge') }}>Flip card</button></>
+            : <><h3>{microKind === 1 ? 'A quick check' : 'Recall this step'}</h3><p>{recall.question}</p><div className={styles.microChoices}>{recall.choices.map(choice => <button key={choice} disabled={microDone} onClick={() => { if (choice === recall.answer) { revealCue(); setMicroFeedback('Ready to continue.'); setFlipped(false) } else { setMicroFeedback('Look at your instruction and try again.'); playLessonSound('nudge') } }}>{choice}</button>)}</div>{microKind === 1 && checkSeconds > 0 && <small>Take a moment · {checkSeconds}s</small>}<p role="status">{microFeedback}</p></>}
+      </section>
+      <div className={styles.focusContent} inert={blocked}>
       {showProgress && <ProgressBar
         value={progress}
         state="focused"
@@ -128,8 +168,8 @@ function TaskCard({
       />}
 
       <div className={styles.contentHeading}>
-        <div>{templateLabel.toLowerCase() !== task.title.toLowerCase() && <span className={styles.typeLabel}>{templateLabel}</span>}<h2>{task.title}</h2></div>
-        <span className={styles.contentHint}>{task.contentDescription}</span>
+        <div>{templateLabel.toLowerCase() !== task.title.toLowerCase() && <span className={styles.typeLabel}>{templateLabel}</span>}<h2><AdaptiveLessonText text={task.title} /></h2></div>
+        <span className={styles.contentHint}><AdaptiveLessonText text={task.contentDescription} /></span>
       </div>
 
       {!hasTaskInteraction && (task.template || task.mediaUrl) ? <ActivityTemplate task={task} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
@@ -143,12 +183,12 @@ function TaskCard({
 
       {hasTaskInteraction ? (
         <>
-          <p className={styles.question}>{task.question}</p>
+          <p className={styles.question}><AdaptiveLessonText text={task.question} /></p>
           <TaskInteraction task={task} onAnswered={handleInteraction} onChanged={onChanged} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement'} />
         </>
       ) : isKnowledgeCheck ? (
         <>
-          <p className={styles.question}>{task.question}</p>
+          <p className={styles.question}><AdaptiveLessonText text={task.question} /></p>
           <div className={styles.choices}>
             {task.choices.map((choice) => (
               <AnswerChoice key={choice} label={choice} answerState={getAnswerState(choice)} disabled={revealed && choice !== task.answer && choice !== selected} onClick={() => handleSelect(choice)} />
@@ -168,7 +208,9 @@ function TaskCard({
           <span>{nudgeText}</span>
         </div>
       )}
+      </div>
     </div>
+    </FocusSupportContext.Provider>
   )
 }
 
