@@ -23,7 +23,7 @@ export default function ClassSessionInvitation() {
     return () => { cancelled = true; clearTimeout(timer) }
   }, [user?.id, user?.role])
   if (user?.role !== 'student' || location.pathname.startsWith('/student/class-session/')) return null
-  const invitation = sessions.find(item => !item.student_session && !dismissed.includes(item.id))
+  const invitation = sessions.find(item => !item.student_session && !dismissed.includes(`${item.id}:${item.invitation_revision}`))
   if (!invitation) return null
-  return <aside className={styles.prompt} role="status" aria-label="Teacher-led session invitation"><div><strong>{invitation.teacher_name} is inviting you to {invitation.class_name}</strong><p>Join your classmates in the lobby. Your teacher will start the lesson.</p></div><button onClick={() => navigate(`/student/class-session/${invitation.id}`)}>Join lobby</button><button className={styles.later} onClick={() => setDismissed(previous => [...previous, invitation.id])}>Later</button></aside>
+  return <aside className={styles.prompt} role="status" aria-label="Teacher-led session invitation"><div><strong>{invitation.teacher_name} is inviting you to {invitation.class_name}</strong><p>Join your classmates in the lobby. Your teacher will start the lesson.</p></div><button onClick={() => navigate(`/student/class-session/${invitation.id}`)}>Join lobby</button><button className={styles.later} onClick={() => setDismissed(previous => [...previous, `${invitation.id}:${invitation.invitation_revision}`])}>Later</button></aside>
 }

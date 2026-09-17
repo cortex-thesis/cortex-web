@@ -30,6 +30,7 @@ export default function ClassStudents() {
 
   return (
     <TeacherTabTemplate user={user} tabs={CLASS_TABS(classId)} title={`🏫 ${classData?.name ?? 'Class'}`}>
+      <button onClick={() => navigate(`/teacher/class/${classId}/enroll`)}>Manage enrollment</button>
       <div className={styles.content}>
         <div className={styles.toolbar}>
           <div className={styles.searchWrap}><Search size={14} strokeWidth={1.75} className={styles.searchIcon} /><input className={styles.searchInput} placeholder="Search students..." value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Search students" /></div>

@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.db.models.query import QuerySet
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.utils import timezone
 
 from .models import Activity, ActivityResponse, ClassSession, ConsentRecord, CurriculumPackage, Enrollment, LearningSession, Lesson, Notification, Profile, SchoolClass, SessionEEGSample, Slide
@@ -70,6 +70,45 @@ class TeacherLedSessionTests(TestCase):
             self.assertEqual(response.status_code, 200, response.content)
         self.assertIn(ClassSession, checked)
         self.assertIn(LearningSession, checked)
+
+    def test_separate_device_clients_share_roster_lesson_and_controls(self):
+        group = self.open()
+        device = Client()
+        device.force_login(self.student.user)
+        invitations = device.get('/api/class-sessions/').json()['sessions']
+        self.assertEqual(invitations[0]['id'], str(group.pk))
+        self.assertIsNone(invitations[0]['student_session'])
+        teacher_view = self.client.get(self.url).json()
+        self.assertEqual(teacher_view['lesson']['slides'][0]['id'], self.slide.pk)
+        self.assertEqual(teacher_view['roster'], [{'student_id': self.student.pk, 'name': 'Student', 'joined': False}])
+        self.assertEqual(device.post(self.url + 'join/', '{}', content_type='application/json').status_code, 201)
+        self.assertTrue(self.client.get(self.url).json()['roster'][0]['joined'])
+        self.control('start')
+        self.control('pause')
+        self.assertEqual(device.get(self.url).json()['status'], 'paused')
+        self.control('resume')
+        self.control('set_lesson', lesson_id=self.second_lesson.pk)
+        student_view = device.get(self.url).json()
+        self.assertEqual(student_view['lesson']['id'], self.second_lesson.pk)
+        self.assertNotIn('roster', student_view)
+
+    def test_reinvite_is_durable_idempotent_and_includes_new_enrollments(self):
+        group = self.open(lesson=False)
+        link = f'/student/class-session/{group.pk}'
+        Notification.objects.filter(link=link).update(read_at=timezone.now())
+        Enrollment.objects.create(school_class=self.school_class, student=self.outsider, enrolled_by=self.teacher)
+        for revision in (1, 2):
+            response = self.control('invite')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['invitation_revision'], revision)
+            self.assertEqual(Notification.objects.filter(link=link).count(), 2)
+            self.assertFalse(Notification.objects.filter(link=link, read_at__isnull=False).exists())
+        self.join(group)
+        Notification.objects.filter(link=link, recipient=self.student).update(read_at=timezone.now())
+        self.control('invite')
+        self.assertIsNotNone(Notification.objects.get(link=link, recipient=self.student).read_at)
+        self.client.force_login(self.student.user)
+        self.assertEqual(self.post(self.url, {'action': 'invite'}).status_code, 403)
 
     def test_teacher_can_enable_adaptive_and_override_it(self):
         group = self.open()

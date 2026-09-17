@@ -77,8 +77,8 @@ export interface TeacherDashboardData {
 }
 
 export const getTeacherDashboard = () => api<TeacherDashboardData>('/teacher/dashboard/', { cache: 'no-store' })
-export const getTeacherClasses = () => api<{ classes: TeacherClass[] }>('/classes/')
-export const getTeacherClass = (id: string) => api<TeacherClass>(`/classes/${id}/`)
+export const getTeacherClasses = () => api<{ classes: TeacherClass[] }>('/classes/', { cache: 'no-store' })
+export const getTeacherClass = (id: string) => api<TeacherClass>(`/classes/${id}/`, { cache: 'no-store' })
 export interface LiveSession {
   id: string
   student: RosterStudent

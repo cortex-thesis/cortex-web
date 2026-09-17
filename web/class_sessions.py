@@ -79,6 +79,7 @@ def group_data(group, profile, include_lesson=False, detailed=True):
         'status': group.status, 'presentation_mode': group.presentation_mode,
         'lesson_revision': group.lesson_revision,
         'updated_at': group.updated_at.isoformat(),
+        'invitation_revision': sum(item['action'] == 'invite' for item in group.control_history),
         'started_at': group.started_at, 'ended_at': group.ended_at,
     }
     sessions = group.student_sessions.select_related('student')
@@ -89,6 +90,12 @@ def group_data(group, profile, include_lesson=False, detailed=True):
         return result
     if profile.role == Profile.Role.TEACHER:
         result['participants'] = [participant_data(session, group) for session in sessions]
+        joined_ids = {session.student_id for session in sessions}
+        result['roster'] = [
+            {'student_id': enrollment.student_id, 'name': enrollment.student.display_name,
+             'joined': enrollment.student_id in joined_ids}
+            for enrollment in group.school_class.enrollments.filter(removed_at__isnull=True).select_related('student')
+        ]
         result['report'] = group.overview_report or None
         result['lesson_history'] = group.lesson_history
     else:
@@ -97,6 +104,20 @@ def group_data(group, profile, include_lesson=False, detailed=True):
     if include_lesson:
         result['lesson'] = _lesson_data(group.lesson) if group.lesson_id else None
     return result
+
+
+def invite_students(group):
+    """Persist invitations for all unjoined students, including offline students."""
+    for enrollment in group.school_class.enrollments.filter(removed_at__isnull=True).select_related('student'):
+        if group.student_sessions.filter(student_id=enrollment.student_id).exists():
+            continue
+        Notification.objects.update_or_create(
+            recipient=enrollment.student, kind=Notification.Kind.CLASS,
+            link=f'/student/class-session/{group.pk}',
+            defaults={'title': 'Your teacher has opened a session',
+                      'body': f'Join {group.school_class.name} and wait for your teacher to begin.',
+                      'read_at': None},
+        )
 
 
 def event(group, action, **details):
@@ -150,12 +171,7 @@ def class_sessions(request):
                 group.lesson_history = [{'id': lesson.pk, 'title': lesson.title}]
             event(group, 'open_lobby')
             group.save()
-            Notification.objects.bulk_create([
-                Notification(recipient=enrollment.student, kind=Notification.Kind.CLASS,
-                    title='Your teacher has opened a session', body=f'Join {school_class.name} and wait for your teacher to begin.',
-                    link=f'/student/class-session/{group.pk}')
-                for enrollment in school_class.enrollments.filter(removed_at__isnull=True).select_related('student')
-            ])
+            invite_students(group)
     except (KeyError, ValueError, TypeError, SchoolClass.DoesNotExist, Lesson.DoesNotExist):
         return JsonResponse({'detail': 'Choose one of your active classes and an available lesson.'}, status=400)
     _audit(profile, 'class_session_opened', group)
@@ -180,7 +196,7 @@ def class_session_detail(request, group_id):
     if group is None:
         return JsonResponse({'detail': 'You do not belong to this class.'}, status=403)
     if request.method == 'GET':
-        return JsonResponse(group_data(group, profile, include_lesson=profile.role == Profile.Role.STUDENT))
+        return JsonResponse(group_data(group, profile, include_lesson=True))
     try:
         data = _body(request)
         action = data['action']
@@ -197,7 +213,9 @@ def class_session_detail(request, group_id):
             if action == 'end':
                 return JsonResponse(group_data(group, profile))
             return JsonResponse({'detail': 'This class session has ended.'}, status=409)
-        if action == 'set_lesson':
+        if action == 'invite':
+            invite_students(group)
+        elif action == 'set_lesson':
             try:
                 group.lesson = available_lessons(group.school_class).get(pk=data['lesson_id'])
             except (KeyError, ValueError, TypeError, Lesson.DoesNotExist):
@@ -250,7 +268,7 @@ def class_session_detail(request, group_id):
                     row['last_seen_at'] = row['last_seen_at'].isoformat()
         group.save()
     _audit(profile, 'class_session_control', group, {'action': action})
-    return JsonResponse(group_data(group, profile))
+    return JsonResponse(group_data(group, profile, include_lesson=True))
 
 
 @require_POST

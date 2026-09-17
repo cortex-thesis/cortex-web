@@ -2,6 +2,9 @@
 
 ## Hybrid Supabase and local EEG storage
 
+For teacher/student testing across two devices, see
+[Teacher-led sessions on two devices](docs/teacher-led-two-device-test.md).
+
 Supabase PostgreSQL is the authoritative application database. Django migrations own Django Auth and all `web` application tables. Raw signals, processed Parquet, model binaries, and processing scratch files live beneath `EEG_DATA_ROOT`; database rows contain UUID-based, forward-slash object keys such as `eeg/raw/<recording-uuid>.edf`, never machine-specific absolute paths. DuckDB is used only inside the EEG data service to query local Parquet and is not an application database. `EEGEpoch` contains only compact processing-window metadata; individual EEG samples are never PostgreSQL rows.
 
 Required software: Python 3.12+, Node/npm, and Docker Desktop (with virtualization enabled) for the local Supabase stack. Install dependencies with:

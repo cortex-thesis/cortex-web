@@ -29,6 +29,7 @@ import { AudioJournal, DrawingJournal } from '../pages/student/JournalMedia'
 
 import Dashboard from '../pages/teacher/Dashboard'
 import TeacherClassSession from '../pages/teacher/ClassSession'
+import TeacherEnrollment from '../pages/teacher/Enrollment'
 import ClassSessionLobby from '../pages/student/ClassSessionLobby'
 import ClassOverview from '../pages/teacher/ClassOverview'
 import ClassStudents from '../pages/teacher/ClassStudents'
@@ -140,7 +141,7 @@ export default function AppRouter() {
       <Route path="/teacher/reports" element={templateOnly ? <TemplateReports /> : <Reports />} />
       <Route path="/teacher/reports/advanced" element={<AdvancedReports />} />
       <Route path="/teacher/classes/new" element={templateOnly ? <TemplateClassSetup /> : <TeacherClassSetup />} />
-      <Route path="/teacher/class/:classId/enroll" element={<Enrollment />} />
+      <Route path="/teacher/class/:classId/enroll" element={templateOnly ? <Enrollment /> : <TeacherEnrollment />} />
       <Route path="/teacher/class/:classId/session" element={<TeacherClassSession />} />
       <Route path="/teacher/student/:studentId/analytics" element={<StudentHistory />} />
       </Route>

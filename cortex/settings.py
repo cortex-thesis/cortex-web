@@ -2,6 +2,8 @@
 from pathlib import Path
 import os
 import sys
+import socket
+import ipaddress
 
 import dj_database_url
 from dotenv import load_dotenv
@@ -19,6 +21,16 @@ CSRF_TRUSTED_ORIGINS = [
         "DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
     ).split(",") if origin.strip()
 ]
+
+# Vite preserves the browser Host/Origin on LAN API requests.
+if DEBUG:
+    try:
+        local_addresses = socket.gethostbyname_ex(socket.gethostname())[2]
+    except OSError:
+        local_addresses = []
+    for address in local_addresses:
+        if ipaddress.ip_address(address).is_private and address not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(address)
 
 if not DEBUG and SECRET_KEY == "django-insecure-development-only":
     raise RuntimeError("DJANGO_SECRET_KEY must be set when DEBUG is false.")

@@ -28,6 +28,8 @@ export interface ClassroomSession {
   status: 'scheduled' | 'active' | 'paused' | 'completed' | 'cancelled'
   presentation_mode: ClassMode; started_at: string | null; ended_at: string | null
   updated_at: string
+  invitation_revision: number
+  roster?: Array<{ student_id: number; name: string; joined: boolean }>
   participants?: ClassParticipant[]; student_session?: ClassParticipant | null
   lesson?: ClassroomLesson | null; report?: ClassOverviewReport | null
 }
