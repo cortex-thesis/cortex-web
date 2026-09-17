@@ -21,7 +21,7 @@ interface Lesson {
 }
 
 const fieldNames: Record<string, string> = Object.fromEntries([
-  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields',
+  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields', 'clockRounds', 'clockMode',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
   'actionLabel', 'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'availableItemIds',
@@ -87,7 +87,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     question: '', choices: [], answer: '', ...configuration,
     imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
-    checkpointKey: lesson.package === 'livelihood' && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
+    checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set') && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
     initialResponse: lesson.progress.activity_evidence?.[String(slide.id)]?.selected,
     index: index + 1, total: lesson.slides.length, contentType: slide.activity.type,
     }

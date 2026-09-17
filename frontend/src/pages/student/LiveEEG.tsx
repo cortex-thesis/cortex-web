@@ -32,7 +32,7 @@ const BANDS: Array<{ key: keyof BandPowers; label: string }> = [
   { key: 'alpha', label: 'Alpha' }, { key: 'beta', label: 'Beta' }, { key: 'gamma', label: 'Gamma' },
 ]
 const fieldNames: Record<string, string> = Object.fromEntries([
-  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields',
+  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields', 'clockRounds', 'clockMode',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl', 'actionLabel',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
   'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'correctFeedback', 'retryFeedback', 'availableItemIds',
@@ -185,7 +185,7 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
       question: '', choices: [], answer: '', ...configuration,
       imageUrl: configuration.imageUrl ?? item.activity.asset_url ?? null,
       id: String(item.id), title: item.title, package: lesson.package,
-      checkpointKey: lesson.package === 'livelihood' && sessionId && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/eeg/${sessionId}/${item.id}` : undefined,
+      checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set') && sessionId && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/eeg/${sessionId}/${item.id}` : undefined,
       index: index + 1, total: lesson.slides.length, contentType: item.activity.type,
     }
   }) : [], [lesson, sessionId])

@@ -1899,9 +1899,10 @@ def student_class_package(request, class_id, package_slug):
 
 
 def _current_garden_rows(activity_path):
-    # Only new digital-garden history rows are excluded; other packages unchanged.
+    # Exclude only explicitly versioned activities, not unrelated optional reviews.
     key = activity_path + '__configuration__digital_garden_history'
-    return Q(**{key + '__isnull': True}) | Q(**{key: False})
+    other = activity_path + '__configuration__digital_activity_history'
+    return (Q(**{key + '__isnull': True}) | Q(**{key: False})) & (Q(**{other + '__isnull': True}) | Q(**{other: False}))
 
 
 def _practice_progress_data(lesson, progress):

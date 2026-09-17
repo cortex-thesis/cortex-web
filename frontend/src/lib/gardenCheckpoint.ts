@@ -1,7 +1,7 @@
 import type { Task } from '../types'
 
 // Tab-local, account/context-scoped recovery. Not a server progress award.
-function signature(task: Task) { return JSON.stringify([task.taskTemplate, task.items, task.missions, task.correctItemIds]) }
+function signature(task: Task) { return JSON.stringify([task.taskTemplate, task.items, task.missions, task.correctItemIds, task.clockRounds, task.clockMode]) }
 export function loadGardenCheckpoint<T>(task: Task, validate: (value: unknown) => value is T): T | null {
   if (!task.checkpointKey) return null
   try {

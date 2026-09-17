@@ -7,6 +7,16 @@ def validate_game(config):
     if template == 'garden_kit':
         template = 'find_it'
     try:
+        if template == 'clock_set':
+            rounds = config['clock_rounds']
+            if config['clock_mode'] not in ('set', 'read') or not isinstance(rounds, list) or not rounds:
+                return 'Clock practice needs a valid mode and examples.'
+            if len({r['id'] for r in rounds}) != len(rounds) or any(
+                    not isinstance(r['id'], str) or not r['id'] or not r.get('instruction') or
+                    type(r['hour']) is not int or not 1 <= r['hour'] <= 12 or
+                    type(r['minute']) is not int or not 0 <= r['minute'] <= 59 or
+                    r['period'] not in ('am', 'pm') for r in rounds):
+                return 'Clock examples require unique IDs, instructions, valid hours/minutes, and a time period.'
         if template == 'garden_mission':
             items, missions = config['items'], config['missions']
             ids = {item['id'] for item in items}
@@ -90,10 +100,15 @@ def evaluate_game(config, selected):
     template = config.get("task_template")
     if template == 'garden_kit':
         template = 'find_it'
-    if template not in {"word_search", "find_it", "audio_sequence", "shopping", "scenario_classifier", "discovery_board", 'garden_mission'}:
+    if template not in {"word_search", "find_it", "audio_sequence", "shopping", "scenario_classifier", "discovery_board", 'garden_mission', 'clock_set'}:
         return None
     try:
         value = json.loads(selected)
+        if template == 'clock_set':
+            times = value['times']
+            return value.get('digital_only') is True and isinstance(times, list) and all(
+                isinstance(r, dict) and type(r.get('hour')) is int and type(r.get('minute')) is int for r in times
+            ) and times == [{key: r[key] for key in ('id', 'hour', 'minute', 'period')} for r in config['clock_rounds']]
         if template == 'garden_mission':
             return value.get('digital_only') is True and value['missions'] == [
                 {'id': row['id'], 'tool': row['answer'], 'target_applied': True} for row in config['missions']]

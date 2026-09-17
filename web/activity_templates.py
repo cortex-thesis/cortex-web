@@ -49,6 +49,7 @@ ACTIVITY_TEMPLATES = {
 }
 
 TASK_TEMPLATES = {
+    'clock_set': {'label': 'Clock Lab', 'required': ('question', 'clock_rounds', 'clock_mode')},
     'garden_kit': {'label': 'Pack a Gardening Kit', 'required': ('question', 'items', 'correct_item_ids')},
     'garden_mission': {'label': 'Garden Mission', 'required': ('question', 'items', 'missions')},
     "discovery_board": {"label": "Discovery Board", "required": ("question", "items", "categories", "self_report_fields")},
@@ -138,7 +139,7 @@ def validate_activity_configuration(activity_type, configuration):
             return f"{task_id} requires correct_item_ids contained in items."
     if template_id == "visual_narrative" and not isinstance(configuration["steps"], list):
         return "visual_narrative steps must be a list."
-    if task_id in {"word_search", "find_it", "audio_sequence", "shopping", 'garden_mission', 'garden_kit'}:
+    if task_id in {"word_search", "find_it", "audio_sequence", "shopping", 'garden_mission', 'garden_kit', 'clock_set'}:
         from .game_validation import validate_game
         return validate_game(configuration)
     return None
