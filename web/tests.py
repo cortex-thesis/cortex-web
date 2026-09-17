@@ -59,6 +59,12 @@ class WorkflowTests(TestCase):
         finished = self.client.post(f"/api/baseline/{recording_id}/", data=json.dumps({"action": "complete"}), content_type="application/json")
         self.assertEqual(finished.status_code, 200)
         self.assertEqual(BaselineRecording.objects.get(pk=recording_id).status, BaselineRecording.Status.COMPLETED)
+        deleted = self.client.delete(f"/api/baseline/{recording_id}/")
+        self.assertEqual(deleted.status_code, 200)
+        self.assertEqual(deleted.json()["epochs_deleted"], 1)
+        self.assertFalse(BaselineRecording.objects.filter(pk=recording_id).exists())
+        self.assertFalse(BaselineEpoch.objects.filter(recording_id=recording_id).exists())
+        self.assertTrue(AuditLog.objects.filter(action="baseline.delete", object_id=recording_id).exists())
 
     def test_admin_stores_structured_research_analysis(self):
         self.admin.admin_scope = Profile.AdminScope.SUPER

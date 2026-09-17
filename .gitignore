@@ -35,6 +35,7 @@ local-data/
 *.fif
 *.parquet
 *.joblib
+!model-artifacts/mixed-1395/classifier.joblib
 *.pkl
 *.onnx
 *.tmp

@@ -516,3 +516,36 @@ Set up `djangorestframework-simplejwt` on your end.
 - Run Django on `localhost:8000`
 - Run the EEG bridge script pointing to `localhost:8000`
 - Tell the frontend dev to switch from mock data to real endpoints
+# Baseline EEG model training
+
+Baseline recordings collected at `/baseline` can be audited and trained directly from the configured database.
+
+```powershell
+pip install -r requirements-ml.txt
+python manage.py train_baseline_models --report-only
+python manage.py train_baseline_models
+python manage.py analyze_baseline_data
+python manage.py train_augmented_baseline_model
+python manage.py train_advanced_eeg_model
+python manage.py generate_synthetic_eeg_demo
+python manage.py train_combined_eeg_model
+start local-data\analysis\baseline_analysis.html
+```
+
+By default only quality-approved epochs are used. Validation is grouped by participant code, preventing the same participant from appearing in both training and validation folds. Outputs are written to `EEG_DATA_ROOT/EEG_MODEL_SUBDIR` (normally `local-data/models`):
+
+- `baseline_classifier.joblib` — supervised condition classifier
+- `baseline_clusterer.joblib` — unsupervised epoch clustering pipeline
+- `baseline_model_metrics.json` — dataset counts, feature list, validation metrics, and confusion matrix
+
+The analysis command creates a browser-ready report plus `baseline_epoch_features.csv` and the complete compressed `baseline_raw_signals.csv.gz` export under `local-data/analysis`.
+
+Use `--include-flagged` only for an explicit sensitivity analysis. These models are research baselines and are not clinical diagnostic tools.
+
+The optional augmented experiment creates exactly 100,000 balanced synthetic/real epoch-feature rows (25,000 per state; 500,000 paper-aligned feature values) separately inside every training fold. Validation rows always remain untouched real EEG from held-out participants. Its artifacts are clearly separated as `baseline_augmented_classifier.joblib`, `baseline_augmented_metrics.json`, and `baseline_augmented_training_features.csv.gz`; synthetic rows must never be reported as independent participants.
+
+`train_advanced_eeg_model` recomputes Welch PSD independently from each epoch's own four-channel raw signal, adds channel-specific relative/absolute powers, ratios, Hjorth parameters, electrode asymmetry, and participant-neutral deltas, then compares Logistic Regression, RBF SVM, Random Forest, Extra Trees, and the paper's four-cluster-to-label flow using participant-grouped evaluation.
+
+`generate_synthetic_eeg_demo` creates an isolated 30-participant, 100,000-row artificial dataset for demonstrations and load-testing. Its output is stored under `local-data/synthetic-demo`, is never inserted into Supabase, and must never be reported as human-subject evidence.
+
+`train_combined_eeg_model` combines the 100,000 synthetic rows with all eligible real epochs in a clearly source-labeled export. Synthetic and real sources receive equal total training weight, while validation is performed exclusively on untouched real participant folds.

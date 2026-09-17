@@ -164,6 +164,25 @@ def _audit(actor, action, obj, metadata=None):
     AuditLog.objects.create(actor=actor, action=action, object_type=obj.__class__.__name__, object_id=str(obj.pk), metadata=metadata or {})
 
 
+@require_http_methods(["GET"])
+def model_analysis_report(request):
+    profile, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    if not profile.is_super_admin:
+        return JsonResponse({"detail": "Only super administrators can view the cross-participant model report."}, status=403)
+    report_path = Path(getattr(settings, "MODEL_ARTIFACT_ROOT", settings.BASE_DIR / "model-artifacts")) / "mixed-1395" / "analysis.html"
+    try:
+        stream = report_path.open("rb")
+    except FileNotFoundError:
+        return JsonResponse({"detail": "The model report has not been generated. Run python manage.py analyze_mixed_epoch_data on this server."}, status=404)
+    response = FileResponse(stream, content_type="text/html; charset=utf-8")
+    response["Cache-Control"] = "no-store, private"
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Content-Security-Policy"] = "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'"
+    return response
+
+
 @require_http_methods(["GET", "POST"])
 def baseline_recordings(request):
     profile, error = _require_profile(request, {Profile.Role.ADMIN, Profile.Role.TEACHER, Profile.Role.STUDENT})
@@ -202,12 +221,21 @@ def baseline_recordings(request):
         return JsonResponse({"detail": "Participant code, consent, and valid baseline settings are required."}, status=400)
 
 
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET", "POST", "DELETE"])
 def baseline_recording_detail(request, recording_id):
     profile, error = _require_profile(request, {Profile.Role.ADMIN, Profile.Role.TEACHER, Profile.Role.STUDENT})
     if error:
         return error
     recording = get_object_or_404(BaselineRecording, pk=recording_id, recorded_by=profile)
+    if request.method == "DELETE":
+        epoch_count = recording.epochs.count()
+        participant_code = recording.participant_code
+        _audit(profile, "baseline.delete", recording, {
+            "participant_code": participant_code, "condition": recording.condition,
+            "epochs_deleted": epoch_count,
+        })
+        recording.delete()
+        return JsonResponse({"deleted": True, "epochs_deleted": epoch_count})
     if request.method == "GET":
         return JsonResponse({
             "recording": {

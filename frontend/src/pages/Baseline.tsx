@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BatteryMedium, Bluetooth, CheckCircle2, Database, Radio, Square } from 'lucide-react'
+import { BatteryMedium, Bluetooth, CheckCircle2, Database, Radio, Square, Trash2 } from 'lucide-react'
 import { Logo } from '../components/atoms'
 import { api } from '../lib/api'
 import { MUSE_CHANNELS, useMuseStore } from '../store/museStore'
+import { analyzeBands } from '../store/museDsp'
 import styles from './Baseline.module.css'
 
 type Recording = { id: string; participant_code: string; condition: string; status: string; started_at: string; epoch_count: number }
@@ -34,6 +35,7 @@ export default function Baseline() {
   const [expandedId, setExpandedId] = useState('')
   const [details, setDetails] = useState<Record<string, RecordingDetail>>({})
   const [detailLoading, setDetailLoading] = useState('')
+  const [deletingId, setDeletingId] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const startedAt = useRef(0)
@@ -61,11 +63,17 @@ export default function Baseline() {
       }
       captureBusy.current = true
       try {
+        const rawChannelArrays = MUSE_CHANNELS.map((_, index) => state.samples[index].slice(-count))
+        const epochAnalysis = analyzeBands(rawChannelArrays, count)
+        if (!epochAnalysis) {
+          setError('This epoch did not contain enough clean channels. Adjust the headset and remain still.')
+          return
+        }
         await api(`/baseline/${recordingId}/`, { method: 'POST', body: JSON.stringify({
           action: 'epoch', epoch_number: epochNumber, start_offset_ms: (epochNumber - 1) * epochMs, end_offset_ms: epochNumber * epochMs,
-          raw_channels: Object.fromEntries(MUSE_CHANNELS.map((name, index) => [name, state.samples[index].slice(-count)])),
-          absolute_band_powers: state.absoluteBands, relative_band_powers: state.relativeBands,
-          signal_quality: state.quality, accepted_channels: state.acceptedChannels, battery_level: state.battery,
+          raw_channels: Object.fromEntries(MUSE_CHANNELS.map((name, index) => [name, rawChannelArrays[index]])),
+          absolute_band_powers: epochAnalysis.absolute, relative_band_powers: epochAnalysis.relative,
+          signal_quality: state.quality, accepted_channels: epochAnalysis.acceptedChannels, battery_level: state.battery,
         }) })
         nextEpoch.current += 1
         setSavedEpochs((value) => Math.max(value, epochNumber)); setError('')
@@ -120,6 +128,18 @@ export default function Baseline() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to load baseline values.') }
     finally { setDetailLoading('') }
   }
+  const deleteRecording = async (item: Recording) => {
+    const confirmed = window.confirm(`Permanently delete ${item.participant_code} (${item.condition.replaceAll('_', ' ')}) and all ${item.epoch_count} saved epochs/raw EEG samples? This cannot be undone.`)
+    if (!confirmed) return
+    setDeletingId(item.id); setError(''); setMessage('')
+    try {
+      const result = await api<{ epochs_deleted: number }>(`/baseline/${item.id}/`, { method: 'DELETE' })
+      setExpandedId(''); setDetails((current) => { const next = { ...current }; delete next[item.id]; return next })
+      setHistory((current) => current.filter((recording) => recording.id !== item.id))
+      setMessage(`Recording deleted with ${result.epochs_deleted} epoch${result.epochs_deleted === 1 ? '' : 's'} and its raw EEG data.`)
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to delete baseline recording.') }
+    finally { setDeletingId('') }
+  }
   return <main className={styles.page}>
     <header className={styles.header}><Logo variant="horizontal" height={31} /><div><span>Research acquisition</span><h1>EEG baseline recorder</h1><p>Capture reproducible Muse 2 epochs for clustering and classification.</p></div><div className={styles.device}><Radio size={16} /> {muse.status === 'streaming' ? muse.deviceName || 'Muse 2' : 'Not connected'} {muse.battery != null && <span><BatteryMedium size={15} /> {muse.battery}%</span>}</div></header>
     <div className={styles.layout}>
@@ -139,6 +159,6 @@ export default function Baseline() {
         {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success}>{message}</p>}
       </aside>
     </div>
-    <section className={`${styles.card} ${styles.history}`}><div className={styles.sectionTitle}><div><span>Database</span><h2>Recent baseline recordings</h2></div></div>{history.length ? <div className={styles.table}>{history.map((item) => <div className={styles.recordingRow} key={item.id}><button className={styles.rowSummary} onClick={() => void toggleRecording(item.id)} aria-expanded={expandedId === item.id}><strong>{item.participant_code}</strong><span>{item.condition.replaceAll('_', ' ')}</span><span>{new Date(item.started_at).toLocaleString()}</span><span>{item.epoch_count} epochs</span><b>{item.status}</b><i>{expandedId === item.id ? 'Hide values' : 'View values'}</i></button>{expandedId === item.id && <div className={styles.detail}>{detailLoading === item.id ? <div className={styles.detailSkeleton} /> : details[item.id] && <><div className={styles.metadata}><span><b>Device</b>{details[item.id].recording.device_name}</span><span><b>Sample rate</b>{details[item.id].recording.sampling_rate_hz} Hz</span><span><b>Epoch length</b>{details[item.id].recording.epoch_length_seconds}s</span><span><b>Age</b>{details[item.id].recording.age_years ?? 'Not collected'}</span><span><b>Sex</b>{details[item.id].recording.sex_at_birth || 'Not collected'}</span></div><div className={styles.epochs}>{details[item.id].epochs.map((epoch) => <article className={styles.epoch} key={epoch.epoch_number}><header><strong>Epoch {epoch.epoch_number}</strong><span>{(epoch.start_offset_ms / 1000).toFixed(1)}–{(epoch.end_offset_ms / 1000).toFixed(1)}s · {epoch.sample_count} samples/channel</span><b data-usable={epoch.is_usable}>{epoch.is_usable ? 'usable' : 'quality flagged'}</b></header><div className={styles.epochBands}>{Object.entries(epoch.absolute_band_powers).map(([band, value]) => <span key={band}><small>{band} absolute</small><strong>{value.toFixed(6)}</strong><small>{((epoch.relative_band_powers[band] ?? 0) * 100).toFixed(2)}% relative</small></span>)}<span><small>theta / beta</small><strong>{epoch.theta_beta_ratio?.toFixed(6) ?? '—'}</strong><small>{epoch.accepted_channels}/4 clean · {epoch.battery_level ?? '—'}% battery</small></span></div><details className={styles.raw}><summary>Show exact raw channel samples and statistics</summary>{Object.entries(epoch.raw_channels).map(([channel, values]) => <div key={channel}><h4>{channel} <small>mean {epoch.channel_statistics[channel]?.mean.toFixed(4)} · SD {epoch.channel_statistics[channel]?.standard_deviation.toFixed(4)} · min {epoch.channel_statistics[channel]?.minimum.toFixed(4)} · max {epoch.channel_statistics[channel]?.maximum.toFixed(4)}</small></h4><code>{values.join(', ')}</code></div>)}</details></article>)}</div></>}</div>}</div>)}</div> : <p>No baseline recordings saved by this account yet.</p>}</section>
+    <section className={`${styles.card} ${styles.history}`}><div className={styles.sectionTitle}><div><span>Database</span><h2>Recent baseline recordings</h2></div></div>{history.length ? <div className={styles.table}>{history.map((item) => <div className={styles.recordingRow} key={item.id}><button className={styles.rowSummary} onClick={() => void toggleRecording(item.id)} aria-expanded={expandedId === item.id}><strong>{item.participant_code}</strong><span>{item.condition.replaceAll('_', ' ')}</span><span>{new Date(item.started_at).toLocaleString()}</span><span>{item.epoch_count} epochs</span><b>{item.status}</b><i>{expandedId === item.id ? 'Hide values' : 'View values'}</i></button>{expandedId === item.id && <div className={styles.detail}>{detailLoading === item.id ? <div className={styles.detailSkeleton} /> : details[item.id] && <><div className={styles.detailActions}><span>Deleting this recording also deletes every saved epoch and raw sample inside it.</span><button disabled={deletingId === item.id} onClick={() => void deleteRecording(item)}><Trash2 size={14} /> {deletingId === item.id ? 'Deleting…' : 'Delete recording'}</button></div><div className={styles.metadata}><span><b>Device</b>{details[item.id].recording.device_name}</span><span><b>Sample rate</b>{details[item.id].recording.sampling_rate_hz} Hz</span><span><b>Epoch length</b>{details[item.id].recording.epoch_length_seconds}s</span><span><b>Age</b>{details[item.id].recording.age_years ?? 'Not collected'}</span><span><b>Sex</b>{details[item.id].recording.sex_at_birth || 'Not collected'}</span></div><div className={styles.epochs}>{details[item.id].epochs.map((epoch) => <article className={styles.epoch} key={epoch.epoch_number}><header><strong>Epoch {epoch.epoch_number}</strong><span>{(epoch.start_offset_ms / 1000).toFixed(1)}–{(epoch.end_offset_ms / 1000).toFixed(1)}s · {epoch.sample_count} samples/channel</span><b data-usable={epoch.is_usable}>{epoch.is_usable ? 'usable' : 'quality flagged'}</b></header><div className={styles.epochBands}>{Object.entries(epoch.absolute_band_powers).map(([band, value]) => <span key={band}><small>{band} absolute</small><strong>{value.toFixed(6)}</strong><small>{((epoch.relative_band_powers[band] ?? 0) * 100).toFixed(2)}% relative</small></span>)}<span><small>theta / beta</small><strong>{epoch.theta_beta_ratio?.toFixed(6) ?? '—'}</strong><small>{epoch.accepted_channels}/4 clean · {epoch.battery_level ?? '—'}% battery</small></span></div><details className={styles.raw}><summary>Show exact raw channel samples and statistics</summary>{Object.entries(epoch.raw_channels).map(([channel, values]) => <div key={channel}><h4>{channel} <small>mean {epoch.channel_statistics[channel]?.mean.toFixed(4)} · SD {epoch.channel_statistics[channel]?.standard_deviation.toFixed(4)} · min {epoch.channel_statistics[channel]?.minimum.toFixed(4)} · max {epoch.channel_statistics[channel]?.maximum.toFixed(4)}</small></h4><code>{values.join(', ')}</code></div>)}</details></article>)}</div></>}</div>}</div>)}</div> : <p>No baseline recordings saved by this account yet.</p>}</section>
   </main>
 }

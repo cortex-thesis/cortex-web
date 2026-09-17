@@ -51,8 +51,8 @@ function detrend(values: number[]) {
   return values.map((value, index) => value - (meanY + slope * (index - meanX)))
 }
 
-function hasArtifact(values: number[]) {
-  if (values.length < EPOCH_SIZE || values.some((value) => !Number.isFinite(value))) return true
+function hasArtifact(values: number[], minimumSamples = EPOCH_SIZE) {
+  if (values.length < minimumSamples || values.some((value) => !Number.isFinite(value))) return true
   let minimum = Infinity; let maximum = -Infinity; let largestStep = 0
   for (let index = 0; index < values.length; index += 1) {
     minimum = Math.min(minimum, values[index]); maximum = Math.max(maximum, values[index])
@@ -103,11 +103,12 @@ function welch(values: number[]) {
 
 const zeroBands = (): BandPowers => ({ delta: 0, theta: 0, alpha: 0, beta: 0, gamma: 0 })
 
-export function analyzeBands(channels: number[][]): BandAnalysis | null {
+export function analyzeBands(channels: number[][], epochSamples = EPOCH_SIZE): BandAnalysis | null {
   const powers: BandPowers[] = []
   for (const channel of channels) {
-    const epoch = channel.slice(-EPOCH_SIZE)
-    if (hasArtifact(epoch)) continue
+    const requiredSamples = Math.max(WELCH_SIZE, epochSamples)
+    const epoch = channel.slice(-requiredSamples)
+    if (hasArtifact(epoch, requiredSamples)) continue
     let filtered = detrend(epoch)
     filtered = applyBiquad(filtered, biquad('notch', 60, 30))
     filtered = applyBiquad(filtered, biquad('highpass', 1, Math.SQRT1_2))

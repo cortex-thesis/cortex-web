@@ -4,6 +4,7 @@ import ProtectedRoute from './ProtectedRoute'
 import Splash from '../pages/student/Splash'
 import UnifiedLogin from '../pages/Login'
 import Baseline from '../pages/Baseline'
+import ModelAnalysis from '../pages/ModelAnalysis'
 import Home from '../pages/student/Home'
 import JoinClass from '../pages/student/JoinClass'
 import EEGPairing from '../pages/student/EEGPairing'
@@ -154,6 +155,7 @@ export default function AppRouter() {
 
       {/* Super administrator */}
       <Route element={<ProtectedRoute roles={['super_admin']} />}>
+        <Route path="/model_analysis" element={<ModelAnalysis />} />
         <Route path="/admin/dashboard" element={templateOnly ? <TemplateAdminDashboard /> : <SuperAdminDashboard />} />
         <Route path="/admin/accounts" element={templateOnly ? <TemplateAdminAccounts /> : <SuperAdminAccounts />} />
         <Route path="/admin/requests" element={<SuperAdminRequests />} />

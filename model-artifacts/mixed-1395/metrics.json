@@ -1,0 +1,252 @@
+{
+  "experiment": "source-epoch-grouped mixed real/augmented 80/20",
+  "warning": "Mixed real/augmented evaluation; performance on unseen students has not been validated.",
+  "augmentation": "Fixed Gaussian jitter SD=0.03 in log10 band power; linear TBR recomputed. Features independently recomputed from saved raw EEG.",
+  "counts": {
+    "real": 95,
+    "augmented": 1300,
+    "total": 1395,
+    "train": 1116,
+    "test": 279,
+    "real_train": 76,
+    "real_test": 19,
+    "augmented_train": 1040,
+    "augmented_test": 260
+  },
+  "source_epoch_overlap": 0,
+  "features": [
+    "log_theta",
+    "log_alpha",
+    "log_beta",
+    "log_gamma",
+    "linear_theta_beta_ratio"
+  ],
+  "combined_test": {
+    "rows": 279,
+    "accuracy": 0.6774193548387096,
+    "balanced_accuracy": 0.6651362901362902,
+    "labels": [
+      "distracted",
+      "focused",
+      "overstimulated",
+      "relaxed"
+    ],
+    "confusion_matrix": [
+      [
+        0,
+        4,
+        0,
+        55
+      ],
+      [
+        15,
+        59,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        29,
+        0
+      ],
+      [
+        8,
+        0,
+        8,
+        101
+      ]
+    ],
+    "per_class": {
+      "distracted": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 59.0
+      },
+      "focused": {
+        "precision": 0.9365079365079365,
+        "recall": 0.7972972972972973,
+        "f1-score": 0.8613138686131386,
+        "support": 74.0
+      },
+      "overstimulated": {
+        "precision": 0.7837837837837838,
+        "recall": 1.0,
+        "f1-score": 0.8787878787878788,
+        "support": 29.0
+      },
+      "relaxed": {
+        "precision": 0.6474358974358975,
+        "recall": 0.8632478632478633,
+        "f1-score": 0.73992673992674,
+        "support": 117.0
+      },
+      "accuracy": 0.6774193548387096,
+      "macro avg": {
+        "precision": 0.5919319044319045,
+        "recall": 0.6651362901362902,
+        "f1-score": 0.6200071218319394,
+        "support": 279.0
+      },
+      "weighted avg": {
+        "precision": 0.6013667277108137,
+        "recall": 0.6774193548387096,
+        "f1-score": 0.6300842413392449,
+        "support": 279.0
+      }
+    }
+  },
+  "real_test": {
+    "rows": 19,
+    "accuracy": 0.6842105263157895,
+    "balanced_accuracy": 0.66875,
+    "labels": [
+      "distracted",
+      "focused",
+      "overstimulated",
+      "relaxed"
+    ],
+    "confusion_matrix": [
+      [
+        0,
+        0,
+        0,
+        4
+      ],
+      [
+        1,
+        4,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        7
+      ]
+    ],
+    "per_class": {
+      "distracted": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 4.0
+      },
+      "focused": {
+        "precision": 1.0,
+        "recall": 0.8,
+        "f1-score": 0.8888888888888888,
+        "support": 5.0
+      },
+      "overstimulated": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 2.0
+      },
+      "relaxed": {
+        "precision": 0.6363636363636364,
+        "recall": 0.875,
+        "f1-score": 0.7368421052631579,
+        "support": 8.0
+      },
+      "accuracy": 0.6842105263157895,
+      "macro avg": {
+        "precision": 0.6590909090909091,
+        "recall": 0.66875,
+        "f1-score": 0.6564327485380117,
+        "support": 19.0
+      },
+      "weighted avg": {
+        "precision": 0.6363636363636364,
+        "recall": 0.6842105263157895,
+        "f1-score": 0.6494305940289319,
+        "support": 19.0
+      }
+    }
+  },
+  "augmented_test": {
+    "rows": 260,
+    "accuracy": 0.676923076923077,
+    "balanced_accuracy": 0.66487169259407,
+    "labels": [
+      "distracted",
+      "focused",
+      "overstimulated",
+      "relaxed"
+    ],
+    "confusion_matrix": [
+      [
+        0,
+        4,
+        0,
+        51
+      ],
+      [
+        14,
+        55,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        27,
+        0
+      ],
+      [
+        7,
+        0,
+        8,
+        94
+      ]
+    ],
+    "per_class": {
+      "distracted": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 55.0
+      },
+      "focused": {
+        "precision": 0.9322033898305084,
+        "recall": 0.7971014492753623,
+        "f1-score": 0.859375,
+        "support": 69.0
+      },
+      "overstimulated": {
+        "precision": 0.7714285714285715,
+        "recall": 1.0,
+        "f1-score": 0.8709677419354839,
+        "support": 27.0
+      },
+      "relaxed": {
+        "precision": 0.6482758620689655,
+        "recall": 0.8623853211009175,
+        "f1-score": 0.7401574803149606,
+        "support": 109.0
+      },
+      "accuracy": 0.676923076923077,
+      "macro avg": {
+        "precision": 0.5879769558320114,
+        "recall": 0.66487169259407,
+        "f1-score": 0.6176250555626112,
+        "support": 260.0
+      },
+      "weighted avg": {
+        "precision": 0.5992795165092067,
+        "recall": 0.676923076923077,
+        "f1-score": 0.6288083437945722,
+        "support": 260.0
+      }
+    }
+  }
+}

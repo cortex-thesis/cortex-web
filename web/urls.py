@@ -62,9 +62,11 @@ from .views import (
     teacher_students,
     baseline_recordings,
     baseline_recording_detail,
+    model_analysis_report,
 )
 
 urlpatterns = [
+    path("model-analysis/report/", model_analysis_report, name="model-analysis-report"),
     path('class-sessions/', class_sessions, name='class-sessions'),
     path('class-sessions/<uuid:group_id>/', class_session_detail, name='class-session-detail'),
     path('class-sessions/<uuid:group_id>/join/', class_session_join, name='class-session-join'),
