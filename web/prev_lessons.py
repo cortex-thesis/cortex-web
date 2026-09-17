@@ -70,5 +70,7 @@ from .prev01_discovery import upgrade_prev01
 upgrade_prev01(PREV_LESSONS)
 from .prev02_refresh import upgrade_prev02
 upgrade_prev02(PREV_LESSONS)
+from .prev03_refresh import upgrade_prev03
+upgrade_prev03(PREV_LESSONS)
 from .lesson_assets import attach_definitions
 attach_definitions(PREV_LESSONS)

@@ -11,6 +11,7 @@ test('YouTube recreates its iframe after Activity cleanup without losing complet
   const host = { replaceChildren(frame) { this.frame = frame; frame.isConnected = true } }
   const saved = { window: globalThis.window, document: globalThis.document }
   globalThis.__youtubeTest = {
+    useState(initial) { return [initial, () => {}] },
     useRef(initial) { const i = cursor++; return refs[i] ??= { current: i === 0 ? host : initial } },
     useEffect(callback) { effects.push(callback) },
     styles: { video: 'video', youtubeHost: 'youtubeHost' },
@@ -28,7 +29,7 @@ test('YouTube recreates its iframe after Activity cleanup without losing complet
   }
   globalThis.document = { createElement() { const frame = { remove() { this.isConnected = false } }; frames.push(frame); return frame } }
   try {
-    const { outputText } = ts.transpileModule(`const {useRef,useEffect,styles}=globalThis.__youtubeTest; const loadYouTubeApi=()=>Promise.resolve(window.YT); ${body}; export default YouTubeVideo`,
+    const { outputText } = ts.transpileModule(`const {useRef,useEffect,useState,styles}=globalThis.__youtubeTest; const loadYouTubeApi=()=>Promise.resolve(window.YT); ${body}; export default YouTubeVideo`,
       { compilerOptions: { module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX } })
     const resolved = outputText.replace('"react/jsx-runtime"', JSON.stringify(import.meta.resolve('react/jsx-runtime')))
     const { default: Video } = await import(`data:text/javascript;base64,${Buffer.from(resolved).toString('base64')}`)

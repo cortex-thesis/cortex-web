@@ -72,3 +72,13 @@ button:focus-visible { outline: 3px solid var(--color-interface-blue); outline-o
 @keyframes sparklePop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .movingBrush, .teethImage, .cleanSparkles { animation: none; } }
 @media (max-width: 560px) { .toolChoices { grid-template-columns: 1fr 1fr 1fr; gap: 6px; } .toolChoice { padding: 6px; font-size: 12px; } .brushFooter { align-items: stretch; flex-direction: column; } }
+.pictureChoice .imagePlaceholder { max-width: 150px; height: min(var(--activity-image-height, 120px), 120px); flex-shrink: 0; }
+.sortLayout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(210px, 260px); align-items: start; gap: 16px; }
+.sortItems { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+.sortItems .sortCard { padding: 10px; min-height: 110px; font-size: 14px; border: 1px solid #cfc8e7; box-shadow: 0 3px 0 #e9e4f4; }
+.sortItems .sortCard img { width: 60px; height: 54px; }
+.categoryGrid.sortGroups { grid-template-columns: 1fr; margin: 0; padding: 0; border: 0; gap: 12px; }
+.sortGroups .category { min-height: 105px; border: 2px dashed #668fb0; background: #eaf4fc; text-align: left; }
+.sortGroups .dropReady { border-color: #534ab6; background: #eeebff; }
+.category .sortedChip { padding: 5px 7px; border-radius: 6px; background: white; color: var(--color-text-primary); }
+@media (max-width: 760px) { .sortLayout { grid-template-columns: 1fr; } .categoryGrid.sortGroups { order: -1; grid-template-columns: repeat(2, minmax(0, 1fr)); } .sortItems { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

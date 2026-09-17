@@ -65,7 +65,7 @@ interface YouTubePlayer {
 
 declare global {
   interface Window {
-    YT?: { Player: new (element: HTMLIFrameElement, options: { events: { onReady: () => void } }) => YouTubePlayer }
+    YT?: { Player: new (element: HTMLIFrameElement, options: { events: { onReady: () => void; onError?: (event: { data: number }) => void } }) => YouTubePlayer }
     onYouTubeIframeAPIReady?: () => void
   }
 }
@@ -90,6 +90,8 @@ function loadYouTubeApi() {
 }
 
 function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: string; onHalfWatched?: () => void }) {
+  const [errorCode, setErrorCode] = useState<number | null>(null)
+  const [reload, setReload] = useState(0)
   const hostRef = useRef<HTMLDivElement | null>(null)
   const completedRef = useRef(false)
   const callbackRef = useRef(onHalfWatched)
@@ -104,6 +106,7 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
     frame.className = styles.video
     frame.src = src
     frame.title = title
+    frame.referrerPolicy = 'strict-origin-when-cross-origin'
     frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
     frame.allowFullscreen = true
     host.replaceChildren(frame)
@@ -124,7 +127,7 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
             callbackRef.current?.()
           }
         }, 750)
-      } } })
+      }, onError: (event) => { if (!cancelled) setErrorCode(event.data) } } })
     })
     return () => {
       cancelled = true
@@ -133,9 +136,17 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
       player?.destroy()
       frame.remove()
     }
-  }, [src, title])
+  }, [src, title, reload])
 
-  return <div ref={hostRef} className={styles.youtubeHost} />
+  return <>
+    <div ref={hostRef} className={styles.youtubeHost} />
+    {errorCode !== null && <div role="alert">
+      <p>YouTube could not play this video (error {errorCode}). Try opening this lesson in Edge or Chrome.</p>
+      <button type="button" onClick={() => { setErrorCode(null); setReload(value => value + 1) }}>Retry video</button>{' '}
+      <a href={`https://www.youtube.com/watch?v=${new URL(src).pathname.split('/').pop()}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
+      {' '}<button type="button" onClick={() => { completedRef.current = true; callbackRef.current?.() }}>I watched it on YouTube</button>
+    </div>}
+  </>
 }
 
 function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {

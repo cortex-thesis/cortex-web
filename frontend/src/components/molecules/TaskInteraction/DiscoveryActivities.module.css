@@ -32,3 +32,4 @@
 .scenario .correct { background: #e1f4e9; border-color: #238461; color: #19634a; }
 .scenario .incorrect { background: #ffebe9; border-color: #b64646; color: #973434; }
 @media (max-width: 600px) { .areas { grid-template-columns: 1fr; } .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.neutralPlaceholder { width: 100%; height: 90px; display: grid; place-items: center; border-radius: 10px; background: #f0efff; color: var(--color-interface-purple); font-size: 36px; }

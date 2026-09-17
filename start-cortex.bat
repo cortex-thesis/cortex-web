@@ -5,6 +5,9 @@ rem Always use the folder containing this launcher as the project folder.
 set "PROJECT_DIR=%~dp0"
 set "FRONTEND_DIR=%~dp0frontend"
 set "VITE_TEMPLATE_ONLY=false"
+rem One development-server worker reuses one DB connection instead of
+rem keeping a separate Supabase Session Pooler connection per request thread.
+set "DATABASE_CONN_MAX_AGE=60"
 
 rem Mirror the root Django flag into Vite so React can select mock screens too.
 findstr /I /R /C:"^[ ]*CORTEX_TEMPLATE_ONLY[ ]*=[ ]*true[ ]*$" "%PROJECT_DIR%.env" >nul 2>&1
@@ -46,7 +49,7 @@ if errorlevel 1 (
 rem Reuse listening development servers instead of creating duplicate listeners.
 netstat -ano | findstr /R /C:":8000 .*LISTENING" >nul
 if not errorlevel 1 goto BACKEND_STARTED
-start "Cortex Backend" /D "%PROJECT_DIR%" cmd /k ""%BACKEND_PYTHON%" -u manage.py runserver 127.0.0.1:8000"
+start "Cortex Backend" /D "%PROJECT_DIR%" cmd /k ""%BACKEND_PYTHON%" -u manage.py runserver 127.0.0.1:8000 --noreload --nothreading"
 :BACKEND_STARTED
 netstat -ano | findstr /R /C:":5173 .*LISTENING" >nul
 if not errorlevel 1 goto FRONTEND_STARTED

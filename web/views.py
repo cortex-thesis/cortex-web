@@ -862,6 +862,13 @@ def content_asset_preview(request, asset_id):
         content_access = Lesson.objects.filter(
             slides__activity__asset=asset, status=Lesson.Status.APPROVED, archived_at__isnull=True
         ).exists()
+        if not content_access:
+            # Illustrations can be nested in steps, choices, and matching pairs
+            # rather than occupying the activity's single primary asset slot.
+            content_access = Lesson.objects.filter(
+                slides__activity__configuration__icontains=f'/api/content/assets/{asset.pk}/preview/',
+                status=Lesson.Status.APPROVED, archived_at__isnull=True,
+            ).exists()
         journal_access = JournalEntry.objects.filter(asset=asset, student=profile).exists()
         if profile.role == Profile.Role.TEACHER:
             journal_access = JournalEntry.objects.filter(
@@ -873,7 +880,10 @@ def content_asset_preview(request, asset_id):
     if hasattr(asset.file.storage, 'bucket_name'):
         # Let private storage serve the signed object directly instead of
         # downloading the entire drawing through the Django worker.
-        return redirect(asset.file.url)
+        response = redirect(asset.file.url)
+        response['Cache-Control'] = 'private, max-age=300'
+        response['Vary'] = 'Cookie'
+        return response
     try:
         response = FileResponse(asset.file.open("rb"), content_type=asset.mime_type)
     except FileNotFoundError:
@@ -1936,7 +1946,8 @@ def student_practice_lesson(request, class_id, lesson_id):
                     }}
                 progress.completed_slide_ids = sorted(set(progress.completed_slide_ids) | {slide_id})
                 progress.save(update_fields=['completed_slide_ids', 'activity_evidence', 'updated_at'])
-                _student_package_progress_data(profile)
+                # Package totals and badge awards are refreshed by the summary
+                # endpoint; do not scan every package on each slide save.
     else:
         progress = LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson=lesson).first()
     return JsonResponse(_lesson_data(lesson) | {'progress': _practice_progress_data(lesson, progress)})
@@ -2665,21 +2676,25 @@ def session_slide_exposure(request, session_id, slide_id):
             done = locked.slide_exposures.filter(completed_at__isnull=False).values('slide_id').distinct().count()
             locked.completion_percentage = round(done * 100 / total, 2) if total else 0
             locked.save(update_fields=['completion_percentage'])
-            _student_package_progress_data(profile)
+            # The progress-summary endpoint derives totals/badges from these
+            # persisted exposures, without blocking every Next click on a scan.
         return JsonResponse({'status': 'completed', 'completed_steps': done, 'step_total': total})
-    active = session.slide_exposures.filter(exited_at__isnull=True).first()
-    if action == "exit":
-        if active and active.slide_id == slide.pk:
-            active.exited_at = now
-            active.save(update_fields=["exited_at"])
-        return JsonResponse({"status": "closed", "exited_at": now})
-    if action != "enter":
+    if action not in ("enter", "exit"):
         return JsonResponse({"detail": "action must be enter, exit, complete, or answer."}, status=400)
-    if session.ended_at is not None:
-        return JsonResponse({"detail": "The session has already ended."}, status=409)
-    if active and active.slide_id == slide.pk:
-        return JsonResponse({"id": str(active.pk), "entered_at": active.entered_at, "status": "active"})
     with transaction.atomic():
+        # Serialize slide transitions per session. Read the active exposure only
+        # after locking: overlapping enter requests must reuse the same row.
+        session = LearningSession.objects.select_for_update().get(pk=session.pk)
+        active = session.slide_exposures.filter(exited_at__isnull=True).first()
+        if action == "exit":
+            if active and active.slide_id == slide.pk:
+                active.exited_at = now
+                active.save(update_fields=["exited_at"])
+            return JsonResponse({"status": "closed", "exited_at": now})
+        if session.ended_at is not None:
+            return JsonResponse({"detail": "The session has already ended."}, status=409)
+        if active and active.slide_id == slide.pk:
+            return JsonResponse({"id": str(active.pk), "entered_at": active.entered_at, "status": "active"})
         session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=now)
         exposure = SessionSlideExposure.objects.create(session=session, slide=slide, entered_at=now)
     return JsonResponse({"id": str(exposure.pk), "entered_at": exposure.entered_at, "status": "active"}, status=201)

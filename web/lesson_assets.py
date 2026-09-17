@@ -5,6 +5,30 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 
+SHARED_ICONS = {
+    name + '.png': '/assets/pre-vocational/common/' + name + '.png'
+    for name in ('capability', 'opportunity', 'activity', 'not-sure-yet')
+}
+
+def shared_icon_urls():
+    """Resolve stable private-storage previews at sync time, not import time."""
+    from .models import Asset
+    return {SHARED_ICONS[asset.original_name]: f'/api/content/assets/{asset.pk}/preview/'
+            for asset in Asset.objects.filter(original_name__in=SHARED_ICONS,
+                storage_path__startswith='lesson-icons/', archived_at__isnull=True,
+                status=Asset.Status.VALIDATED).order_by('pk')}
+
+def attach_shared_icons(configuration, urls):
+    if isinstance(configuration, list):
+        for item in configuration:
+            attach_shared_icons(item, urls)
+    elif isinstance(configuration, dict):
+        for key, value in list(configuration.items()):
+            if key in ('image_url', 'reveal_image') and isinstance(value, str) and value in urls:
+                configuration[key] = urls[value]
+            elif isinstance(value, (dict, list)):
+                attach_shared_icons(value, urls)
+
 def _key(text):
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 

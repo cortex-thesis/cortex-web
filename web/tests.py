@@ -10,6 +10,28 @@ from .models import Activity, AuditLog, BaselineEpoch, BaselineRecording, Consen
 
 
 class WorkflowTests(TestCase):
+    def test_nested_lesson_asset_preview_allows_only_approved_references(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        from .models import Asset
+        asset = Asset.objects.create(file='lesson-icons/test.png', original_name='test.png', mime_type='image/png', size_bytes=10, uploaded_by=self.admin)
+        url = f'/api/content/assets/{asset.pk}/preview/'
+        lesson = Lesson.objects.create(package=CurriculumPackage.objects.first(), title='Nested image', created_by=self.admin, status=Lesson.Status.DRAFT)
+        activity = Activity.objects.create(type=Activity.ActivityType.IMAGE, title='Nested image', configuration={'steps': [{'image_url': url}]})
+        Slide.objects.create(lesson=lesson, activity=activity, position=0, title='Nested image')
+        self._login(self.student)
+        asset.file.storage = SimpleNamespace(bucket_name='private-content', url=lambda name: 'https://storage.example.test/signed-image')
+        with patch('web.views.get_object_or_404', return_value=asset):
+            self.assertEqual(self.client.get(url).status_code, 403)
+            lesson.status = Lesson.Status.APPROVED
+            lesson.save(update_fields=['status'])
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response['Cache-Control'], 'private, max-age=300')
+            activity.configuration = {'steps': [{'image_url': f'/api/content/assets/{asset.pk}0/preview/'}]}
+            activity.save(update_fields=['configuration'])
+            self.assertEqual(self.client.get(url).status_code, 403)
+
     def setUp(self):
         self.teacher = self._account("teacher", "Teacher", Profile.Role.TEACHER)
         self.admin = self._account("admin", "Administrator", Profile.Role.ADMIN)
@@ -213,7 +235,16 @@ class WorkflowTests(TestCase):
 
         entered = self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "enter"}), content_type="application/json")
         self.assertEqual(entered.status_code, 201)
+        repeated = self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "enter"}), content_type="application/json")
+        self.assertEqual(repeated.status_code, 200)
+        self.assertEqual(repeated.json()["id"], entered.json()["id"])
         self.assertEqual(SessionSlideExposure.objects.filter(session=session, exited_at__isnull=True).count(), 1)
+        from unittest.mock import patch
+        with patch('web.views._student_package_progress_data') as summary:
+            saved = self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "complete"}), content_type="application/json")
+            self.assertEqual(saved.status_code, 200)
+            summary.assert_not_called()
+        self.assertTrue(SessionSlideExposure.objects.filter(session=session, completed_at__isnull=False).exists())
         self.assertEqual(self.client.post(f"/api/sessions/{session.pk}/end/").status_code, 200)
         self.assertFalse(SessionSlideExposure.objects.filter(session=session, exited_at__isnull=True).exists())
 

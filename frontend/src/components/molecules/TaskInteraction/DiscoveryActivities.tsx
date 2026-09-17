@@ -46,7 +46,7 @@ export function AudioNarration({ script }: { script: string }) {
 }
 
 function Picture({ item }: { item: TaskItem }) {
-  return item.imageUrl ? <img src={item.imageUrl} alt={item.altText ?? item.label} /> : <BookOpen className={styles.fallback} aria-hidden="true" />
+  return item.imageUrl ? <img src={item.imageUrl} alt={item.altText ?? item.label} /> : item.id === 'unsure' ? <span className={styles.neutralPlaceholder} aria-hidden="true">?</span> : <BookOpen className={styles.fallback} aria-hidden="true" />
 }
 
 export function DiscussionCards({ task, quiet, narrowed }: Props) {

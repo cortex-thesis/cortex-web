@@ -13,6 +13,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--owner", help="Username whose profile owns newly created lessons.")
+        parser.add_argument("--preserve-history", action="store_true", help="Retain replaced slides as optional review instead of deleting historical records.")
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -85,7 +86,13 @@ class Command(BaseCommand):
                     slide.save(update_fields=["title", "position"])
             obsolete_slides = [slide for slide in existing_slides if slide.pk not in used_slide_ids]
             obsolete_activity_ids = [slide.activity_id for slide in obsolete_slides]
-            if obsolete_slides:
+            if obsolete_slides and options.get('preserve_history'):
+                for index, slide in enumerate(obsolete_slides, start=len(definition['slides'])):
+                    slide.position = index
+                    slide.save(update_fields=['position'])
+                    slide.activity.configuration = {**slide.activity.configuration, 'optional_review': True}
+                    slide.activity.save(update_fields=['configuration'])
+            elif obsolete_slides:
                 Slide.objects.filter(pk__in=[slide.pk for slide in obsolete_slides]).delete()
                 Activity.objects.filter(pk__in=obsolete_activity_ids, slide__isnull=True).delete()
             self.stdout.write(f'{definition["lesson_id"]}: {lesson.title} ({len(definition["slides"])} screens)')

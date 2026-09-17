@@ -61,6 +61,7 @@ function nodes(tree) {
   return [tree, ...nodes(tree.props?.children)]
 }
 function text(tree) {
+  if (tree?.props?.['aria-hidden'] === true) return ''
   if (Array.isArray(tree)) return tree.map(text).join('')
   if (typeof tree === 'string' || typeof tree === 'number') return String(tree)
   return tree?.props ? text(tree.props.children) : ''
@@ -79,6 +80,33 @@ test('word selection supports forward/reverse horizontal and vertical endpoints'
   assert.equal(logic.wordAtEndpoints(targets, [], [1,4], [3,4])?.word, 'DRY')
   assert.equal(logic.wordAtEndpoints(targets, ['SOAP'], [0,0], [0,3]), undefined)
   assert.equal(logic.wordAtEndpoints(targets, [], [0,0], [2,2]), undefined)
+})
+test('word hunt marks a word found immediately and shows its meaning question in the sidebar', () => {
+  const run = harness('WordSearch', {
+    grid: [['S', 'T', 'O', 'P']],
+    targets: [{ word: 'STOP', displayLabel: 'STOP', cells: [[0, 0], [0, 1], [0, 2], [0, 3]], revealImage: '/stop.png',
+      followUpQuestion: { question: 'What does this sign tell you?', choices: ['Stop before proceeding', 'Keep going'], answer: 'Stop before proceeding' } }],
+  })
+  for (const cell of ['0,0', '0,3']) nodes(run.render()).find(node => node.props?.['data-cell'] === cell).props.onClick()
+  let tree = run.render()
+  assert.match(text(tree), /1 of 1 found/)
+  assert.match(text(tree), /Found · answer next/)
+  assert.equal(nodes(tree).filter(node => node.props?.['data-cell'] && node.props.className.includes('found')).length, 4)
+  const sidebar = nodes(tree).find(node => node.props?.['aria-label'] === 'Words to find')
+  assert.ok(nodes(sidebar).some(node => node.type === 'section' && node.props.className === 'followUp'))
+  assert.equal(run.answers.length, 0, 'Finding the word does not bypass the meaning question')
+  click(run, 'Keep going')
+  assert.equal(run.answers.length, 0)
+  assert.match(text(run.render()), /1 of 1 found/)
+  click(run, 'Stop before proceeding')
+  assert.equal(run.answers.length, 1)
+  assert.deepEqual(run.answers[0].value.found, ['STOP'])
+  assert.deepEqual(run.answers[0].value.follow_ups, { STOP: 'Stop before proceeding' })
+  assert.ok(!nodes(run.render()).some(node => node.type === 'section' && node.props.className === 'followUp'))
+  click(run, 'Reset')
+  tree = run.render()
+  assert.match(text(tree), /0 of 1 found/)
+  assert.equal(nodes(tree).filter(node => node.props?.['data-cell'] && node.props.className.includes('found')).length, 0)
 })
 test('Find It accepts appropriate subsets without allowing distractors or duplicates', () => {
   assert.equal(logic.validObjectSelection(['rice', 'water'], ['rice', 'egg', 'water'], true, 2), true)
@@ -134,6 +162,18 @@ test('picture self-reflections save neutral selections while scored questions re
   click(run, 'Wrong choice'); click(run, 'Check my choices')
   assert.equal(run.answers.at(-1).correct, false)
   assert.ok(nodes(run.render()).some(node => node.type === 'button' && node.props.className.includes('incorrect')))
+  const sort = harness('', {taskTemplate:'sort_groups',items:[{id:'tailor',label:'Alter clothes'},{id:'draw',label:'Draw for fun'}],categories:[{id:'work',label:'Work'},{id:'free',label:'Free time'}],sortAnswers:{tailor:'work',draw:'free'}}, module.default)
+  const layout = nodes(sort.render()).find(node => node.props?.className === 'sortLayout')
+  assert.ok(nodes(layout).some(node => node.props?.['aria-label'] === 'Drop zones'))
+  assert.match(text(sort.render()), /Drag cards into a group/)
+  click(sort, 'Alter clothes')
+  assert.match(text(sort.render()), /Selected: Alter clothes/)
+  click(sort, 'WorkDrop here')
+  assert.equal(sort.answers.length, 0)
+  nodes(sort.render()).find(node => node.type === 'button' && text(node) === 'Draw for fun').props.onDragStart()
+  nodes(sort.render()).find(node => node.type === 'button' && text(node) === 'Free timeDrop here').props.onDrop()
+  assert.equal(sort.answers.at(-1).correct, true)
+  assert.deepEqual(sort.answers.at(-1).value, {tailor:'work',draw:'free'})
 })
 
 test('Discovery Board permits overlap, not sure, neutral save and restored self-report', () => {
@@ -186,6 +226,10 @@ test('flip cards use balanced three-column rows and two columns on small screens
   const css = await readFile(new URL('../src/components/molecules/TaskInteraction/MiniGames.module.css', import.meta.url), 'utf8')
   assert.match(css, /\.flipGrid\s*\{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/)
   assert.match(css, /@media \(max-width: 600px\)\s*\{\s*\.flipGrid\s*\{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/)
+  // Both faces contribute intrinsic height, so wrapped labels cannot spill out.
+  assert.match(css, /\.flipInner\s*\{[^}]*display: grid/)
+  assert.match(css, /\.flipFace\s*\{[^}]*grid-area: 1 \/ 1/)
+  assert.doesNotMatch(css, /\.flipFace\s*\{[^}]*position: absolute/)
 })
 
 test('Find It handler feedback, incorrect selections, reset and completion', () => {

@@ -1,7 +1,15 @@
 .control { min-height: 36px; margin-left: auto; display: inline-flex; align-items: center; gap: 7px; padding: 4px 5px 4px 11px; border: 1px solid; border-radius: var(--radius-full); font: var(--font-weight-semibold) 12px/1 var(--font-family); }
 .focus { color: #44389d; border-color: #c9c2ee; background: #eeebff; }
 .relax { color: #286451; border-color: #b9ddcf; background: #e1f5ee; }
-.control button { min-width: 60px; height: 28px; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 20px; background: currentColor; color: white; cursor: pointer; }
-.control button:disabled { opacity: .48; cursor: default; }
-.control button svg { color: white; }
+.control button { min-width: 72px; min-height: 32px; padding: 5px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid transparent; border-radius: 20px; background: #44389d; color: #fff; font: inherit; cursor: pointer; }
+.relax button { background: #286451; }
+.control button:disabled { background: #e5e1f3; border-color: #c9c2ee; color: #51496c; cursor: default; }
+.relax button:disabled { background: #d3e8df; border-color: #a7cdbd; color: #285c49; }
+.control button svg { color: inherit; }
 .control button:focus-visible { outline: 3px solid var(--color-interface-blue); outline-offset: 2px; }
+.volume { display: inline-flex; align-items: center; gap: 6px; padding: 0 7px; }
+.volume input { width: 88px; min-height: 28px; margin: 0; accent-color: #44389d; cursor: pointer; }
+.relax .volume input { accent-color: #286451; }
+.volume span { min-width: 32px; font-variant-numeric: tabular-nums; }
+.volume input:focus-visible { outline: 2px solid var(--color-interface-blue); outline-offset: 2px; }
+@media (max-width: 480px) { .control { gap: 5px; flex-wrap: wrap; max-width: 100%; } .volume input { width: 76px; } }
