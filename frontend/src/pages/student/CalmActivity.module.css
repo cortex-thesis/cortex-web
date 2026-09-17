@@ -3,6 +3,12 @@
 .workspace { width: min(100%, 560px); min-height: 190px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px; }
 .choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 .choices button { min-width: 64px; }
+.groundingForm { width: 100%; display: flex; flex-direction: column; gap: 12px; text-align: left; }
+.groundingForm label { font-weight: 600; }
+.groundingForm textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 88px; padding: 12px; border: 1px solid #b7c8bb; border-radius: 12px; background: #fffdf9; color: #40584b; font: inherit; line-height: 1.5; }
+.groundingForm textarea:focus-visible { outline: 3px solid #8970bd; outline-offset: 3px; }
+.groundingForm small { color: #5b6a5e; }
+.groundingForm .choices { justify-content: flex-start; }
 .scene { width: min(100%, 360px); max-height: 150px; }
 .track { width: min(100%, 320px); height: 70px; position: relative; }
 .circle { position: absolute; top: 15px; left: 0; width: 40px; height: 40px; border-radius: 50%; background: #8fac9e; animation: drift 12s ease-in-out infinite alternate; }

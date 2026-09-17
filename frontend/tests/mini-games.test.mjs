@@ -24,7 +24,7 @@ let active
 globalThis.__miniGameHooks = {
   useState(initial) {
     const runtime = active, index = runtime.index++
-    if (!(index in runtime.slots)) runtime.slots[index] = initial
+    if (!(index in runtime.slots)) runtime.slots[index] = typeof initial === 'function' ? initial() : initial
     return [runtime.slots[index], value => { runtime.slots[index] = typeof value === 'function' ? value(runtime.slots[index]) : value }]
   },
   useRef(initial) {
@@ -40,12 +40,19 @@ const interactive = await load(source
   .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => undefined')
   .replace("import { validObjectSelection, wordAtEndpoints } from '../../../lib/miniGameLogic'", logicSource)
   .replace("import styles from './MiniGames.module.css'", 'const styles = new Proxy({}, { get: (_, key) => String(key) })'))
-function harness(name, task) {
+const discoverySource = await readFile(new URL('../src/components/molecules/TaskInteraction/DiscoveryActivities.tsx', import.meta.url), 'utf8')
+const discovery = await load(discoverySource
+  .replace("import { useEffect, useRef, useState } from 'react'", 'const {useEffect,useRef,useState} = globalThis.__miniGameHooks')
+  .replace("import { BookOpen, Pause, Volume2, RotateCcw } from 'lucide-react'", 'const BookOpen = () => null, Pause = BookOpen, Volume2 = BookOpen, RotateCcw = BookOpen')
+  .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => undefined')
+  .replace("import { AdaptiveLessonText } from '../TaskCard/FocusSupport'", 'const AdaptiveLessonText = ({text}) => text')
+  .replace("import styles from './DiscoveryActivities.module.css'", 'const styles = new Proxy({}, { get: (_, key) => String(key) })'))
+function harness(name, task, component = interactive[name]) {
   const runtime = { slots: [], index: 0 }, answers = []
   let changed = 0
   return {
     answers, get changed() { return changed },
-    render() { active = runtime; runtime.index = 0; return interactive[name]({ task, onAnswered: (correct, value) => answers.push({ correct, value: JSON.parse(value) }), onChanged: () => changed++ }) },
+    render() { active = runtime; runtime.index = 0; return component({ task, onAnswered: (correct, value) => { let parsed; try { parsed = JSON.parse(value) } catch { parsed = value }; answers.push({ correct, value: parsed }) }, onChanged: () => changed++ }) },
   }
 }
 function nodes(tree) {
@@ -101,6 +108,78 @@ test('word hunt has pointer and keyboard button paths and calm responsive styles
   assert.match(css, /focus-visible/)
   assert.match(css, /max-width: 380px/)
   assert.doesNotMatch(css, /animation:/)
+})
+
+test('picture self-reflections save neutral selections while scored questions retain feedback', async () => {
+  const taskSource = await readFile(new URL('../src/components/molecules/TaskInteraction/TaskInteraction.tsx', import.meta.url), 'utf8')
+  const module = await load(taskSource
+    .replace("import { useMemo, useRef, useState } from 'react'", 'const {useRef,useState} = globalThis.__miniGameHooks; const useMemo = factory => factory()')
+    .replace(/import .* from 'lucide-react'/, 'const GripVertical = () => null, ImageIcon = GripVertical, Puzzle = GripVertical, RotateCcw = GripVertical')
+    .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => undefined')
+    .replace("import styles from './TaskInteraction.module.css'", 'const styles = new Proxy({}, { get: (_, key) => String(key) })')
+    .replace("import CreativeTask from './CreativeTask'", 'const CreativeTask = () => null')
+    .replace("import ToothBrushingTask from './ToothBrushingTask'", 'const ToothBrushingTask = () => null')
+    .replace("import { DiscoveryBoard, ScenarioClassifier } from './DiscoveryActivities'", 'const DiscoveryBoard = () => null, ScenarioClassifier = DiscoveryBoard')
+    .replace(/import .* from '.\/MiniGames'/, 'const AudioSequence = () => null, FindIt = AudioSequence, FlipMatching = AudioSequence, Shopping = AudioSequence, WordSearch = AudioSequence'))
+  for (const options of [{correctItemIds:[]}, {scored:false,correctItemIds:['other']}]) {
+    const run = harness('', {taskTemplate:'picture_choice',selectionMode:'multiple',items:[{id:'crafts',label:'Make crafts'}],...options}, module.default)
+    click(run, 'Make crafts'); click(run, 'Save choices')
+    assert.equal(run.answers.at(-1).correct, true)
+    const card = nodes(run.render()).find(node => node.type === 'button' && text(node) === 'Make crafts')
+    assert.match(card.props.className, /selected/)
+    assert.doesNotMatch(card.props.className, /correct|incorrect/)
+    assert.doesNotMatch(text(run.render()), /↻/)
+  }
+  const run = harness('', {taskTemplate:'picture_choice',selectionMode:'multiple',items:[{id:'wrong',label:'Wrong choice'}],correctItemIds:['right']}, module.default)
+  click(run, 'Wrong choice'); click(run, 'Check my choices')
+  assert.equal(run.answers.at(-1).correct, false)
+  assert.ok(nodes(run.render()).some(node => node.type === 'button' && node.props.className.includes('incorrect')))
+})
+
+test('Discovery Board permits overlap, not sure, neutral save and restored self-report', () => {
+  const task = { items:[{id:'garden',label:'Gardening'},{id:'unsure',label:'Not sure yet'}], categories:[{id:'enjoy',label:'I enjoy'},{id:'can',label:'I can'},{id:'explore',label:'I explore'}], selfReportFields:{enjoy:'selfReportedInterests',can:'selfReportedCapabilities',explore:'activitiesToExplore'} }
+  const run = harness('', task, discovery.DiscoveryBoard)
+  const choose = label => nodes(run.render()).find(node => node.type === 'button' && text(node).startsWith(label)).props.onClick()
+  choose('Gardening'); choose('I can'); choose('Not sure yet'); choose('I explore'); choose('Gardening'); click(run, 'Save reflection')
+  assert.equal(run.answers.at(-1).correct, true)
+  const value = run.answers.at(-1).value
+  assert.deepEqual(value.fields.selfReportedInterests, ['garden'])
+  assert.deepEqual(value.fields.activitiesToExplore, ['garden'])
+  assert.deepEqual(value.fields.selfReportedCapabilities, ['unsure'])
+  assert.equal(value.evidence_type, 'self_report')
+  assert.doesNotMatch(text(run.render()), /Correct|talented|career/)
+  const restored = harness('', {...task,initialResponse:JSON.stringify(value)}, discovery.DiscoveryBoard)
+  assert.match(text(restored.render()), /Gardening/)
+  assert.ok(nodes(restored.render()).some(node => node.type === 'button' && text(node).startsWith('Gardening') && node.props['aria-pressed']))
+})
+
+test('scenario classifier retries current clue and validates full completion', () => {
+  const run = harness('', {scenarios:[{clue:'Enjoys plants',choices:['Interest','Skill'],answer:'Interest',feedback:'Enjoyment'}, {clue:'Learned to water plants',choices:['Interest','Skill'],answer:'Skill',feedback:'Learned'}]}, discovery.ScenarioClassifier)
+  click(run, 'Skill'); assert.equal(run.answers.at(-1).correct, false)
+  click(run, 'Try this clue again'); click(run, 'Interest'); click(run, 'Next clue'); click(run, 'Skill')
+  assert.equal(run.answers.at(-1).correct, true)
+  assert.deepEqual(run.answers.at(-1).value.answers, ['Interest','Skill'])
+  nodes(run.render()).find(node => node.props?.['aria-label'] === 'Reset clues').props.onClick(); assert.match(text(run.render()), /Clue 1 of 2/)
+})
+
+test('narration supports requested play pause resume and replay without autoplay', () => {
+  let plays = 0, pauses = 0, resumes = 0
+  globalThis.window = {dispatchEvent(){},speechSynthesis:{cancel(){},pause(){pauses++},resume(){resumes++},speak(){plays++}}}
+  globalThis.SpeechSynthesisUtterance = class {constructor(script){this.text=script}}
+  const run = harness('', {script:'A skill develops with practice.'}, props => discovery.AudioNarration({script:props.task.script}))
+  run.render(); assert.equal(plays, 0)
+  click(run, 'Listen'); assert.equal(plays, 1)
+  click(run, 'Pause'); assert.equal(pauses, 1)
+  click(run, 'Resume'); assert.equal(resumes, 1)
+  click(run, 'Replay'); assert.equal(plays, 2)
+  delete globalThis.window; delete globalThis.SpeechSynthesisUtterance
+})
+
+test('quiet discussion shows one card with access to all concepts', () => {
+  const run = harness('', {task:{title:'Concepts',steps:[{id:'interest',title:'Interest',description:'Enjoyment'},{id:'skill',title:'Skill',description:'Learning'}]},quiet:true}, props => discovery.DiscussionCards(props.task))
+  assert.ok(nodes(run.render()).some(node => node.props?.text === 'Enjoyment'))
+  assert.ok(!nodes(run.render()).some(node => node.props?.text === 'Learning'))
+  click(run, 'Next card'); assert.ok(nodes(run.render()).some(node => node.props?.text === 'Learning'))
 })
 
 test('flip cards use balanced three-column rows and two columns on small screens', async () => {

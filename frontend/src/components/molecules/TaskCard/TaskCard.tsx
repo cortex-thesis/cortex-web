@@ -6,6 +6,7 @@ import AnswerChoice from '../AnswerChoice'
 import { ProgressBar } from '../../atoms'
 import ActivityTemplate from '../ActivityTemplate'
 import TaskInteraction from '../TaskInteraction'
+import { AudioNarration, DiscussionCards } from '../TaskInteraction/DiscoveryActivities'
 import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../../constants/activityTemplates'
 import { playLessonSound } from '../../../lib/lessonSounds'
 import styles from './TaskCard.module.css'
@@ -72,7 +73,8 @@ function TaskCard({
       : { question: 'What is the goal of this step?', choices: [task.title], answer: task.title }
   function revealCue() { setMicroDone(true); playLessonSound('nudge') }
   function handleInteraction(correct: boolean, response: string) {
-    if (deliveryStrategy !== 'sensory_cooldown') playLessonSound(correct ? 'correct' : 'incorrect')
+    window.dispatchEvent(new Event('cortex-stop-narration'))
+    if (task.evidenceRole !== 'self_report' && deliveryStrategy !== 'sensory_cooldown') playLessonSound(correct ? 'correct' : 'incorrect')
     onAnswered?.(correct, response)
   }
 
@@ -99,6 +101,7 @@ function TaskCard({
   const template = task.template ?? 'multiple_choice'
   const isKnowledgeCheck = template === 'multiple_choice'
   const hasTaskInteraction = Boolean(task.taskTemplate)
+  const headingInstruction = (hasTaskInteraction || isKnowledgeCheck) ? task.question : ''
   const templateLabel = task.taskTemplate
     ? (TASK_TEMPLATE_BY_ID[task.taskTemplate]?.label ?? 'Interactive activity')
     : (ACTIVITY_TEMPLATE_BY_ID[template]?.label ?? 'Learning activity')
@@ -168,11 +171,13 @@ function TaskCard({
       />}
 
       <div className={styles.contentHeading}>
-        <div>{templateLabel.toLowerCase() !== task.title.toLowerCase() && <span className={styles.typeLabel}>{templateLabel}</span>}<h2><AdaptiveLessonText text={task.title} /></h2></div>
-        <span className={styles.contentHint}><AdaptiveLessonText text={task.contentDescription} /></span>
+        <div className={styles.headingGroup}>{templateLabel.toLowerCase() !== task.title.toLowerCase() && <span className={styles.typeLabel}>{templateLabel}</span>}<div className={styles.titleRow}><h2><AdaptiveLessonText text={task.title} /></h2>{headingInstruction && <p className={styles.inlineInstruction}><AdaptiveLessonText text={headingInstruction} /></p>}</div></div>
+        {!headingInstruction && task.contentDescription && <span className={styles.contentHint}><AdaptiveLessonText text={task.contentDescription} /></span>}
       </div>
 
-      {!hasTaskInteraction && (task.template || task.mediaUrl) ? <ActivityTemplate task={task} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
+      {task.narrationScript && <AudioNarration script={task.narrationScript} />}
+      {task.discussion ? <DiscussionCards task={task} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement' || focusTemplate === 'active'} /> : !hasTaskInteraction && (task.template || task.mediaUrl) ? <ActivityTemplate task={task} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
+      {task.videoOptional && <p>Video unavailable? You can continue and reflect on the lesson examples instead.</p>}
 
       {task.imageUrl && (
         <div className={`${styles.imageWrap} ${task.priceTag ? styles.pricedItem : ''}`}>
@@ -183,12 +188,10 @@ function TaskCard({
 
       {hasTaskInteraction ? (
         <>
-          <p className={styles.question}><AdaptiveLessonText text={task.question} /></p>
-          <TaskInteraction task={task} onAnswered={handleInteraction} onChanged={onChanged} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement'} />
+          <TaskInteraction task={task} onAnswered={handleInteraction} onChanged={onChanged} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement' || focusTemplate === 'active'} />
         </>
       ) : isKnowledgeCheck ? (
         <>
-          <p className={styles.question}><AdaptiveLessonText text={task.question} /></p>
           <div className={styles.choices}>
             {task.choices.map((choice) => (
               <AnswerChoice key={choice} label={choice} answerState={getAnswerState(choice)} disabled={revealed && choice !== task.answer && choice !== selected} onClick={() => handleSelect(choice)} />

@@ -4,6 +4,7 @@
 .waveformPaused span { animation-play-state: paused !important; }
 .video { width: 100%; min-width: 0; height: var(--activity-video-height, min(40dvh, 320px)); border-radius: var(--radius-md); background: #151326; object-fit: contain; }
 .youtubePanel { width: 100%; min-height: 0; align-self: center; flex-direction: column; align-items: stretch; padding: 0; border: 0; background: transparent; }
+.youtubeHost { width: 100%; aspect-ratio: 16 / 9; }
 .youtubePanel .video { width: 100%; height: auto; min-height: 0; aspect-ratio: 16 / 9; border: 0; }
 .panel audio { width: 100%; min-width: 0; }
 .readingAudio { width: 100%; min-height: 42px; flex-shrink: 0; }

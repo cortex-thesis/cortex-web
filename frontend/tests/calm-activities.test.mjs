@@ -35,15 +35,29 @@ function harness(kind) {
   slots = []; effects = []
   return { render(paused = false) { cursor = 0; effects = []; return CalmActivity({ paused, nextActivity: () => kind }) } }
 }
-test('grounding completes three prompts and can rotate without losing completion on state changes', () => {
+test('typed grounding accepts personal observations and clears each prompt', () => {
   const run = harness(0)
   for (let step = 0; step < 3; step++) {
-    const button = nodes(run.render()).find(node => node.type === 'button' && node.props.children === 'I noticed them')
-    assert.ok(button); button.props.onClick()
+    assert.equal(nodes(run.render()).find(node => node.type === 'textarea').props.value, '')
+    assert.equal(nodes(run.render()).find(node => node.props.children === 'Next prompt').props.disabled, true)
+    nodes(run.render()).find(node => node.type === 'textarea').props.onChange({ target: { value: 'My own observation' } })
+    assert.equal(nodes(run.render(true)).find(node => node.type === 'textarea').props.disabled, true)
+    nodes(run.render(true)).find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
+    assert.equal(nodes(run.render()).find(node => node.type === 'textarea').props.value, 'My own observation')
+    nodes(run.render()).find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
   }
   const next = nodes(run.render()).find(node => node.props.children === 'Try another calm activity')
   assert.ok(next); next.props.onClick()
-  assert.ok(nodes(run.render()).find(node => node.props.children === 'I noticed them'))
+  assert.equal(nodes(run.render()).find(node => node.type === 'textarea').props.value, '')
+})
+
+test('grounding allows skipping and does not advance on whitespace', () => {
+  const run = harness(0)
+  nodes(run.render()).find(node => node.type === 'textarea').props.onChange({ target: { value: '   ' } })
+  nodes(run.render()).find(node => node.type === 'form').props.onSubmit({ preventDefault() {} })
+  assert.ok(nodes(run.render()).find(node => node.props.children === 'Find 3 things you can see.'))
+  for (let step = 0; step < 3; step++) nodes(run.render()).find(node => node.props.children === 'Skip this prompt').props.onClick()
+  assert.ok(nodes(run.render()).find(node => node.props.children === 'Try another calm activity'))
 })
 test('matching requires the correct shape and paused activities disable interaction', () => {
   const run = harness(2)

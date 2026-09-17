@@ -62,7 +62,7 @@
 @media (max-width: 480px) { .monitorBands { grid-template-columns: repeat(3, 1fr); } }
 .monitorDetails { margin-bottom: 10px; font-size: 12px; color: #62596f; }
 .monitorDetails summary { cursor: pointer; padding: 6px 0; }
-.stateChooser { position: fixed; bottom: 12px; left: 12px; z-index: 100; width: 220px; box-sizing: border-box; padding: 12px; border: 1px solid #c8d3cc; border-radius: 12px; background: #f4f7f2; color: #40584b; box-shadow: 0 4px 18px #34463812; font-size: 12px; }
+.stateChooser { width: min(100%, 1000px); margin: 16px auto 0; box-sizing: border-box; padding: 12px; border: 1px solid #c8d3cc; border-radius: 12px; background: #f4f7f2; color: #40584b; font-size: 12px; }
 .stateChooser summary { cursor: pointer; }
 .stateChooser label, .stateChooser small { display: block; margin-top: 10px; }
 .stateChooser select, .stateChooser button { width: 100%; margin-top: 6px; padding: 8px; border: 1px solid #bdcbbf; border-radius: 6px; background: #fff; color: inherit; font: inherit; }
@@ -81,7 +81,7 @@
 @keyframes triviaArrive { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .trivia p { animation: none; } }
 
-.returnTransition { min-height: 0; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; color: #40584b; text-align: center; animation: returnArrive 1.8s ease-in-out both; }
+.returnTransition { min-height: 280px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; color: #40584b; text-align: center; animation: returnArrive .2s ease-in-out both; }
 .returnTransition h2 { font-size: clamp(22px, 3vw, 28px); font-weight: 500; }
 .focusArrival { animation: returnArrive 1.4s ease-in-out both; }
 .progressRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 24px; }
@@ -89,7 +89,7 @@
 .holdMeter { display: flex; align-items: center; gap: 6px; color: #776781; font-size: 11px; animation: returnArrive 1.6s ease both; }
 .holdMeter progress { width: 110px; height: 7px; accent-color: #9b83b6; }
 .pauseAnchor { padding: 3px 6px; border: 1px solid #d9c3a4; border-radius: 6px; background: #fff5e6; color: #685342; font: inherit; font-size: 11px; cursor: pointer; animation: returnArrive 1.6s ease both; }
-.modeStage { display: flex; flex-direction: column; flex: 1; min-height: 0; opacity: 1; transition: opacity 1.4s ease-in-out; }
+.modeStage { display: flex; flex-direction: column; flex: 1; min-height: 0; opacity: 1; transition: opacity .2s ease-in-out; }
 .modeLeaving { opacity: 0; pointer-events: none; transition-duration: .9s; }
 .modeStage > section { min-height: 0; }
 .player, .restPlayer { transition: background-color 1.8s ease, border-color 1.8s ease; }

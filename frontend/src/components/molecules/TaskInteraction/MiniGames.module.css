@@ -32,6 +32,9 @@
 .flipCard img { width: 100%; max-width: 105px; height: 95px; object-fit: contain; }
 .cardBack { font-size: 32px; color: var(--color-interface-purple); }
 .wordList { display: grid; gap: 8px; min-width: 140px; }
+.wordListHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.wordListHeader button { min-height: 44px; padding: 8px 12px; border: 1px solid #ddd7ee; border-radius: 10px; background: #fff; color: #534ab7; font: inherit; cursor: pointer; }
+.wordListHeader button:focus-visible { outline: 3px solid #8970bd; outline-offset: 3px; }
 .wordList > span { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 7px; }
 .wordList img { width: 44px; height: 44px; object-fit: contain; }
 .followUp { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--color-border); border-radius: 14px; }

@@ -30,6 +30,8 @@ export interface TaskTemplateDefinition {
 }
 
 export const TASK_TEMPLATES: TaskTemplateDefinition[] = [
+  { id: 'discovery_board', label: 'Discovery Board', response: 'Record overlapping personal choices', purpose: 'Unscored self-report reflection' },
+  { id: 'scenario_classifier', label: 'Scenario cards', response: 'Identify a concept from fictional clues', purpose: 'Concept knowledge only' },
   { id: 'word_search', label: 'Word Hunt', response: 'Find words in a letter grid', purpose: 'Supporting vocabulary practice' },
   { id: 'find_it', label: 'Find It', response: 'Choose objects in a workspace', purpose: 'Functional object selection' },
   { id: 'audio_sequence', label: 'Listen and Tap', response: 'Follow a spoken sequence', purpose: 'Spoken-direction practice with prompts' },

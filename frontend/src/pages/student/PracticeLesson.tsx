@@ -11,7 +11,7 @@ import playerStyles from './PracticeLesson.module.css'
 import eegStyles from './LiveEEG.module.css'
 
 interface Lesson {
-  progress: { completed_slide_ids: number[] }
+  progress: { completed_slide_ids: number[]; activity_evidence?: Record<string, {selected: string}> }
   id: number
   title: string
   package: Task['package']
@@ -19,6 +19,7 @@ interface Lesson {
 }
 
 const fieldNames: Record<string, string> = Object.fromEntries([
+  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
   'actionLabel', 'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode',
@@ -84,23 +85,25 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     question: '', choices: [], answer: '', ...configuration,
     imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
+    initialResponse: lesson.progress.activity_evidence?.[String(slide.id)]?.selected,
     index: index + 1, total: lesson.slides.length, contentType: slide.activity.type,
     }
   }) : []
   const task = tasks[position]
+  const videoSlide = Boolean(task && (task.contentType === 'video' || task.template === 'instructional_video'))
   const isActivity = Boolean(task && (task.taskTemplate || (task.template ?? 'multiple_choice') === 'multiple_choice'))
-  const requiresMedia = Boolean(task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
+  const requiresMedia = Boolean(!task?.videoOptional && task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
   const canAdvance = answered[position] || (!isActivity && !requiresMedia)
   const complete = Boolean(lesson?.slides.length && position >= lesson.slides.length)
-  return <PlayfulZoneTemplate><div className={`${styles.page} ${playerStyles.page}`}>
+  return <PlayfulZoneTemplate showNav={false}><div className={`${styles.page} ${playerStyles.page}`}>
     <header className={styles.header}>
       <button className={styles.backBtn} onClick={back} aria-label="Back to lessons"><ArrowLeft size={18} /></button>
-      <div><span className={styles.eyebrow}>Lesson practice</span><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1><p>Your lesson progress is saved as you continue. Practice stays separate from EEG session history.</p></div>
+      <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>
     </header>
-    <section className={playerStyles.player} aria-label="Lesson activities">
+    <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}>
-          <span style={{ width: `${completed.size / lesson.slides.length * 100}%` }} />
+          <span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length - 1) * 100)}%` }} />
         </div>
         <ol className={playerStyles.dots} aria-label="Activity progress">{lesson.slides.map((item, index) => <li key={item.id} aria-current={!complete && index === position ? 'step' : undefined} aria-label={`Activity ${index + 1}: ${!complete && index === position ? 'current' : completed.has(index) ? 'completed' : 'remaining'}`} className={`${playerStyles.dot} ${completed.has(index) ? playerStyles.done : ''} ${!complete && index === position ? playerStyles.current : ''}`}>
           {completed.has(index) ? <span aria-hidden="true" /> : <span />}
@@ -108,7 +111,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         <div className={eegStyles.progressRow}><span className={playerStyles.progressHint} title="Filled: completed · Ring: current">{complete ? 'All activities complete' : `Activity ${position + 1} of ${lesson.slides.length}`}</span></div>
       </div>}
       <div className={eegStyles.modeStage}>
-      <div className={playerStyles.stage}>
+      <div className={`${playerStyles.stage} ${videoSlide ? playerStyles.videoStage : ''}`}>
         {tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}>
             <TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onChanged={() => {
               setAnswered(previous => { const next = { ...previous }; delete next[index]; return next })
@@ -125,7 +128,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       {saveError && <p role="alert">{saveError}</p>}
       {task && <nav className={playerStyles.actions} aria-label="Activity navigation">
         <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || saving} onClick={() => { playLessonSound('transition'); setVisited((previous) => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
-        {isActivity && !['audio_sequence', 'memory_flip'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry((previous) => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered((previous) => { const next = { ...previous }; delete next[position]; return next }); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
+        {isActivity && !['audio_sequence', 'memory_flip', 'scenario_classifier'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry((previous) => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered((previous) => { const next = { ...previous }; delete next[position]; return next }); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
         <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || saving} onClick={() => { playLessonSound(position === lesson!.slides.length - 1 ? 'finished' : 'transition'); void advance() }}>{saving ? 'Saving progress…' : position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next activity'}<ArrowRight size={18} /></button>
       </nav>}
       </div>

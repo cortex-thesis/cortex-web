@@ -1,7 +1,7 @@
 .stage { container-type: size; }
 .content { width: min(100%, 900px); min-height: 100%; box-sizing: border-box; margin-inline: auto; padding: 8px; color: #435b54; text-align: center; display: flex; flex-direction: column; justify-content: center; }
 .content h1 { font-size: clamp(20px, 3vw, 28px); font-weight: 500; margin: 8px 0 16px; }
-.breathing { position: relative; justify-content: center; padding: 64px 16px 16px; border-radius: 20px; background: #fff5e6; color: #685342; }
+.breathing { position: relative; justify-content: center; padding: var(--space-4, 16px); background: transparent; color: #685342; }
 .breathing .orb { background: #edd6b7; }
 .breathing button { background: #f2e1c9; border-color: #d9c3a4; color: #685342; }
 .content p { line-height: 1.7; }
@@ -10,7 +10,7 @@
 .breath { animation: words 4s ease-in-out both; }
 .content button { border: 1px solid #b4ccc0; border-radius: 14px; padding: 14px 24px; background: #dbe9df; color: #355446; font: inherit; cursor: pointer; }
 .content button:focus-visible, .content input:focus-visible, .content textarea:focus-visible, .content select:focus-visible { outline: 3px solid #7b9b8c; outline-offset: 4px; }
-.activity { display: grid; gap: 10px; animation: arrive 1s ease both; }
+.activity { display: grid; gap: var(--space-4, 16px); }
 .activity > p { min-height: 24px; margin: 0; }
 .wordGame { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: center; gap: clamp(16px, 3vw, 36px); }
 .wordControls { display: grid; gap: 16px; min-width: 0; }
@@ -27,7 +27,7 @@
 .answerSlots button:disabled { opacity: 1; color: #8b9b90; }
 .groupQuestion { min-width: 0; margin: 0; padding: 12px; border: 1px solid #dbe4dc; border-radius: 12px; text-align: left; }
 .groupQuestion legend { padding-inline: 4px; line-height: 1.5; }
-.content .groupChoice { display: flex; align-items: center; gap: 10px; margin-top: 6px; padding: 8px; border: 1px solid #dbe4dc; border-radius: 10px; cursor: pointer; }
+.content .groupChoice { display: flex; align-items: center; gap: 10px; margin-top: 6px; padding: 8px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; }
 .groupChoice:has(input:checked) { background: #e5efe7; border-color: #7b9b8c; }
 .content .groupChoice input { width: 18px; height: 18px; margin: 0; accent-color: #52745f; }
 @keyframes words { 0%, 100% { opacity: .15; } 25%, 75% { opacity: 1; } }
@@ -38,11 +38,13 @@
 @media (max-width: 600px) { .wordGame { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 12px; } .pictures { gap: 6px; } .pictures svg { width: 38px; height: 38px; } .answerSlots, .letterBank { gap: 4px; } .answerSlots button, .letterBank button { min-height: 40px; padding: 4px; font-size: 16px; } .wordControls { gap: 10px; } }
 
 .actions { display: flex; justify-content: center; }
-.music { position: absolute; top: 12px; left: 12px; display: flex; }
+.music { display: flex; justify-content: center; margin-top: var(--space-5, 20px); }
 .music > div { margin-left: 0; }
 .music button { width: auto; min-height: 32px; padding: 6px 10px; border-radius: 20px; }
-.ready { animation: arrive 1.6s ease-in-out both; }
-.actions { animation: arrive 1.6s .5s ease-in-out both; }
+.continuation { min-height: 280px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--space-4, 16px); }
+.continuation h1, .continuation p { margin: 0; }
+.continuation h1:focus { outline: none; }
+.continuation .actions { margin-top: var(--space-4, 16px); }
 @media (prefers-reduced-motion: reduce) { .ready, .actions { animation: none; } }
 .success { display: grid; justify-items: center; align-content: center; gap: 18px; min-height: 250px; }
 .successMark { width: 112px; height: 112px; animation: successAppear .35s ease-out both; }
@@ -53,8 +55,8 @@
 @media (prefers-reduced-motion: reduce) { .successMark, .successMark path { animation: none; } }
 .still { animation: none; }
 
-.stage { animation: regulationArrive 1.4s ease-in-out both; }
-.intro { animation: arrive 1s ease both; }
+.stage { animation: regulationArrive .2s ease-in-out both; }
+.intro { animation: none; }
 .pattern, .order { display: grid; gap: 12px; width: min(100%, 520px); margin-inline: auto; }
 .order button[aria-pressed="true"] { background: #bdd9c7; border-color: #527866; }
 @keyframes regulationArrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

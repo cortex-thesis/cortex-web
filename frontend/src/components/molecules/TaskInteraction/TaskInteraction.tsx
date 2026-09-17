@@ -6,6 +6,7 @@ import styles from './TaskInteraction.module.css'
 import CreativeTask from './CreativeTask'
 import ToothBrushingTask from './ToothBrushingTask'
 import { AudioSequence, FindIt, FlipMatching, Shopping, WordSearch } from './MiniGames'
+import { DiscoveryBoard, ScenarioClassifier } from './DiscoveryActivities'
 
 interface TaskInteractionProps {
   task: Task
@@ -56,6 +57,8 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
   if (template === 'audio_sequence') return <AudioSequence task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} narrowed={narrowed} />
   if (template === 'shopping') return <Shopping task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} narrowed={narrowed} />
   if (template === 'memory_flip') return <FlipMatching task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} />
+  if (template === 'discovery_board') return <DiscoveryBoard task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} narrowed={narrowed} />
+  if (template === 'scenario_classifier') return <ScenarioClassifier task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} />
 
   if (template === 'hotspot_hunt' || template === 'trace_route' || template === 'pattern_builder') {
     return <CreativeTask task={task} onAnswered={onAnswered} />
@@ -87,10 +90,11 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
 
   if (template === 'picture_choice' || template === 'tap_target') {
     const multiple = task.selectionMode === 'multiple'
+    const reflection = task.scored === false || expected.length === 0
     function choosePicture(itemId: string) {
       if (!multiple) {
         setSelected([itemId])
-        finish(expected.includes(itemId), itemId)
+        finish(reflection || expected.includes(itemId), itemId)
         return
       }
       setSelected((current) => current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId])
@@ -99,12 +103,12 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
       <div className={styles.stack}>
         <div className={`${styles.pictureGrid} ${template === 'tap_target' ? styles.targetGrid : ''}`}>
           {items.map((item) => (
-            <button key={item.id} type="button" className={`${styles.pictureChoice} ${selected.includes(item.id) ? styles.selected : ''} ${result !== null && selected.includes(item.id) ? expected.includes(item.id) ? styles.correct : styles.incorrect : ''}`} aria-pressed={selected.includes(item.id)} disabled={result !== null} onClick={() => choosePicture(item.id)}>
-              <ItemVisual item={item} /><strong>{result !== null && selected.includes(item.id) ? expected.includes(item.id) ? ' ' : '↻ ' : ''}{item.label}</strong>
+            <button key={item.id} type="button" className={`${styles.pictureChoice} ${selected.includes(item.id) ? styles.selected : ''} ${!reflection && result !== null && selected.includes(item.id) ? expected.includes(item.id) ? styles.correct : styles.incorrect : ''}`} aria-pressed={selected.includes(item.id)} disabled={result !== null} onClick={() => choosePicture(item.id)}>
+              <ItemVisual item={item} /><strong>{!reflection && result !== null && selected.includes(item.id) && !expected.includes(item.id) ? '↻ ' : ''}{item.label}</strong>
             </button>
           ))}
         </div>
-        <div className={styles.actions}>{feedback}{multiple && <button type="button" className={styles.check} disabled={!selected.length || result !== null} onClick={() => finish(task.scored === false || expected.length === 0 || (selected.length === expected.length && selected.every((id) => expected.includes(id))), selected.join(','))}><span aria-hidden="true" /> {task.scored === false || expected.length === 0 ? 'Save choices' : 'Check my choices'}</button>}</div>
+        <div className={styles.actions}>{feedback}{multiple && <button type="button" className={styles.check} disabled={!selected.length || result !== null} onClick={() => finish(reflection || (selected.length === expected.length && selected.every((id) => expected.includes(id))), selected.join(','))}>{reflection ? 'Save choices' : 'Check my choices'}</button>}</div>
       </div>
     )
   }

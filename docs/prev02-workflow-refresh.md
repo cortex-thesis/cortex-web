@@ -1,0 +1,15 @@
+# PREV workflow refresh
+
+PREV-01 now delivers nine core screens: goal with picture, four-concept discussion, supplied video, three concept clues, short gardening story, Discovery Board, four knowledge clues, reflection and completion. Nine extra screens remain stored as optional review, excluded from serialized lesson sequences. Existing slide/activity IDs and saved evidence remain intact. Practice completion and newly ended EEG-session percentages count active screens only. Historical completed sessions are not recomputed. Previously complete students may encounter newly added content; previous answers are not erased.
+
+PREV-02 keeps its official competency and code. Nine screens: illustrated goal, brief goods/services discussion with optional browser narration, user-supplied video, picture/definition flip matching, livelihood/recreation sorting, three customer scenarios, unscored community reflection, word hunt and illustrated completion. Answer order is mixed independently of the answer keys. PREV-03 content is unchanged.
+
+Imported supplied RAR contents: community, baked goods, food processing and food product PNGs into the existing pre-vocational common folder; backpack, eraser, notebook and ruler PNGs into LIFE-01. Asset attachment reuses existing illustrations and changes LIFE-01 image slots only, not task rules or recorded answers.
+
+Category tabs now have a flat shaded/underlined appearance; object choices remain bordered picture cards. Sorting destinations use dashed blue styling and separate spacing. Reset clues uses a 44px icon control with an accessible label and tooltip. Incorrect clues retain local retry.
+
+Video `6fKVyeGdKxY` is supplied by the user; its contents could not be fetched for independent review. Expert suitability review and real-browser visual/video/audio checks remain outstanding. No changes to EEG thresholds, classifier behavior, databases/schema or teacher dashboard were required. Whole-project upstream lint issues remain as previously reported.
+
+Verification: 53 frontend tests, 36 targeted Django regressions plus two new compact-workflow tests, production build and targeted DiscoveryActivities lint passed. The live content sync confirmed nine serialized slides in each revised PREV lesson and preserved 11 practice records. LIFE-01 image-only attachment updated seven concrete slots with progress unchanged.
+
+Follow-up PREV-01 layout/assets: goal now uses one full-width column; Alex gardener, talent and skill supplied PNGs are attached. Activity 6 presents six choices per page in a balanced three-column grid (two on smaller screens), with browsing and saving controls above the choices. Activity 8 is a distinct single-choice next-step reflection, not another three-area board. The shared YouTube player owns its disposable iframe inside a stable React container, recreating it on Activity effect reactivation while preserving watch completion. A simulated lifecycle regression verifies hide/show after YouTube iframe destruction; real-browser playback remains to verify. All slide/activity IDs and saved practice evidence were retained by scoped sync.

@@ -5,6 +5,15 @@ import json
 def validate_game(config):
     template = config.get("task_template")
     try:
+        if template == "scenario_classifier":
+            scenarios = config["scenarios"]
+            if not scenarios or any(not row.get("clue") or len(row["choices"]) < 2 or len(set(row["choices"])) != len(row["choices"]) or row["answer"] not in row["choices"] or not row.get("feedback") for row in scenarios):
+                return "Scenario cards require clear clues, unique choices, valid keys and feedback."
+        if template == "discovery_board":
+            ids = {item["id"] for item in config["items"]}
+            categories = {item["id"] for item in config["categories"]}
+            if not ids or len(ids) != len(config["items"]) or not categories or len(categories) != len(config["categories"]) or set(config["self_report_fields"]) != categories or config.get("scored") is not False or config.get("evidence_role") != "self_report":
+                return "Discovery boards require unique choices/areas and explicitly unscored self-report fields."
         if template == "word_search":
             grid, targets = config["grid"], config["targets"]
             if not 6 <= len(grid) <= 9 or not 6 <= len(grid[0]) <= 9 or any(len(row) != len(grid[0]) for row in grid):
@@ -61,10 +70,18 @@ def validate_game(config):
 def evaluate_game(config, selected):
     """Return None for legacy templates; otherwise verify a complete successful response."""
     template = config.get("task_template")
-    if template not in {"word_search", "find_it", "audio_sequence", "shopping"}:
+    if template not in {"word_search", "find_it", "audio_sequence", "shopping", "scenario_classifier", "discovery_board"}:
         return None
     try:
         value = json.loads(selected)
+        if template == "scenario_classifier":
+            return value["answers"] == [row["answer"] for row in config["scenarios"]]
+        if template == "discovery_board":
+            selections = value["selections"]
+            ids = {item["id"] for item in config["items"]}
+            categories = {item["id"] for item in config["categories"]}
+            fields = {config["self_report_fields"][key]: picks for key, picks in selections.items()}
+            return value.get("evidence_type") == "self_report" and set(selections) == categories and value["fields"] == fields and all(isinstance(picks, list) and picks and len(set(picks)) == len(picks) and set(picks).issubset(ids) and ("unsure" not in picks or picks == ["unsure"]) for picks in selections.values())
         if template == "word_search":
             return sorted(value["found"]) == sorted(target["word"] for target in config["targets"]) and all(value.get("follow_ups", {}).get(target["word"]) == target["follow_up_question"]["answer"] for target in config["targets"] if target.get("follow_up_question"))
         if template == "find_it":

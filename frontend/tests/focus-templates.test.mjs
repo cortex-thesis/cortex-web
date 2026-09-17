@@ -36,6 +36,7 @@ const cardUrl = await load(cardSource
   .replace("import { ProgressBar } from '../../atoms'", 'const ProgressBar = () => null')
   .replace("import ActivityTemplate from '../ActivityTemplate'", 'const ActivityTemplate = () => null')
   .replace("import TaskInteraction from '../TaskInteraction'", 'const TaskInteraction = () => null')
+  .replace("import { AudioNarration, DiscussionCards } from '../TaskInteraction/DiscoveryActivities'", 'const AudioNarration = () => null, DiscussionCards = AudioNarration')
   .replace("import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../../constants/activityTemplates'", 'const ACTIVITY_TEMPLATE_BY_ID = {}, TASK_TEMPLATE_BY_ID = {}')
   .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => {}')
   .replace("import styles from './TaskCard.module.css'", 'const styles = new Proxy({}, { get: (_, key) => String(key) })')

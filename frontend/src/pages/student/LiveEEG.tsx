@@ -30,6 +30,7 @@ const BANDS: Array<{ key: keyof BandPowers; label: string }> = [
   { key: 'alpha', label: 'Alpha' }, { key: 'beta', label: 'Beta' }, { key: 'gamma', label: 'Gamma' },
 ]
 const fieldNames: Record<string, string> = Object.fromEntries([
+  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl', 'actionLabel',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
   'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'correctFeedback', 'retryFeedback',
@@ -204,10 +205,12 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
   }
 
   const isActivity = Boolean(task && (task.taskTemplate || (task.template ?? 'multiple_choice') === 'multiple_choice'))
-  const requiresMedia = Boolean(task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
+  const requiresMedia = Boolean(!task?.videoOptional && task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
   const canAdvance = !focusGates[task?.id ?? ''] && (answered[position] || (!isActivity && !requiresMedia))
+  const videoSlide = Boolean(task && (task.contentType === 'video' || task.template === 'instructional_video')) && displayMode === 'focus'
   async function advance() {
     if (savingStep || !lesson || teacherControl?.paused || mode !== 'focus') return
+    playLessonSound(position === lesson.slides.length - 1 ? 'finished' : 'transition')
     if (sessionId) {
       setSavingStep(true)
       try {
@@ -232,10 +235,9 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
       setMode(queuedMode)
       window.dispatchEvent(new Event('cortex:pause-media'))
     }
-    playLessonSound(position === lesson!.slides.length - 1 ? 'finished' : 'transition')
   }
-  const controls = import.meta.env.DEV && !teacherControl && <details className={styles.stateChooser} open>
-    <summary>Force state: {forcedState ? 'Manual' : 'EEG device'}</summary>
+  const controls = import.meta.env.DEV && !teacherControl && <details className={styles.stateChooser}>
+    <summary>Development controls</summary>
     <label>Student state<select aria-label="Force student state" value={forcedState ?? ''} onChange={event => { const value = event.target.value as CognitiveState; setForcedState(value || null); setForcedFocusScore(value === 'focused' ? 90 : value === 'relaxed' ? 72 : value === 'distracted' ? 55 : 30) }}>
       <option value="">EEG device based</option>{(['focused', 'relaxed', 'overstimulated', 'distracted'] as const).map(state => <option key={state} value={state}>{state}</option>)}
     </select></label>
@@ -280,20 +282,20 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
     {saveFailed && <button onClick={() => Object.entries(unsavedAnswers.current).forEach(([index, answer]) => saveAnswer(Number(index), answer.correct, answer.selected))}>Retry saving answers</button>}
     <button onClick={() => void finish()}>End session</button>
   </div>}
-  <Activity mode={phase !== 'calibrating' ? 'visible' : 'hidden'}><PlayfulZoneTemplate calm={mode !== 'focus'} spotlight={backgroundSupport} cool={coolSupport} quietNav={mode === 'breathing'}><div className={`${shellStyles.page} ${playerStyles.page} ${backgroundSupport ? styles.spotlight : ''} ${mode === 'breathing' ? styles.quiet : ''}`}>
+  <Activity mode={phase !== 'calibrating' ? 'visible' : 'hidden'}><PlayfulZoneTemplate showNav={false} calm={mode !== 'focus'} spotlight={backgroundSupport} cool={coolSupport} quietNav={mode === 'breathing'}><div className={`${shellStyles.page} ${playerStyles.page} ${backgroundSupport ? styles.spotlight : ''} ${mode === 'breathing' ? styles.quiet : ''}`}>
     <header className={shellStyles.header}>
       <button className={shellStyles.backBtn} onClick={() => void finish()} aria-label="End session and return"><ArrowLeft size={18} /></button>
-      <div><span className={shellStyles.eyebrow}>Recorded lesson</span><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1><p>Your lesson is the same with Muse connected. Brainwave monitoring runs quietly in the background.</p></div>
+      {displayMode === 'focus' && <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>}
     </header>
-    {phase !== 'complete' && <details className={styles.monitorDetails}><summary aria-live="polite">EEG device: {currentState ?? (status !== 'streaming' ? 'Signal lost — check headset connection' : baselineProgress < 100 ? `Recalibrating (${baselineProgress}%)` : 'Weak signal — adjust headset contact')}</summary><section className={styles.monitor} aria-label="Live Muse 2 status">
+    {phase !== 'complete' && displayMode === 'focus' && (import.meta.env.DEV || teacherControl) && <details className={styles.monitorDetails}><summary>Session details</summary><section className={styles.monitor} aria-label="Live Muse 2 status">
       <div className={styles.monitorDevice}><Radio size={15} /><strong>{deviceName || 'Muse 2'}</strong><span><BatteryMedium size={15} />{battery == null ? '—' : `${battery}%`}</span></div>
       <div className={styles.monitorBands}>{BANDS.map(({ key, label }) => <span key={key}><small>{label}</small><strong>{bands[key].toFixed(3)}</strong></span>)}</div>
       <div className={styles.monitorQuality}><span>{acceptedChannels}/4 clean channels</span><span>Baseline {baselineProgress}%</span>{MUSE_CHANNELS.map((channel, index) => <i key={channel} title={`${channel} contact`} className={quality[index] === 2 ? styles.contactGood : quality[index] === 1 ? styles.contactFair : styles.contactPoor} />)}</div>
     </section></details>}
     {error && <p className={styles.error}>{error}</p>}
-    <section className={`${playerStyles.player} ${coolSupport ? styles.coolPlayer : focusTemplate === 'rest' ? styles.restPlayer : ''}`} aria-label="Lesson activities">
-      {!!lesson?.slides.length && <div className={`${playerStyles.progress} ${backgroundSupport ? styles.backgroundProgress : ''} ${mode !== 'focus' ? styles.quietProgress : ''}`}>
-        <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}><span style={{ width: `${completed.size / lesson.slides.length * 100}%` }} /></div>
+    <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : ''} ${coolSupport ? styles.coolPlayer : focusTemplate === 'rest' ? styles.restPlayer : ''}`} aria-label="Lesson activities">
+      {!!lesson?.slides.length && displayMode === 'focus' && !modeLeaving && <div className={`${playerStyles.progress} ${backgroundSupport ? styles.backgroundProgress : ''}`}>
+        <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}><span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length - 1) * 100)}%` }} /></div>
         <ol className={playerStyles.dots}>{lesson.slides.map((item, index) => <li key={item.id} aria-current={!complete && index === position ? 'step' : undefined} className={`${playerStyles.dot} ${completed.has(index) ? playerStyles.done : ''} ${!complete && index === position ? playerStyles.current : ''}`}>{completed.has(index) ? <span aria-hidden="true" /> : <span />}</li>)}</ol>
         <div className={styles.progressRow}><span className={playerStyles.progressHint} title="Filled: completed · Ring: current">{complete ? 'All activities complete' : `Activity ${position + 1} of ${lesson.slides.length}`}</span>
       <div className={styles.supportTools}>
@@ -316,7 +318,7 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
       }} /></Activity>) : null}</div>
       {phase !== 'complete' && task && <nav className={playerStyles.actions} aria-label="Activity navigation">
         <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || savingStep} onClick={() => { playLessonSound('transition'); setVisited(previous => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
-        {isActivity && !['audio_sequence', 'memory_flip'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} onClick={() => { setRetry(previous => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered(previous => { const next = { ...previous }; delete next[position]; return next }) }}><RotateCcw size={18} />Try again</button>}
+        {isActivity && !['audio_sequence', 'memory_flip', 'scenario_classifier'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} onClick={() => { setRetry(previous => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered(previous => { const next = { ...previous }; delete next[position]; return next }) }}><RotateCcw size={18} />Try again</button>}
         <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || savingStep} onClick={() => void advance()}>{savingStep ? 'Saving progress…' : position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next activity'}<ArrowRight size={18} /></button>
       </nav>}
       </Activity>
@@ -324,5 +326,6 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
       {saveFailed && <button className={styles.endSession} onClick={() => Object.entries(unsavedAnswers.current).forEach(([index, answer]) => saveAnswer(Number(index), answer.correct, answer.selected))}>Retry saving answers</button>}
     </section>
     {phase !== 'complete' && <button className={styles.endSession} onClick={() => void finish()}>{teacherControl ? 'Leave and save my session' : 'End and save session'}</button>}
-  </div></PlayfulZoneTemplate></Activity>{controls}</>
+    {controls}
+  </div></PlayfulZoneTemplate></Activity></>
 }

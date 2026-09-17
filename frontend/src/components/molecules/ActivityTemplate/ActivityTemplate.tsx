@@ -90,20 +90,32 @@ function loadYouTubeApi() {
 }
 
 function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: string; onHalfWatched?: () => void }) {
-  const frameRef = useRef<HTMLIFrameElement | null>(null)
+  const hostRef = useRef<HTMLDivElement | null>(null)
   const completedRef = useRef(false)
   const callbackRef = useRef(onHalfWatched)
   useEffect(() => { callbackRef.current = onHalfWatched }, [onHalfWatched])
 
   useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+    // YouTube.destroy removes its iframe. Own it inside a stable React host
+    // so Activity hide/show and Strict Mode can create a fresh frame safely.
+    const frame = document.createElement('iframe')
+    frame.className = styles.video
+    frame.src = src
+    frame.title = title
+    frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+    frame.allowFullscreen = true
+    host.replaceChildren(frame)
     let player: YouTubePlayer | null = null
     let timer: number | null = null
     let cancelled = false
     const pause = () => player?.pauseVideo()
     window.addEventListener('cortex:pause-media', pause)
     void loadYouTubeApi().then((YT) => {
-      if (cancelled || !frameRef.current) return
-      player = new YT.Player(frameRef.current, { events: { onReady: () => {
+      if (cancelled || !frame.isConnected) return
+      player = new YT.Player(frame, { events: { onReady: () => {
+        if (cancelled) return
         timer = window.setInterval(() => {
           if (!player || completedRef.current) return
           const duration = player.getDuration()
@@ -119,10 +131,11 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
       window.removeEventListener('cortex:pause-media', pause)
       if (timer !== null) window.clearInterval(timer)
       player?.destroy()
+      frame.remove()
     }
-  }, [])
+  }, [src, title])
 
-  return <iframe ref={frameRef} className={styles.video} src={src} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+  return <div ref={hostRef} className={styles.youtubeHost} />
 }
 
 function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {

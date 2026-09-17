@@ -49,6 +49,8 @@ ACTIVITY_TEMPLATES = {
 }
 
 TASK_TEMPLATES = {
+    "discovery_board": {"label": "Discovery Board", "required": ("question", "items", "categories", "self_report_fields")},
+    "scenario_classifier": {"label": "Scenario cards", "required": ("question", "scenarios")},
     "word_search": {"label": "Word Hunt", "required": ("question", "grid", "targets")},
     "find_it": {"label": "Find It", "required": ("question", "items", "correct_item_ids")},
     "audio_sequence": {"label": "Listen and Tap", "required": ("question", "items", "rounds")},

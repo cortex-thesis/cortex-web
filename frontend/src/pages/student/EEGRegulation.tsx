@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { Activity, useEffect, useEffectEvent, useRef, useState } from 'react'
 import { Apple, Banana, Cherry, Grape, Cat, Dog, Bird, Fish, Bus, Car, Bike, TrainFront, Circle, Square, Triangle, Star } from 'lucide-react'
 import type { CognitiveState } from '../../constants/states'
 import { playLessonSound } from '../../lib/lessonSounds'
@@ -7,6 +7,7 @@ import styles from './EEGRegulation.module.css'
 import playerStyles from './PracticeLesson.module.css'
 import BinauralAmbient from './BinauralAmbient'
 import CalmActivity from './CalmActivity'
+import ReadyToContinue from './ReadyToContinue'
 
 const WORDS = [
   { answer: 'FRUIT', pictures: [Apple, Banana, Cherry, Grape], labels: ['Apple', 'Banana', 'Cherries', 'Grapes'] },
@@ -61,7 +62,9 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
   const completionLocked = useRef(false)
   const [breathingSeconds, setBreathingSeconds] = useState(0)
   const [continueUnlocked, setContinueUnlocked] = useState(false)
+  const [refocusReady, setRefocusReady] = useState(false)
   const recovered = breathingResumeUnlocked(continueUnlocked, state, breathingSeconds)
+  const ready = !intro && (mode === 'breathing' ? recovered : refocusReady)
   useEffect(() => {
     if (recovered) setContinueUnlocked(true)
   }, [recovered])
@@ -74,7 +77,7 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
     const nextMode = nextEEGMode(transitionState(), 'refocus')
     setCelebrating(false)
     completionLocked.current = false
-    if (nextMode === 'focus') { onResume(); return }
+    if (nextMode === 'focus') { setRefocusReady(true); return }
     if (nextMode === 'breathing') { onBreathing(); return }
     setRound(value => value + 1); setText(''); setPickedLetters([]); setSorted({}); setFeedback('')
   })
@@ -104,16 +107,13 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
   }
   return <>
     <div className={`${playerStyles.stage} ${styles.stage}`}>
-    <section className={`${styles.content} ${mode === 'breathing' ? styles.breathing : ''}`} aria-label={mode === 'breathing' ? 'Breathing break' : 'Refocusing activity'}>
+    <section className={`${styles.content} ${mode === 'breathing' ? styles.breathing : ''}`} aria-label={ready ? 'Return to lesson' : mode === 'breathing' ? 'Calm pause' : 'Refocusing activity'} data-ui-state={ready ? 'ready' : intro ? 'intro' : celebrating ? 'feedback' : 'activity'}>
+      {ready && <ReadyToContinue allowResume={allowResume} paused={paused} onResume={onResume} />}
+      <Activity mode={ready ? 'hidden' : 'visible'}>
       {intro ? <div className={styles.intro} role="status"><h1>Let's take a gentle pause</h1><p>Try a small activity, one step at a time.</p></div> : mode === 'breathing' ? <>
-        <CalmActivity paused={paused} nextActivity={nextCalmActivity} />
-        {recovered && <p className={styles.ready} role="status">Ready to continue</p>}
-        {recovered && allowResume && <div className={styles.actions}><button className={`${playerStyles.button} ${playerStyles.next}`} onClick={onResume}>Continue</button></div>}
-        {recovered && !allowResume && <p>Your teacher will continue the lesson when the class is ready.</p>}
-        {breathingSeconds < 15 && <p role="status">A gentle calm pause · {15 - breathingSeconds}s</p>}
-        <div className={styles.music}><BinauralAmbient paused={paused} /></div>
+        <CalmActivity paused={paused || ready} nextActivity={nextCalmActivity} />
+        <div className={styles.music}><BinauralAmbient paused={paused || ready} /></div>
       </> : celebrating ? <div className={styles.success} role="status">
-        <svg className={styles.successMark} viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" /><path d="M28 51 L43 66 L73 35" pathLength="1" /></svg>
         <h1>Good job!</h1>
       </div> : <>
         <h1>{['Four pictures, one word', 'Write a calming thought', 'Put things in their place', 'Complete the pattern', 'Put the steps in order'][kind]}</h1>
@@ -134,9 +134,10 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
           : kind === 2 ? <div className={styles.organize}>{sorting.items.map(item => <fieldset key={item} className={styles.groupQuestion}><legend>{item}: Which group does this belong to?</legend>{sorting.groups.map(([value, label]) => <label key={value} className={styles.groupChoice}><input type="radio" name={`group-${item}`} value={value} checked={sorted[item] === value} onChange={() => { const next = { ...sorted, [item]: value }; setSorted(next); setFeedback(''); finishActivity(pickedLetters, text, next) }} /><span>{label}</span></label>)}</fieldset>)}</div>
           : kind === 3 ? <div className={styles.pattern}><p>{pattern.prompt}</p>{pattern.options.map(option => <button key={option} onClick={() => { setText(option); finishActivity(pickedLetters, option) }}>{option}</button>)}</div>
           : <div className={styles.order}><p>Tap the steps in the order you would do them. Tap a selected step to undo.</p>{[2, 0, 3, 1].map(index => <button key={index} aria-pressed={pickedLetters.includes(index)} onClick={() => { const next = pickedLetters.includes(index) ? pickedLetters.filter(value => value !== index) : [...pickedLetters, index]; setPickedLetters(next); setFeedback(''); finishActivity(next) }}>{pickedLetters.includes(index) ? (pickedLetters.indexOf(index) + 1) + '. ' : ''}{order[index]}</button>)}</div>}
-          <p role="status">{feedback}</p>
+          {feedback && <p role="status">{feedback}</p>}
         </div>
       </>}
+      </Activity>
     </section>
     </div>
   </>

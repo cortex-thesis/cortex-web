@@ -218,5 +218,13 @@
   "you need assistance": "/assets/functional-academics/func-01/needs-assistance.png",
   "sports area": "/assets/care/care-01/ball.png",
   "egg": "/assets/care/care-02/egg.png",
-  "star": "/assets/life/life-01/star.png"
+  "star": "/assets/life/life-01/star.png",
+  "backpack": "/assets/life/life-01/backpack.png",
+  "school bag": "/assets/life/life-01/backpack.png",
+  "eraser": "/assets/life/life-01/eraser.png",
+  "notebook": "/assets/life/life-01/notebook.png",
+  "ruler": "/assets/life/life-01/ruler.png",
+  "food processing": "/assets/pre-vocational/common/food-processing.png",
+  "food product": "/assets/pre-vocational/common/food-product.png",
+  "selling baked goods": "/assets/pre-vocational/common/baked-goods.png"
 }

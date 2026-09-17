@@ -149,6 +149,11 @@
   .waveform { display: none; }
 }
 .card { position: relative; }
+.headingGroup { width: 100%; min-width: 0; }
+.titleRow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 20px; }
+.titleRow h2 { flex: 0 1 auto; margin: 0; }
+.inlineInstruction { flex: 1 1 280px; margin: 0; color: var(--color-text-secondary); font: var(--font-weight-regular) var(--text-body-d)/1.45 var(--font-family); }
+@media (max-width: 620px) { .titleRow { flex-direction: column; gap: 4px; } .inlineInstruction { flex: 0 1 auto; } }
 .focusContent { display: contents; }
 .adaptiveText { position: relative; }
 /* Keep text metrics identical when support changes so activities do not reflow. */

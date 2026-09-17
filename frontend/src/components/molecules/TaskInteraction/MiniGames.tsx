@@ -56,7 +56,7 @@ export function WordSearch({ task, onAnswered, onChanged, quiet }: Props) {
   function finishWord(word: string, answer?: string) {
     if (answer) followUps.current[word] = answer
     const next = [...found, word]
-    setFound(next); setPending(null); setMessage(`${word} found.`)
+    setFound(next); setPending(null); setMessage('')
     if (next.length === targets.length) { setResult(true); onAnswered?.(true, JSON.stringify({ found: next, follow_ups: followUps.current })) }
     else if (!quiet) playLessonSound('correct')
   }
@@ -79,9 +79,9 @@ export function WordSearch({ task, onAnswered, onChanged, quiet }: Props) {
         const highlighted = targets.some(item => found.includes(item.word) && item.cells.some(([rr, cc]) => rr === r && cc === c))
         return <button type="button" key={`${r},${c}`} data-cell={`${r},${c}`} disabled={pending !== null || result === true} className={`${highlighted ? styles.found : ''} ${start?.[0] === r && start?.[1] === c ? styles.selected : ''}`} aria-label={`${letter}, row ${r + 1}, column ${c + 1}${highlighted ? ', found' : ''}`} onPointerDown={() => { dragStart.current = [r, c]; suppressClick.current = false }} onClick={() => { if (suppressClick.current) { suppressClick.current = false; return } select([r, c]) }}>{letter}</button>
       }))}
-    </div><div className={styles.wordList} aria-label="Words to find"><strong>{found.length} of {targets.length} found</strong>{targets.map(item => <span key={item.word} className={found.includes(item.word) ? styles.found : ''}>{found.includes(item.word) ? ' ' : ''}{item.displayLabel}{found.includes(item.word) && <small className={styles.foundBadge}>Found</small>}{found.includes(item.word) && item.revealImage && <img src={item.revealImage} alt={item.displayLabel} />}</span>)}</div></div>
+    </div><div className={styles.wordList} aria-label="Words to find"><div className={styles.wordListHeader}><strong role="status">{found.length} of {targets.length} found</strong><button type="button" onClick={() => { setFound([]); setStart(null); setPending(null); setResult(null); setMessage(''); followUps.current = {}; dragStart.current = null; suppressClick.current = false; onChanged?.() }}>Reset</button></div>{targets.map(item => <span key={item.word} className={found.includes(item.word) ? styles.found : ''}>{found.includes(item.word) ? ' ' : ''}{item.displayLabel}{found.includes(item.word) && <small className={styles.foundBadge}>Found</small>}{found.includes(item.word) && item.revealImage && <img src={item.revealImage} alt={item.displayLabel} />}</span>)}</div></div>
     {target?.followUpQuestion && <section className={styles.followUp}><img src={target.revealImage} alt="Safety sign" /><strong>{target.followUpQuestion.question}</strong><div className={styles.actions}>{target.followUpQuestion.choices.map(choice => <button type="button" key={choice} onClick={() => { if (choice === target.followUpQuestion?.answer) finishWord(target.word, choice); else { setMessage('Look at the sign again. What is it telling you?'); if (!quiet) playLessonSound('incorrect') } }}>{choice}</button>)}</div></section>}
-    <div className={styles.actions}><button type="button" onClick={() => { setFound([]); setStart(null); setPending(null); setResult(null); setMessage(''); onChanged?.() }}>Reset</button><Feedback correct={result} task={task} message={result ? undefined : message} /></div>
+    {message && <Feedback correct={null} task={task} message={message} />}
   </div>
 }
 

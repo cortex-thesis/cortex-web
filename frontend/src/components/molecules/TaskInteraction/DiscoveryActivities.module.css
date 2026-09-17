@@ -1,0 +1,34 @@
+.board, .discussion, .scenario { display: grid; gap: 14px; min-width: 0; width: 100%; max-width: 1000px; margin-inline: auto; }
+.board button, .discussion button, .scenario button, .narration button { min-height: 44px; border: 1.5px solid var(--color-border); border-radius: 12px; padding: 10px 14px; background: white; color: var(--color-text-primary); cursor: pointer; font: inherit; }
+.board button:focus-visible, .discussion button:focus-visible, .scenario button:focus-visible, .narration button:focus-visible { outline: 3px solid var(--color-interface-purple); outline-offset: 3px; }
+.board button:disabled, .discussion button:disabled, .scenario button:disabled { cursor: default; opacity: .7; }
+.narration, .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.narration { margin-bottom: 12px; }
+.narration button { display: inline-flex; align-items: center; gap: 8px; }
+.narration p, .actions p { flex: 1; margin: 0; }
+.board .listen, .scenario .listen, .narration .listen { background: var(--color-interface-purple); color: white; }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.concept { padding: 20px; border: 1px solid var(--color-border); background: #f6f5fa; border-radius: 16px; }
+.concept h3, .concept p { margin: 0; }
+.concept h3 { margin-bottom: 8px; color: var(--color-interface-purple); }
+.concept p { line-height: 1.6; }
+.concept img { width: 100%; height: 110px; object-fit: contain; margin-bottom: 10px; }
+.areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+.areas button { display: grid; align-content: start; text-align: left; gap: 8px; }
+.board .areas button { border: 0; border-bottom: 3px solid #d7d1e7; border-radius: 0; background: #f6f5fa; }
+.board .areas button.active { border-bottom-color: var(--color-interface-purple); background: #e9e5f5; }
+.areas span { font-size: 14px; line-height: 1.5; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cards button { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.cards { padding-top: 8px; }
+.scenario { position: relative; padding-right: 52px; box-sizing: border-box; }
+.scenario .resetIcon { position: absolute; top: 0; right: 0; width: 44px; padding: 10px; display: grid; place-items: center; background: transparent; }
+.cards img { width: 100%; height: 90px; object-fit: contain; }
+.fallback { width: 55px; height: 55px; color: var(--color-interface-purple); }
+.board .active { background: #efedfc; border: 2px solid var(--color-interface-purple); }
+.clue { border: 1px solid var(--color-border); background: #f6f5fa; border-radius: 16px; padding: 20px; }
+.clue h3 { margin: 0; line-height: 1.5; }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; }
+.scenario .correct { background: #e1f4e9; border-color: #238461; color: #19634a; }
+.scenario .incorrect { background: #ffebe9; border-color: #b64646; color: #973434; }
+@media (max-width: 600px) { .areas { grid-template-columns: 1fr; } .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

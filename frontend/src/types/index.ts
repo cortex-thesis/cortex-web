@@ -99,6 +99,8 @@ export interface ActivityStep {
 }
 
 export type TaskTemplateId =
+  | 'discovery_board'
+  | 'scenario_classifier'
   | 'word_search'
   | 'find_it'
   | 'audio_sequence'
@@ -161,9 +163,16 @@ export interface Task {
   altText?: string
   priceTag?: string
   evidenceRole?: string
+  discussion?: boolean
+  narrationScript?: string
+  videoOptional?: boolean
+  selfReportField?: string
+  selfReportFields?: Record<string, string>
+  initialResponse?: string
   grid?: string[][]
   targets?: { word: string; displayLabel: string; cells: number[][]; revealImage?: string; followUpQuestion?: { question: string; choices: string[]; answer: string } }[]
   rounds?: { direction: string; correctOrder: string[]; audioUrl?: string }[]
+  scenarios?: { clue: string; choices: string[]; answer: string; feedback: string }[]
   workspaceLabel?: string
   allowSubset?: boolean
   minimumSelections?: number

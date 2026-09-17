@@ -732,6 +732,7 @@ def _lesson_data(lesson, include_slides=True):
     data = {"id": lesson.pk, "package": lesson.package.slug, "title": lesson.title, "description": lesson.description, "archived": lesson.archived_at is not None}
     if include_slides:
         slides = lesson.slides.all() if "slides" in getattr(lesson, "_prefetched_objects_cache", {}) else lesson.slides.select_related("activity")
+        slides = [slide for slide in slides if not slide.activity.configuration.get('optional_review')]
         data["slides"] = [{"id": slide.pk, "position": slide.position, "title": slide.title, "activity": {"id": slide.activity.pk, "type": slide.activity.type, "title": slide.activity.title, "configuration": slide.activity.configuration, "asset_id": slide.activity.asset_id, "asset_url": f"/api/content/assets/{slide.activity.asset_id}/preview/" if slide.activity.asset_id else None}} for slide in slides]
     return data
 
@@ -1888,7 +1889,7 @@ def student_class_package(request, class_id, package_slug):
 
 
 def _practice_progress_data(lesson, progress):
-    slide_ids = {slide.pk for slide in lesson.slides.all()}
+    slide_ids = {slide.pk for slide in lesson.slides.all() if not slide.activity.configuration.get('optional_review')}
     completed = slide_ids.intersection(progress.completed_slide_ids) if progress else set()
     return {"status": 'not_started' if progress is None else 'completed' if slide_ids and completed == slide_ids else 'in_progress',
             "percentage": round(len(completed) * 100 / len(slide_ids)) if slide_ids else 0,
@@ -2550,10 +2551,12 @@ def end_session(request, session_id):
         session.ended_at = timezone.now()
         session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=session.ended_at)
         session.status = LearningSession.Status.COMPLETED
-        slide_count = session.lesson.slides.count() if session.lesson_id else 0
+        lesson_ids = [session.lesson_id] if session.lesson_id else []
         if session.class_session_id:
-            slide_count = Slide.objects.filter(lesson_id__in=[item['id'] for item in session.class_session.lesson_history]).count()
-        viewed = session.slide_exposures.filter(completed_at__isnull=False).values("slide_id").distinct().count()
+            lesson_ids = [item['id'] for item in session.class_session.lesson_history]
+        active_slide_ids = [slide.pk for slide in Slide.objects.filter(lesson_id__in=lesson_ids).select_related('activity') if not slide.activity.configuration.get('optional_review')]
+        slide_count = len(active_slide_ids)
+        viewed = session.slide_exposures.filter(completed_at__isnull=False, slide_id__in=active_slide_ids).values("slide_id").distinct().count()
         session.completion_percentage = round(viewed * 100 / slide_count, 2) if slide_count else 0
         session.save(update_fields=["ended_at", "status", "completion_percentage"])
         counts = {state: session.eeg_samples.filter(state=state).count() for state in ("focused", "relaxed", "distracted", "overstimulated")}
@@ -2639,7 +2642,7 @@ def session_slide_exposure(request, session_id, slide_id):
                 session=session, activity=slide.activity, attempt_number=attempt,
                 defaults={"response": {"selected": selected} if evidence_role is None else {"selected": selected, "evidence_role": evidence_role,
                     "practice_correct": correct, "digital_mastery_claim": False},
-                    "is_correct": None if evidence_role == 'supporting' else correct},
+                    "is_correct": None if evidence_role in ('supporting', 'self_report') else correct},
             )
         return JsonResponse({"id": str(response.pk), "status": "saved"})
     if action == 'complete':
