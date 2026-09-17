@@ -64,5 +64,9 @@ LIVE_LESSONS = [
 ]
 
 
+from .live01_refresh import upgrade_live01
+upgrade_live01(LIVE_LESSONS)
+from .live23_refresh import upgrade_live23
+upgrade_live23(LIVE_LESSONS)
 from .lesson_assets import attach_definitions
 attach_definitions(LIVE_LESSONS)

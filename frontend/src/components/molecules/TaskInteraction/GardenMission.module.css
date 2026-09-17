@@ -1,0 +1,40 @@
+.mission { display: grid; gap: 12px; min-width: 0; }
+.mission button { font: inherit; cursor: pointer; border: 1px solid #dcd7ec; border-radius: 12px; background: white; color: #17213b; min-height: 44px; padding: 10px 14px; }
+.mission button:focus-visible { outline: 3px solid #5749c5; outline-offset: 3px; }
+.mission button:disabled { cursor: default; }
+.header, .footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.header button { color: #5749c5; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; list-style: none; padding: 0; margin: 0; }
+.steps li { display: flex; align-items: center; gap: 8px; padding: 9px; border-radius: 10px; background: #f2f0fa; font-size: 14px; }
+.steps li[aria-current] { box-shadow: inset 0 0 0 2px #5749c5; }
+.steps span { display: grid; place-items: center; flex: 0 0 26px; height: 26px; border-radius: 50%; background: white; font-weight: 700; }
+.instruction { margin: 0; font-weight: 600; }
+.workspace { display: grid; grid-template-columns: minmax(180px, .7fr) minmax(0, 1.3fr); gap: 16px; }
+.tools, .targetArea { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.tools small, .targetArea small { font-weight: 600; color: #514a6c; }
+.tools button { display: flex; gap: 12px; align-items: center; text-align: left; cursor: grab; }
+.tools img { width: 48px; height: 48px; object-fit: contain; }
+.tools .selected { border: 2px solid #5749c5; background: #eeebfc; }
+.targetArea .target { position: relative; display: grid; justify-items: center; align-content: center; gap: 12px; width: 100%; min-height: 240px; border: 2px dashed #86afa1; background: #f3fbf6; }
+.target img { width: 140px; height: 140px; object-fit: contain; animation: arrive 250ms ease-out; }
+.mission .complete { background: #dff3e6; color: #19634a; }
+.targetArea .complete { border: 2px solid #238461; }
+.check { position: absolute; right: 12px; top: 12px; font-size: 24px; }
+.footer p { margin: 0; font-size: 14px; }
+.footer button { flex-shrink: 0; background: #5749c5; color: white; }
+@keyframes arrive { from { opacity: .4; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 600px) { .workspace { grid-template-columns: 1fr; } .tools { grid-template-columns: repeat(3, minmax(0, 1fr)); } .tools small { grid-column: 1 / -1; } .tools button { flex-direction: column; text-align: center; padding: 8px; font-size: 13px; } .targetArea .target { min-height: 180px; } .target img { width: 100px; height: 100px; } .steps li { flex-direction: column; text-align: center; font-size: 12px; } .footer { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .target img { animation: none; } }
+.quiet .target img { animation: none; }
+.gardenScene { display: block; width: 100%; max-width: 440px; height: auto; }
+.toolbox { width: min(100%, 260px); height: 140px; }
+.packedTools { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.packedTools > span { display: grid; justify-items: center; gap: 4px; font-size: 14px; }
+.packedTools img { width: 64px; height: 64px; animation: arrive 250ms ease-out; }
+.waterDrops { animation: watering 700ms ease-out both; }
+.measuringTape { animation: revealTape 400ms ease-out both; transform-origin: 60px 70px; }
+@keyframes watering { from { opacity: 0; transform: translateY(-10px); } 50% { opacity: 1; } to { opacity: 0; transform: translateY(50px); } }
+@keyframes revealTape { from { transform: scaleX(.1); } to { transform: scaleX(1); } }
+.quiet .waterDrops, .quiet .measuringTape { animation: none; }
+@media (max-width: 600px) { .kitTools { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .waterDrops, .measuringTape, .packedTools img { animation: none; } }

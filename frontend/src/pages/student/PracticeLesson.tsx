@@ -6,6 +6,7 @@ import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molec
 import { api } from '../../lib/api'
 import { playLessonSound } from '../../lib/lessonSounds'
 import ModeBgm from '../../components/molecules/ModeBgm/ModeBgm'
+import { useAuthStore } from '../../store/authStore'
 import type { Task } from '../../types'
 import styles from './FreeLessonSelect.module.css'
 import playerStyles from './PracticeLesson.module.css'
@@ -23,7 +24,7 @@ const fieldNames: Record<string, string> = Object.fromEntries([
   'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
-  'actionLabel', 'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode',
+  'actionLabel', 'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'availableItemIds',
   'correctFeedback', 'retryFeedback', 'sceneImageUrl', 'preferredColumns', 'boardMinHeight', 'mediaFit',
   'dirtyImageUrl', 'cleaningImageUrl', 'cleanImageUrl', 'toolImageUrl',
 ].map((name) => [name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`), name]))
@@ -86,6 +87,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     question: '', choices: [], answer: '', ...configuration,
     imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
+    checkpointKey: lesson.package === 'livelihood' && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
     initialResponse: lesson.progress.activity_evidence?.[String(slide.id)]?.selected,
     index: index + 1, total: lesson.slides.length, contentType: slide.activity.type,
     }

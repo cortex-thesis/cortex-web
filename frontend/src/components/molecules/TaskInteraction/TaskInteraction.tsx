@@ -5,6 +5,8 @@ import { playLessonSound } from '../../../lib/lessonSounds'
 import styles from './TaskInteraction.module.css'
 import CreativeTask from './CreativeTask'
 import ToothBrushingTask from './ToothBrushingTask'
+import GardenMission from './GardenMission'
+import GardenKit from './GardenKit'
 import { AudioSequence, FindIt, FlipMatching, Shopping, WordSearch } from './MiniGames'
 import { DiscoveryBoard, ScenarioClassifier } from './DiscoveryActivities'
 
@@ -52,6 +54,8 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
     return [...pairs.slice(1), ...pairs.slice(0, 1)]
   }, [task.pairs])
   if (template === 'tooth_brushing') return <ToothBrushingTask task={task} onAnswered={onAnswered} />
+  if (template === 'garden_mission') return <GardenMission task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} />
+  if (template === 'garden_kit') return <GardenKit task={task} onAnswered={onAnswered} onChanged={onChanged} />
   if (template === 'word_search') return <WordSearch task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} />
   if (template === 'find_it') return <FindIt task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} narrowed={narrowed} />
   if (template === 'audio_sequence') return <AudioSequence task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} narrowed={narrowed} />

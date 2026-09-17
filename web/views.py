@@ -1489,16 +1489,16 @@ def teacher_student_detail(request, student_id):
     ).annotate(active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True)))
     # Independent scalar aggregates avoid multiplying predictions by responses,
     # slides and adaptation events in a large multi-table join.
-    def session_count(relation, **filters):
+    def session_count(relation, count_filter=None, **filters):
         return Subquery(LearningSession.objects.filter(pk=OuterRef("pk")).order_by().annotate(
-            total=Count(relation, filter=Q(**filters), distinct=True),
+            total=Count(relation, filter=Q(**filters) & (count_filter if count_filter is not None else Q()), distinct=True),
         ).values("total")[:1])
 
     sessions = LearningSession.objects.filter(
         student=student, school_class_id__in=class_ids, ended_at__isnull=False,
     ).select_related("school_class", "lesson", "analytics").annotate(
         tasks_completed=session_count("activity_responses__activity"),
-        tasks_total=session_count("lesson__slides__activity"),
+        tasks_total=session_count("lesson__slides__activity", count_filter=_current_garden_rows('lesson__slides__activity')),
         adaptation_total=session_count("adaptation_events", adaptation_events__previous_mode='focus', adaptation_events__new_mode='relax'),
         override_total=session_count("manual_overrides", manual_overrides__previous_presentation_mode='focus', manual_overrides__new_presentation_mode='relax'),
         **{f"{state}_count": session_count("state_predictions", state_predictions__state=state)
@@ -1898,6 +1898,12 @@ def student_class_package(request, class_id, package_slug):
     })
 
 
+def _current_garden_rows(activity_path):
+    # Only new digital-garden history rows are excluded; other packages unchanged.
+    key = activity_path + '__configuration__digital_garden_history'
+    return Q(**{key + '__isnull': True}) | Q(**{key: False})
+
+
 def _practice_progress_data(lesson, progress):
     slide_ids = {slide.pk for slide in lesson.slides.all() if not slide.activity.configuration.get('optional_review')}
     completed = slide_ids.intersection(progress.completed_slide_ids) if progress else set()
@@ -2100,7 +2106,7 @@ def _student_session_data(session, now):
         "state": dominant_state,
         "status": "in_progress" if session.ended_at is None else "completed",
         "tasks_completed": session.tasks_completed,
-        "tasks_total": Slide.objects.filter(lesson_id__in=[item['id'] for item in session.class_session.lesson_history]).count() if session.class_session_id else session.tasks_total,
+        "tasks_total": Slide.objects.filter(lesson_id__in=[item['id'] for item in session.class_session.lesson_history]).filter(_current_garden_rows('activity')).count() if session.class_session_id else session.tasks_total,
         "state_distribution": state_distribution,
     }
 
@@ -2186,7 +2192,7 @@ def student_sessions(request):
         .select_related("school_class", "lesson", "analytics")
         .annotate(
             tasks_completed=Count("slide_exposures__slide", filter=Q(slide_exposures__completed_at__isnull=False), distinct=True),
-            tasks_total=Count("lesson__slides", distinct=True),
+            tasks_total=Count("lesson__slides", filter=_current_garden_rows('lesson__slides__activity'), distinct=True),
             focused_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.FOCUSED), distinct=True),
             relaxed_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.RELAXED), distinct=True),
             distracted_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.DISTRACTED), distinct=True),
@@ -2672,8 +2678,8 @@ def session_slide_exposure(request, session_id, slide_id):
             if not locked.slide_exposures.filter(slide=slide, completed_at__isnull=False).exists():
                 exposure.completed_at = now
                 exposure.save(update_fields=['completed_at'])
-            total = Slide.objects.filter(lesson_id__in=allowed_lesson_ids).count()
-            done = locked.slide_exposures.filter(completed_at__isnull=False).values('slide_id').distinct().count()
+            total = Slide.objects.filter(lesson_id__in=allowed_lesson_ids).filter(_current_garden_rows('activity')).count()
+            done = locked.slide_exposures.filter(completed_at__isnull=False).filter(_current_garden_rows('slide__activity')).values('slide_id').distinct().count()
             locked.completion_percentage = round(done * 100 / total, 2) if total else 0
             locked.save(update_fields=['completion_percentage'])
             # The progress-summary endpoint derives totals/badges from these

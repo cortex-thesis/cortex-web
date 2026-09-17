@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
+from copy import deepcopy
+from web.lesson_assets import attach_shared_icons, shared_icon_urls
 
 from web.activity_templates import validate_activity_configuration
 from web.live_lessons import LIVE_LESSONS
@@ -12,6 +14,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--owner")
+        parser.add_argument("--lesson", choices=['LIVE-01', 'LIVE-02', 'LIVE-03'])
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -20,7 +23,10 @@ class Command(BaseCommand):
         if owner is None:
             raise CommandError("An owner profile is required. Create an administrator or pass --owner USERNAME.")
         package, _ = CurriculumPackage.objects.update_or_create(slug="livelihood", defaults={"name": "Livelihood", "domain_focus": "Gardening concepts, tools, and planting-material selection", "is_active": True})
+        icon_urls = shared_icon_urls()
         for definition in LIVE_LESSONS:
+            if options.get('lesson') and definition['lesson_id'] != options['lesson']:
+                continue
             matches = Lesson.objects.filter(competency_code=definition["competency_code"]).order_by("pk")
             lesson = matches.first() or Lesson(created_by=owner)
             lesson.package, lesson.title, lesson.description = package, definition["title"], definition["description"]
@@ -28,9 +34,10 @@ class Command(BaseCommand):
             lesson.estimated_duration_seconds, lesson.status, lesson.archived_at = 15 * 60, Lesson.Status.APPROVED, None
             lesson.save()
             matches.exclude(pk=lesson.pk).update(status=Lesson.Status.ARCHIVED, archived_at=timezone.now())
-            existing = {slide.position: slide for slide in lesson.slides.select_related("activity")}
+            existing = {slide.position: slide for slide in lesson.slides.select_related("activity") if not slide.activity.configuration.get('optional_review')}
             for position, screen in enumerate(definition["slides"]):
-                config = dict(screen["configuration"])
+                config = deepcopy(screen["configuration"])
+                attach_shared_icons(config, icon_urls)
                 config["lesson_metadata"] = {"lesson_id": definition["lesson_id"], "official_competency": definition["competency"], "competency_code": definition["competency_code"], "assessment": definition["assessment"], "content_status": "Proposed for SPED expert validation"}
                 error = validate_activity_configuration(screen["type"], config)
                 if error:

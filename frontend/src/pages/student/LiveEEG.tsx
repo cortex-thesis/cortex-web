@@ -7,6 +7,7 @@ import { api } from '../../lib/api'
 import { playLessonSound } from '../../lib/lessonSounds'
 import { endStudentSession, getStudentSessions, trackStudentSlide } from '../../lib/studentApi'
 import ModeBgm from '../../components/molecules/ModeBgm/ModeBgm'
+import { useAuthStore } from '../../store/authStore'
 import { MUSE_CHANNELS, useMuseStore, type BandPowers } from '../../store/museStore'
 import type { Task } from '../../types'
 import EEGRegulation from './EEGRegulation'
@@ -34,7 +35,7 @@ const fieldNames: Record<string, string> = Object.fromEntries([
   'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl', 'actionLabel',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
-  'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'correctFeedback', 'retryFeedback',
+  'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'correctFeedback', 'retryFeedback', 'availableItemIds',
   'sceneImageUrl', 'preferredColumns', 'boardMinHeight', 'mediaFit',
   'dirtyImageUrl', 'cleaningImageUrl', 'cleanImageUrl', 'toolImageUrl',
 ].map((name) => [name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`), name]))
@@ -184,9 +185,10 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
       question: '', choices: [], answer: '', ...configuration,
       imageUrl: configuration.imageUrl ?? item.activity.asset_url ?? null,
       id: String(item.id), title: item.title, package: lesson.package,
+      checkpointKey: lesson.package === 'livelihood' && sessionId && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/eeg/${sessionId}/${item.id}` : undefined,
       index: index + 1, total: lesson.slides.length, contentType: item.activity.type,
     }
-  }) : [], [lesson])
+  }) : [], [lesson, sessionId])
   const task = tasks[position]
   const pendingAnswers = useRef(new Set<Promise<unknown>>())
   const unsavedAnswers = useRef<Record<number, { correct: boolean; selected: string }>>({})

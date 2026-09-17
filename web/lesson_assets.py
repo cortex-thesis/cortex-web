@@ -9,6 +9,8 @@ SHARED_ICONS = {
     name + '.png': '/assets/pre-vocational/common/' + name + '.png'
     for name in ('capability', 'opportunity', 'activity', 'not-sure-yet')
 }
+SHARED_ICONS.update({name + '.png': '/assets/livelihood/common/' + name + '.png'
+                     for name in ('flowers', 'gardening-goal', 'gardening')})
 
 def shared_icon_urls():
     """Resolve stable private-storage previews at sync time, not import time."""
