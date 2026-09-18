@@ -214,8 +214,22 @@ class WorkflowTests(TestCase):
         entered = self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "enter"}), content_type="application/json")
         self.assertEqual(entered.status_code, 201)
         self.assertEqual(SessionSlideExposure.objects.filter(session=session, exited_at__isnull=True).count(), 1)
+        url = f"/api/sessions/{session.pk}/slides/{slide.pk}/"
+        duplicate = self.client.post(url, data=json.dumps({"action": "enter"}), content_type="application/json")
+        self.assertEqual(duplicate.status_code, 200)
+        self.assertEqual(duplicate.json()["id"], entered.json()["id"])
+        second_activity = Activity.objects.create(type=Activity.ActivityType.INTERACTIVE, title="Next Content")
+        second_slide = Slide.objects.create(lesson=lesson, activity=second_activity, position=2, title="Next Slide")
+        next_url = f"/api/sessions/{session.pk}/slides/{second_slide.pk}/"
+        self.assertEqual(self.client.post(next_url, data=json.dumps({"action": "enter"}), content_type="application/json").status_code, 201)
+        # A delayed exit for the previous slide must not close the current one.
+        self.assertEqual(self.client.post(url, data=json.dumps({"action": "exit"}), content_type="application/json").status_code, 200)
+        self.assertEqual(SessionSlideExposure.objects.get(session=session, exited_at__isnull=True).slide_id, second_slide.pk)
+        self.assertEqual(self.client.post(next_url, data=json.dumps({"action": "exit"}), content_type="application/json").status_code, 200)
+        self.assertEqual(self.client.post(next_url, data=json.dumps({"action": "enter"}), content_type="application/json").status_code, 201)
         self.assertEqual(self.client.post(f"/api/sessions/{session.pk}/end/").status_code, 200)
         self.assertFalse(SessionSlideExposure.objects.filter(session=session, exited_at__isnull=True).exists())
+        self.assertEqual(self.client.post(next_url, data=json.dumps({"action": "enter"}), content_type="application/json").status_code, 409)
 
         self._login(self.teacher)
         report = self.client.get(f"/api/teacher/reports/advanced/?class_id={school_class.pk}&range=term")

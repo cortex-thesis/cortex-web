@@ -2667,19 +2667,28 @@ def session_slide_exposure(request, session_id, slide_id):
             locked.save(update_fields=['completion_percentage'])
             _student_package_progress_data(profile)
         return JsonResponse({'status': 'completed', 'completed_steps': done, 'step_total': total})
-    active = session.slide_exposures.filter(exited_at__isnull=True).first()
-    if action == "exit":
-        if active and active.slide_id == slide.pk:
-            active.exited_at = now
-            active.save(update_fields=["exited_at"])
-        return JsonResponse({"status": "closed", "exited_at": now})
-    if action != "enter":
+    if action not in {"enter", "exit"}:
         return JsonResponse({"detail": "action must be enter, exit, complete, or answer."}, status=400)
-    if session.ended_at is not None:
-        return JsonResponse({"detail": "The session has already ended."}, status=409)
-    if active and active.slide_id == slide.pk:
-        return JsonResponse({"id": str(active.pk), "entered_at": active.entered_at, "status": "active"})
     with transaction.atomic():
+        # Lock the parent even when there is no active exposure to lock. This
+        # serializes overlapping enter/exit requests for the same session.
+        if session.class_session_id:
+            from .models import ClassSession
+            group = ClassSession.objects.select_for_update().get(pk=session.class_session_id)
+            if group.ended_at and action == "enter":
+                return JsonResponse({"detail": "The class session has ended."}, status=409)
+        session = LearningSession.objects.select_for_update().get(pk=session.pk)
+        now = timezone.now()
+        active = session.slide_exposures.filter(exited_at__isnull=True).first()
+        if action == "exit":
+            if active and active.slide_id == slide.pk:
+                active.exited_at = now
+                active.save(update_fields=["exited_at"])
+            return JsonResponse({"status": "closed", "exited_at": now})
+        if session.ended_at is not None:
+            return JsonResponse({"detail": "The session has already ended."}, status=409)
+        if active and active.slide_id == slide.pk:
+            return JsonResponse({"id": str(active.pk), "entered_at": active.entered_at, "status": "active"})
         session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=now)
         exposure = SessionSlideExposure.objects.create(session=session, slide=slide, entered_at=now)
     return JsonResponse({"id": str(exposure.pk), "entered_at": exposure.entered_at, "status": "active"}, status=201)
