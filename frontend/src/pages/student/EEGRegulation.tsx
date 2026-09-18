@@ -5,7 +5,7 @@ import { playLessonSound } from '../../lib/lessonSounds'
 import { breathingResumeUnlocked, nextEEGMode } from '../../lib/eegTransitions'
 import styles from './EEGRegulation.module.css'
 import playerStyles from './PracticeLesson.module.css'
-import BinauralAmbient from './BinauralAmbient'
+import ModeBgm from '../../components/molecules/ModeBgm/ModeBgm'
 import CalmActivity from './CalmActivity'
 import ReadyToContinue from './ReadyToContinue'
 
@@ -106,13 +106,13 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
     setCelebrating(true)
   }
   return <>
+    {mode === 'breathing' && !intro && !ready && <div className={playerStyles.musicToolbar}><ModeBgm mode="relax" suspended={paused} /></div>}
     <div className={`${playerStyles.stage} ${styles.stage}`}>
     <section className={`${styles.content} ${mode === 'breathing' ? styles.breathing : ''}`} aria-label={ready ? 'Return to lesson' : mode === 'breathing' ? 'Calm pause' : 'Refocusing activity'} data-ui-state={ready ? 'ready' : intro ? 'intro' : celebrating ? 'feedback' : 'activity'}>
       {ready && <ReadyToContinue allowResume={allowResume} paused={paused} onResume={onResume} />}
       <Activity mode={ready ? 'hidden' : 'visible'}>
       {intro ? <div className={styles.intro} role="status"><h1>Let's take a gentle pause</h1><p>Try a small activity, one step at a time.</p></div> : mode === 'breathing' ? <>
         <CalmActivity paused={paused || ready} nextActivity={nextCalmActivity} />
-        <div className={styles.music}><BinauralAmbient paused={paused || ready} /></div>
       </> : celebrating ? <div className={styles.success} role="status">
         <h1>Good job!</h1>
       </div> : <>

@@ -30,6 +30,9 @@ export interface TaskTemplateDefinition {
 }
 
 export const TASK_TEMPLATES: TaskTemplateDefinition[] = [
+    { id: 'garden_kit', label: 'Pack a Gardening Kit', response: 'Move suitable tools into a toolbox', purpose: 'Task-specific tool preparation through action' },
+    { id: 'clock_set', label: 'Clock Lab', response: 'Set or read an analog and digital clock', purpose: 'Hours, minutes, and time-period practice' },
+  { id: 'garden_mission', label: 'Garden Mission', response: 'Choose a tool and apply it to a pictured target', purpose: 'Guided garden-task and inspection-process practice' },
   { id: 'discovery_board', label: 'Discovery Board', response: 'Record overlapping personal choices', purpose: 'Unscored self-report reflection' },
   { id: 'scenario_classifier', label: 'Scenario cards', response: 'Identify a concept from fictional clues', purpose: 'Concept knowledge only' },
   { id: 'word_search', label: 'Word Hunt', response: 'Find words in a letter grid', purpose: 'Supporting vocabulary practice' },

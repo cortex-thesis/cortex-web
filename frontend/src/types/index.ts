@@ -119,6 +119,9 @@ export type TaskTemplateId =
   | 'memory_flip'
   | 'pattern_builder'
   | 'tooth_brushing'
+  | 'garden_mission'
+  | 'garden_kit'
+  | 'clock_set'
 
 export interface TaskItem {
   id: string
@@ -169,9 +172,13 @@ export interface Task {
   selfReportField?: string
   selfReportFields?: Record<string, string>
   initialResponse?: string
+  checkpointKey?: string
+  clockMode?: 'set' | 'read'
+  clockRounds?: { id: string; instruction: string; hour: number; minute: number; period: 'am' | 'pm' }[]
   grid?: string[][]
   targets?: { word: string; displayLabel: string; cells: number[][]; revealImage?: string; followUpQuestion?: { question: string; choices: string[]; answer: string } }[]
   rounds?: { direction: string; correctOrder: string[]; audioUrl?: string }[]
+  missions?: { id: string; label: string; instruction: string; answer: string; actionLabel: string; imageUrl?: string; altText?: string; scene?: 'soil' | 'water' | 'measure' | 'meal' | 'display' | 'practice' | 'inspect' | 'compare' | 'reference'; availableItemIds?: string[]; hint: string; feedback: string }[]
   scenarios?: { clue: string; choices: string[]; answer: string; feedback: string }[]
   workspaceLabel?: string
   allowSubset?: boolean

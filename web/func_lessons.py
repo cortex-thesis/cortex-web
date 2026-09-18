@@ -64,5 +64,7 @@ FUNC_LESSONS = [
 ]
 
 
+from .func03_refresh import upgrade_func03
+upgrade_func03(FUNC_LESSONS)
 from .lesson_assets import attach_definitions
 attach_definitions(FUNC_LESSONS)

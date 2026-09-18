@@ -1,0 +1,20 @@
+.activity { display: grid; gap: 12px; min-width: 0; }
+.activity button { font: inherit; min-height: 44px; padding: 10px 14px; border: 1px solid #c9d9cf; border-radius: 12px; background: white; color: #243b35; cursor: pointer; }
+.activity button:disabled { cursor: default; opacity: .65; }
+.activity button:focus-visible, .activity input:focus-visible { outline: 3px solid #6653ad; outline-offset: 3px; }
+.header, .footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.instruction { margin: 0; font-weight: 600; }
+.workspace { display: grid; grid-template-columns: minmax(0,1fr) minmax(230px,1fr); gap: 24px; align-items: center; }
+.workspace figure { margin: 0; text-align: center; }
+.clock { width: min(100%,300px); height: auto; touch-action: none; }
+.workspace figcaption { font-size: 13px; color: #52645b; }
+.controls { display: grid; gap: 12px; }
+.controls p { margin: 0; font-size: 14px; }
+.controls label { display: grid; grid-template-columns: 65px minmax(0,1fr) 30px; gap: 8px; align-items: center; }
+.controls input { min-width: 0; width: 100%; min-height: 44px; accent-color: #6653ad; }
+.handChoice { display: flex; gap: 8px; flex-wrap: wrap; }
+.handChoice button[aria-pressed=true] { background: #eee9fa; border: 2px solid #6653ad; }
+.digital { font-size: 25px; font-weight: 700; color: #243b35; }
+.activity .primary { background: #dceee2; border-color: #86afa1; font-weight: 600; }
+.footer p { margin: 0; }
+@media(max-width:600px) { .workspace { grid-template-columns: 1fr; gap: 12px; } .clock { max-width: 230px; } .footer { flex-wrap: wrap; } }

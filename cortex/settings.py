@@ -201,6 +201,8 @@ if SUPABASE_STORAGE_ENDPOINT and "test" not in sys.argv:
                 "bucket_name": storage_bucket,
                 "endpoint_url": SUPABASE_STORAGE_ENDPOINT,
                 "region_name": os.environ.get("SUPABASE_STORAGE_REGION"),
+                "signature_version": "s3v4",
+                "addressing_style": "path",
                 "default_acl": None,
                 "querystring_auth": True,
                 "file_overwrite": False,

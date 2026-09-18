@@ -5,6 +5,9 @@ import { playLessonSound } from '../../../lib/lessonSounds'
 import styles from './TaskInteraction.module.css'
 import CreativeTask from './CreativeTask'
 import ToothBrushingTask from './ToothBrushingTask'
+import GardenMission from './GardenMission'
+import GardenKit from './GardenKit'
+import ClockSet from './ClockSet'
 import { AudioSequence, FindIt, FlipMatching, Shopping, WordSearch } from './MiniGames'
 import { DiscoveryBoard, ScenarioClassifier } from './DiscoveryActivities'
 
@@ -52,6 +55,9 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
     return [...pairs.slice(1), ...pairs.slice(0, 1)]
   }, [task.pairs])
   if (template === 'tooth_brushing') return <ToothBrushingTask task={task} onAnswered={onAnswered} />
+  if (template === 'garden_mission') return <GardenMission task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} />
+  if (template === 'garden_kit') return <GardenKit task={task} onAnswered={onAnswered} onChanged={onChanged} />
+  if (template === 'clock_set') return <ClockSet task={task} onAnswered={onAnswered} onChanged={onChanged} />
   if (template === 'word_search') return <WordSearch task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} />
   if (template === 'find_it') return <FindIt task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} narrowed={narrowed} />
   if (template === 'audio_sequence') return <AudioSequence task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} narrowed={narrowed} />
@@ -191,9 +197,11 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
 
   return (
     <div className={styles.stack}>
-        <div className={styles.itemRow}>{items.filter((item) => !sorted[item.id]).map((item) => <button type="button" draggable key={item.id} disabled={result !== null} className={`${styles.itemButton} ${item.imageUrl ? styles.visualItemButton : ''} ${sortItem === item.id ? styles.selected : ''} ${resultClass(sortItem === item.id)}`} onDragStart={() => setSortItem(item.id)} onClick={() => setSortItem(item.id)}><GripVertical size={15} />{item.imageUrl && <ItemVisual item={item} />}<strong>{item.label}</strong></button>)}</div>
-      <p className={styles.helper}>{sortItem ? 'Move it to a group, or tap a group.' : 'Choose or drag an item to sort.'}</p>
-      <div className={styles.categoryGrid}>{(task.categories ?? []).map((category) => <button type="button" key={category.id} className={`${styles.category} ${result === 'correct' ? styles.correct : result === 'incorrect' && attemptedCategory === category.id ? styles.incorrect : ''}`} disabled={result !== null} onDragOver={(event) => event.preventDefault()} onDrop={() => assignCategory(category.id)} onClick={() => assignCategory(category.id)}><strong>{category.label}</strong><span>{Object.entries(sorted).filter(([, value]) => value === category.id).map(([id]) => items.find((item) => item.id === id)?.label).join(', ') || 'Drop items here'}</span></button>)}</div>
+      <p className={styles.dragHint} role="status">{sortItem ? `Selected: ${items.find(item => item.id === sortItem)?.label}. Tap or drop into a group.` : 'Drag cards into a group, or tap a card then its group.'}</p>
+      <div className={styles.sortLayout}>
+        <div className={`${styles.itemRow} ${styles.sortItems}`} aria-label="Cards to sort">{items.filter((item) => !sorted[item.id]).map((item) => <button type="button" draggable key={item.id} aria-pressed={sortItem === item.id} disabled={result !== null} className={`${styles.itemButton} ${styles.sortCard} ${item.imageUrl ? styles.visualItemButton : ''} ${sortItem === item.id ? styles.selected : ''} ${resultClass(sortItem === item.id)}`} onDragStart={() => setSortItem(item.id)} onClick={() => setSortItem(item.id)}><GripVertical size={15} />{item.imageUrl && <ItemVisual item={item} />}<strong>{item.label}</strong></button>)}</div>
+        <div className={`${styles.categoryGrid} ${styles.sortGroups}`} aria-label="Drop zones">{(task.categories ?? []).map((category) => <button type="button" key={category.id} className={`${styles.category} ${sortItem ? styles.dropReady : ''} ${result === 'correct' ? styles.correct : result === 'incorrect' && attemptedCategory === category.id ? styles.incorrect : ''}`} disabled={result !== null} onDragOver={(event) => event.preventDefault()} onDrop={() => assignCategory(category.id)} onClick={() => assignCategory(category.id)}><strong>{category.label}</strong>{Object.entries(sorted).some(([, value]) => value === category.id) ? Object.entries(sorted).filter(([, value]) => value === category.id).map(([id]) => <span key={id} className={styles.sortedChip}>{items.find((item) => item.id === id)?.label}</span>) : <span>Drop here</span>}</button>)}</div>
+      </div>
       {feedback}
     </div>
   )

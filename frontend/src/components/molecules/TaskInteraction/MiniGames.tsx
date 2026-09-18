@@ -51,21 +51,31 @@ export function WordSearch({ task, onAnswered, onChanged, quiet }: Props) {
   const dragStart = useRef<number[] | null>(null)
   const suppressClick = useRef(false)
   const followUps = useRef<Record<string, string>>({})
+  const followUpRef = useRef<HTMLElement | null>(null)
   const targets = task.targets ?? []
   const target = targets.find(item => item.word === pending)
+  useEffect(() => {
+    if (!pending) return
+    followUpRef.current?.focus({ preventScroll: true })
+    followUpRef.current?.scrollIntoView({ block: 'nearest', behavior: 'auto' })
+  }, [pending])
   function finishWord(word: string, answer?: string) {
     if (answer) followUps.current[word] = answer
-    const next = [...found, word]
+    const next = Array.from(new Set([...found, word]))
     setFound(next); setPending(null); setMessage('')
-    if (next.length === targets.length) { setResult(true); onAnswered?.(true, JSON.stringify({ found: next, follow_ups: followUps.current })) }
-    else if (!quiet) playLessonSound('correct')
+    if (targets.every(item => next.includes(item.word) && (!item.followUpQuestion || followUps.current[item.word] === item.followUpQuestion.answer))) { setResult(true); onAnswered?.(true, JSON.stringify({ found: next, follow_ups: followUps.current })) }
+    else if (!quiet && !found.includes(word)) playLessonSound('correct')
   }
   function select(end: number[], beginning = start) {
     if (!beginning) { setStart(end); return }
     setStart(null)
     const match = wordAtEndpoints(targets, found, beginning, end)
     if (!match) { setMessage('Try another line of letters.'); return }
-    if (match.followUpQuestion) { setPending(match.word); setMessage('Look at the sign and choose its meaning.') }
+    if (match.followUpQuestion) {
+      setFound(previous => Array.from(new Set([...previous, match.word])))
+      setPending(match.word); setMessage('')
+      if (!quiet) playLessonSound('correct')
+    }
     else finishWord(match.word)
   }
   return <div className={styles.game}>
@@ -79,9 +89,18 @@ export function WordSearch({ task, onAnswered, onChanged, quiet }: Props) {
         const highlighted = targets.some(item => found.includes(item.word) && item.cells.some(([rr, cc]) => rr === r && cc === c))
         return <button type="button" key={`${r},${c}`} data-cell={`${r},${c}`} disabled={pending !== null || result === true} className={`${highlighted ? styles.found : ''} ${start?.[0] === r && start?.[1] === c ? styles.selected : ''}`} aria-label={`${letter}, row ${r + 1}, column ${c + 1}${highlighted ? ', found' : ''}`} onPointerDown={() => { dragStart.current = [r, c]; suppressClick.current = false }} onClick={() => { if (suppressClick.current) { suppressClick.current = false; return } select([r, c]) }}>{letter}</button>
       }))}
-    </div><div className={styles.wordList} aria-label="Words to find"><div className={styles.wordListHeader}><strong role="status">{found.length} of {targets.length} found</strong><button type="button" onClick={() => { setFound([]); setStart(null); setPending(null); setResult(null); setMessage(''); followUps.current = {}; dragStart.current = null; suppressClick.current = false; onChanged?.() }}>Reset</button></div>{targets.map(item => <span key={item.word} className={found.includes(item.word) ? styles.found : ''}>{found.includes(item.word) ? ' ' : ''}{item.displayLabel}{found.includes(item.word) && <small className={styles.foundBadge}>Found</small>}{found.includes(item.word) && item.revealImage && <img src={item.revealImage} alt={item.displayLabel} />}</span>)}</div></div>
-    {target?.followUpQuestion && <section className={styles.followUp}><img src={target.revealImage} alt="Safety sign" /><strong>{target.followUpQuestion.question}</strong><div className={styles.actions}>{target.followUpQuestion.choices.map(choice => <button type="button" key={choice} onClick={() => { if (choice === target.followUpQuestion?.answer) finishWord(target.word, choice); else { setMessage('Look at the sign again. What is it telling you?'); if (!quiet) playLessonSound('incorrect') } }}>{choice}</button>)}</div></section>}
-    {message && <Feedback correct={null} task={task} message={message} />}
+    </div><div className={`${styles.wordList} ${pending ? styles.wordListExpanded : ''}`} aria-label="Words to find">
+      <div className={styles.wordListHeader}><strong role="status">{found.length} of {targets.length} found</strong><button type="button" onClick={() => { setFound([]); setStart(null); setPending(null); setResult(null); setMessage(''); followUps.current = {}; dragStart.current = null; suppressClick.current = false; onChanged?.() }}>Reset</button></div>
+      {target?.followUpQuestion && <section ref={followUpRef} tabIndex={-1} className={styles.followUp} aria-label={`${target.displayLabel} found. Choose the sign's meaning.`}>
+        <span className={styles.nextStep}>Next: understand the sign</span>
+        {target.revealImage && <img src={target.revealImage} alt={`${target.displayLabel} sign`} />}
+        <strong>{target.followUpQuestion.question}</strong>
+        <div className={styles.followUpChoices}>{target.followUpQuestion.choices.map(choice => <button type="button" key={choice} onClick={() => { if (choice === target.followUpQuestion?.answer) finishWord(target.word, choice); else { setMessage('Look at the sign again. What is it telling you?'); if (!quiet) playLessonSound('incorrect') } }}>{choice}</button>)}</div>
+        {message && <Feedback correct={null} task={task} message={message} />}
+      </section>}
+      {targets.map(item => <span key={item.word} className={found.includes(item.word) ? styles.found : ''}>{item.displayLabel}{found.includes(item.word) && <small className={styles.foundBadge}>{pending === item.word ? 'Found · answer next' : 'Found'}</small>}{found.includes(item.word) && pending !== item.word && item.revealImage && <img src={item.revealImage} alt={item.displayLabel} />}</span>)}
+    </div></div>
+    {message && !pending && <Feedback correct={null} task={task} message={message} />}
   </div>
 }
 
@@ -176,11 +195,14 @@ export function FlipMatching({ task, onAnswered, onChanged, quiet }: Props) {
   }
   return <div className={styles.game}>
     <strong role="status">{matched.length} of {task.pairs?.length ?? 0} pairs matched</strong>
-    <div className={styles.flipGrid}>{cards.map((card, index) => {
+    <div className={`${styles.flipGrid} ${cards.length >= 8 && cards.length % 4 === 0 ? styles.flipGridCompact : ''}`}>{cards.map((card, index) => {
       const complete = matched.includes(card.pairId)
       const shown = complete || open.includes(card.key)
       return <button type="button" key={card.key} aria-label={shown ? `${card.item.label}${complete ? ', matched' : ', tap to turn over'}` : `Flip card ${index + 1}`} aria-pressed={shown} disabled={complete} className={`${styles.flipCard} ${shown ? styles.revealed : ''} ${complete ? styles.correct : ''}`} onClick={() => flip(card.key)}>
-        {shown ? <>{card.item.imageUrl ? <img src={card.item.imageUrl} alt={card.item.altText ?? card.item.label} /> : <span>{card.item.label}</span>}{complete && <strong>Matched</strong>}</> : <><span className={styles.cardBack}>?</span><small>Card {index + 1}</small></>}
+        <span className={`${styles.flipInner} ${shown ? styles.flipTurned : ''}`}>
+          <span className={`${styles.flipFace} ${styles.flipBack}`} aria-hidden={shown}><span className={styles.cardBack}>?</span><small>Card {index + 1}</small></span>
+          <span className={`${styles.flipFace} ${styles.flipFront}`} aria-hidden={!shown}>{card.item.imageUrl ? <><img src={card.item.imageUrl} alt={card.item.altText ?? card.item.label} />{!task.hideImageLabels && <span>{card.item.label}</span>}</> : <span>{card.item.label}</span>}{complete && <strong>Matched</strong>}</span>
+        </span>
       </button>
     })}</div>
     {wrong && <p role="status">These cards don't match. Tap a card to turn it over, or choose another card.</p>}

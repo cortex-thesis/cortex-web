@@ -5,6 +5,8 @@ import { PlayfulZoneTemplate } from '../../components/templates'
 import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molecules'
 import { api } from '../../lib/api'
 import { playLessonSound } from '../../lib/lessonSounds'
+import ModeBgm from '../../components/molecules/ModeBgm/ModeBgm'
+import { useAuthStore } from '../../store/authStore'
 import type { Task } from '../../types'
 import styles from './FreeLessonSelect.module.css'
 import playerStyles from './PracticeLesson.module.css'
@@ -19,10 +21,10 @@ interface Lesson {
 }
 
 const fieldNames: Record<string, string> = Object.fromEntries([
-  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields',
+  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields', 'clockRounds', 'clockMode',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
-  'actionLabel', 'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode',
+  'actionLabel', 'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'availableItemIds',
   'correctFeedback', 'retryFeedback', 'sceneImageUrl', 'preferredColumns', 'boardMinHeight', 'mediaFit',
   'dirtyImageUrl', 'cleaningImageUrl', 'cleanImageUrl', 'toolImageUrl',
 ].map((name) => [name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`), name]))
@@ -85,6 +87,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     question: '', choices: [], answer: '', ...configuration,
     imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
+    checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set') && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
     initialResponse: lesson.progress.activity_evidence?.[String(slide.id)]?.selected,
     index: index + 1, total: lesson.slides.length, contentType: slide.activity.type,
     }
@@ -100,6 +103,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       <button className={styles.backBtn} onClick={back} aria-label="Back to lessons"><ArrowLeft size={18} /></button>
       <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>
     </header>
+    {lesson && !complete && <div className={playerStyles.musicToolbar}><ModeBgm mode="focus" suspended={Boolean(task?.taskTemplate === 'audio_sequence' || (task?.mediaUrl && (videoSlide || task.contentType === 'audio' || task.template === 'calming_soundscape')))} /></div>}
     <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}>

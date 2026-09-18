@@ -57,4 +57,11 @@ def upgrade_prev02(definitions):
            **puzzle(['GOODS', 'SERVICE', 'WORK']), correct_feedback='You found the livelihood words.', retry_feedback='Try another line of letters.')
     screen('Lesson Complete', template='visual_narrative', steps=[{'id': 'done', 'title': 'Goods and services help communities',
            'description': 'You identified livelihood activities and what they provide.', 'image_url': '/assets/shared/thumbs-up.png'}])
+    for config in (screens[0]['configuration'], screens[-1]['configuration']):
+        config['layout']['preferred_columns'] = 1
+    for screen_data in screens:
+        for item in screen_data['configuration'].get('items', []):
+            if item['id'] == 'draw': item['image_url'] = root + 'drawing-interest.png'
+            elif item['id'] == 'tailor': item['image_url'] = root + 'tailoring.png'
+            elif 'food' in item['id'] or 'food' in item['label'].lower(): item['image_url'] = root + 'meal-preparation.png'
     lesson['slides'] = screens

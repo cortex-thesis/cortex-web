@@ -41,3 +41,33 @@ class FuncLessonIntegrationTests(TestCase):
         self.assertFalse(by_id["FUNC-01"]["assessment"]["spoken_language_exclusive"])
         self.assertIn("excludes", by_id["FUNC-02"]["assessment"]["digital_scope"])
         self.assertEqual(by_id["FUNC-03"]["assessment"]["mastery_threshold"], "Panorama/SPED must determine")
+
+    def test_clock_contract_requires_all_times_and_correct_period(self):
+        import json
+        from web.game_validation import evaluate_game
+        config = FUNC_LESSONS[2]['slides'][4]['configuration']
+        times = [{k: r[k] for k in ('id','hour','minute','period')} for r in config['clock_rounds']]
+        self.assertTrue(evaluate_game(config,json.dumps({'times':times,'digital_only':True})))
+        self.assertFalse(evaluate_game(config,json.dumps({'times':times[:-1],'digital_only':True})))
+        times[0]['period']='pm'
+        self.assertFalse(evaluate_game(config,json.dumps({'times':times,'digital_only':True})))
+
+    def test_scoped_clock_sync_preserves_other_lessons_and_history(self):
+        self.sync()
+        other=Lesson.objects.get(competency_code=FUNC_LESSONS[0]['competency_code'])
+        other.title='Teacher edit'
+        other.save(update_fields=['title'])
+        lesson=Lesson.objects.get(competency_code=FUNC_LESSONS[2]['competency_code'])
+        old=lesson.slides.get(position=3)
+        old.position=8
+        old.save(update_fields=['position'])
+        old.activity.configuration=dict(old.activity.configuration,optional_review=True,digital_activity_history=True)
+        old.activity.save(update_fields=['configuration'])
+        call_command('sync_func_lessons',owner='func-owner',lesson='FUNC-03',stdout=StringIO())
+        other.refresh_from_db()
+        self.assertEqual(other.title,'Teacher edit')
+        self.assertNotEqual(lesson.slides.get(position=3).pk,old.pk)
+        from web.views import _current_garden_rows, _practice_progress_data
+        from types import SimpleNamespace
+        self.assertEqual(lesson.slides.filter(_current_garden_rows('activity')).count(),8)
+        self.assertEqual(_practice_progress_data(lesson,SimpleNamespace(completed_slide_ids=[old.pk],activity_evidence={}))['percentage'],0)

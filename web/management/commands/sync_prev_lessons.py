@@ -1,3 +1,4 @@
+from copy import deepcopy
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
@@ -5,6 +6,7 @@ from django.utils import timezone
 from web.activity_templates import validate_activity_configuration
 from web.models import Activity, CurriculumPackage, Lesson, Profile, Slide
 from web.prev_lessons import PREV_LESSONS
+from web.lesson_assets import attach_shared_icons, shared_icon_urls
 
 
 class Command(BaseCommand):
@@ -16,6 +18,7 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        icon_urls = shared_icon_urls()
         profiles = Profile.objects.select_related("user")
         owner = profiles.filter(user__username=options["owner"]).first() if options["owner"] else profiles.filter(role=Profile.Role.ADMIN).order_by("pk").first()
         if owner is None:
@@ -52,7 +55,8 @@ class Command(BaseCommand):
                     slide.save(update_fields=["position"])
                 existing = {}
             for position, screen in enumerate(definition["slides"]):
-                config = dict(screen["configuration"])
+                config = deepcopy(screen["configuration"])
+                attach_shared_icons(config, icon_urls)
                 config["lesson_metadata"] = {"lesson_id": definition["lesson_id"], "official_competency": definition["competency"], "competency_code": definition["competency_code"], "assessment": definition["assessment"], "content_status": "Proposed for SPED expert validation"}
                 for field in ("content_standard", "performance_standard"):
                     if field in definition:

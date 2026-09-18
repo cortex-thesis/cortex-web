@@ -4,7 +4,35 @@ import json
 
 def validate_game(config):
     template = config.get("task_template")
+    if template == 'garden_kit':
+        template = 'find_it'
     try:
+        if template == 'clock_set':
+            rounds = config['clock_rounds']
+            if config['clock_mode'] not in ('set', 'read') or not isinstance(rounds, list) or not rounds:
+                return 'Clock practice needs a valid mode and examples.'
+            if len({r['id'] for r in rounds}) != len(rounds) or any(
+                    not isinstance(r['id'], str) or not r['id'] or not r.get('instruction') or
+                    type(r['hour']) is not int or not 1 <= r['hour'] <= 12 or
+                    type(r['minute']) is not int or not 0 <= r['minute'] <= 59 or
+                    r['period'] not in ('am', 'pm') for r in rounds):
+                return 'Clock examples require unique IDs, instructions, valid hours/minutes, and a time period.'
+        if template == 'garden_mission':
+            items, missions = config['items'], config['missions']
+            ids = {item['id'] for item in items}
+            if not items or len(ids) != len(items) or not missions or len({row['id'] for row in missions}) != len(missions):
+                return 'Garden missions require unique tools and nonempty, unique steps.'
+            if any(row['answer'] not in ids or any(not row.get(field) for field in ('label', 'instruction', 'action_label', 'hint', 'feedback')) for row in missions):
+                return 'Garden missions require valid tools, instructions, target labels, hints and feedback.'
+            scenes = {'soil', 'water', 'measure', 'meal', 'display', 'practice', 'inspect', 'compare', 'reference'}
+            for row in missions:
+                if row.get('scene') and row['scene'] not in scenes:
+                    return 'Garden missions require a supported scene.'
+                available = row.get('available_item_ids')
+                if available is not None and (not isinstance(available, list) or not available or
+                        any(not isinstance(key, str) for key in available) or len(set(available)) != len(available) or
+                        not set(available).issubset(ids) or row['answer'] not in available):
+                    return 'Visible mission actions must include the required action and reference unique known items.'
         if template == "scenario_classifier":
             scenarios = config["scenarios"]
             if not scenarios or any(not row.get("clue") or len(row["choices"]) < 2 or len(set(row["choices"])) != len(row["choices"]) or row["answer"] not in row["choices"] or not row.get("feedback") for row in scenarios):
@@ -70,10 +98,20 @@ def validate_game(config):
 def evaluate_game(config, selected):
     """Return None for legacy templates; otherwise verify a complete successful response."""
     template = config.get("task_template")
-    if template not in {"word_search", "find_it", "audio_sequence", "shopping", "scenario_classifier", "discovery_board"}:
+    if template == 'garden_kit':
+        template = 'find_it'
+    if template not in {"word_search", "find_it", "audio_sequence", "shopping", "scenario_classifier", "discovery_board", 'garden_mission', 'clock_set'}:
         return None
     try:
         value = json.loads(selected)
+        if template == 'clock_set':
+            times = value['times']
+            return value.get('digital_only') is True and isinstance(times, list) and all(
+                isinstance(r, dict) and type(r.get('hour')) is int and type(r.get('minute')) is int for r in times
+            ) and times == [{key: r[key] for key in ('id', 'hour', 'minute', 'period')} for r in config['clock_rounds']]
+        if template == 'garden_mission':
+            return value.get('digital_only') is True and value['missions'] == [
+                {'id': row['id'], 'tool': row['answer'], 'target_applied': True} for row in config['missions']]
         if template == "scenario_classifier":
             return value["answers"] == [row["answer"] for row in config["scenarios"]]
         if template == "discovery_board":

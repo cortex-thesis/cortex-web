@@ -18,6 +18,7 @@ ACTIVITIES = [
 
 def items():
     visuals = {"sports": "/assets/care/care-01/ball.png", "building": "/assets/pre-vocational/common/repair.png"}
+    visuals['unsure'] = '/assets/pre-vocational/common/not-sure-yet.png'
     return [{"id": key, "label": label, **({"image_url": visuals[key]} if key in visuals else {})} for key, label in ACTIVITIES]
 
 
@@ -144,8 +145,12 @@ def build():
     goal = by_key['orientation']['configuration']
     goal.update(discussion=False, narration_script='', steps=[{'id': 'goal', 'title': "Today's goal", 'description': 'Discover what you enjoy, what you can do, and what you want to practice.', 'image_url': '/assets/pre-vocational/common/drawing-interest.png'}])
     goal['layout']['preferred_columns'] = 1
+    by_key['concepts']['configuration']['layout']['preferred_columns'] = 2
+    completion = by_key['completion']['configuration']
+    completion['layout']['preferred_columns'] = 1
+    completion['steps'][0].update(image_url='/assets/shared/thumbs-up.png', alt_text='Thumbs up for completing the lesson')
     for concept in by_key['concepts']['configuration']['steps']:
-        if concept['id'] in ('talent', 'skill'):
+        if concept['id'] in ('talent', 'skill', 'capability'):
             concept['image_url'] = '/assets/pre-vocational/common/' + concept['id'] + '.png'
     by_key['story']['configuration']['steps'][0]['image_url'] = '/assets/pre-vocational/common/alex-gardener.png'
     reflection = by_key['reflection']['configuration']

@@ -68,6 +68,21 @@ class PrevLessonIntegrationTests(TestCase):
                     self.assertTrue(config["correct_feedback"])
                     self.assertTrue(config["retry_feedback"])
 
+    def test_prev03_video_free_interactive_workflow(self):
+        definition = PREV_LESSONS[2]
+        configs = [screen['configuration'] for screen in definition['slides']]
+        self.assertEqual(len(configs), 9)
+        self.assertFalse(any(screen['type'] == 'video' for screen in definition['slides']))
+        self.assertEqual(configs[0]['layout']['preferred_columns'], 1)
+        self.assertEqual(configs[-1]['layout']['preferred_columns'], 1)
+        self.assertEqual(configs[2]['task_template'], 'memory_flip')
+        self.assertEqual(configs[3]['task_template'], 'sort_groups')
+        self.assertEqual(configs[4]['task_template'], 'scenario_classifier')
+        self.assertFalse(configs[6]['scored'])
+        self.assertEqual(configs[7]['task_template'], 'word_search')
+        for screen in definition['slides']:
+            self.assertIsNone(validate_activity_configuration(screen['type'], screen['configuration']))
+
     def test_self_reports_are_not_scored_as_verified_skills(self):
         prev01 = next(lesson for lesson in PREV_LESSONS if lesson["lesson_id"] == "PREV-01")
         self.assertFalse(prev01["assessment"]["self_report_scored"])

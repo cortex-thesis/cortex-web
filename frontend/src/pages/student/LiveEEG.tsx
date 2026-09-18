@@ -6,6 +6,8 @@ import { PlayfulZoneTemplate } from '../../components/templates'
 import { api } from '../../lib/api'
 import { playLessonSound } from '../../lib/lessonSounds'
 import { endStudentSession, getStudentSessions, trackStudentSlide } from '../../lib/studentApi'
+import ModeBgm from '../../components/molecules/ModeBgm/ModeBgm'
+import { useAuthStore } from '../../store/authStore'
 import { MUSE_CHANNELS, useMuseStore, type BandPowers } from '../../store/museStore'
 import type { Task } from '../../types'
 import EEGRegulation from './EEGRegulation'
@@ -30,10 +32,10 @@ const BANDS: Array<{ key: keyof BandPowers; label: string }> = [
   { key: 'alpha', label: 'Alpha' }, { key: 'beta', label: 'Beta' }, { key: 'gamma', label: 'Gamma' },
 ]
 const fieldNames: Record<string, string> = Object.fromEntries([
-  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields',
+  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields', 'clockRounds', 'clockMode',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl', 'actionLabel',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
-  'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'correctFeedback', 'retryFeedback',
+  'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'correctFeedback', 'retryFeedback', 'availableItemIds',
   'sceneImageUrl', 'preferredColumns', 'boardMinHeight', 'mediaFit',
   'dirtyImageUrl', 'cleaningImageUrl', 'cleanImageUrl', 'toolImageUrl',
 ].map((name) => [name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`), name]))
@@ -160,9 +162,12 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
   }, [phase])
   const trivia = lessonTrivia(lesson?.package)
   const slide = lesson?.slides[position]
+  const slideEntry = useRef<{ sessionId: string; slideId: number; request: Promise<unknown> } | null>(null)
   useEffect(() => {
     if (!sessionId || !slide || mode !== 'focus' || !calibrated || complete || ending || teacherControl?.paused) return
-    void trackStudentSlide(sessionId, slide.id, 'enter').catch((reason: Error) => setError(reason.message))
+    const request = trackStudentSlide(sessionId, slide.id, 'enter')
+    slideEntry.current = { sessionId, slideId: slide.id, request }
+    void request.catch((reason: Error) => setError(reason.message))
   }, [sessionId, slide, mode, calibrated, complete, ending, teacherControl?.paused])
 
   useEffect(() => {
@@ -180,9 +185,10 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
       question: '', choices: [], answer: '', ...configuration,
       imageUrl: configuration.imageUrl ?? item.activity.asset_url ?? null,
       id: String(item.id), title: item.title, package: lesson.package,
+      checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set') && sessionId && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/eeg/${sessionId}/${item.id}` : undefined,
       index: index + 1, total: lesson.slides.length, contentType: item.activity.type,
     }
-  }) : [], [lesson])
+  }) : [], [lesson, sessionId])
   const task = tasks[position]
   const pendingAnswers = useRef(new Set<Promise<unknown>>())
   const unsavedAnswers = useRef<Record<number, { correct: boolean; selected: string }>>({})
@@ -214,7 +220,12 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
     if (sessionId) {
       setSavingStep(true)
       try {
-        await trackStudentSlide(sessionId, lesson.slides[position].id, 'enter')
+        const entry = slideEntry.current
+        if (entry?.sessionId === sessionId && entry.slideId === lesson.slides[position].id) {
+          try { await entry.request } catch { await trackStudentSlide(sessionId, entry.slideId, 'enter') }
+        } else {
+          await trackStudentSlide(sessionId, lesson.slides[position].id, 'enter')
+        }
         await trackStudentSlide(sessionId, lesson.slides[position].id, 'complete')
       } catch {
         setError('Your lesson progress could not be saved. Please try Next again.')
@@ -287,6 +298,7 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
       <button className={shellStyles.backBtn} onClick={() => void finish()} aria-label="End session and return"><ArrowLeft size={18} /></button>
       {displayMode === 'focus' && <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>}
     </header>
+    {phase !== 'complete' && displayMode === 'focus' && <div className={playerStyles.musicToolbar}><ModeBgm mode="focus" suspended={Boolean(task?.taskTemplate === 'audio_sequence' || (task?.mediaUrl && (videoSlide || task.contentType === 'audio' || task.template === 'calming_soundscape')) || teacherControl?.paused || phase === 'calibrating')} /></div>}
     {phase !== 'complete' && displayMode === 'focus' && (import.meta.env.DEV || teacherControl) && <details className={styles.monitorDetails}><summary>Session details</summary><section className={styles.monitor} aria-label="Live Muse 2 status">
       <div className={styles.monitorDevice}><Radio size={15} /><strong>{deviceName || 'Muse 2'}</strong><span><BatteryMedium size={15} />{battery == null ? '—' : `${battery}%`}</span></div>
       <div className={styles.monitorBands}>{BANDS.map(({ key, label }) => <span key={key}><small>{label}</small><strong>{bands[key].toFixed(3)}</strong></span>)}</div>
