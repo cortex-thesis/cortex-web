@@ -22,6 +22,8 @@ dist-ssr
 frontend_dist/
 staticfiles/
 db.sqlite3
+# Locally cached/uploaded application media may contain private user content.
+media/
 __pycache__/
 *.py[cod]
 *.local

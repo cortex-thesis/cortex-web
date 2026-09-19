@@ -56,8 +56,10 @@ function storedUser(): User | null {
 }
 
 function storeUser(user: User | null) {
-  if (user) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(user))
-  else localStorage.removeItem(AUTH_CACHE_KEY)
+  try {
+    if (user) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(user))
+    else localStorage.removeItem(AUTH_CACHE_KEY)
+  } catch { /* Login still works when browser storage is unavailable. */ }
 }
 
 function primeStudentBootstrap(bootstrap: StudentBootstrapData) {
@@ -89,8 +91,11 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
   initialize: async () => {
     clearApiCache()
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 15_000)
     try {
-      const [, authUser] = await Promise.all([api('/auth/csrf/'), api<AuthUser>('/auth/me/')])
+      const options = { signal: controller.signal }
+      const [, authUser] = await Promise.all([api('/auth/csrf/', options), api<AuthUser>('/auth/me/', options)])
       if (authUser.student_bootstrap) primeStudentBootstrap(authUser.student_bootstrap)
       if (authUser.dashboard) {
         primeApiCache('/teacher/dashboard/', authUser.dashboard)
@@ -103,6 +108,9 @@ export const useAuthStore = create<AuthState>()((set) => ({
       clearApiCache()
       storeUser(null)
       set({ user: null, isAuthenticated: false, isInitialized: true })
+    } finally {
+      clearTimeout(timeout)
+      controller.abort()
     }
   },
 

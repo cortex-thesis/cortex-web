@@ -2,6 +2,11 @@
 
 ## Hybrid Supabase and local EEG storage
 
+For development on separate laptops with intermittent internet, see
+[Offline development and synchronization](docs/offline-sync.md). This optional
+mode uses local SQLite for application requests and syncs with Supabase in the
+background. The direct-cloud behavior described below remains the default.
+
 For teacher/student testing across two devices, see
 [Teacher-led sessions on two devices](docs/teacher-led-two-device-test.md).
 

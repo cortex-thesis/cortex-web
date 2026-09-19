@@ -43,9 +43,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "web",
+    "offline_sync",
 ]
 
 MIDDLEWARE = [
+    "offline_sync.middleware.InitializationMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -139,6 +141,25 @@ else:
         }
     }
 
+# Keep cloud credentials server-side. Requests never fall back to the cloud in
+# offline mode: only the worker uses this alias.
+OFFLINE_SYNC_ENABLED = os.environ.get("CORTEX_OFFLINE_SYNC", "false").lower() == "true" and "test" not in sys.argv
+OFFLINE_SYNC_INTERVAL = max(5, int(os.environ.get("CORTEX_SYNC_INTERVAL", "15")))
+if OFFLINE_SYNC_ENABLED and "test" not in sys.argv:
+    if TEMPLATE_ONLY or DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+        raise RuntimeError("Offline sync requires Supabase DB_* or DATABASE_URL and CORTEX_TEMPLATE_ONLY=false.")
+    DATABASES["cloud"] = DATABASES["default"]
+    DATABASES["cloud"]["CONN_MAX_AGE"] = 0
+    DATABASES["cloud"]["OPTIONS"]["connect_timeout"] = 3
+    DATABASES["cloud"]["OPTIONS"]["options"] += " -c statement_timeout=5000 -c lock_timeout=2000"
+    local_database = Path(os.environ.get("CORTEX_LOCAL_DATABASE", BASE_DIR / ".runtime" / "offline.sqlite3"))
+    local_database.parent.mkdir(parents=True, exist_ok=True)
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.sqlite3", "NAME": local_database,
+        "OPTIONS": {"timeout": 10, "transaction_mode": "IMMEDIATE"},
+    }
+DATABASE_ROUTERS = ["offline_sync.router.SyncRouter"]
+
 AUTH_PASSWORD_VALIDATORS = []
 if not DEBUG:
     AUTH_PASSWORD_VALIDATORS = [
@@ -211,3 +232,15 @@ if SUPABASE_STORAGE_ENDPOINT and "test" not in sys.argv:
         "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
     }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+if OFFLINE_SYNC_ENABLED:
+    if SUPABASE_STORAGE_ENDPOINT and "test" not in sys.argv:
+        from botocore.config import Config
+        STORAGES["cloud_media"] = STORAGES["default"]
+        STORAGES["cloud_media"]["OPTIONS"]["client_config"] = Config(
+            connect_timeout=3, read_timeout=10, retries={"max_attempts": 1},
+            signature_version="s3v4", s3={"addressing_style": "path"},
+        )
+    else:
+        STORAGES = {"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}}
+    STORAGES["default"] = {"BACKEND": "django.core.files.storage.FileSystemStorage"}

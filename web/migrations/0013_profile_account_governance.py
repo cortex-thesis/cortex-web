@@ -6,12 +6,12 @@ import web.models
 
 def classify_existing_administrators(apps, schema_editor):
     Profile = apps.get_model("web", "Profile")
-    Profile.objects.filter(role="admin").update(admin_scope="super")
+    Profile.objects.using(schema_editor.connection.alias).filter(role="admin").update(admin_scope="super")
 
 
 def reverse_classification(apps, schema_editor):
     Profile = apps.get_model("web", "Profile")
-    Profile.objects.filter(role="admin").update(admin_scope="none")
+    Profile.objects.using(schema_editor.connection.alias).filter(role="admin").update(admin_scope="none")
 
 
 class Migration(migrations.Migration):

@@ -21,11 +21,11 @@ def assign_packages(apps, schema_editor):
     ClassPackage = apps.get_model('web', 'ClassPackage')
     packages = []
     for slug, name in PACKAGES.items():
-        package, _ = CurriculumPackage.objects.get_or_create(slug=slug, defaults={'name': name, 'is_active': True})
+        package, _ = CurriculumPackage.objects.using(schema_editor.connection.alias).get_or_create(slug=slug, defaults={'name': name, 'is_active': True})
         packages.append(package)
-    ClassPackage.objects.bulk_create([
+    ClassPackage.objects.using(schema_editor.connection.alias).bulk_create([
         ClassPackage(school_class=school_class, package=package)
-        for school_class in SchoolClass.objects.all()
+        for school_class in SchoolClass.objects.using(schema_editor.connection.alias).all()
         for package in packages
     ], ignore_conflicts=True)
 

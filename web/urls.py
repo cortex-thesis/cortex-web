@@ -1,5 +1,6 @@
 from .class_sessions import class_sessions, class_session_detail, class_session_join, class_session_report, class_session_lessons
 from django.urls import path
+from offline_sync.views import sync_status
 from .views import (
     admin_account_status,
     admin_accounts,
@@ -67,6 +68,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("sync/status/", sync_status, name="sync-status"),
     path("model-analysis/report/", model_analysis_report, name="model-analysis-report"),
     path('class-sessions/', class_sessions, name='class-sessions'),
     path('class-sessions/<uuid:group_id>/', class_session_detail, name='class-session-detail'),
