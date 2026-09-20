@@ -157,7 +157,7 @@ export default function Profile() {
               <button className={styles.sessionRow} key={session.id} onClick={() => navigate('/student/session-summary', { state: { summary: { sessionId: session.id, duration: session.duration_seconds, focusScore: session.focus_score, stateDistribution: session.state_distribution, taskCompleted: session.tasks_completed, taskTotal: session.tasks_total } } })}>
                 <span className={styles.sessionIcon}><BookOpen size={18}/></span>
                 <span className={styles.sessionInfo}><strong>{session.title}</strong><small>{new Date(session.ended_at ?? session.started_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} · {Math.max(1, Math.round(session.duration_seconds / 60))} min</small></span>
-                <StateBadge state={session.state} size="sm" />
+                {session.state ? <StateBadge state={session.state} size="sm" /> : <span>No EEG data</span>}
                 <span className={styles.focusScore}>
                   <span className={styles.focusEmoji} aria-hidden="true">
                     {getFocusPerformance(session.focus_score, session.state_distribution).emoji}

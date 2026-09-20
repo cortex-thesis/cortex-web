@@ -20,8 +20,14 @@
 }
 
 .pageContent {
+  --teacher-page-title-size: 22px;
   --teacher-page-padding: 0;
+  font-size: var(--text-body-d);
   --teacher-page-max-width: var(--content-max-width, 1300px);
 }
 
 @media print { .root { background: white; min-height: auto; } .root > nav { display: none; } .content { max-width: none; padding: 0; overflow: visible; } }
+
+@media (max-width: 600px) {
+  .content { padding: var(--space-4); }
+}

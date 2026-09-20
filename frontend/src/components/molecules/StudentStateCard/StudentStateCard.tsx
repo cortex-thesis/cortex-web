@@ -83,15 +83,6 @@ function StudentStateCard({
 
       {isConnected && currentState ? (
         <>
-          <svg className={styles.sparkline} viewBox="0 0 120 20" role="img" preserveAspectRatio="none" aria-label={`${name} focus trend`}>
-            <polyline
-              points="0,15 15,11 30,13 45,7 60,10 75,5 90,8 105,3 120,6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
 
           <div className={styles.stats}>
             <div className={styles.stat}>
@@ -106,7 +97,7 @@ function StudentStateCard({
             </div>
             <div className={styles.stat}>
               <span className={styles.statVal}>{formatDuration(stateDuration)}</span>
-              <span className={styles.statLabel}>State time</span>
+              <span className={styles.statLabel}>Latest EEG sample</span>
             </div>
           </div>
 
@@ -117,13 +108,13 @@ function StudentStateCard({
             <span className={styles.transitions}>{(student.stateTransitions ?? []).map((transition) => transition.state).join(' > ')}</span>
           </div>
 
-          <button
+          {onOverride && <button
             className={styles.overrideBtn}
             onClick={() => onOverride?.(id)}
             aria-label={`Override mode for ${name}`}
           >
             Override mode
-          </button>
+          </button>}
         </>
       ) : (
         <div className={styles.offlineMsg}>EEG headband not detected</div>

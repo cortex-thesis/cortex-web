@@ -8,7 +8,7 @@
 }
 
 .title {
-  font-size: 22px;
+  font-size: var(--teacher-page-title-size, 22px);
   font-weight: var(--font-weight-semibold);
   color: var(--color-deep-purple);
 }

@@ -192,3 +192,11 @@
     flex: 1;
   }
 }
+
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.filters label { display: grid; gap: 4px; font-size: 13px; }
+.filters input, .filters select, .filters button, .sessionControls button { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-white); font: inherit; }
+.filters button[aria-pressed="true"] { background: var(--color-interface-purple); color: white; }
+.reportNote { font-size: 12px; }
+.sessionControls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; }
+.sessionControls small { color: var(--color-text-secondary); }

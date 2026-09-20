@@ -9,7 +9,7 @@
 
 .title {
   font-family: var(--font-family);
-  font-size: 22px;
+  font-size: var(--teacher-page-title-size, 22px);
   font-weight: var(--font-weight-semibold);
   color: var(--color-deep-purple);
 }
@@ -169,10 +169,17 @@
 
 .message {
   margin: 0;
-  color: var(--color-teal);
+
   font-size: var(--text-caption);
 }
 
 .logoutBtn {
   align-self: flex-start;
+}
+
+.success { color: var(--color-teal); }
+.error { color: #b42318; }
+@media (max-width: 700px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .formActions { flex-wrap: wrap; }
 }

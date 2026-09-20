@@ -1,3 +1,4 @@
+import NotificationCenter from '../pages/NotificationCenter'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 
@@ -148,6 +149,7 @@ export default function AppRouter() {
 
       {/* School administrator */}
       <Route element={<ProtectedRoute roles={['school_admin']} />}>
+        <Route path="/school-admin/notifications" element={<NotificationCenter />} />
         <Route path="/school-admin/dashboard" element={<SchoolAdminDashboard />} />
         <Route path="/school-admin/classes" element={<SchoolAdminClasses />} />
         <Route path="/school-admin/teachers" element={<SchoolAdminDirectory />} />
@@ -156,6 +158,7 @@ export default function AppRouter() {
 
       {/* Super administrator */}
       <Route element={<ProtectedRoute roles={['super_admin']} />}>
+        <Route path="/admin/notifications" element={<NotificationCenter />} />
         <Route path="/model_analysis" element={<ModelAnalysis />} />
         <Route path="/admin/dashboard" element={templateOnly ? <TemplateAdminDashboard /> : <SuperAdminDashboard />} />
         <Route path="/admin/accounts" element={templateOnly ? <TemplateAdminAccounts /> : <SuperAdminAccounts />} />

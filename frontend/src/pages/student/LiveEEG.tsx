@@ -47,12 +47,37 @@ function taskConfiguration(value: unknown): unknown {
 
 interface TeacherControl { paused: boolean; presentation_mode: 'focus' | 'breathing' | 'refocus' | 'returning' | 'adaptive'; lesson: LessonData }
 
-export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherControl }) {
+export default function LiveEEG({ teacherControl: classroomControl }: { teacherControl?: TeacherControl }) {
   const navigate = useNavigate()
   const location = useLocation()
   const context = (location.state as { sessionId?: string; classId?: number; lessonId?: number; mode?: string; devBypass?: boolean } | null) ?? {}
   const { status, deviceName, battery, quality, bands, absoluteBands, relativeBands, baselineProgress, acceptedChannels, disconnect } = useMuseStore()
-  const [lesson, setLesson] = useState<LessonData | null>(teacherControl?.lesson ?? null)
+  const [lesson, setLesson] = useState<LessonData | null>(classroomControl?.lesson ?? null)
+  const [remote, setRemote] = useState<{ control_mode: string; presentation_mode: 'focus' | 'refocus' | 'breathing'; status: string; ended_at: string | null } | null>(null)
+  const [controlError, setControlError] = useState('')
+  const teacherControl = useMemo(() => classroomControl ?? (remote?.control_mode === 'teacher' && lesson ? { lesson, presentation_mode: remote.presentation_mode, paused: remote.status === 'paused' || Boolean(controlError) } : undefined), [classroomControl, remote, lesson, controlError])
+  useEffect(() => {
+    if (!context.sessionId || classroomControl) return
+    let disposed = false
+    let timer: ReturnType<typeof setTimeout>
+    const refresh = async () => {
+      try {
+        const result = await api<NonNullable<typeof remote>>('/sessions/' + context.sessionId + '/control/', { method: 'POST', body: JSON.stringify({ action: 'heartbeat' }) })
+        if (!disposed) { setRemote(result); setControlError('') }
+        if (result.ended_at) return
+      } catch (reason) { if (!disposed) setControlError(reason instanceof Error ? reason.message : 'Reconnecting to your teacher?') }
+      if (!disposed) timer = setTimeout(() => void refresh(), 2000)
+    }
+    void refresh()
+    return () => { disposed = true; clearTimeout(timer) }
+  }, [context.sessionId, classroomControl])
+  const remotelyPaused = !classroomControl && Boolean(teacherControl?.paused || remote?.ended_at)
+  const playerRoot = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!remotelyPaused) return
+    playerRoot.current?.querySelectorAll<HTMLMediaElement>('audio,video').forEach(media => media.pause())
+    window.dispatchEvent(new Event('cortex:pause-media'))
+  }, [remotelyPaused])
   const [position, setPosition] = useState(0)
   const [answered, setAnswered] = useState<Record<number, boolean>>({})
   const [focusGates, setFocusGates] = useState<Record<string, boolean>>({})
@@ -108,9 +133,9 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
   }, [sessionId, reportMode, ending, complete, teacherControl?.paused])
 
   useEffect(() => {
-    if (!sessionId || teacherControl) return
+    if (!sessionId || classroomControl) return
     void api<SessionPayload>(`/sessions/${sessionId}/eeg/`, { cache: 'no-store' }).then((payload) => setLesson(payload.lesson)).catch((reason: Error) => setError(reason.message))
-  }, [sessionId, teacherControl])
+  }, [sessionId, classroomControl])
 
   const calibrated = Boolean(forcedState || (status === 'streaming' && baselineProgress >= 100 && acceptedChannels > 0))
   useEffect(() => { if (calibrated) setLessonStarted(true) }, [calibrated])
@@ -281,6 +306,9 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
 
 
   return <>
+  {!classroomControl && remote?.control_mode === 'teacher' && <p role="status">Your teacher is guiding this session.</p>}
+  {remotelyPaused && <section className={styles.calibration}><h1>{remote?.ended_at ? 'Session ended' : controlError ? 'Reconnecting to your teacher' : 'Your teacher paused this session'}</h1><p role="status">{controlError || 'Your progress is saved. Wait for your teacher to resume.'}</p><button onClick={() => void finish()}>Leave and save my session</button></section>}
+  <div ref={playerRoot} inert={remotelyPaused} style={{ display: remotelyPaused ? 'none' : undefined }}>
   {phase === 'calibrating' && <div className={styles.calibration}>
     <Radio size={42} aria-hidden="true" />
     <h1>{status === 'connecting' ? 'Reconnecting to your headset' : status !== 'streaming' ? 'Connect your headset' : 'Getting ready for your lesson'}</h1>
@@ -293,7 +321,7 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
     {saveFailed && <button onClick={() => Object.entries(unsavedAnswers.current).forEach(([index, answer]) => saveAnswer(Number(index), answer.correct, answer.selected))}>Retry saving answers</button>}
     <button onClick={() => void finish()}>End session</button>
   </div>}
-  <Activity mode={phase !== 'calibrating' ? 'visible' : 'hidden'}><PlayfulZoneTemplate showNav={false} calm={mode !== 'focus'} spotlight={backgroundSupport} cool={coolSupport} quietNav={mode === 'breathing'}><div className={`${shellStyles.page} ${playerStyles.page} ${backgroundSupport ? styles.spotlight : ''} ${mode === 'breathing' ? styles.quiet : ''}`}>
+  <Activity mode={phase !== 'calibrating' && !remotelyPaused ? 'visible' : 'hidden'}><PlayfulZoneTemplate showNav={false} calm={mode !== 'focus'} spotlight={backgroundSupport} cool={coolSupport} quietNav={mode === 'breathing'}><div className={`${shellStyles.page} ${playerStyles.page} ${backgroundSupport ? styles.spotlight : ''} ${mode === 'breathing' ? styles.quiet : ''}`}>
     <header className={shellStyles.header}>
       <button className={shellStyles.backBtn} onClick={() => void finish()} aria-label="End session and return"><ArrowLeft size={18} /></button>
       {displayMode === 'focus' && <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>}
@@ -339,5 +367,5 @@ export default function LiveEEG({ teacherControl }: { teacherControl?: TeacherCo
     </section>
     {phase !== 'complete' && <button className={styles.endSession} onClick={() => void finish()}>{teacherControl ? 'Leave and save my session' : 'End and save session'}</button>}
     {controls}
-  </div></PlayfulZoneTemplate></Activity></>
+  </div></PlayfulZoneTemplate></Activity></div></>
 }

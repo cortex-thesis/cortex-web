@@ -5,7 +5,7 @@ import os
 import secrets
 import string
 import sys
-from datetime import timedelta
+from datetime import timedelta, datetime
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -34,6 +34,7 @@ from .models import (
     SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction,
     UserPreference,
 )
+from .statistics import percentages, sample_distribution
 from .activity_templates import ACTIVITY_TEMPLATES, LAYOUT_OPTIONS, TASK_TEMPLATES, validate_activity_configuration
 
 PACKAGE_NAMES = {
@@ -1400,10 +1401,26 @@ def teacher_dashboard(request):
         return error
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
-    return JsonResponse(_teacher_dashboard_data(profile))
+    try:
+        return JsonResponse(_teacher_dashboard_data(profile, request.GET))
+    except ValueError as error:
+        return JsonResponse({'detail': str(error)}, status=400)
 
 
-def _teacher_dashboard_data(profile):
+def _teacher_dashboard_data(profile, filters=None):
+    filters = filters or {}
+    now = timezone.now()
+    month = filters.get('month', timezone.localtime(now).strftime('%Y-%m'))
+    start = end = None
+    if month != 'all':
+        try:
+            start = timezone.make_aware(datetime.strptime(month, '%Y-%m'))
+            end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+        except ValueError:
+            raise ValueError('Choose a valid reporting month.')
+    selected_class = filters.get('class_id', '')
+    if selected_class and not str(selected_class).isdigit():
+        raise ValueError('Choose a valid class.')
     class_items = list(SchoolClass.objects.filter(
         teacher=profile, status=SchoolClass.Status.ACTIVE,
     ).select_related("teacher", "teacher__school", "teacher__user").annotate(
@@ -1415,42 +1432,54 @@ def _teacher_dashboard_data(profile):
         school_class__teacher=profile, school_class__status=SchoolClass.Status.ACTIVE,
         removed_at__isnull=True,
     ).values_list("student_id", flat=True).distinct()
-    sessions = LearningSession.objects.filter(school_class__teacher=profile)
+    sessions = LearningSession.objects.filter(school_class__in=class_items)
+    if selected_class:
+        if not any(str(item.pk) == str(selected_class) for item in class_items):
+            raise ValueError('Choose one of your active classes.')
+        sessions = sessions.filter(school_class_id=selected_class)
+        student_ids = student_ids.filter(school_class_id=selected_class)
+    reporting = sessions.filter(ended_at__isnull=False)
+    if start:
+        reporting = reporting.filter(started_at__gte=start, started_at__lt=end)
+    measured_samples = SessionEEGSample.objects.filter(session__in=reporting)
+    distribution, sample_count = sample_distribution(measured_samples)
+    class_counts = {}
+    for row in measured_samples.filter(accepted_channels__gt=0).values('session__school_class_id', 'state').annotate(count=Count('pk')):
+        counts = class_counts.setdefault(row['session__school_class_id'], dict.fromkeys(StatePrediction.State.values, 0))
+        if row['state'] in counts:
+            counts[row['state']] += row['count']
+    class_scores = {item.pk: percentages(class_counts[item.pk])['focused'] if sum(class_counts.get(item.pk, {}).values()) else None for item in class_items}
     active_session_rows = []
     for session in sessions.filter(ended_at__isnull=True).select_related("student", "lesson", "school_class"):
         latest = session.eeg_samples.order_by("-recorded_at").first()
         if not _session_is_live(session, latest):
             continue
-        recent_states = list(session.eeg_samples.order_by("-recorded_at").values_list("state", flat=True)[:30])
+        recent_states = list(session.eeg_samples.filter(accepted_channels__gt=0).order_by("-recorded_at").values_list("state", flat=True)[:30])
         focus_score = round(100 * recent_states.count("focused") / len(recent_states)) if recent_states else 0
         active_session_rows.append({
             "id": str(session.pk), "class_id": session.school_class_id,
             "class_name": session.school_class.name, "student": _profile_data(session.student),
             "lesson": session.lesson.title if session.lesson_id else "No lesson selected",
             "started_at": session.started_at, "focus_score": focus_score,
+            "control_mode": session.control_mode, "status": session.status, "class_session_id": str(session.class_session_id) if session.class_session_id else None,
+            "presentation_mode": session.active_presentation_mode, "last_seen_at": session.last_seen_at,
             "latest": _eeg_sample_data(latest) if latest else None,
         })
-    analytics_averages = SessionAnalytics.objects.filter(
-        session__in=sessions, session__ended_at__isnull=False,
-    ).aggregate(**{
-        f"{state}_average": Avg(f"{state}_percentage")
-        for state in ("focused", "relaxed", "distracted", "overstimulated")
-    })
     return {
         "teacher": _profile_data(profile),
         "classes": [_class_data(item, packages=packages) | {
-            "average_focus": round(float(item.average_focus), 1) if item.average_focus is not None else None,
+            "average_focus": class_scores[item.pk],
         } for item in class_items],
-        "class_count": len(class_items),
+        "class_count": 1 if selected_class else len(class_items),
         "student_count": student_ids.count(),
         "unread_notifications": profile.notifications.filter(read_at__isnull=True).count(),
         "active_sessions": len(active_session_rows),
-        "total_sessions": sessions.count(),
-        "average_focus": round(float(analytics_averages["focused_average"]), 1) if analytics_averages["focused_average"] is not None else None,
-        "state_distribution": {
-            state: round(float(analytics_averages[f"{state}_average"] or 0), 1)
-            for state in ("focused", "relaxed", "distracted", "overstimulated")
-        },
+        "total_sessions": reporting.count(),
+        "average_focus": distribution['focused'] if sample_count else None,
+        "state_distribution": distribution,
+        "reporting": {"month": month, "start": start, "end_exclusive": end, "generated_at": now,
+                      "sample_count": sample_count, "measured_sessions": measured_samples.filter(accepted_channels__gt=0).values('session_id').distinct().count(),
+                      "basis": "Valid EEG samples in completed sessions, grouped by session start date"},
         "live_sessions": active_session_rows,
     }
 
@@ -1536,7 +1565,7 @@ def teacher_student_detail(request, student_id):
         "average_duration_seconds": round(sum(row["duration_seconds"] for row in rows) / len(rows)) if rows else None,
         "tasks_completed": sum(row["tasks_completed"] for row in rows),
         "tasks_total": sum(row["tasks_total"] for row in rows),
-        "state_distribution": {state: round(sum(row["state_distribution"][state] for row in measured) / len(measured)) for state in StatePrediction.State.values} if measured else None,
+        "state_distribution": percentages({state: sum(row["state_distribution"][state] for row in measured) for state in StatePrediction.State.values}, places=0) if measured else None,
     })
     return JsonResponse(data)
 
@@ -1549,7 +1578,7 @@ def teacher_class_analytics(request, class_id):
     school_class = get_object_or_404(SchoolClass, pk=class_id, teacher=profile)
     sessions = LearningSession.objects.filter(school_class=school_class)
     completed = sessions.filter(ended_at__isnull=False)
-    analytics = SessionAnalytics.objects.filter(session__in=completed)
+    analytics = SessionAnalytics.objects.filter(session__in=completed).filter(Q(focused_percentage__gt=0) | Q(relaxed_percentage__gt=0) | Q(distracted_percentage__gt=0) | Q(overstimulated_percentage__gt=0))
     states = StatePrediction.State.values
     distribution = analytics.aggregate(**{state: Avg(f'{state}_percentage') for state in states})
     recent_sessions = [{
@@ -1588,6 +1617,7 @@ def teacher_class_analytics(request, class_id):
             'samples': sum(counts.get(slide['id'], {}).values())} for slide in slides]
         timeline.append(line)
     return JsonResponse({
+        "generated_at": timezone.now(),
         "class": _class_data(school_class),
         "student_count": school_class.enrollments.filter(removed_at__isnull=True).count(),
         "session_count": sessions.count(),
@@ -1596,7 +1626,7 @@ def teacher_class_analytics(request, class_id):
         "completion_rate": round(float(completed.aggregate(value=Avg("completion_percentage"))["value"]), 1) if completed.exists() else None,
         "students": students, "timeline": timeline, 'slides': slides, 'lessons': lessons,
         'selected_lesson_id': selected_lesson, 'recent_sessions': recent_sessions, 'recent_badges': badges,
-        'state_distribution': {state: round(float(distribution[state] or 0), 1) for state in states},
+        'state_distribution': percentages(distribution),
         "message": "Analytics are calculated from stored learning sessions and processed Muse windows.",
     })
 
@@ -1652,10 +1682,10 @@ def teacher_journals(request):
 
 
 def _state_metrics(counts, confidence_sums):
-    total = sum(counts.values())
+    distribution = percentages(counts)
     return {state: {
         "samples": counts[state],
-        "percentage": round(counts[state] * 100 / total, 1) if total else 0,
+        "percentage": distribution[state],
         "average_confidence": round(confidence_sums[state] / counts[state], 3) if counts[state] else 0,
     } for state in StatePrediction.State.values}
 
@@ -2076,22 +2106,16 @@ def _student_session_data(session, now):
     prediction_total = sum(state_counts.values())
     analytics = getattr(session, "analytics", None)
     if not prediction_total and analytics is not None:
-        state_distribution = {
-            "focused": round(float(analytics.focused_percentage)),
-            "relaxed": round(float(analytics.relaxed_percentage)),
-            "distracted": round(float(analytics.distracted_percentage)),
-            "overstimulated": round(float(analytics.overstimulated_percentage)),
-        }
+        state_distribution = percentages({state: getattr(analytics, f"{state}_percentage") for state in state_counts}, places=0)
         prediction_total = -1
     if prediction_total:
         if prediction_total > 0:
-            state_distribution = {state: round(count * 100 / prediction_total) for state, count in state_counts.items()}
+            state_distribution = percentages(state_counts, places=0)
     else:
         state_distribution = {state: 0 for state in state_counts}
-        fallback_state = {"focus": "focused", "relax": "relaxed"}.get(session.active_presentation_mode, "focused")
-        state_distribution[fallback_state] = 100
+
     focus_score = state_distribution["focused"]
-    dominant_state = max(state_distribution, key=state_distribution.get)
+    dominant_state = max(state_distribution, key=state_distribution.get) if any(state_distribution.values()) else None
     return {
         "id": str(session.pk),
         "class_id": session.school_class_id,
@@ -2231,7 +2255,7 @@ def _session_is_live(session, latest_sample=None):
     now = timezone.now()
     if session.ended_at is not None:
         return False
-    if session.class_session_id and session.last_seen_at and session.last_seen_at >= now - timedelta(seconds=12):
+    if session.last_seen_at and session.last_seen_at >= now - timedelta(seconds=12):
         return True
     if latest_sample is not None:
         return latest_sample.recorded_at >= now - timedelta(seconds=8)
@@ -2418,10 +2442,7 @@ def teacher_reports(request):
             "focus_percentage": focus, "tasks_completed": session.activity_responses.count(),
             "mode_changes": session.adaptation_events.filter(previous_mode='focus', new_mode='relax').count() + session.manual_overrides.filter(previous_presentation_mode='focus', new_presentation_mode='relax').count(),
         })
-    distribution = {
-        state: round(total / sessions_with_state_data) if sessions_with_state_data else 0
-        for state, total in state_percentage_totals.items()
-    }
+    distribution = percentages(state_percentage_totals, places=0)
     return JsonResponse({
         "classes": [{"id": item.pk, "name": item.name} for item in class_items],
         "students": [{"id": item.pk, "name": item.display_name or item.user.username} for item in student_items],
@@ -2583,7 +2604,7 @@ def end_session(request, session_id):
         SessionAnalytics.objects.update_or_create(session=session, defaults={
             "total_duration_seconds": duration,
             **{f"{state}_seconds": round(duration * count / total) if total else 0 for state, count in counts.items()},
-            **{f"{state}_percentage": round(count * 100 / total, 3) if total else 0 for state, count in counts.items()},
+            **{f"{state}_percentage": value for state, value in percentages(counts, places=3).items()},
             "state_transition_count": max(0, total - 1),
         })
         _audit(profile, "session_ended", session)
@@ -2605,6 +2626,8 @@ def session_mode(request, session_id):
         session = get_object_or_404(LearningSession.objects.select_for_update(), pk=session_id, student=profile)
         if session.ended_at:
             return JsonResponse({'detail': 'The session has ended.'}, status=409)
+        if session.control_mode == 'teacher' and not session.class_session_id:
+            return JsonResponse({'mode': session.active_presentation_mode})
         previous = session.active_presentation_mode
         if previous != mode:
             AdaptationEvent.objects.create(session=session, source=AdaptationEvent.Source.AUTOMATIC,

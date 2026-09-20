@@ -1,3 +1,4 @@
+import { useNotifications } from '../../../hooks/useNotifications'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Bell, LogOut, Settings, UserRound } from 'lucide-react'
@@ -34,7 +35,9 @@ function getInitials(name: string): string {
     .toUpperCase()
 }
 
-function NavBarTeacher({ user, hasNotification = false }: NavBarTeacherProps) {
+function NavBarTeacher({ user }: NavBarTeacherProps) {
+  const { unread_count } = useNotifications()
+  const hasNotification = unread_count > 0
   const location = useLocation()
   const navigate = useNavigate()
   const logout = useAuthStore((state) => state.logout)

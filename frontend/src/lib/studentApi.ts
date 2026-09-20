@@ -19,7 +19,7 @@ export interface StudentSessionItem {
   ended_at: string | null
   duration_seconds: number
   focus_score: number
-  state: 'focused' | 'relaxed' | 'distracted' | 'overstimulated'
+  state: 'focused' | 'relaxed' | 'distracted' | 'overstimulated' | null
   status: 'in_progress' | 'completed'
   tasks_completed: number
   tasks_total: number

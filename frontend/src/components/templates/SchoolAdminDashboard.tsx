@@ -1,3 +1,4 @@
+import { useNotifications } from '../../hooks/useNotifications'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Bell, LogOut, Settings, UserRound } from 'lucide-react'
@@ -16,6 +17,7 @@ const links = [
 ]
 
 export default function SchoolAdminDashboard({ user, children }: { user: Pick<User, 'name' | 'avatar'>; children: ReactNode }) {
+  const { unread_count } = useNotifications()
   const location = useLocation()
   const navigate = useNavigate()
   const logout = useAuthStore((state) => state.logout)
@@ -38,7 +40,7 @@ export default function SchoolAdminDashboard({ user, children }: { user: Pick<Us
         })}</div>
       </div>
       <div className={navStyles.right}>
-        <span className={navStyles.notifBtn} title="School administrator"><Bell size={18} /></span>
+        <button className={navStyles.notifBtn} aria-label={`Notifications, ${unread_count} unread`} onClick={() => navigate('/school-admin/notifications')}><Bell size={18} />{unread_count > 0 && <span className={navStyles.notifDot} />}</button>
         <div className={navStyles.accountMenu} ref={menuRef}>
           <button className={navStyles.avatarBtn} onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-haspopup="menu">
             {user.avatar ? <img src={user.avatar} alt={user.name} className={navStyles.avatarImg} /> : <span className={navStyles.avatarInitials}>{user.name.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>}

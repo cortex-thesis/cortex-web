@@ -13,6 +13,7 @@ from .models import (
     AdaptationEvent, ClassSession, Enrollment, LearningSession, Lesson, Notification, Profile,
     SchoolClass, SessionAnalytics, SessionSlideExposure, Slide,
 )
+from .statistics import percentages
 from .views import _audit, _body, _lesson_data, _require_profile, _session_is_live
 
 OPEN_STATUSES = (ClassSession.Status.SCHEDULED, ClassSession.Status.ACTIVE, ClassSession.Status.PAUSED)
@@ -41,7 +42,7 @@ def participant_data(session, group):
     for row in session.eeg_samples.values('state').annotate(count=Count('pk')):
         counts[row['state']] = row['count']
     total = sum(counts.values())
-    distribution = {state: round(count * 100 / total, 1) if total else 0 for state, count in counts.items()}
+    distribution = percentages(counts)
     latest = session.eeg_samples.order_by('-recorded_at').first()
     online = bool(session.last_seen_at and (timezone.now() - session.last_seen_at).total_seconds() <= 12 and not session.ended_at)
     status = 'completed' if session.ended_at else 'lobby' if session.status == LearningSession.Status.JOINED else 'paused' if group.status == ClassSession.Status.PAUSED else 'active'
@@ -141,7 +142,7 @@ def finalize_student(session, now):
     SessionAnalytics.objects.update_or_create(session=session, defaults={
         'total_duration_seconds': duration,
         **{f'{state}_seconds': round(duration * count / total) if total else 0 for state, count in counts.items()},
-        **{f'{state}_percentage': round(count * 100 / total, 3) if total else 0 for state, count in counts.items()},
+        **{f'{state}_percentage': value for state, value in percentages(counts, places=3).items()},
     })
 
 

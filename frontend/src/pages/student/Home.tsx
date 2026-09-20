@@ -1,3 +1,4 @@
+import { useNotifications } from '../../hooks/useNotifications'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Settings, Plus, Brain, BarChart2, BookOpen, Star, UserRound, LogOut } from 'lucide-react'
@@ -18,6 +19,7 @@ function getGreeting(): string {
 }
 
 export default function Home() {
+  const { unread_count } = useNotifications()
   const navigate = useNavigate()
   const student = useAuthStore((state) => state.user)!
   const logout = useAuthStore((state) => state.logout)
@@ -49,7 +51,7 @@ export default function Home() {
       <div className={styles.topBar}>
         <Logo variant="icon" height={36} />
         <div className={styles.topBarRight}>
-          <button className={styles.iconBtn} aria-label="Notifications" onClick={() => navigate('/student/notifications')}><Bell size={18} strokeWidth={1.75} /></button>
+          <button className={styles.iconBtn} aria-label="Notifications" onClick={() => navigate('/student/notifications')}><Bell size={18} strokeWidth={1.75} />{unread_count > 0 && <span>{unread_count}</span>}</button>
           <button className={styles.iconBtn} aria-label="Settings" onClick={() => navigate('/student/settings')}><Settings size={18} strokeWidth={1.75} /></button>
           <div className={styles.accountMenu} ref={menuRef}>
             <button className={styles.avatarBtn} onClick={() => setIsMenuOpen((open) => !open)} aria-label="Open account menu" aria-expanded={isMenuOpen} aria-haspopup="menu"><Avatar name={student.name} imageUrl={student.avatar} size="sm" /></button>

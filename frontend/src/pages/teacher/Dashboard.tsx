@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Clock, TrendingUp, Users } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { DetailSkeleton, StatSummaryCard } from '../../components/molecules'
@@ -9,7 +9,7 @@ import { LiveDashboardGrid } from '../../components/organisms/teacher'
 import { COGNITIVE_STATES, type CognitiveState } from '../../constants/states'
 import type { StudentLive } from '../../types'
 import { getTeacherDashboard, type TeacherDashboardData } from '../../lib/teacherApi'
-import { cachedApiValue } from '../../lib/api'
+import { api } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import styles from './Dashboard.module.css'
 import analyticsStyles from './Analytics.module.css'
@@ -19,19 +19,36 @@ const states: CognitiveState[] = ['focused', 'relaxed', 'distracted', 'overstimu
 
 export default function Dashboard() {
   const user = useAuthStore((state) => state.user)!
-  const [data, setData] = useState<TeacherDashboardData | null>(() => cachedApiValue<TeacherDashboardData>('/teacher/dashboard/') ?? null)
-  const hadBootstrapData = useRef(data !== null)
+  const [data, setData] = useState<TeacherDashboardData | null>(null)
+  const [month, setMonth] = useState(() => { const now = new Date(); return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') })
+  const [classId, setClassId] = useState('')
+  const [search, setSearch] = useState('')
+  const [modeFilter, setModeFilter] = useState('all')
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   useEffect(() => {
-    const refresh = () => void getTeacherDashboard().then(setData).catch((reason: Error) => setError(reason.message))
-    if (!hadBootstrapData.current) refresh()
-    const timer = window.setInterval(refresh, 4000)
-    return () => window.clearInterval(timer)
-  }, [])
-  const live = useMemo(() => data?.live_sessions ?? [], [data])
+    let disposed = false
+    let timer: ReturnType<typeof setTimeout>
+    const refresh = async () => {
+      try { const result = await getTeacherDashboard(month, classId); if (!disposed) { setData(result); setError('') } }
+      catch (reason) { if (!disposed) setError(reason instanceof Error ? reason.message : 'Unable to refresh dashboard.') }
+      if (!disposed) timer = setTimeout(() => void refresh(), 4000)
+    }
+    void refresh()
+    return () => { disposed = true; clearTimeout(timer) }
+  }, [month, classId])
+  const live = useMemo(() => (data?.live_sessions ?? []).filter(item => (modeFilter === 'all' || item.control_mode === modeFilter) && (item.student.name + ' ' + item.class_name + ' ' + item.lesson).toLowerCase().includes(search.toLowerCase())), [data, search, modeFilter])
+  async function control(id: string, action: string, mode?: string) {
+    setBusy(true)
+    try {
+      await api('/sessions/' + id + '/control/', { method: 'POST', body: JSON.stringify({ action, mode }) })
+      setData(await getTeacherDashboard(month, classId)); setError(''); setSelectedId(id)
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to control session.') }
+    finally { setBusy(false) }
+  }
   const liveStudents = useMemo<StudentLive[]>(() => live.map((session) => {
-    const latest = session.latest
+    const latest = session.latest && session.latest.accepted_channels > 0 && Date.parse(data?.reporting.generated_at ?? session.started_at) - Date.parse(session.latest.recorded_at) < 8000 ? session.latest : null
     const accepted = latest?.accepted_channels ?? 0
     const started = Date.parse(session.started_at)
     const beta = latest?.bands.beta ?? 0
@@ -39,14 +56,14 @@ export default function Dashboard() {
       id: session.id, name: session.student.name, avatar: session.student.avatar,
       currentState: latest?.state ?? null, signalStrength: accepted as 0 | 1 | 2 | 3 | 4,
       focusScore: session.focus_score,
-      sessionDuration: Math.max(0, Math.floor((Date.parse(latest?.recorded_at ?? session.started_at) - started) / 1000)),
+      sessionDuration: Math.max(0, Math.floor((Date.parse(data?.reporting.generated_at ?? session.started_at) - started) / 1000)),
       isConnected: Boolean(latest),
       bandPowers: latest ? { theta: latest.bands.theta, alpha: latest.bands.alpha, beta, gamma: latest.bands.gamma, tbr: latest.bands.theta / Math.max(beta, .001) } : undefined,
       signalQuality: accepted === 4 ? 'good' : accepted >= 2 ? 'fair' : 'poor',
       connectionStatus: latest ? 'connected' : 'resyncing', stateStartedAt: latest?.recorded_at,
-      activeActivity: `${session.class_name} · ${session.lesson}`, engineMode: 'auto',
+      activeActivity: `${session.class_name} · ${session.lesson}`, engineMode: session.control_mode === 'teacher' ? 'teacher-override' : 'auto',
     }
-  }), [live])
+  }), [live, data?.reporting.generated_at])
   const selectedStudent = liveStudents.find((student) => student.id === selectedId) ?? liveStudents[0]
   const distribution = data?.state_distribution ?? { focused: 0, relaxed: 0, distracted: 0, overstimulated: 0 }
   const focused = distribution.focused
@@ -55,25 +72,34 @@ export default function Dashboard() {
 
   return <TeacherDashboardTemplate user={data?.teacher ?? user} hasNotification={Boolean(data?.unread_notifications)}>
     <div className={analyticsStyles.content}>
-      <h1 className={analyticsStyles.title}>Analytics</h1>
+      <h1 className={analyticsStyles.title}>Teacher dashboard</h1>
+      <div className={styles.filters}>
+        <label>Reporting period<select value={month === 'all' ? 'all' : 'month'} onChange={event => setMonth(event.target.value === 'all' ? 'all' : new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'))}><option value="month">Selected month</option><option value="all">All time</option></select></label>
+        {month !== 'all' && <label>Month<input type="month" value={month} onChange={event => { if (event.target.value) setMonth(event.target.value) }} /></label>}
+        <label>Class<select value={classId} onChange={event => setClassId(event.target.value)}><option value="">All my classes</option>{data?.classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+      </div>
+      {data?.reporting && <p className={styles.reportNote}>{data.reporting.month === 'all' ? 'All recorded dates' : new Date(data.reporting.start!).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} | Sessions grouped by start date | Updated {new Date(data.reporting.generated_at).toLocaleString()}<br />{data.reporting.sample_count.toLocaleString()} valid EEG samples from {data.reporting.measured_sessions} completed sessions. Percentages are sample-weighted, not time estimates. Sessions without valid EEG are excluded from percentages.</p>}
       <Link className={buttonStyles.primary} to="/teacher/sessions">Start a teacher-led session</Link>
       {error && <p role="alert">{error}</p>}
       {!data && !error ? <DetailSkeleton /> : <>
       <div className={analyticsStyles.statsRow}>
-        <StatSummaryCard value={data?.class_count ?? 0} label="Classes" icon={<BookOpen size={18} color="#534AB7" />} iconBg="var(--color-cool-surface)" />
-        <StatSummaryCard value={data?.student_count ?? 0} label="Students" icon={<Users size={18} color="#1D9E75" />} iconBg="var(--color-cool-surface)" />
-        <StatSummaryCard value={data?.average_focus == null ? '—' : `${data.average_focus}%`} label="Avg focus score" icon={<TrendingUp size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" sub="Across all completed sessions" subColor="var(--color-teal)" />
-        <StatSummaryCard value={data?.total_sessions ?? 0} label="Total sessions" icon={<Clock size={18} color="var(--color-coral)" />} iconBg="var(--color-cream)" sub={`${data?.active_sessions ?? 0} active now`} />
+        <StatSummaryCard value={data?.class_count ?? 0} label="Active classes" icon={<BookOpen size={18} color="#534AB7" />} iconBg="var(--color-cool-surface)" />
+        <StatSummaryCard value={data?.student_count ?? 0} label="Enrolled students" icon={<Users size={18} color="#1D9E75" />} iconBg="var(--color-cool-surface)" />
+        <StatSummaryCard value={data?.average_focus == null ? '—' : `${data.average_focus}%`} label="Focused EEG samples" icon={<TrendingUp size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" sub="Within the reporting period" subColor="var(--color-teal)" />
+        <StatSummaryCard value={data?.total_sessions ?? 0} label="Completed sessions" icon={<Clock size={18} color="var(--color-coral)" />} iconBg="var(--color-cream)" sub={`${data?.active_sessions ?? 0} active now`} />
       </div>
       <div className={analyticsStyles.chartsRow}>
-        <div className={analyticsStyles.chartCard}><div className={analyticsStyles.chartHeader}><span className={analyticsStyles.chartTitle}>Average focus by class</span><span className={analyticsStyles.chartSub}>Recorded sessions</span></div><div className={analyticsStyles.barList}>
-          {(data?.classes ?? []).map((item) => { const score = item.average_focus ?? 0; return <div key={item.id} className={analyticsStyles.barRow}><span className={analyticsStyles.barLabel}>Class · {item.name}</span><div className={analyticsStyles.barTrack} role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}><div className={analyticsStyles.barFill} style={{ width: `${score}%`, background: score >= 75 ? 'var(--color-teal)' : score >= 50 ? 'var(--color-sunflower)' : 'var(--color-coral)' }} /></div><span className={analyticsStyles.barValue}>{item.average_focus == null ? '—' : `${score}%`}</span></div>})}
+        <div className={analyticsStyles.chartCard}><div className={analyticsStyles.chartHeader}><span className={analyticsStyles.chartTitle}>Focused EEG samples by class</span><span className={analyticsStyles.chartSub}>Selected reporting period</span></div><div className={analyticsStyles.barList}>
+          {(data?.classes ?? []).filter(item => (!classId || String(item.id) === classId)).map((item) => { const score = item.average_focus ?? 0; return <div key={item.id} className={analyticsStyles.barRow}><span className={analyticsStyles.barLabel}>Class · {item.name}</span><div className={analyticsStyles.barTrack} role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}><div className={analyticsStyles.barFill} style={{ width: `${score}%`, background: score >= 75 ? 'var(--color-teal)' : score >= 50 ? 'var(--color-sunflower)' : 'var(--color-coral)' }} /></div><span className={analyticsStyles.barValue}>{item.average_focus == null ? '—' : `${score}%`}</span></div>})}
           {!data?.classes.length && <span className={styles.liveSectionNote}>No classes yet.</span>}
         </div></div>
         <div className={analyticsStyles.donutCard}><span className={analyticsStyles.chartTitle}>State distribution</span><div className={analyticsStyles.donutWrap}><div className={analyticsStyles.donut} style={{ background: focused || angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={analyticsStyles.donutHole}><span className={analyticsStyles.donutPct}>{focused}%</span><span className={analyticsStyles.donutLbl}>focused</span></div></div><div className={analyticsStyles.legend}>{states.map((state) => <div className={analyticsStyles.legendItem} key={state}><span className={analyticsStyles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={analyticsStyles.legendLabel}>{COGNITIVE_STATES[state].label}</span><span className={analyticsStyles.legendPct}>{distribution[state]}%</span></div>)}</div></div></div>
       </div>
-      <div className={analyticsStyles.stateCard}><span className={analyticsStyles.chartTitle}>Time in each cognitive state</span><div className={analyticsStyles.stateBars}>{states.map((state) => <div className={analyticsStyles.stateRow} key={state}><StateBadge state={state} size="sm" /><div className={analyticsStyles.stateTrack}><div className={analyticsStyles.stateFill} style={{ width: `${distribution[state]}%`, background: COGNITIVE_STATES[state].color }} /></div><span className={analyticsStyles.statePct}>{distribution[state]}%</span></div>)}</div></div>
-      <section className={styles.liveSection}><div className={styles.liveSectionHeader}><div><span className={styles.analyticsEyebrow}>Live classroom</span><h2 className={styles.liveSectionTitle}>{live.length ? `${live.length} session${live.length === 1 ? '' : 's'} in progress` : 'No session in progress'}</h2></div><span className={styles.liveSectionNote}>Live database updates every four seconds</span></div>{liveStudents.length ? <div className={styles.monitorLayout}><LiveDashboardGrid compact students={liveStudents} selectedId={selectedStudent?.id} onSelectStudent={setSelectedId} sessionLabel="Recorded lesson sessions" /><EEGWaveDisplay state={selectedStudent?.currentState} bandPowers={selectedStudent?.bandPowers} signalQuality={selectedStudent?.signalQuality} connectionStatus={selectedStudent?.connectionStatus} /></div> : <p className={styles.emptyLive}>A student appears here only while fresh Muse epochs are reaching the database.</p>}</section>
+      <div className={analyticsStyles.stateCard}><span className={analyticsStyles.chartTitle}>Share of valid EEG samples by state</span><div className={analyticsStyles.stateBars}>{states.map((state) => <div className={analyticsStyles.stateRow} key={state}><StateBadge state={state} size="sm" /><div className={analyticsStyles.stateTrack}><div className={analyticsStyles.stateFill} style={{ width: `${distribution[state]}%`, background: COGNITIVE_STATES[state].color }} /></div><span className={analyticsStyles.statePct}>{distribution[state]}%</span></div>)}</div></div>
+      <section className={styles.liveSection}>
+        <div className={styles.filters}><label>Search live sessions<input type="search" placeholder="Student, class, or lesson" value={search} onChange={event => setSearch(event.target.value)} /></label><label>Mode<select value={modeFilter} onChange={event => setModeFilter(event.target.value)}><option value="all">All modes</option><option value="free">Free mode</option><option value="teacher">Teacher controlled</option></select></label></div>
+        {live.map(item => <div className={styles.sessionControls} key={item.id}><div><strong>{item.student.name}</strong><p>{item.class_name} | {item.lesson} | {item.control_mode === 'free' ? 'Free mode' : 'Teacher controlled'} | {item.status}</p><small>Started {new Date(item.started_at).toLocaleString()} | Last seen {item.last_seen_at ? new Date(item.last_seen_at).toLocaleTimeString() : 'awaiting heartbeat'}</small></div>{item.class_session_id ? <Link to={'/teacher/class-session/' + item.class_session_id}>Open classroom controls</Link> : item.control_mode === 'free' ? <button disabled={busy} onClick={() => void control(item.id, 'claim')}>Override - take control</button> : item.control_mode === 'teacher' ? <div className={styles.filters}>{(['focus', 'refocus', 'breathing'] as const).map(mode => <button key={mode} disabled={busy} aria-pressed={item.presentation_mode === mode} onClick={() => void control(item.id, 'set_mode', mode)}>{mode === 'focus' ? 'Focus lesson' : mode === 'refocus' ? 'Refocusing' : 'Breathing'}</button>)}<button disabled={busy} onClick={() => void control(item.id, item.status === 'paused' ? 'resume' : 'pause')}>{item.status === 'paused' ? 'Resume' : 'Pause'}</button><button disabled={busy} onClick={() => void control(item.id, 'release')}>Return to free mode</button></div> : null}</div>)}
+        <div className={styles.liveSectionHeader}><div><span className={styles.analyticsEyebrow}>Live classroom</span><h2 className={styles.liveSectionTitle}>{live.length ? `${live.length} session${live.length === 1 ? '' : 's'} in progress` : 'No session in progress'}</h2></div><span className={styles.liveSectionNote}>Current sessions | Refreshes every four seconds | Independent of reporting month</span></div>{liveStudents.length ? <div className={styles.monitorLayout}><LiveDashboardGrid compact students={liveStudents} selectedId={selectedStudent?.id} onSelectStudent={setSelectedId} sessionLabel="Recorded lesson sessions" /><EEGWaveDisplay state={selectedStudent?.currentState} bandPowers={selectedStudent?.bandPowers} signalQuality={selectedStudent?.signalQuality} connectionStatus={selectedStudent?.connectionStatus} /></div> : <p className={styles.emptyLive}>No online sessions match your filters. Online status uses a recent heartbeat; EEG status requires a fresh headset sample.</p>}</section>
       </>}
     </div>
   </TeacherDashboardTemplate>

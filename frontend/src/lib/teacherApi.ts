@@ -64,6 +64,7 @@ export interface TeacherClass {
 }
 
 export interface TeacherDashboardData {
+  reporting: { month: string; start: string | null; end_exclusive: string | null; generated_at: string; sample_count: number; measured_sessions: number; basis: string }
   teacher: TeacherIdentity
   classes: TeacherClass[]
   class_count: number
@@ -76,10 +77,15 @@ export interface TeacherDashboardData {
   live_sessions: Array<LiveSession & { class_id: number; class_name: string }>
 }
 
-export const getTeacherDashboard = () => api<TeacherDashboardData>('/teacher/dashboard/', { cache: 'no-store' })
+export const getTeacherDashboard = (month = '', classId = '') => api<TeacherDashboardData>(`/teacher/dashboard/?${new URLSearchParams({ ...(month ? { month } : {}), ...(classId ? { class_id: classId } : {}) })}`, { cache: 'no-store' })
 export const getTeacherClasses = () => api<{ classes: TeacherClass[] }>('/classes/', { cache: 'no-store' })
 export const getTeacherClass = (id: string) => api<TeacherClass>(`/classes/${id}/`, { cache: 'no-store' })
 export interface LiveSession {
+  control_mode?: 'free' | 'teacher' | 'automatic'
+  status?: string
+  class_session_id?: string | null
+  presentation_mode?: string
+  last_seen_at?: string | null
   id: string
   student: RosterStudent
   lesson: string
@@ -89,6 +95,7 @@ export interface LiveSession {
 }
 export const getTeacherClassLive = (id: string) => api<{ active_sessions: LiveSession[] }>(`/teacher/classes/${id}/live/`, { cache: 'no-store' })
 export interface ClassAnalyticsData {
+  generated_at?: string
   class: TeacherClass
   student_count: number
   session_count: number

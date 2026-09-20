@@ -72,7 +72,7 @@ set /a WAITED+=1
 goto WAIT_FOR_FRONTEND
 
 :OPEN_CORTEX
-start "" "http://localhost:5173/"
+start msedge "http://localhost:5173/"
 goto DONE
 
 :STARTUP_TIMEOUT
