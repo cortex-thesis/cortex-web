@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { CalmZoneTemplate } from '../../components/templates'
+import { PlayfulZoneTemplate } from '../../components/templates'
 import styles from './ModeSelect.module.css'
 import { startStudentSession } from '../../lib/studentApi'
 import { api } from '../../lib/api'
@@ -102,7 +102,7 @@ export default function ModeSelect() {
   }
 
   return (
-    <CalmZoneTemplate showNav={false}>
+    <PlayfulZoneTemplate showNav={false}>
       <div className={styles.topBar}>
         <button
           className={styles.backBtn}
@@ -173,6 +173,6 @@ export default function ModeSelect() {
           You can ask your teacher to change your mode at any time.
         </p>
       </div>
-    </CalmZoneTemplate>
+    </PlayfulZoneTemplate>
   )
 }

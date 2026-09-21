@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CalmZoneTemplate } from '../../components/templates'
+import { PlayfulZoneTemplate } from '../../components/templates'
 import { heartbeatClassSession, joinClassSession, type ClassroomSession } from '../../lib/classSessionApi'
 import { endStudentSession } from '../../lib/studentApi'
 import { useMuseStore } from '../../store/museStore'
@@ -39,7 +39,7 @@ export default function ClassSessionLobby() {
   }
   const ended = session?.status === 'completed' || session?.status === 'cancelled'
   const ready = session?.status === 'active' && session.lesson_id
-  return <CalmZoneTemplate><div className={styles.page}><section className={styles.card}>
+  return <PlayfulZoneTemplate><div className={styles.page}><section className={styles.card}>
     <span className={styles.eyebrow}>{ended ? 'Session complete' : 'Teacher-led classroom'}</span>
     <div className={styles.orb} aria-hidden="true" />
     <h1>{session?.class_name ?? 'Joining your classroom...'}</h1>
@@ -49,5 +49,5 @@ export default function ClassSessionLobby() {
     {error && <button onClick={() => setRetry(value => value + 1)}>Try joining again</button>}
     {ready && <button className={styles.primary} onClick={() => navigate(status === 'streaming' ? '/student/mode-select' : '/student/eeg-pairing', { state: { classId: session.class_id, lessonId: session.lesson_id, classSessionId: session.id, mode: 'teacher' } })}>{status === 'streaming' ? 'Join lesson' : 'Connect headset and join lesson'}</button>}
     <button disabled={busy} onClick={() => void leave()}>{busy ? 'Leaving...' : ended ? 'Go home' : 'Leave lobby'}</button>
-  </section></div></CalmZoneTemplate>
+  </section></div></PlayfulZoneTemplate>
 }

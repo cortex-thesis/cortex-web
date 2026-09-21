@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, Radio} from 'lucide-react'
-import { CalmZoneTemplate } from '../../components/templates'
+import { PlayfulZoneTemplate } from '../../components/templates'
 import { InlineSkeleton } from '../../components/molecules'
 import { api } from '../../lib/api'
 import type { StudentLesson } from '../../lib/studentApi'
@@ -21,7 +21,7 @@ export default function LessonModeSelect() {
     return () => controller.abort()
   }, [classId, lessonId, key])
   const lesson = result?.key === key ? result.lesson : null
-  return <CalmZoneTemplate showNav={false}>
+  return <PlayfulZoneTemplate showNav={false}>
     <div className={styles.topBar}><button className={styles.backBtn} aria-label="Back to learning package" onClick={() => navigate(lesson ? `/student/class/${classId}/package/${lesson.package}` : `/student/class/${classId}`, { replace: true })}><ArrowLeft size={18} /></button><h1 className={styles.topTitle}>Choose how to learn</h1></div>
     <div className={styles.content}>
       <div className={styles.textBlock}><h2 className={styles.heading}>{lesson?.title ?? <InlineSkeleton width={240} height={28} />}</h2><p className={styles.sub}>How would you like to explore this lesson?</p></div>
@@ -33,5 +33,5 @@ export default function LessonModeSelect() {
       {error && <p role="alert">{error}</p>}
       <button className={styles.startBtn} disabled={!lesson || !!error} onClick={() => { if (!lesson) return; if (selected === 'practice') navigate(`/student/class/${classId}/lesson/${lesson.id}/practice`); else navigate('/student/eeg-pairing', { state: { classId: Number(classId), lessonId: lesson.id, package: lesson.package, lesson: lesson.title } }) }}>Continue to {selected === 'practice' ? 'practice' : 'EEG session'}</button>
     </div>
-  </CalmZoneTemplate>
+  </PlayfulZoneTemplate>
 }
