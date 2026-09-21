@@ -19,7 +19,7 @@ from django.core.files.storage import FileSystemStorage
 from django.contrib.auth import HASH_SESSION_KEY, SESSION_KEY
 from django.utils.crypto import constant_time_compare
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Count, F, Q, OuterRef, Subquery
+from django.db.models import Avg, Count, F, Q, OuterRef, Subquery, Max
 from django.http import FileResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -1426,13 +1426,35 @@ def _teacher_dashboard_data(profile, filters=None):
     ).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
         average_focus=Avg("sessions__analytics__focused_percentage"),
-    ))
+        latest_session_at=Max("sessions__started_at"),
+    ).order_by(F('latest_session_at').desc(nulls_last=True), '-created_at', '-pk'))
     packages = _active_packages()
     student_ids = Enrollment.objects.filter(
         school_class__teacher=profile, school_class__status=SchoolClass.Status.ACTIVE,
         removed_at__isnull=True,
     ).values_list("student_id", flat=True).distinct()
     sessions = LearningSession.objects.filter(school_class__in=class_items)
+    # Recent activity spans all assigned active classes, independently of report filters.
+    recent_sessions = [{
+        'id': str(item.pk), 'class_id': item.school_class_id,
+        'class_name': item.school_class.name, 'student': _profile_data(item.student),
+        'lesson': item.lesson.title if item.lesson_id else 'No lesson selected',
+        'package': item.lesson.package.slug if item.lesson_id else None,
+        'started_at': item.started_at, 'ended_at': item.ended_at,
+        'status': item.status, 'completion_percentage': float(item.completion_percentage),
+    } for item in sessions.select_related('school_class', 'student__school', 'lesson__package')
+        .order_by('-started_at', '-pk')[:10]]
+    student_classes = {}
+    for enrollment in Enrollment.objects.filter(school_class__in=class_items, removed_at__isnull=True).select_related('school_class'):
+        student_classes.setdefault(enrollment.student_id, []).append({
+            'id': enrollment.school_class_id, 'name': enrollment.school_class.name,
+        })
+    recent_badges = [{
+        'id': item.pk, 'key': item.key, 'student': _profile_data(item.student),
+        'unlocked_at': item.unlocked_at,
+        'classes': sorted(student_classes[item.student_id], key=lambda item: (item['name'], item['id'])),
+    } for item in StudentBadge.objects.filter(student_id__in=student_classes)
+        .select_related('student__school').order_by('-unlocked_at', '-pk')[:10]]
     if selected_class:
         if not any(str(item.pk) == str(selected_class) for item in class_items):
             raise ValueError('Choose one of your active classes.')
@@ -1469,6 +1491,7 @@ def _teacher_dashboard_data(profile, filters=None):
         "teacher": _profile_data(profile),
         "classes": [_class_data(item, packages=packages) | {
             "average_focus": class_scores[item.pk],
+            "latest_session_at": item.latest_session_at,
         } for item in class_items],
         "class_count": 1 if selected_class else len(class_items),
         "student_count": student_ids.count(),
@@ -1481,6 +1504,8 @@ def _teacher_dashboard_data(profile, filters=None):
                       "sample_count": sample_count, "measured_sessions": measured_samples.filter(accepted_channels__gt=0).values('session_id').distinct().count(),
                       "basis": "Valid EEG samples in completed sessions, grouped by session start date"},
         "live_sessions": active_session_rows,
+        "recent_sessions": recent_sessions,
+        "recent_badges": recent_badges,
     }
 
 

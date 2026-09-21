@@ -200,3 +200,29 @@
 .reportNote { font-size: 12px; }
 .sessionControls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; }
 .sessionControls small { color: var(--color-text-secondary); }
+
+.shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.shortcut { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-white); color: var(--color-deep-purple); text-decoration: none; }
+.shortcut span { display: grid; gap: 3px; font-size: 12px; }
+.shortcut strong { font-size: 14px; }
+.activityCard { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-white); }
+.activityCard h2 { margin: 0; font-size: 17px; color: var(--color-deep-purple); }
+.activityNote { margin: 8px 0 12px; font-size: 12px; color: var(--color-text-secondary); }
+.classLinks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.classLink { display: grid; gap: 5px; padding: 12px; border: 1px solid var(--color-border); border-radius: 10px; color: var(--color-deep-purple); text-decoration: none; overflow-wrap: anywhere; }
+.classLink:hover, .shortcut:hover { background: var(--color-surface-1); }
+.classLink small, .classLink > span { color: var(--color-text-secondary); font-size: 12px; }
+.statsPanel { display: flex; flex-direction: column; gap: var(--space-4); padding: 20px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-white); box-shadow: var(--shadow-card); }
+.statsHeader { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.statsHeader h2 { margin: 0; font-size: 15px; color: var(--color-text-primary); }
+.statsPanel .filters { gap: 10px; }
+.statsPanel .filters label { min-width: 140px; color: var(--color-text-secondary); font-size: 12px; }
+.statsPanel .filters input, .statsPanel .filters select { height: 38px; width: 100%; color: var(--color-text-primary); background: var(--color-surface-1); }
+.statsNote { margin: 0; font-size: 11px; color: var(--color-text-secondary); }
+.shortcut:focus-visible, .classLink:focus-visible { outline: 2px solid var(--color-interface-purple); outline-offset: 3px; }
+@media (max-width: 700px) {
+  .statsHeader .filters { width: 100%; }
+  .statsHeader .filters label { flex: 1 1 140px; min-width: 0; }
+  .statsPanel { padding: 16px; }
+  .classLinks { grid-template-columns: 1fr; }
+}

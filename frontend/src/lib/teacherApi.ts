@@ -61,6 +61,7 @@ export interface TeacherClass {
   teacher: TeacherIdentity
   students?: RosterStudent[]
   average_focus?: number | null
+  latest_session_at?: string | null
 }
 
 export interface TeacherDashboardData {
@@ -75,6 +76,14 @@ export interface TeacherDashboardData {
   average_focus: number | null
   state_distribution: Record<CognitiveState, number>
   live_sessions: Array<LiveSession & { class_id: number; class_name: string }>
+  recent_sessions: Array<{
+    id: string; class_id: number; class_name: string; student: RosterStudent
+    lesson: string; package: CurriculumPackage | null; started_at: string; ended_at: string | null; status: string; completion_percentage: number
+  }>
+  recent_badges: Array<{
+    id: number; key: string; student: RosterStudent; unlocked_at: string
+    classes: Array<{ id: number; name: string }>
+  }>
 }
 
 export const getTeacherDashboard = (month = '', classId = '') => api<TeacherDashboardData>(`/teacher/dashboard/?${new URLSearchParams({ ...(month ? { month } : {}), ...(classId ? { class_id: classId } : {}) })}`, { cache: 'no-store' })

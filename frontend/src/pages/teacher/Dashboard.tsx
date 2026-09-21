@@ -1,19 +1,19 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, Clock, TrendingUp, Users } from 'lucide-react'
+import { BookOpen, Clock, NotebookPen, Play, TrendingUp, Users } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { DetailSkeleton, StatSummaryCard } from '../../components/molecules'
 import { StateBadge } from '../../components/atoms'
 import { EEGWaveDisplay } from '../../components/molecules/EEGWaveDisplay/EEGWaveDisplay'
 import { LiveDashboardGrid } from '../../components/organisms/teacher'
 import { COGNITIVE_STATES, type CognitiveState } from '../../constants/states'
+import { RecentClassActivity } from '../../components/organisms/teacher/RecentClassActivity'
 import type { StudentLive } from '../../types'
 import { getTeacherDashboard, type TeacherDashboardData } from '../../lib/teacherApi'
 import { api } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import styles from './Dashboard.module.css'
 import analyticsStyles from './Analytics.module.css'
-import buttonStyles from '../prototype/Prototype.module.css'
 
 const states: CognitiveState[] = ['focused', 'relaxed', 'distracted', 'overstimulated']
 
@@ -67,25 +67,42 @@ export default function Dashboard() {
   const selectedStudent = liveStudents.find((student) => student.id === selectedId) ?? liveStudents[0]
   const distribution = data?.state_distribution ?? { focused: 0, relaxed: 0, distracted: 0, overstimulated: 0 }
   const focused = distribution.focused
+  const mostRecentClass = data?.classes.find(item => item.latest_session_at)
   let angle = 0
   const segments = states.map((state) => { const start = angle; angle += distribution[state] * 3.6; return `${COGNITIVE_STATES[state].color} ${start}deg ${angle}deg` })
 
   return <TeacherDashboardTemplate user={data?.teacher ?? user} hasNotification={Boolean(data?.unread_notifications)}>
     <div className={analyticsStyles.content}>
       <h1 className={analyticsStyles.title}>Teacher dashboard</h1>
-      <div className={styles.filters}>
-        <label>Reporting period<select value={month === 'all' ? 'all' : 'month'} onChange={event => setMonth(event.target.value === 'all' ? 'all' : new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'))}><option value="month">Selected month</option><option value="all">All time</option></select></label>
-        {month !== 'all' && <label>Month<input type="month" value={month} onChange={event => { if (event.target.value) setMonth(event.target.value) }} /></label>}
-        <label>Class<select value={classId} onChange={event => setClassId(event.target.value)}><option value="">All my classes</option>{data?.classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-      </div>
-      {data?.reporting && <p className={styles.reportNote}>{data.reporting.month === 'all' ? 'All recorded dates' : new Date(data.reporting.start!).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} | Sessions grouped by start date | Updated {new Date(data.reporting.generated_at).toLocaleString()}<br />{data.reporting.sample_count.toLocaleString()} valid EEG samples from {data.reporting.measured_sessions} completed sessions. Percentages are sample-weighted, not time estimates. Sessions without valid EEG are excluded from percentages.</p>}
-      <Link className={buttonStyles.primary} to="/teacher/sessions">Start a teacher-led session</Link>
+      <nav className={styles.shortcuts} aria-label="Teacher shortcuts">
+        <Link className={styles.shortcut} to="/teacher/sessions"><Play size={17} aria-hidden="true" /><strong>Start session</strong></Link>
+        {mostRecentClass && <Link className={styles.shortcut} to={`/teacher/class/${mostRecentClass.id}/overview`}><Clock size={17} aria-hidden="true" /><span>Most recent class<strong>{mostRecentClass.name}</strong></span></Link>}
+        <Link className={styles.shortcut} to="/teacher/journals"><NotebookPen size={17} aria-hidden="true" /><strong>Journals</strong></Link>
+        <Link className={styles.shortcut} to="/teacher/classes"><Users size={17} aria-hidden="true" /><strong>My classes</strong></Link>
+      </nav>
       {error && <p role="alert">{error}</p>}
       {!data && !error ? <DetailSkeleton /> : <>
+      {data && <>
+        <section className={styles.activityCard} aria-labelledby="dashboard-classes">
+          <h2 id="dashboard-classes">My classes</h2>
+          <div className={styles.classLinks}>{data.classes.map(item => <Link className={styles.classLink} key={item.id} to={`/teacher/class/${item.id}/overview`}><strong>{item.name}</strong><span>{item.student_count} students</span><small>{item.latest_session_at ? `Latest session ${new Date(item.latest_session_at).toLocaleString()}` : 'No sessions yet'}</small></Link>)}</div>
+          {!data.classes.length && <p className={styles.activityNote}>No active classes assigned yet.</p>}
+        </section>
+        <RecentClassActivity sessions={data.recent_sessions} badges={data.recent_badges} />
+      </>}
+      <section className={styles.statsPanel} aria-label="Class statistics">
+        <div className={styles.statsHeader}>
+          <h2>Statistics</h2>
+          <div className={styles.filters}>
+            <label>Class<select value={classId} onChange={event => setClassId(event.target.value)}><option value="">All my classes</option>{data?.classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+            <label>Period<select value={month === 'all' ? 'all' : 'month'} onChange={event => setMonth(event.target.value === 'all' ? 'all' : new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'))}><option value="month">Monthly</option><option value="all">All time</option></select></label>
+            {month !== 'all' && <label>Month<input type="month" value={month} onChange={event => { if (event.target.value) setMonth(event.target.value) }} /></label>}
+          </div>
+        </div>
       <div className={analyticsStyles.statsRow}>
         <StatSummaryCard value={data?.class_count ?? 0} label="Active classes" icon={<BookOpen size={18} color="#534AB7" />} iconBg="var(--color-cool-surface)" />
         <StatSummaryCard value={data?.student_count ?? 0} label="Enrolled students" icon={<Users size={18} color="#1D9E75" />} iconBg="var(--color-cool-surface)" />
-        <StatSummaryCard value={data?.average_focus == null ? '—' : `${data.average_focus}%`} label="Focused EEG samples" icon={<TrendingUp size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" sub="Within the reporting period" subColor="var(--color-teal)" />
+        <StatSummaryCard value={data?.average_focus == null ? '—' : `${data.average_focus}%`} label="Focused EEG samples" icon={<TrendingUp size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" />
         <StatSummaryCard value={data?.total_sessions ?? 0} label="Completed sessions" icon={<Clock size={18} color="var(--color-coral)" />} iconBg="var(--color-cream)" sub={`${data?.active_sessions ?? 0} active now`} />
       </div>
       <div className={analyticsStyles.chartsRow}>
@@ -96,10 +113,12 @@ export default function Dashboard() {
         <div className={analyticsStyles.donutCard}><span className={analyticsStyles.chartTitle}>State distribution</span><div className={analyticsStyles.donutWrap}><div className={analyticsStyles.donut} style={{ background: focused || angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={analyticsStyles.donutHole}><span className={analyticsStyles.donutPct}>{focused}%</span><span className={analyticsStyles.donutLbl}>focused</span></div></div><div className={analyticsStyles.legend}>{states.map((state) => <div className={analyticsStyles.legendItem} key={state}><span className={analyticsStyles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={analyticsStyles.legendLabel}>{COGNITIVE_STATES[state].label}</span><span className={analyticsStyles.legendPct}>{distribution[state]}%</span></div>)}</div></div></div>
       </div>
       <div className={analyticsStyles.stateCard}><span className={analyticsStyles.chartTitle}>Share of valid EEG samples by state</span><div className={analyticsStyles.stateBars}>{states.map((state) => <div className={analyticsStyles.stateRow} key={state}><StateBadge state={state} size="sm" /><div className={analyticsStyles.stateTrack}><div className={analyticsStyles.stateFill} style={{ width: `${distribution[state]}%`, background: COGNITIVE_STATES[state].color }} /></div><span className={analyticsStyles.statePct}>{distribution[state]}%</span></div>)}</div></div>
+        <p className={styles.statsNote}>EEG percentages use valid samples from completed sessions.</p>
+      </section>
       <section className={styles.liveSection}>
         <div className={styles.filters}><label>Search live sessions<input type="search" placeholder="Student, class, or lesson" value={search} onChange={event => setSearch(event.target.value)} /></label><label>Mode<select value={modeFilter} onChange={event => setModeFilter(event.target.value)}><option value="all">All modes</option><option value="free">Free mode</option><option value="teacher">Teacher controlled</option></select></label></div>
         {live.map(item => <div className={styles.sessionControls} key={item.id}><div><strong>{item.student.name}</strong><p>{item.class_name} | {item.lesson} | {item.control_mode === 'free' ? 'Free mode' : 'Teacher controlled'} | {item.status}</p><small>Started {new Date(item.started_at).toLocaleString()} | Last seen {item.last_seen_at ? new Date(item.last_seen_at).toLocaleTimeString() : 'awaiting heartbeat'}</small></div>{item.class_session_id ? <Link to={'/teacher/class-session/' + item.class_session_id}>Open classroom controls</Link> : item.control_mode === 'free' ? <button disabled={busy} onClick={() => void control(item.id, 'claim')}>Override - take control</button> : item.control_mode === 'teacher' ? <div className={styles.filters}>{(['focus', 'refocus', 'breathing'] as const).map(mode => <button key={mode} disabled={busy} aria-pressed={item.presentation_mode === mode} onClick={() => void control(item.id, 'set_mode', mode)}>{mode === 'focus' ? 'Focus lesson' : mode === 'refocus' ? 'Refocusing' : 'Breathing'}</button>)}<button disabled={busy} onClick={() => void control(item.id, item.status === 'paused' ? 'resume' : 'pause')}>{item.status === 'paused' ? 'Resume' : 'Pause'}</button><button disabled={busy} onClick={() => void control(item.id, 'release')}>Return to free mode</button></div> : null}</div>)}
-        <div className={styles.liveSectionHeader}><div><span className={styles.analyticsEyebrow}>Live classroom</span><h2 className={styles.liveSectionTitle}>{live.length ? `${live.length} session${live.length === 1 ? '' : 's'} in progress` : 'No session in progress'}</h2></div><span className={styles.liveSectionNote}>Current sessions | Refreshes every four seconds | Independent of reporting month</span></div>{liveStudents.length ? <div className={styles.monitorLayout}><LiveDashboardGrid compact students={liveStudents} selectedId={selectedStudent?.id} onSelectStudent={setSelectedId} sessionLabel="Recorded lesson sessions" /><EEGWaveDisplay state={selectedStudent?.currentState} bandPowers={selectedStudent?.bandPowers} signalQuality={selectedStudent?.signalQuality} connectionStatus={selectedStudent?.connectionStatus} /></div> : <p className={styles.emptyLive}>No online sessions match your filters. Online status uses a recent heartbeat; EEG status requires a fresh headset sample.</p>}</section>
+        <div className={styles.liveSectionHeader}><div><span className={styles.analyticsEyebrow}>Live classroom</span><h2 className={styles.liveSectionTitle}>{live.length ? `${live.length} session${live.length === 1 ? '' : 's'} in progress` : 'No session in progress'}</h2></div><span className={styles.liveSectionNote}>Live updates</span></div>{liveStudents.length ? <div className={styles.monitorLayout}><LiveDashboardGrid compact students={liveStudents} selectedId={selectedStudent?.id} onSelectStudent={setSelectedId} sessionLabel="Recorded lesson sessions" /><EEGWaveDisplay state={selectedStudent?.currentState} bandPowers={selectedStudent?.bandPowers} signalQuality={selectedStudent?.signalQuality} connectionStatus={selectedStudent?.connectionStatus} /></div> : <p className={styles.emptyLive}>No live sessions match your filters.</p>}</section>
       </>}
     </div>
   </TeacherDashboardTemplate>
