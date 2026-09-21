@@ -1862,11 +1862,15 @@ def teacher_advanced_reports(request):
         node["slides"] = sorted(slides, key=lambda item: item["position"])
         lesson_results.append(node)
     return JsonResponse({
+        "generated_at": timezone.now(),
         "classes": [{"id": item.pk, "name": item.name} for item in classes],
         "selected_class_id": school_class.pk if school_class else None,
         "class_name": school_class.name if school_class else None,
         "range": range_key, "start_date": start_date, "end_date": today,
-        "overall": {"session_count": len(sessions), "states": _state_metrics(overall_counts, overall_confidence)},
+        "overall": {"session_count": len(sessions), "sample_count": sum(overall_counts.values()),
+                    "first_sample_at": min((item.classified_at for values in predictions_by_session.values() for item in values), default=None),
+                    "last_sample_at": max((item.classified_at for values in predictions_by_session.values() for item in values), default=None),
+                    "states": _state_metrics(overall_counts, overall_confidence)},
         "lessons": sorted(lesson_results, key=lambda item: item["title"]),
         "students": sorted(student_results, key=lambda item: item["student"]["name"]),
     })
