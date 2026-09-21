@@ -1,5 +1,5 @@
 import { Activity, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, BatteryMedium, Radio, RotateCcw } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BatteryMedium, Radio, RotateCcw, WifiOff } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molecules'
 import { PlayfulZoneTemplate } from '../../components/templates'
@@ -51,7 +51,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const navigate = useNavigate()
   const location = useLocation()
   const context = (location.state as { sessionId?: string; classId?: number; lessonId?: number; mode?: string; devBypass?: boolean } | null) ?? {}
-  const { status, deviceName, battery, quality, bands, absoluteBands, relativeBands, baselineProgress, acceptedChannels, disconnect } = useMuseStore()
+  const { status, error: museError, deviceName, battery, quality, bands, absoluteBands, relativeBands, baselineProgress, acceptedChannels, disconnect } = useMuseStore()
   const [lesson, setLesson] = useState<LessonData | null>(classroomControl?.lesson ?? null)
   const [remote, setRemote] = useState<{ control_mode: string; presentation_mode: 'focus' | 'refocus' | 'breathing'; status: string; ended_at: string | null } | null>(null)
   const [controlError, setControlError] = useState('')
@@ -140,6 +140,15 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const calibrated = Boolean(forcedState || (status === 'streaming' && baselineProgress >= 100 && acceptedChannels > 0))
   useEffect(() => { if (calibrated) setLessonStarted(true) }, [calibrated])
   const phase = eegSessionPhase(complete, ending, calibrated, lessonStarted)
+  const connectionInterrupted = lessonStarted && !complete && !ending && status !== 'streaming'
+  const [reconnectSeconds, setReconnectSeconds] = useState(0)
+  useEffect(() => {
+    if (!connectionInterrupted) { setReconnectSeconds(0); return }
+    const started = Date.now()
+    setReconnectSeconds(0)
+    const timer = window.setInterval(() => setReconnectSeconds(Math.floor((Date.now() - started) / 1000)), 250)
+    return () => window.clearInterval(timer)
+  }, [connectionInterrupted])
   const focusScore = forcedState ? forcedFocusScore : calibrated ? deviceFocusScore : null
   const supportKey = `${lesson?.id ?? ''}/${position}`
   const coolingTriggered = adaptive && mode === 'focus' && currentState === 'overstimulated' && hold.overstimulated >= 5000
@@ -308,7 +317,17 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   return <>
   {!classroomControl && remote?.control_mode === 'teacher' && <p role="status">Your teacher is guiding this session.</p>}
   {remotelyPaused && <section className={styles.calibration}><h1>{remote?.ended_at ? 'Session ended' : controlError ? 'Reconnecting to your teacher' : 'Your teacher paused this session'}</h1><p role="status">{controlError || 'Your progress is saved. Wait for your teacher to resume.'}</p><button onClick={() => void finish()}>Leave and save my session</button></section>}
-  <div ref={playerRoot} inert={remotelyPaused} style={{ display: remotelyPaused ? 'none' : undefined }}>
+  {connectionInterrupted && <div className={styles.connectionOverlay} role="alertdialog" aria-modal="true" aria-labelledby="connection-title">
+    <section className={styles.connectionCard}>
+      <span className={styles.connectionIcon}><WifiOff size={24} /></span>
+      <span className={styles.connectionEyebrow}>Muse 2 connection</span>
+      <h1 id="connection-title">{status === 'connecting' ? 'Reconnecting to your headset' : 'Connection lost'}</h1>
+      <p>{status === 'connecting' ? 'Keep your headset switched on and nearby. Your lesson is paused and your place is safe.' : 'Automatic reconnection could not restore the signal. Your lesson progress is still saved.'}</p>
+      {status === 'connecting' ? <><div className={styles.reconnectSteps} aria-label={`Reconnecting for ${reconnectSeconds} seconds`}>{[1,2,3,4,5].map(step => <i key={step} data-active={step <= reconnectSeconds % 6} />)}</div><small>Reconnecting… {reconnectSeconds}s</small></> : <button onClick={() => navigate('/student/eeg-pairing', { replace: true, state: context })}>Reconnect Muse 2</button>}
+      {museError && <small className={styles.connectionDetail}>{museError}</small>}
+    </section>
+  </div>}
+  <div ref={playerRoot} inert={remotelyPaused || connectionInterrupted} className={connectionInterrupted ? styles.connectionBlur : undefined} style={{ display: remotelyPaused ? 'none' : undefined }}>
   {phase === 'calibrating' && <div className={styles.calibration}>
     <Radio size={42} aria-hidden="true" />
     <h1>{status === 'connecting' ? 'Reconnecting to your headset' : status !== 'streaming' ? 'Connect your headset' : 'Getting ready for your lesson'}</h1>
