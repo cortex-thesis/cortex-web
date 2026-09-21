@@ -44,6 +44,9 @@ export interface RosterStudent {
   avatar: string | null
   student_number: string
   school: string | null
+  session_count?: number
+  last_state?: CognitiveState | null
+  journal_count?: number
 }
 
 export interface GlobalPackage { id: number; slug: string; name: string }
@@ -105,6 +108,7 @@ export interface LiveSession {
 export const getTeacherClassLive = (id: string) => api<{ active_sessions: LiveSession[] }>(`/teacher/classes/${id}/live/`, { cache: 'no-store' })
 export interface ClassAnalyticsData {
   generated_at?: string
+  reporting?: { month: string; start: string | null; end_exclusive: string | null; basis: string }
   class: TeacherClass
   student_count: number
   session_count: number
@@ -120,8 +124,8 @@ export interface ClassAnalyticsData {
   slides: Array<{ id: number; title: string; position: number }>
   timeline: Array<{ session_id: string; student_id: number; name: string; started_at: string; points: Array<{ slide_id: number; state: CognitiveState | null; samples: number }> }>
 }
-export const getClassAnalytics = (id: string, lessonId = '', signal?: AbortSignal) =>
-  api<ClassAnalyticsData>(`/teacher/classes/${id}/analytics/${lessonId ? `?lesson_id=${encodeURIComponent(lessonId)}` : ''}`, { cache: 'no-store', signal })
+export const getClassAnalytics = (id: string, lessonId = '', signal?: AbortSignal, month = 'all') =>
+  api<ClassAnalyticsData>(`/teacher/classes/${id}/analytics/?${new URLSearchParams({ ...(lessonId ? { lesson_id: lessonId } : {}), month })}`, { cache: 'no-store', signal })
 export const createTeacherClass = (data: { name: string; description?: string; school_year?: string }) =>
   api<TeacherClass>('/classes/', { method: 'POST', body: JSON.stringify(data) })
 export const updateTeacherClass = (id: string, data: Partial<Pick<TeacherClass, 'name' | 'description' | 'school_year'>>) =>

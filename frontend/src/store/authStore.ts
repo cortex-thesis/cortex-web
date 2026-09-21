@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { User } from '../types'
-import { api, clearApiCache, primeApiCache } from '../lib/api'
+import { api, clearApiCache, primeApiCache, setApiCacheOwner } from '../lib/api'
 import type { TeacherDashboardData } from '../lib/teacherApi'
 import type { DashboardData, StudentLesson } from '../lib/studentApi'
 import type { CurriculumPackage } from '../constants/states'
@@ -96,6 +96,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       const options = { signal: controller.signal }
       const [, authUser] = await Promise.all([api('/auth/csrf/', options), api<AuthUser>('/auth/me/', options)])
+      setApiCacheOwner(authUser.id)
       if (authUser.student_bootstrap) primeStudentBootstrap(authUser.student_bootstrap)
       if (authUser.dashboard) {
         primeApiCache('/teacher/dashboard/', authUser.dashboard)
@@ -106,6 +107,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       set({ user, isAuthenticated: true, isInitialized: true })
     } catch {
       clearApiCache()
+      setApiCacheOwner(null)
       storeUser(null)
       set({ user: null, isAuthenticated: false, isInitialized: true })
     } finally {
@@ -121,6 +123,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       const response = await api<AuthUser>('/auth/login/', {
         method: 'POST', body: JSON.stringify(credentials),
       })
+      setApiCacheOwner(response.id)
       if (response.dashboard) {
         primeApiCache('/teacher/dashboard/', response.dashboard)
         primeApiCache('/classes/', { classes: response.dashboard.classes })
@@ -143,6 +146,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       await api('/auth/logout/', { method: 'POST' })
     } finally {
+      setApiCacheOwner(null)
       storeUser(null)
       set({ user: null, isAuthenticated: false, error: null })
     }

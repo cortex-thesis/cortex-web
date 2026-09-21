@@ -364,6 +364,10 @@ def _ensure_demo_accounts():
         {"username": "school-admin-demo", "email": "school-admin@example-school.test", "password": "admin-demo-2026!", "role": Profile.Role.ADMIN, "display_name": "School Administrator", "admin_scope": Profile.AdminScope.SCHOOL},
         {"username": "teacher-example", "email": "teacher@example-school.test", "password": "teacher-demo-2026!", "role": Profile.Role.TEACHER, "display_name": "Example Teacher"},
         {"username": "student-example", "email": "student@example-school.test", "password": "student-demo-2026!", "role": Profile.Role.STUDENT, "display_name": "Example Student"},
+        {"username": "dennis-martillano", "email": "dennis.martillano@example-school.test", "password": "teacher-demo-2026!", "role": Profile.Role.TEACHER, "display_name": "Dennis Martillano"},
+        {"username": "gabriel-tanabe", "email": "gabriel.tanabe@example-school.test", "password": "student-demo-2026!", "role": Profile.Role.STUDENT, "display_name": "Gabriel Tanabe"},
+        {"username": "christina-factura", "email": "christina.factura@example-school.test", "password": "student-demo-2026!", "role": Profile.Role.STUDENT, "display_name": "Christina Factura"},
+        {"username": "sofia-loren-lacanilao", "email": "sofia.lacanilao@example-school.test", "password": "student-demo-2026!", "role": Profile.Role.STUDENT, "display_name": "Sofia Loren Lacanilao"},
     ]
     for account in demo_accounts:
         user = User.objects.filter(email__iexact=account["email"]).first()
@@ -725,7 +729,25 @@ def _class_data(school_class, include_students=False, packages=None):
         "teacher": _profile_data(school_class.teacher),
     }
     if include_students:
-        data["students"] = [_profile_data(item.student) for item in school_class.enrollments.filter(removed_at__isnull=True).select_related("student", "student__school", "student__user")]
+        enrollments = list(school_class.enrollments.filter(removed_at__isnull=True).select_related("student", "student__school", "student__user"))
+        student_ids = [item.student_id for item in enrollments]
+        session_counts = dict(LearningSession.objects.filter(
+            school_class=school_class, student_id__in=student_ids, ended_at__isnull=False,
+        ).values_list("student_id").annotate(total=Count("pk")))
+        journal_counts = dict(JournalEntry.objects.filter(
+            student_id__in=student_ids, session__school_class=school_class, shared_with_teacher=True,
+        ).values_list("student_id").annotate(total=Count("pk")))
+        last_states = {}
+        for student_id, state in SessionEEGSample.objects.filter(
+            session__school_class=school_class, session__student_id__in=student_ids,
+            session__ended_at__isnull=False, accepted_channels__gt=0,
+        ).order_by("-recorded_at", "-pk").values_list("session__student_id", "state"):
+            last_states.setdefault(student_id, state)
+        data["students"] = [_profile_data(item.student) | {
+            "session_count": session_counts.get(item.student_id, 0),
+            "last_state": last_states.get(item.student_id),
+            "journal_count": journal_counts.get(item.student_id, 0),
+        } for item in enrollments]
     return data
 
 
@@ -1602,6 +1624,15 @@ def teacher_class_analytics(request, class_id):
         return error
     school_class = get_object_or_404(SchoolClass, pk=class_id, teacher=profile)
     sessions = LearningSession.objects.filter(school_class=school_class)
+    month = request.GET.get('month', 'all')
+    start = end = None
+    if month != 'all':
+        try:
+            start = timezone.make_aware(datetime.strptime(month, '%Y-%m'))
+            end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+        except ValueError:
+            return JsonResponse({'detail': 'Choose a valid reporting month.'}, status=400)
+        sessions = sessions.filter(started_at__gte=start, started_at__lt=end)
     completed = sessions.filter(ended_at__isnull=False)
     analytics = SessionAnalytics.objects.filter(session__in=completed).filter(Q(focused_percentage__gt=0) | Q(relaxed_percentage__gt=0) | Q(distracted_percentage__gt=0) | Q(overstimulated_percentage__gt=0))
     states = StatePrediction.State.values
@@ -1620,7 +1651,7 @@ def teacher_class_analytics(request, class_id):
         'average_focus': round(float(item.average_focus), 1) if item.average_focus is not None else None }
         for item in school_class.enrollments.filter(removed_at__isnull=True).select_related('student').annotate(
             average_focus=Avg('student__learning_sessions__analytics__focused_percentage',
-                filter=Q(student__learning_sessions__school_class=school_class, student__learning_sessions__ended_at__isnull=False)))]
+                filter=Q(student__learning_sessions__in=completed)))]
     lessons = list(Lesson.objects.filter(Q(learning_sessions__school_class=school_class) | Q(slides__eeg_samples__session__school_class=school_class)).distinct().order_by('id').values('id', 'title'))
     selected_lesson = request.GET.get('lesson_id')
     if selected_lesson and not any(str(item['id']) == selected_lesson for item in lessons):
@@ -1629,7 +1660,7 @@ def teacher_class_analytics(request, class_id):
     slides = list(Slide.objects.filter(lesson_id=selected_lesson).order_by('position', 'pk').values('id', 'title', 'position')) if selected_lesson else []
     # Keep separate attempts as separate lines so repeated sessions do not blur a trend.
     grouped = {}
-    for row in SessionEEGSample.objects.filter(session__school_class=school_class, slide__lesson_id=selected_lesson).order_by().values(
+    for row in SessionEEGSample.objects.filter(session__in=sessions, slide__lesson_id=selected_lesson).order_by().values(
             'session_id', 'session__student_id', 'session__student__display_name', 'session__started_at', 'slide_id', 'state').annotate(count=Count('id')) if selected_lesson else []:
         key = str(row['session_id'])
         line = grouped.setdefault(key, {'session_id': key, 'student_id': row['session__student_id'],
@@ -1643,6 +1674,8 @@ def teacher_class_analytics(request, class_id):
         timeline.append(line)
     return JsonResponse({
         "generated_at": timezone.now(),
+        "reporting": {"month": month, "start": start, "end_exclusive": end,
+                      "basis": "Completed sessions grouped by session start date"},
         "class": _class_data(school_class),
         "student_count": school_class.enrollments.filter(removed_at__isnull=True).count(),
         "session_count": sessions.count(),
@@ -2731,8 +2764,10 @@ def session_slide_exposure(request, session_id, slide_id):
             done = locked.slide_exposures.filter(completed_at__isnull=False).filter(_current_garden_rows('slide__activity')).values('slide_id').distinct().count()
             locked.completion_percentage = round(done * 100 / total, 2) if total else 0
             locked.save(update_fields=['completion_percentage'])
-            # The progress-summary endpoint derives totals/badges from these
-            # persisted exposures, without blocking every Next click on a scan.
+        # Refresh awards only at a completion boundary. This makes achievements
+        # available immediately without adding a package-wide scan to every step.
+        if total and done >= total:
+            _student_package_progress_data(profile)
         return JsonResponse({'status': 'completed', 'completed_steps': done, 'step_total': total})
     if action not in {"enter", "exit"}:
         return JsonResponse({"detail": "action must be enter, exit, complete, or answer."}, status=400)

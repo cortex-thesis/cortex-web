@@ -2,10 +2,22 @@ const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
 export const apiMediaUrl = (url: string) => url.startsWith('/api/') ? `${API_BASE.replace(/\/$/, '')}/${url.slice(5)}` : url
 // Briefly reuse navigation data; never keep another user's changes hidden all day.
 const GET_CACHE_TTL_MS = 30_000
-const SESSION_CACHE_PREFIX = 'cortex-api-v3:'
+const SESSION_CACHE_PREFIX = 'cortex-api-v4:'
 const getCache = new Map<string, { expiresAt: number; value: unknown }>()
 const pendingGets = new Map<string, Promise<unknown>>()
 let cacheGeneration = 0
+let cacheOwner = 'anonymous'
+
+function cacheKey(path: string) {
+  return `${cacheOwner}:${path}`
+}
+
+export function setApiCacheOwner(owner: string | number | null) {
+  const next = owner == null ? 'anonymous' : String(owner)
+  if (next === cacheOwner) return
+  clearApiCache()
+  cacheOwner = next
+}
 
 export class ApiError extends Error {
   status: number
@@ -23,14 +35,15 @@ function csrfToken(): string {
 
 export function cachedApiValue<T>(path: string): T | undefined {
   if (path.startsWith('/auth/')) return undefined
-  const memory = getCache.get(path)
+  const key = cacheKey(path)
+  const memory = getCache.get(key)
   if (memory && memory.expiresAt > Date.now()) return memory.value as T
   try {
-    const raw = localStorage.getItem(`${SESSION_CACHE_PREFIX}${path}`)
+    const raw = localStorage.getItem(`${SESSION_CACHE_PREFIX}${key}`)
     if (!raw) return undefined
     const item = JSON.parse(raw) as { expiresAt: number; value: T }
     if (item.expiresAt <= Date.now()) {
-      localStorage.removeItem(`${SESSION_CACHE_PREFIX}${path}`)
+      localStorage.removeItem(`${SESSION_CACHE_PREFIX}${key}`)
       return undefined
     }
     return item.value
@@ -53,8 +66,9 @@ export function clearApiCache() {
 
 export function primeApiCache(path: string, value: unknown) {
   const expiresAt = Date.now() + GET_CACHE_TTL_MS
-  getCache.set(path, { expiresAt, value })
-  try { localStorage.setItem(`${SESSION_CACHE_PREFIX}${path}`, JSON.stringify({ expiresAt, value })) } catch { /* Storage may be unavailable. */ }
+  const key = cacheKey(path)
+  getCache.set(key, { expiresAt, value })
+  try { localStorage.setItem(`${SESSION_CACHE_PREFIX}${key}`, JSON.stringify({ expiresAt, value })) } catch { /* Storage may be unavailable. */ }
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -62,8 +76,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   const method = (options.method ?? 'GET').toUpperCase()
   const isProfileRequest = path === '/student/profile/' || path === '/teacher/profile/'
   const cacheable = method === 'GET' && !isProfileRequest && !path.startsWith('/auth/') && options.cache !== 'no-store'
+  const key = cacheKey(path)
   if (cacheable) {
-    const cached = getCache.get(path)
+    const cached = getCache.get(key)
     if (cached && cached.expiresAt > Date.now()) return cached.value as T
     const stored = cachedApiValue<T>(path)
     if (stored !== undefined) {
@@ -71,7 +86,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     }
   }
   if (method === 'GET' && !options.signal) {
-    const pending = pendingGets.get(path)
+    const pending = pendingGets.get(key)
     if (pending) return pending as Promise<T>
   } else if (method !== 'GET') {
     // Mutations can affect dashboard counts, rosters, notifications, and profiles.
@@ -82,13 +97,13 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   if (method !== 'GET') {
     try { return await request } finally { clearApiCache() }
   }
-  if (!options.signal) pendingGets.set(path, request)
+  if (!options.signal) pendingGets.set(key, request)
   try {
     const value = await request
     if (cacheable && generation === cacheGeneration) primeApiCache(path, value)
     return value
   } finally {
-    if (pendingGets.get(path) === request) pendingGets.delete(path)
+    if (pendingGets.get(key) === request) pendingGets.delete(key)
   }
 }
 

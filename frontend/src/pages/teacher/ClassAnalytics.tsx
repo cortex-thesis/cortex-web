@@ -19,26 +19,27 @@ export default function ClassAnalytics() {
   const [data, setData] = useState<ClassAnalyticsData | null>(null)
   const [lessonId, setLessonId] = useState('')
   const [studentSearch, setStudentSearch] = useState('')
+  const [month, setMonth] = useState('all')
   const [error, setError] = useState('')
   const [trendLoading, setTrendLoading] = useState(false)
   const [trendError, setTrendError] = useState('')
   useEffect(() => {
     const controller = new AbortController()
     setError(''); setData(null); setLessonId(''); setTrendLoading(false); setTrendError('')
-    void getClassAnalytics(classId, '', controller.signal).then(setData).catch((reason: Error) => { if (!controller.signal.aborted) setError(reason.message) })
+    void getClassAnalytics(classId, '', controller.signal, month).then(setData).catch((reason: Error) => { if (!controller.signal.aborted) setError(reason.message) })
     return () => controller.abort()
-  }, [classId])
+  }, [classId, month])
   useEffect(() => {
     if (!lessonId) return
     const controller = new AbortController()
     setTrendLoading(true); setTrendError('')
-    void getClassAnalytics(classId, lessonId, controller.signal).then(incoming => {
+    void getClassAnalytics(classId, lessonId, controller.signal, month).then(incoming => {
       setData(previous => previous?.class.id === Number(classId) ? { ...previous,
         slides: incoming.slides, timeline: incoming.timeline, selected_lesson_id: incoming.selected_lesson_id } : previous)
     }).catch((reason: Error) => { if (!controller.signal.aborted) setTrendError(reason.message) })
       .finally(() => { if (!controller.signal.aborted) setTrendLoading(false) })
     return () => controller.abort()
-  }, [classId, lessonId])
+  }, [classId, lessonId, month])
   const distribution = data?.state_distribution
   let angle = 0
   const segments = states.map(state => { const start = angle; angle += (distribution?.[state] ?? 0) * 3.6; return `${COGNITIVE_STATES[state].color} ${start}deg ${angle}deg` })
@@ -53,8 +54,8 @@ export default function ClassAnalytics() {
     {error && <p role="alert">{error}</p>}
     {!data && !error && <p role="status">Loading class analytics…</p>}
     {data && <>
-      <p>All-time class performance through {data.generated_at ? new Date(data.generated_at).toLocaleString() : 'the latest refresh'}. Focus and state percentages summarize completed sessions with recorded state data; open sessions are excluded.</p>
-      <label>Search students <input type="search" placeholder="Student name" value={studentSearch} onChange={event => setStudentSearch(event.target.value)} /></label>
+      <p>{month === 'all' ? 'All-time' : new Date(`${month}-01T00:00:00`).toLocaleDateString([], { month: 'long', year: 'numeric' })} class performance · updated {data.generated_at ? new Date(data.generated_at).toLocaleString() : 'on the latest refresh'}. Percentages use completed sessions with recorded EEG data and always total 100% when samples exist.</p>
+      <div className={trendStyles.filters}><label>Student <input type="search" placeholder="Search by name" value={studentSearch} onChange={event => setStudentSearch(event.target.value)} /></label><label>Period <select value={month === 'all' ? 'all' : 'month'} onChange={event => setMonth(event.target.value === 'all' ? 'all' : new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'))}><option value="all">All time</option><option value="month">Monthly</option></select></label>{month !== 'all' && <label>Month <input type="month" value={month} onChange={event => event.target.value && setMonth(event.target.value)} /></label>}</div>
       <div className={styles.statsRow}>
         <StatSummaryCard value={data.student_count} label="Students" icon={<Users size={18} />} />
         <StatSummaryCard value={data.session_count} label="Total sessions" icon={<Clock size={18} />} sub={`${data.active_sessions} open sessions`} />
@@ -63,7 +64,7 @@ export default function ClassAnalytics() {
       </div>
       <div className={styles.chartsRow}>
         <section className={styles.chartCard}><h2 className={styles.chartTitle}>Average focus by student</h2><div className={styles.barList}>{data.students.filter(student => student.name.toLowerCase().includes(studentSearch.toLowerCase())).map(student => <div key={student.id} className={styles.barRow}><span className={styles.barLabel}>{student.name}</span><div className={styles.barTrack}><div className={styles.barFill} style={{ width: `${student.average_focus ?? 0}%`, background: 'var(--color-teal)' }} /></div><span className={styles.barValue}>{student.average_focus == null ? '—' : `${student.average_focus}%`}</span></div>)}{!data.students.length && <p>No enrolled students.</p>}</div></section>
-        <section className={styles.donutCard}><h2 className={styles.chartTitle}>State distribution</h2><div className={styles.donutWrap}><div className={styles.donut} style={{ background: angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={styles.donutHole}><span className={styles.donutPct}>{distribution?.focused ?? 0}%</span><span className={styles.donutLbl}>focused</span></div></div><div className={styles.legend}>{states.map(state => <div key={state} className={styles.legendItem}><span className={styles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={styles.legendLabel}>{COGNITIVE_STATES[state].label}</span><span>{distribution?.[state]}%</span></div>)}</div></div></section>
+        <section className={styles.donutCard}><div className={styles.chartHeader}><h2 className={styles.chartTitle}>State distribution</h2><span className={styles.chartSub}>{month === 'all' ? 'All time' : new Date(`${month}-01T00:00:00`).toLocaleDateString([], { month: 'short', year: 'numeric' })}</span></div><div className={styles.donutWrap}><div className={styles.donut} style={{ background: angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={styles.donutHole}><span className={styles.donutPct}>{distribution?.focused ?? 0}%</span><span className={styles.donutLbl}>focused</span></div></div><div className={styles.legend}>{states.map(state => <div key={state} className={styles.legendItem}><span className={styles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={styles.legendLabel}>{COGNITIVE_STATES[state].label}</span><span>{distribution?.[state]}%</span></div>)}</div></div></section>
       </div>
       <section className={styles.stateCard}><h2 className={styles.chartTitle}>Average recorded state distribution</h2><div className={styles.stateBars}>{states.map(state => <div key={state} className={styles.stateRow}><StateBadge state={state} size="sm" /><div className={styles.stateTrack}><div className={styles.stateFill} style={{ width: `${distribution?.[state] ?? 0}%`, background: COGNITIVE_STATES[state].color }} /></div><span className={styles.statePct}>{distribution?.[state]}%</span></div>)}</div></section>
       <section className={styles.chartCard}><h2 className={styles.chartTitle}>Student state across lesson steps</h2>

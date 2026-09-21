@@ -28,7 +28,10 @@ export default function Home() {
   const cachedDashboard = cachedApiValue<DashboardData>('/student/dashboard/')
   const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cachedDashboard?.classes ?? []).map(classPresentation))
   const [classesLoading, setClassesLoading] = useState(!cachedDashboard)
-  useEffect(() => { void getStudentDashboard().then((data) => setClasses(data.classes.map(classPresentation))).finally(() => setClassesLoading(false)) }, [])
+  useEffect(() => {
+    setClassesLoading(true)
+    void getStudentDashboard().then((data) => setClasses(data.classes.map(classPresentation))).finally(() => setClassesLoading(false))
+  }, [student.id])
   useEffect(() => {
     function closeMenu(event: MouseEvent) {
       if (!menuRef.current?.contains(event.target as Node)) setIsMenuOpen(false)
@@ -78,7 +81,7 @@ export default function Home() {
             <QuickActionCard icon={<Plus size={14} strokeWidth={1.75} color="#534AB7" />} iconBg="#EEEDFE" label="Join a class" sub="Enter code" onClick={() => navigate('/student/join-class')} />
             <QuickActionCard icon={<Brain size={14} strokeWidth={1.75} color="#1D9E75" />} iconBg="#E1F5EE" label="New session" sub="Coming next" onClick={() => navigate('/student/classes')} />
             <QuickActionCard icon={<BarChart2 size={14} strokeWidth={1.75} color="#D4537E" />} iconBg="#FBEAF0" label="My progress" sub="Profile overview" onClick={() => navigate('/student/profile')} />
-            <QuickActionCard icon={<Star size={14} strokeWidth={1.75} color="#EF9F27" />} iconBg="#FAEEDA" label="Achievements" sub="Coming soon" onClick={() => navigate('/student/profile')} />
+            <QuickActionCard icon={<Star size={14} strokeWidth={1.75} color="#EF9F27" />} iconBg="#FAEEDA" label="Achievements" sub="View badges" onClick={() => navigate('/student/profile')} />
             <QuickActionCard className={styles.journalShortcut} icon={<BookOpen size={14} strokeWidth={1.75} color="#534AB7" />} iconBg="#EEEDFE" label="Learning journal" sub="Available after sessions" onClick={() => navigate('/student/profile')} />
           </div>
         </div>

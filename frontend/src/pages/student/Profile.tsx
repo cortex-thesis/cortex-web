@@ -20,12 +20,6 @@ import { PACKAGE_META } from '../../constants/packages'
 import type { CurriculumPackage } from '../../constants/states'
 import styles from './Profile.module.css'
 
-const mockStats = {
-  sessionsCompleted: 0,
-  learningTime: '0m',
-}
-
-
 interface PackageProgress { slug: CurriculumPackage; name: string; percentage: number; is_completed: boolean; last_interacted_at: string | null }
 
 
@@ -46,7 +40,7 @@ export default function Profile() {
       .then((data) => { if (!cancelled) { setPackageProgress(data.packages); setBadgeUnlocks(data.badge_unlocks) } })
       .catch(() => { if (!cancelled) setProgressError('Unable to load package progress.') })
     return () => { cancelled = true }
-  }, [])
+  }, [student.id])
 
   useEffect(() => {
     let cancelled = false
@@ -54,7 +48,7 @@ export default function Profile() {
       .then((data) => { if (!cancelled) setSessionData(data) })
       .catch((error: unknown) => { if (!cancelled) setSessionsError(error instanceof Error ? error.message : 'Unable to load recent sessions.') })
     return () => { cancelled = true }
-  }, [])
+  }, [student.id])
 
   const badges = [
     ...[1, 3, 12].map((count) => ({
@@ -79,6 +73,10 @@ export default function Profile() {
     .filter((session) => session.status === 'completed')
     .sort((a, b) => new Date(b.ended_at ?? b.started_at).getTime() - new Date(a.ended_at ?? a.started_at).getTime())
     .slice(0, 3)
+  const completedSessions = sessionData?.summary.completed_sessions ?? 0
+  const learningMinutes = Math.round((sessionData?.summary.total_duration_seconds ?? 0) / 60)
+  const learningTime = learningMinutes >= 60 ? `${Math.floor(learningMinutes / 60)}h ${learningMinutes % 60}m` : `${learningMinutes}m`
+  const studentNumber = student.student_number || 'Not assigned'
 
   return (
     <PlayfulZoneTemplate>
@@ -89,7 +87,7 @@ export default function Profile() {
             <div>
               <span className={styles.eyebrow}>Student profile</span>
               <h1 className={styles.name}>{student.name}</h1>
-              <p className={styles.profileMeta}>Student ID {student.id}</p>
+              <p className={styles.profileMeta}>Student number {studentNumber}</p>
             </div>
           </div>
           <button className={styles.editBtn} onClick={() => navigate('/student/settings')}>
@@ -99,8 +97,8 @@ export default function Profile() {
 
         <section className={styles.statsGrid} aria-label="Learning statistics">
           <StreakCard score={sessionData?.summary.average_focus_score ?? 0} label="Current progress" className={styles.currentProgress} />
-          <Stat icon={<span aria-hidden="true" />} color="#534AB7" bg="#EEEDFE" value={mockStats.sessionsCompleted} label="Sessions completed" detail="4 sessions this week" />
-          <Stat icon={<Clock3 size={22}/>} color="#D4537E" bg="#FBEAF0" value={mockStats.learningTime} label="Total learning time" detail="Current school term" />
+          <Stat icon={<span aria-hidden="true" />} color="#534AB7" bg="#EEEDFE" value={completedSessions} label="Sessions completed" detail={completedSessions ? 'All completed sessions' : 'No completed sessions yet'} />
+          <Stat icon={<Clock3 size={22}/>} color="#D4537E" bg="#FBEAF0" value={learningTime} label="Total learning time" detail="Across completed sessions" />
         </section>
 
         <div className={styles.dashboardGrid}>

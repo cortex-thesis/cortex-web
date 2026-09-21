@@ -6,7 +6,7 @@ import ts from 'typescript'
 const source = (await readFile(new URL('../src/lib/api.ts', import.meta.url), 'utf8'))
   .replace("import.meta.env.VITE_API_URL ?? '/api'", "'/api'")
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
-const { api, primeApiCache, cachedApiValue, clearApiCache } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
+const { api, primeApiCache, cachedApiValue, clearApiCache, setApiCacheOwner } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
 const storage = new Map()
 globalThis.localStorage = {
   get length() { return storage.size },
@@ -91,4 +91,15 @@ test('clearing an account removes legacy cache and isolates outstanding reads', 
   finish(response({ private: 'old account' }))
   await oldRequest
   assert.equal(cachedApiValue('/classes/'), undefined)
+})
+
+test('cached dashboard data is isolated between signed-in accounts', () => {
+  setApiCacheOwner('student-a')
+  primeApiCache('/student/dashboard/', { classes: ['A'] })
+  assert.deepEqual(cachedApiValue('/student/dashboard/'), { classes: ['A'] })
+  setApiCacheOwner('student-b')
+  assert.equal(cachedApiValue('/student/dashboard/'), undefined)
+  primeApiCache('/student/dashboard/', { classes: [] })
+  assert.deepEqual(cachedApiValue('/student/dashboard/'), { classes: [] })
+  setApiCacheOwner(null)
 })

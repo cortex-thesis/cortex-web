@@ -52,7 +52,7 @@ export default function StudentProfile() {
             <div>
               <span className={styles.eyebrow}>Student learning profile</span>
               <h1>{student.name}</h1>
-              <p>{classData.name} · Learner record {student.student_number || student.id}</p>
+              <p>{classData.name} · Student number {student.student_number || 'Not assigned'}</p>
             </div>
           </div>
           <div className={styles.headerActions}>

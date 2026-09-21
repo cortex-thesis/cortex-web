@@ -67,6 +67,9 @@ export default function Dashboard() {
   const selectedStudent = liveStudents.find((student) => student.id === selectedId) ?? liveStudents[0]
   const distribution = data?.state_distribution ?? { focused: 0, relaxed: 0, distracted: 0, overstimulated: 0 }
   const focused = distribution.focused
+  const reportingLabel = month === 'all'
+    ? 'All time'
+    : new Date(`${month}-01T00:00:00`).toLocaleDateString([], { month: 'long', year: 'numeric' })
   const mostRecentClass = data?.classes.find(item => item.latest_session_at)
   let angle = 0
   const segments = states.map((state) => { const start = angle; angle += distribution[state] * 3.6; return `${COGNITIVE_STATES[state].color} ${start}deg ${angle}deg` })
@@ -99,6 +102,7 @@ export default function Dashboard() {
             {month !== 'all' && <label>Month<input type="month" value={month} onChange={event => { if (event.target.value) setMonth(event.target.value) }} /></label>}
           </div>
         </div>
+        {data?.reporting && <p className={styles.statsNote}>Updated {new Date(data.reporting.generated_at).toLocaleString()} · {data.reporting.start ? `${new Date(data.reporting.start).toLocaleDateString()}–${new Date(data.reporting.end_exclusive!).toLocaleDateString()} (end exclusive)` : 'All recorded dates'} · {data.reporting.sample_count.toLocaleString()} valid EEG samples across {data.reporting.measured_sessions} measured sessions.</p>}
       <div className={analyticsStyles.statsRow}>
         <StatSummaryCard value={data?.class_count ?? 0} label="Active classes" icon={<BookOpen size={18} color="#534AB7" />} iconBg="var(--color-cool-surface)" />
         <StatSummaryCard value={data?.student_count ?? 0} label="Enrolled students" icon={<Users size={18} color="#1D9E75" />} iconBg="var(--color-cool-surface)" />
@@ -110,7 +114,7 @@ export default function Dashboard() {
           {(data?.classes ?? []).filter(item => (!classId || String(item.id) === classId)).map((item) => { const score = item.average_focus ?? 0; return <div key={item.id} className={analyticsStyles.barRow}><span className={analyticsStyles.barLabel}>Class · {item.name}</span><div className={analyticsStyles.barTrack} role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}><div className={analyticsStyles.barFill} style={{ width: `${score}%`, background: score >= 75 ? 'var(--color-teal)' : score >= 50 ? 'var(--color-sunflower)' : 'var(--color-coral)' }} /></div><span className={analyticsStyles.barValue}>{item.average_focus == null ? '—' : `${score}%`}</span></div>})}
           {!data?.classes.length && <span className={styles.liveSectionNote}>No classes yet.</span>}
         </div></div>
-        <div className={analyticsStyles.donutCard}><span className={analyticsStyles.chartTitle}>State distribution</span><div className={analyticsStyles.donutWrap}><div className={analyticsStyles.donut} style={{ background: focused || angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={analyticsStyles.donutHole}><span className={analyticsStyles.donutPct}>{focused}%</span><span className={analyticsStyles.donutLbl}>focused</span></div></div><div className={analyticsStyles.legend}>{states.map((state) => <div className={analyticsStyles.legendItem} key={state}><span className={analyticsStyles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={analyticsStyles.legendLabel}>{COGNITIVE_STATES[state].label}</span><span className={analyticsStyles.legendPct}>{distribution[state]}%</span></div>)}</div></div></div>
+        <div className={analyticsStyles.donutCard}><div className={analyticsStyles.chartHeader}><span className={analyticsStyles.chartTitle}>State distribution</span><span className={analyticsStyles.chartSub}>{reportingLabel}</span></div><div className={analyticsStyles.donutWrap}><div className={analyticsStyles.donut} style={{ background: focused || angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={analyticsStyles.donutHole}><span className={analyticsStyles.donutPct}>{focused}%</span><span className={analyticsStyles.donutLbl}>focused</span></div></div><div className={analyticsStyles.legend}>{states.map((state) => <div className={analyticsStyles.legendItem} key={state}><span className={analyticsStyles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={analyticsStyles.legendLabel}>{COGNITIVE_STATES[state].label}</span><span className={analyticsStyles.legendPct}>{distribution[state]}%</span></div>)}</div></div></div>
       </div>
       <div className={analyticsStyles.stateCard}><span className={analyticsStyles.chartTitle}>Share of valid EEG samples by state</span><div className={analyticsStyles.stateBars}>{states.map((state) => <div className={analyticsStyles.stateRow} key={state}><StateBadge state={state} size="sm" /><div className={analyticsStyles.stateTrack}><div className={analyticsStyles.stateFill} style={{ width: `${distribution[state]}%`, background: COGNITIVE_STATES[state].color }} /></div><span className={analyticsStyles.statePct}>{distribution[state]}%</span></div>)}</div></div>
         <p className={styles.statsNote}>EEG percentages use valid samples from completed sessions.</p>

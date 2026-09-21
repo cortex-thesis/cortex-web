@@ -83,6 +83,23 @@ class Profile(models.Model):
         return self.role == self.Role.ADMIN and self.admin_scope == self.AdminScope.SCHOOL
 
 
+@receiver(post_save, sender=Profile)
+def assign_student_number(sender, instance, created, **kwargs):
+    """Assign a stable, school-facing number; database IDs remain internal."""
+    if instance.role != Profile.Role.STUDENT or instance.student_number:
+        return
+    year = timezone.localdate().year
+    prefix = f"STU-{year}-"
+    peers = Profile.objects.filter(role=Profile.Role.STUDENT, school_id=instance.school_id,
+                                   student_number__startswith=prefix).values_list("student_number", flat=True)
+    used = {int(value.rsplit("-", 1)[-1]) for value in peers if value.rsplit("-", 1)[-1].isdigit()}
+    sequence = 1
+    while sequence in used:
+        sequence += 1
+    Profile.objects.filter(pk=instance.pk, student_number="").update(student_number=f"{prefix}{sequence:03d}")
+    instance.student_number = f"{prefix}{sequence:03d}"
+
+
 class SchoolClass(models.Model):
     class Status(models.TextChoices):
         ACTIVE = "active", "Active"

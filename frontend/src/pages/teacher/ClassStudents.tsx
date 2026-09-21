@@ -41,7 +41,7 @@ export default function ClassStudents() {
           {students.map((student) => (
             <div key={student.id} className={styles.tableRow}>
               <div className={styles.studentInfo}><Avatar name={student.name} imageUrl={student.avatar} size="sm" /><span className={styles.studentName}>{student.name}</span></div>
-              <span className={styles.tdMuted}>{student.student_number || '—'}</span><span className={styles.tdMuted}>0</span><span className={styles.tdMuted}>No sessions</span><span className={styles.tdMuted}>0 entries</span>
+              <span className={styles.tdMuted}>{student.student_number || 'Not assigned'}</span><span className={styles.tdMuted}>{student.session_count ?? 0}</span><span className={styles.tdMuted}>{student.last_state ? student.last_state.charAt(0).toUpperCase() + student.last_state.slice(1) : 'No sessions'}</span><span className={styles.tdMuted}>{student.journal_count ?? 0} {(student.journal_count ?? 0) === 1 ? 'entry' : 'entries'}</span>
               <div><button className={styles.viewBtn} onClick={() => navigate(`/teacher/class/${classId}/student/${student.id}`)}>View profile</button></div>
             </div>
           ))}

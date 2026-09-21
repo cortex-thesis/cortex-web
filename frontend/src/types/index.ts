@@ -13,6 +13,7 @@ export interface User {
   role: UserRole
   avatar: string | null
   classIds: string[]
+  student_number?: string
 }
 
 // EEG
