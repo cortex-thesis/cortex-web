@@ -41,13 +41,13 @@ export default function Classes() {
           <div className={styles.grid}>
             {filtered.map((item) => (
               <button key={item.id} className={styles.card} onClick={() => navigate(`/teacher/class/${item.id}/overview`)}>
-                <span className={styles.cardIcon} style={{ background: '#EEEDFE' }}>🏫</span>
+                <span className={styles.cardIcon} style={{ background: '#EEEDFE' }} aria-hidden="true">{'🏫'}</span>
                 <span className={styles.cardBody}>
                   <span className={styles.cardName}>{item.name}</span>
-                  <span className={styles.cardMeta}>{item.student_count} students · Code {item.code}</span>
+                  <span className={styles.cardMeta}>{item.student_count} students &middot; Code {item.code}</span>
                   <span className={styles.packagePill} style={{ background: '#F8F8FC' }}>All 7 learning packages</span>
                 </span>
-                <ChevronRight size={16} strokeWidth={1.75} className={styles.cardChevron} />
+                <ChevronRight size={16} strokeWidth={1.75} className={styles.cardChevron} aria-hidden="true" />
               </button>
             ))}
           </div>

@@ -1,10 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Enrollment, LearningSession, Profile, SchoolClass, StudentBadge
+from .models import Enrollment, LearningSession, Profile, SchoolClass, StudentBadge, SessionEEGSample
 
 
 class TeacherDashboardActivityTests(TestCase):
@@ -73,3 +73,40 @@ class TeacherDashboardActivityTests(TestCase):
         self.assertEqual(data['recent_badges'], [])
         self.client.force_login(self.student.user)
         self.assertEqual(self.client.get('/api/teacher/dashboard/').status_code, 403)
+
+    def test_comparison_uses_same_class_and_valid_samples(self):
+        for school_class, date, state, channels in [
+            (self.first, '2024-02-01', 'focused', 4),
+            (self.first, '2024-01-31', 'distracted', 4),
+            (self.first, '2024-01-15', 'focused', 0),
+            (self.second, '2024-01-15', 'focused', 4),
+            (self.foreign, '2024-01-15', 'focused', 4),
+        ]:
+            item = self.session(school_class, 0)
+            LearningSession.objects.filter(pk=item.pk).update(started_at=timezone.make_aware(datetime.fromisoformat(date)))
+            SessionEEGSample.objects.create(session=item, state=state, accepted_channels=channels)
+        data = self.client.get('/api/teacher/dashboard/', {'month': '2024-02', 'class_id': self.first.pk}).json()
+        self.assertEqual(data['average_focus'], 100)
+        self.assertEqual(data['total_sessions'], 1)
+        self.assertEqual(data['comparison']['average_focus'], 0)
+        self.assertEqual(data['comparison']['total_sessions'], 2)
+        self.assertEqual(data['comparison']['sample_count'], 1)
+        self.assertFalse(data['reporting']['is_partial'])
+
+    def test_period_boundaries_and_empty_comparison(self):
+        for filters, start, end, previous in [
+            ({'period': 'week', 'date': '2025-01-01'}, '2024-12-30', '2025-01-06', '2024-12-23'),
+            ({'period': 'month', 'month': '2024-03'}, '2024-03-01', '2024-04-01', '2024-02-01'),
+            ({'period': 'year', 'year': '2024'}, '2024-01-01', '2025-01-01', '2023-01-01'),
+        ]:
+            with self.subTest(filters=filters):
+                data = self.client.get('/api/teacher/dashboard/', filters).json()
+                self.assertTrue(data['reporting']['start'].startswith(start))
+                self.assertTrue(data['reporting']['end_exclusive'].startswith(end))
+                self.assertTrue(data['comparison']['start'].startswith(previous))
+                self.assertIsNone(data['comparison']['average_focus'])
+                self.assertEqual(data['comparison']['total_sessions'], 0)
+        self.assertIsNone(self.client.get('/api/teacher/dashboard/', {'period': 'all'}).json()['comparison'])
+        self.assertTrue(self.client.get('/api/teacher/dashboard/').json()['reporting']['is_partial'])
+        for filters in [{'period': 'bad'}, {'period': 'week', 'date': 'bad'}, {'period': 'year', 'year': '9999'}]:
+            self.assertEqual(self.client.get('/api/teacher/dashboard/', filters).status_code, 400)

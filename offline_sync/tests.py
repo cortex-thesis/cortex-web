@@ -1,5 +1,5 @@
 from unittest import skipUnless
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -15,6 +15,32 @@ from .models import IdAllocation, ReplicaState
 
 
 class MergeTests(SimpleTestCase):
+    def test_cloud_fingerprints_fetch_only_changed_rows_and_detect_deletes(self):
+        from .engine import cloud_snapshot, _cloud_snapshots
+        _cloud_snapshots.clear()
+        connection = MagicMock(vendor="postgresql")
+        connection.ops.quote_name.side_effect = lambda name: '"' + name + '"'
+        cursor = connection.cursor.return_value.__enter__.return_value
+        cursor.fetchall.side_effect = [[(1, "a"), (2, "b")], [(1, "a"), (2, "b")], [(2, "c")]]
+        model = MagicMock()
+        model._meta.db_table = "test_table"
+        model._meta.pk.attname = model._meta.pk.column = "id"
+        query = model._base_manager.using.return_value.filter
+        query.return_value.values.side_effect = [
+            [{"id": 1, "name": "one"}, {"id": 2, "name": "two"}],
+            [{"id": 2, "name": "edited"}],
+        ]
+        with patch("offline_sync.engine.connections", {"cloud": connection}), patch("offline_sync.engine.cloud_identity", return_value="test"):
+            first = cloud_snapshot([model])
+            first["test_table"]["1"]["name"] = "mutated externally"
+            second = cloud_snapshot([model])
+            self.assertEqual(second["test_table"]["1"]["name"], "one")
+            self.assertEqual(query.call_count, 1)
+            third = cloud_snapshot([model])
+            self.assertEqual(third, {"test_table": {"2": {"id": 2, "name": "edited"}}})
+            query.assert_called_with(pk__in=["2"])
+        _cloud_snapshots.clear()
+
     def test_offline_create_update_delete_and_remote_changes(self):
         base = {"t": {"1": {"id": 1, "name": "old"}, "2": {"id": 2}}}
         local = {"t": {"1": {"id": 1, "name": "new"}, "3": {"id": 3}}}

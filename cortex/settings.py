@@ -144,7 +144,7 @@ else:
 # Keep cloud credentials server-side. Requests never fall back to the cloud in
 # offline mode: only the worker uses this alias.
 OFFLINE_SYNC_ENABLED = os.environ.get("CORTEX_OFFLINE_SYNC", "false").lower() == "true" and "test" not in sys.argv
-OFFLINE_SYNC_INTERVAL = max(5, int(os.environ.get("CORTEX_SYNC_INTERVAL", "15")))
+OFFLINE_SYNC_INTERVAL = max(5, int(os.environ.get("CORTEX_SYNC_INTERVAL", "300")))
 if OFFLINE_SYNC_ENABLED and "test" not in sys.argv:
     if TEMPLATE_ONLY or DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
         raise RuntimeError("Offline sync requires Supabase DB_* or DATABASE_URL and CORTEX_TEMPLATE_ONLY=false.")

@@ -68,7 +68,8 @@ export interface TeacherClass {
 }
 
 export interface TeacherDashboardData {
-  reporting: { month: string; start: string | null; end_exclusive: string | null; generated_at: string; sample_count: number; measured_sessions: number; basis: string }
+  reporting: { period: string; is_partial: boolean; month: string; start: string | null; end_exclusive: string | null; generated_at: string; sample_count: number; measured_sessions: number; basis: string }
+  comparison: null | { start: string; end_exclusive: string; total_sessions: number; average_focus: number | null; state_distribution: Record<CognitiveState, number>; sample_count: number; measured_sessions: number }
   teacher: TeacherIdentity
   classes: TeacherClass[]
   class_count: number
@@ -89,7 +90,7 @@ export interface TeacherDashboardData {
   }>
 }
 
-export const getTeacherDashboard = (month = '', classId = '') => api<TeacherDashboardData>(`/teacher/dashboard/?${new URLSearchParams({ ...(month ? { month } : {}), ...(classId ? { class_id: classId } : {}) })}`, { cache: 'no-store' })
+export const getTeacherDashboard = (month = '', classId = '', filters: Record<string, string> = {}) => api<TeacherDashboardData>(`/teacher/dashboard/?${new URLSearchParams({ ...(month ? { month } : {}), ...(classId ? { class_id: classId } : {}), ...filters })}`, { cache: 'no-store' })
 export const getTeacherClasses = () => api<{ classes: TeacherClass[] }>('/classes/', { cache: 'no-store' })
 export const getTeacherClass = (id: string) => api<TeacherClass>(`/classes/${id}/`, { cache: 'no-store' })
 export interface LiveSession {

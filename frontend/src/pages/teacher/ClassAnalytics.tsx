@@ -3,20 +3,26 @@ import { useParams } from 'react-router-dom'
 import { Clock, Target, TrendingUp, Users } from 'lucide-react'
 import { TeacherTabTemplate } from '../../components/templates'
 import { StatSummaryCard } from '../../components/molecules'
-import { StateBadge } from '../../components/atoms'
-import { getClassAnalytics, type ClassAnalyticsData } from '../../lib/teacherApi'
+import DashboardTrends from './DashboardTrends'
+import LessonStateChart from './LessonStateChart'
+import StateTrend from './StateTrend'
+import dashboardStyles from './Dashboard.module.css'
+import { getClassAnalytics, getTeacherDashboard, type TeacherDashboardData, type ClassAnalyticsData } from '../../lib/teacherApi'
 import { COGNITIVE_STATES, type CognitiveState } from '../../constants/states'
 import { useAuthStore } from '../../store/authStore'
 import styles from './Analytics.module.css'
 import trendStyles from './ClassAnalytics.module.css'
 
 const states: CognitiveState[] = ['overstimulated', 'distracted', 'relaxed', 'focused']
-const lineColors = ['#534AB7', '#1D9E75', '#D4537E', '#BA7517', '#185FA5', '#993C1D']
+
 
 export default function ClassAnalytics() {
   const { classId = '' } = useParams()
   const user = useAuthStore(state => state.user)!
   const [data, setData] = useState<ClassAnalyticsData | null>(null)
+  const [report, setReport] = useState<TeacherDashboardData | null>(null)
+  const [reportKey, setReportKey] = useState('')
+  const [reportError, setReportError] = useState('')
   const [lessonId, setLessonId] = useState('')
   const [studentSearch, setStudentSearch] = useState('')
   const [month, setMonth] = useState('all')
@@ -40,12 +46,19 @@ export default function ClassAnalytics() {
       .finally(() => { if (!controller.signal.aborted) setTrendLoading(false) })
     return () => controller.abort()
   }, [classId, lessonId, month])
-  const distribution = data?.state_distribution
+  useEffect(() => {
+    let disposed = false
+    void getTeacherDashboard(month, classId, { period: month === 'all' ? 'all' : 'month' }).then(result => {
+      if (!disposed) { setReport(result); setReportKey(classId + ':' + month); setReportError('') }
+    }).catch((reason: Error) => { if (!disposed) { setReport(null); setReportKey(classId + ':' + month); setReportError(reason.message) } })
+    return () => { disposed = true }
+  }, [classId, month])
+  const currentReport = reportKey === classId + ':' + month ? report : null
+  const currentReportError = reportKey === classId + ':' + month ? reportError : ''
+  const distribution = currentReport?.state_distribution
+  const hasSamples = Boolean(currentReport?.reporting.sample_count)
   let angle = 0
   const segments = states.map(state => { const start = angle; angle += (distribution?.[state] ?? 0) * 3.6; return `${COGNITIVE_STATES[state].color} ${start}deg ${angle}deg` })
-  const x = (index: number) => 150 + index * 100
-  const y = (state: CognitiveState) => 190 - states.indexOf(state) * 50
-  const width = Math.max(450, 200 + (data?.slides.length ?? 0) * 100)
   return <TeacherTabTemplate user={user} title={`Class · ${data?.class.name ?? ''}`} tabs={[
     { label: 'Overview', path: `/teacher/class/${classId}/overview` },
     { label: 'Students', path: `/teacher/class/${classId}/students` },
@@ -54,31 +67,20 @@ export default function ClassAnalytics() {
     {error && <p role="alert">{error}</p>}
     {!data && !error && <p role="status">Loading class analytics…</p>}
     {data && <>
-      <p>{month === 'all' ? 'All-time' : new Date(`${month}-01T00:00:00`).toLocaleDateString([], { month: 'long', year: 'numeric' })} class performance · updated {data.generated_at ? new Date(data.generated_at).toLocaleString() : 'on the latest refresh'}. Percentages use completed sessions with recorded EEG data and always total 100% when samples exist.</p>
       <div className={trendStyles.filters}><label>Student <input type="search" placeholder="Search by name" value={studentSearch} onChange={event => setStudentSearch(event.target.value)} /></label><label>Period <select value={month === 'all' ? 'all' : 'month'} onChange={event => setMonth(event.target.value === 'all' ? 'all' : new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'))}><option value="all">All time</option><option value="month">Monthly</option></select></label>{month !== 'all' && <label>Month <input type="month" value={month} onChange={event => event.target.value && setMonth(event.target.value)} /></label>}</div>
       <div className={styles.statsRow}>
         <StatSummaryCard value={data.student_count} label="Students" icon={<Users size={18} />} />
         <StatSummaryCard value={data.session_count} label="Total sessions" icon={<Clock size={18} />} sub={`${data.active_sessions} open sessions`} />
-        <StatSummaryCard value={data.average_focus == null ? '—' : `${data.average_focus}%`} label="Average focus" icon={<TrendingUp size={18} />} />
+        <StatSummaryCard value={currentReport?.average_focus == null ? '—' : `${currentReport.average_focus}%`} label="Focused EEG samples" icon={<TrendingUp size={18} />} />
         <StatSummaryCard value={data.completion_rate == null ? '—' : `${data.completion_rate}%`} label="Completion rate" icon={<Target size={18} />} />
       </div>
+      {currentReportError && <p role="alert">Comparison unavailable: {currentReportError}</p>}
+      {currentReport ? (month === 'all' ? <p className={dashboardStyles.statsNote}>Choose Monthly to compare with the previous period.</p> : <DashboardTrends data={currentReport} />) : !currentReportError && <p role="status">Loading period comparison...</p>}
       <div className={styles.chartsRow}>
         <section className={styles.chartCard}><h2 className={styles.chartTitle}>Average focus by student</h2><div className={styles.barList}>{data.students.filter(student => student.name.toLowerCase().includes(studentSearch.toLowerCase())).map(student => <div key={student.id} className={styles.barRow}><span className={styles.barLabel}>{student.name}</span><div className={styles.barTrack}><div className={styles.barFill} style={{ width: `${student.average_focus ?? 0}%`, background: 'var(--color-teal)' }} /></div><span className={styles.barValue}>{student.average_focus == null ? '—' : `${student.average_focus}%`}</span></div>)}{!data.students.length && <p>No enrolled students.</p>}</div></section>
-        <section className={styles.donutCard}><div className={styles.chartHeader}><h2 className={styles.chartTitle}>State distribution</h2><span className={styles.chartSub}>{month === 'all' ? 'All time' : new Date(`${month}-01T00:00:00`).toLocaleDateString([], { month: 'short', year: 'numeric' })}</span></div><div className={styles.donutWrap}><div className={styles.donut} style={{ background: angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={styles.donutHole}><span className={styles.donutPct}>{distribution?.focused ?? 0}%</span><span className={styles.donutLbl}>focused</span></div></div><div className={styles.legend}>{states.map(state => <div key={state} className={styles.legendItem}><span className={styles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={styles.legendLabel}>{COGNITIVE_STATES[state].label}</span><span>{distribution?.[state]}%</span></div>)}</div></div></section>
+        <section className={styles.donutCard}><div className={styles.chartHeader}><h2 className={styles.chartTitle}>State distribution</h2><span className={styles.chartSub}>{month === 'all' ? 'All time' : new Date(`${month}-01T00:00:00`).toLocaleDateString([], { month: 'short', year: 'numeric' })}</span></div><div className={styles.donutWrap}><div className={styles.donut} style={{ background: angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={styles.donutHole}><span className={styles.donutPct}>{hasSamples ? `${distribution?.focused}%` : '\u2014'}</span><span className={styles.donutLbl}>{hasSamples ? 'focused' : 'no data'}</span></div></div><div className={styles.legend}>{states.map(state => <div key={state} className={styles.legendItem}><span className={styles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={styles.legendLabel}><span className={dashboardStyles.distributionLabel}>{COGNITIVE_STATES[state].label}<StateTrend state={state} data={currentReport} /></span></span><span>{hasSamples ? `${distribution?.[state]}%` : "\u2014"}</span></div>)}</div></div></section>
       </div>
-      <section className={styles.stateCard}><h2 className={styles.chartTitle}>Average recorded state distribution</h2><div className={styles.stateBars}>{states.map(state => <div key={state} className={styles.stateRow}><StateBadge state={state} size="sm" /><div className={styles.stateTrack}><div className={styles.stateFill} style={{ width: `${distribution?.[state] ?? 0}%`, background: COGNITIVE_STATES[state].color }} /></div><span className={styles.statePct}>{distribution?.[state]}%</span></div>)}</div></section>
-      <section className={styles.chartCard}><h2 className={styles.chartTitle}>Student state across lesson steps</h2>
-        <label>Lesson <select value={lessonId || String(data.selected_lesson_id ?? '')} onChange={event => setLessonId(event.target.value)}>{data.lessons.map(lesson => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}</select></label>
-        <p>Each point shows the most frequent recorded EEG state for that slide. Each line is one student’s session; gaps mean no EEG data.</p>
-        {trendLoading ? <p role="status">Loading lesson trend…</p> : trendError ? <p role="alert">{trendError}</p> : !data.timeline.length ? <p>No recorded EEG states for this lesson yet.</p> : <>
-          <div className={trendStyles.trendScroll}><svg width={width} height={300} role="img" aria-label="Student cognitive state by lesson slide">
-            {states.map(state => <g key={state}><text x={8} y={y(state) + 4} fontSize={11}>{COGNITIVE_STATES[state].label}</text><line x1={140} x2={width - 30} y1={y(state)} y2={y(state)} stroke="#e5e3ef" /></g>)}
-            {data.slides.map((slide, index) => <text key={slide.id} x={x(index)} y={235} textAnchor="middle" fontSize={11}><title>{slide.title}</title>Step {index + 1}</text>)}
-            {data.timeline.filter(item => item.name.toLowerCase().includes(studentSearch.toLowerCase())).map((line, lineIndex) => <g key={line.session_id} stroke={lineColors[lineIndex % lineColors.length]}>{line.points.map((point, index) => point.state && <g key={point.slide_id}>{index > 0 && line.points[index - 1].state && <line x1={x(index - 1)} y1={y(line.points[index - 1].state!)} x2={x(index)} y2={y(point.state)} strokeWidth={2} />}<circle cx={x(index)} cy={y(point.state)} r={4} fill={lineColors[lineIndex % lineColors.length]}><title>{line.name} · {data.slides[index]?.title}: {COGNITIVE_STATES[point.state].label} ({point.samples} samples)</title></circle></g>)}</g>)}
-          </svg></div>
-          <div className={trendStyles.trendLegend}>{data.timeline.filter(item => item.name.toLowerCase().includes(studentSearch.toLowerCase())).map((line, index) => <span key={line.session_id} style={{ color: lineColors[index % lineColors.length] }}>● {line.name} · {new Date(line.started_at).toLocaleString()}</span>)}</div>
-        </>}
-      </section>
+      <LessonStateChart key={classId + ':' + month + ':' + (lessonId || data.selected_lesson_id) + ':' + studentSearch} data={data} lessonId={lessonId} onLessonChange={setLessonId} studentSearch={studentSearch} loading={trendLoading} error={trendError} />
     </>}
   </div></TeacherTabTemplate>
 }

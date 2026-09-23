@@ -3,7 +3,9 @@
 Each trusted developer runs React and Django on their laptop. With
 `CORTEX_OFFLINE_SYNC=true`, all application reads and writes use a separate local
 SQLite database (`.runtime/offline.sqlite3`). A background worker exchanges changes
-with the existing Supabase PostgreSQL tables every 15 seconds. The original
+with the existing Supabase PostgreSQL tables every five minutes by default. Set
+`CORTEX_SYNC_INTERVAL` in seconds to adjust this tradeoff between freshness and
+free-plan usage. The original
 `db.sqlite3` is not used or overwritten. Django authentication works locally after
 the first import, even without internet.
 
@@ -177,7 +179,9 @@ Configure the existing `SUPABASE_STORAGE_*` variables to sync lesson assets. In 
 mode uploads and previews use local `MEDIA_ROOT`; the worker copies immutable asset
 paths to/from the private cloud bucket. Files are checked with SHA-256, downloads
 use temporary files and atomic rename, and existing objects with different bytes
-pause sync. Recently verified files are cached for five minutes. Missing or invalid
+pause sync. Recently verified files are cached for five minutes; after that, S3
+object metadata is checked and bytes are downloaded again only if the object
+version changed. Restarting the worker performs a fresh verification. Missing or invalid
 files block the batch until restored. For assets without a recorded checksum, the
 two available copies are compared when possible.
 
@@ -195,14 +199,28 @@ Use only trusted developer laptops and appropriate development data. Each replic
 holds the entire shared dataset; this is not per-user data isolation. Account
 revocations cannot reach a disconnected laptop until it reconnects and syncs.
 
-This implementation uses full-table snapshots and a short cloud table lock for
-safe development synchronization. It is intended for a small development team,
+This implementation keeps a local snapshot and uses a short cloud table lock for
+safe development synchronization. Cloud row fingerprints detect changes, including
+SQL updates and deletes; only new or changed rows are downloaded after the first
+cycle of each worker process. Asset metadata is also read before file preparation.
+The server still scans all rows to calculate fingerprints, and fingerprints use
+some egress, so this is not a constant-cost change feed. It is intended for a small development team,
 not high-volume production replication. Large EEG metadata tables or asset
 libraries increase synchronization time. Avoid running multiple workers per laptop.
 
 To return to direct Supabase mode, sync all pending work first, stop Django, set
 `CORTEX_OFFLINE_SYNC=false`, then restart. Unsynced local work remains in the replica
 but will not appear in direct cloud mode.
+
+## Connection troubleshooting
+
+Run `.\.venv\Scripts\python.exe scripts/check_cloud_connection.py` to test
+authenticated, read-only queries on the session (5432) and transaction (6543)
+pooler ports without printing credentials. Both timeouts indicate a network or
+project availability problem, not a reason to reinitialize or delete the replica.
+Check the project's availability and network restrictions in Supabase, and whether
+the current network permits outbound PostgreSQL traffic. The application requires
+a working PostgreSQL connection; HTTPS access to the dashboard alone is insufficient.
 
 ## Verification
 

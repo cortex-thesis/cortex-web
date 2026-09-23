@@ -28,7 +28,7 @@ class ClassAnalyticsTests(TestCase):
         self.session.save()
         SessionAnalytics.objects.create(session=self.session, focused_percentage=75, relaxed_percentage=25)
         for state in ['focused', 'focused', 'relaxed']:
-            SessionEEGSample.objects.create(session=self.session, slide=self.slides[0], state=state)
+            SessionEEGSample.objects.create(session=self.session, slide=self.slides[0], state=state, accepted_channels=4)
         StudentBadge.objects.create(student=self.student, key='care', unlocked_at=timezone.now())
         other_class = SchoolClass.objects.create(name='Other', code='OTHER-A', teacher=self.teacher)
         other_session = LearningSession.objects.create(student=self.student, school_class=other_class, lesson=self.lesson, ended_at=timezone.now())
@@ -45,6 +45,17 @@ class ClassAnalyticsTests(TestCase):
         self.assertEqual(len(data['timeline']), 1)
         self.assertEqual(data['timeline'][0]['points'][0], {'slide_id': self.slides[0].pk, 'state': 'focused', 'samples': 3})
         self.assertIsNone(data['timeline'][0]['points'][1]['state'])
+
+    def test_slide_trend_excludes_invalid_samples_and_marks_ties(self):
+        for state in ['focused', 'relaxed']:
+            SessionEEGSample.objects.create(session=self.session, slide=self.slides[0], state=state, accepted_channels=4)
+        for slide in self.slides:
+            for _ in range(3):
+                SessionEEGSample.objects.create(session=self.session, slide=slide, state='overstimulated', accepted_channels=0)
+        self.client.force_login(self.teacher.user)
+        points = self.client.get(self.url).json()['timeline'][0]['points']
+        self.assertEqual(points[0], {'slide_id': self.slides[0].pk, 'state': None, 'samples': 2})
+        self.assertEqual(points[1], {'slide_id': self.slides[1].pk, 'state': None, 'samples': 0})
 
     def test_mode_switches_are_saved_once_and_only_focus_to_relax_is_counted(self):
         self.client.force_login(self.student.user)

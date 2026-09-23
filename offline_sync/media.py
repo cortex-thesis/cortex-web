@@ -18,6 +18,15 @@ _prepared = set()
 _verified = {}
 
 
+def cloud_version(cloud, name):
+    """HEAD metadata lets us recheck verified S3 objects without downloading them."""
+    if not hasattr(cloud, "bucket"):
+        return None
+    response = cloud.connection.meta.client.head_object(Bucket=cloud.bucket_name, Key=name)
+    return (response.get("VersionId"), response.get("ETag"),
+            response.get("ContentLength"), str(response.get("LastModified")))
+
+
 def assets(data):
     # Retention can intentionally clear the file while preserving its audit row.
     return (asset for asset in data.get("web_asset", {}).values() if asset.get("file"))
@@ -59,6 +68,14 @@ def prepare_media(local, remote):
             if cached and cached[0] == fingerprint and time.monotonic() - cached[1] < 300:
                 _prepared.add(identity)
                 continue
+            if cached and cached[0] == fingerprint and cached[2] is not None:
+                if cloud_version(cloud, name) == cached[2]:
+                    _verified[name] = (fingerprint, time.monotonic(), cached[2])
+                    _prepared.add(identity)
+                    continue
+        # Capture metadata before reading bytes. A concurrent replacement then
+        # causes another verification on the next check, never a stale match.
+        version = cloud_version(cloud, name) if cloud.exists(name) else None
         if default_storage.exists(name):
             with default_storage.open(name, "rb") as file:
                 actual = digest(file)
@@ -92,7 +109,7 @@ def prepare_media(local, remote):
                     os.unlink(temporary)
         _prepared.add(identity)
         stat = os.stat(default_storage.path(name))
-        _verified[name] = ((stat.st_size, stat.st_mtime_ns, checksum), time.monotonic())
+        _verified[name] = ((stat.st_size, stat.st_mtime_ns, checksum), time.monotonic(), version)
 
 
 def media_ready(data):

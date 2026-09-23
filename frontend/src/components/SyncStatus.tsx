@@ -66,6 +66,7 @@ export default function SyncStatus() {
   }}>
     <strong>{labels[state.status ?? ''] ?? 'Checking sync status…'}</strong>
     {!!state.pending && <span> · {state.pending} pending changes</span>}
+    {!healthy && state.message && <div style={{ fontSize: 12, marginTop: 4 }}>{state.message}</div>}
     {state.last_success && !healthy && <div style={{ fontSize: 11, marginTop: 3 }}>
       Last synced: {new Date(state.last_success).toLocaleString()}
     </div>}

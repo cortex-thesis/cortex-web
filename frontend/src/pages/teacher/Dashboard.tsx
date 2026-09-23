@@ -1,9 +1,10 @@
+import StateTrend from './StateTrend'
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Clock, NotebookPen, Play, TrendingUp, Users } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { DetailSkeleton, StatSummaryCard } from '../../components/molecules'
-import { StateBadge } from '../../components/atoms'
+
 import { EEGWaveDisplay } from '../../components/molecules/EEGWaveDisplay/EEGWaveDisplay'
 import { LiveDashboardGrid } from '../../components/organisms/teacher'
 import { COGNITIVE_STATES, type CognitiveState } from '../../constants/states'
@@ -13,6 +14,8 @@ import { getTeacherDashboard, type TeacherDashboardData } from '../../lib/teache
 import { api } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import styles from './Dashboard.module.css'
+import DashboardTrends from './DashboardTrends'
+import { periodRange } from './reportingDates'
 import analyticsStyles from './Analytics.module.css'
 
 const states: CognitiveState[] = ['focused', 'relaxed', 'distracted', 'overstimulated']
@@ -22,28 +25,33 @@ export default function Dashboard() {
   const [data, setData] = useState<TeacherDashboardData | null>(null)
   const [month, setMonth] = useState(() => { const now = new Date(); return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') })
   const [classId, setClassId] = useState('')
+  const [period, setPeriod] = useState('month')
+  const [date, setDate] = useState(() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}` })
+  const [year, setYear] = useState(String(new Date().getFullYear()))
   const [search, setSearch] = useState('')
   const [modeFilter, setModeFilter] = useState('all')
   const [busy, setBusy] = useState(false)
+  const [reportLoading, setReportLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   useEffect(() => {
     let disposed = false
     let timer: ReturnType<typeof setTimeout>
     const refresh = async () => {
-      try { const result = await getTeacherDashboard(month, classId); if (!disposed) { setData(result); setError('') } }
-      catch (reason) { if (!disposed) setError(reason instanceof Error ? reason.message : 'Unable to refresh dashboard.') }
+      try { const result = await getTeacherDashboard(month, classId, { period, date, year }); if (!disposed) { setData(result); setError(''); setReportLoading(false) } }
+      catch (reason) { if (!disposed) { setError(reason instanceof Error ? reason.message : 'Unable to refresh dashboard.'); setReportLoading(false) } }
       if (!disposed) timer = setTimeout(() => void refresh(), 4000)
     }
+    setReportLoading(true)
     void refresh()
     return () => { disposed = true; clearTimeout(timer) }
-  }, [month, classId])
+  }, [month, classId, period, date, year])
   const live = useMemo(() => (data?.live_sessions ?? []).filter(item => (modeFilter === 'all' || item.control_mode === modeFilter) && (item.student.name + ' ' + item.class_name + ' ' + item.lesson).toLowerCase().includes(search.toLowerCase())), [data, search, modeFilter])
   async function control(id: string, action: string, mode?: string) {
     setBusy(true)
     try {
       await api('/sessions/' + id + '/control/', { method: 'POST', body: JSON.stringify({ action, mode }) })
-      setData(await getTeacherDashboard(month, classId)); setError(''); setSelectedId(id)
+      setData(await getTeacherDashboard(month, classId, { period, date, year })); setError(''); setSelectedId(id)
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to control session.') }
     finally { setBusy(false) }
   }
@@ -66,10 +74,9 @@ export default function Dashboard() {
   }), [live, data?.reporting.generated_at])
   const selectedStudent = liveStudents.find((student) => student.id === selectedId) ?? liveStudents[0]
   const distribution = data?.state_distribution ?? { focused: 0, relaxed: 0, distracted: 0, overstimulated: 0 }
+  const hasSamples = Boolean(data?.reporting.sample_count)
   const focused = distribution.focused
-  const reportingLabel = month === 'all'
-    ? 'All time'
-    : new Date(`${month}-01T00:00:00`).toLocaleDateString([], { month: 'long', year: 'numeric' })
+  const reportingLabel = data?.reporting.start && data.reporting.end_exclusive ? periodRange(data.reporting.start, data.reporting.end_exclusive) : 'All time'
   const mostRecentClass = data?.classes.find(item => item.latest_session_at)
   let angle = 0
   const segments = states.map((state) => { const start = angle; angle += distribution[state] * 3.6; return `${COGNITIVE_STATES[state].color} ${start}deg ${angle}deg` })
@@ -84,7 +91,7 @@ export default function Dashboard() {
         <Link className={styles.shortcut} to="/teacher/classes"><Users size={17} aria-hidden="true" /><strong>My classes</strong></Link>
       </nav>
       {error && <p role="alert">{error}</p>}
-      {!data && !error ? <DetailSkeleton /> : <>
+      {!data ? (!error ? <DetailSkeleton /> : <p className={styles.emptyLive}>Dashboard data could not be loaded. Retrying automatically.</p>) : <>
       {data && <>
         <section className={styles.activityCard} aria-labelledby="dashboard-classes">
           <h2 id="dashboard-classes">My classes</h2>
@@ -98,10 +105,13 @@ export default function Dashboard() {
           <h2>Statistics</h2>
           <div className={styles.filters}>
             <label>Class<select value={classId} onChange={event => setClassId(event.target.value)}><option value="">All my classes</option>{data?.classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-            <label>Period<select value={month === 'all' ? 'all' : 'month'} onChange={event => setMonth(event.target.value === 'all' ? 'all' : new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'))}><option value="month">Monthly</option><option value="all">All time</option></select></label>
-            {month !== 'all' && <label>Month<input type="month" value={month} onChange={event => { if (event.target.value) setMonth(event.target.value) }} /></label>}
+            <label>Period<select value={period} onChange={event => setPeriod(event.target.value)}><option value="week">Weekly</option><option value="month">Monthly</option><option value="year">Yearly</option><option value="all">All time</option></select></label>
+            {period === 'month' && <label>Month<input type="month" value={month} onChange={event => { if (event.target.value) setMonth(event.target.value) }} /></label>}
+            {period === 'week' && <label>Week containing<input type="date" value={date} onChange={event => { if (event.target.value) setDate(event.target.value) }} /></label>}
+            {period === 'year' && <label>Year<input type="number" min="2" max="9998" value={year} onChange={event => setYear(event.target.value)} /></label>}
           </div>
         </div>
+        {reportLoading && <p role="status" className={styles.statsNote}>Updating statistics for the selected filters…</p>}
         {data?.reporting && <p className={styles.statsNote}>Updated {new Date(data.reporting.generated_at).toLocaleString()} · {data.reporting.start ? `${new Date(data.reporting.start).toLocaleDateString()}–${new Date(data.reporting.end_exclusive!).toLocaleDateString()} (end exclusive)` : 'All recorded dates'} · {data.reporting.sample_count.toLocaleString()} valid EEG samples across {data.reporting.measured_sessions} measured sessions.</p>}
       <div className={analyticsStyles.statsRow}>
         <StatSummaryCard value={data?.class_count ?? 0} label="Active classes" icon={<BookOpen size={18} color="#534AB7" />} iconBg="var(--color-cool-surface)" />
@@ -109,14 +119,15 @@ export default function Dashboard() {
         <StatSummaryCard value={data?.average_focus == null ? '—' : `${data.average_focus}%`} label="Focused EEG samples" icon={<TrendingUp size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" />
         <StatSummaryCard value={data?.total_sessions ?? 0} label="Completed sessions" icon={<Clock size={18} color="var(--color-coral)" />} iconBg="var(--color-cream)" sub={`${data?.active_sessions ?? 0} active now`} />
       </div>
+      {data && !reportLoading && <DashboardTrends data={data} />}
+      {!reportLoading && !hasSamples && <p role="status" className={styles.trendNotice}>{!data.classes.length ? 'No active classes are assigned to this teacher account.' : data.total_sessions ? 'Completed sessions exist, but they contain no valid EEG samples for this selection.' : 'No completed sessions for this teacher and the selected filters. Try All time or another class.'} Missing measurements are not 0% focus.</p>}
       <div className={analyticsStyles.chartsRow}>
         <div className={analyticsStyles.chartCard}><div className={analyticsStyles.chartHeader}><span className={analyticsStyles.chartTitle}>Focused EEG samples by class</span><span className={analyticsStyles.chartSub}>Selected reporting period</span></div><div className={analyticsStyles.barList}>
           {(data?.classes ?? []).filter(item => (!classId || String(item.id) === classId)).map((item) => { const score = item.average_focus ?? 0; return <div key={item.id} className={analyticsStyles.barRow}><span className={analyticsStyles.barLabel}>Class · {item.name}</span><div className={analyticsStyles.barTrack} role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}><div className={analyticsStyles.barFill} style={{ width: `${score}%`, background: score >= 75 ? 'var(--color-teal)' : score >= 50 ? 'var(--color-sunflower)' : 'var(--color-coral)' }} /></div><span className={analyticsStyles.barValue}>{item.average_focus == null ? '—' : `${score}%`}</span></div>})}
           {!data?.classes.length && <span className={styles.liveSectionNote}>No classes yet.</span>}
         </div></div>
-        <div className={analyticsStyles.donutCard}><div className={analyticsStyles.chartHeader}><span className={analyticsStyles.chartTitle}>State distribution</span><span className={analyticsStyles.chartSub}>{reportingLabel}</span></div><div className={analyticsStyles.donutWrap}><div className={analyticsStyles.donut} style={{ background: focused || angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={analyticsStyles.donutHole}><span className={analyticsStyles.donutPct}>{focused}%</span><span className={analyticsStyles.donutLbl}>focused</span></div></div><div className={analyticsStyles.legend}>{states.map((state) => <div className={analyticsStyles.legendItem} key={state}><span className={analyticsStyles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={analyticsStyles.legendLabel}>{COGNITIVE_STATES[state].label}</span><span className={analyticsStyles.legendPct}>{distribution[state]}%</span></div>)}</div></div></div>
+        <div className={analyticsStyles.donutCard}><div className={analyticsStyles.chartHeader}><span className={analyticsStyles.chartTitle}>State distribution</span><span className={analyticsStyles.chartSub}>{reportingLabel}</span></div><div className={analyticsStyles.donutWrap}><div className={analyticsStyles.donut} style={{ background: focused || angle ? `conic-gradient(${segments.join(', ')})` : 'var(--color-surface-1)' }}><div className={analyticsStyles.donutHole}><span className={analyticsStyles.donutPct}>{hasSamples ? `${focused}%` : '\u2014'}</span><span className={analyticsStyles.donutLbl}>{hasSamples ? 'focused' : 'no data'}</span></div></div><div className={analyticsStyles.legend}>{states.map((state) => <div className={analyticsStyles.legendItem} key={state}><span className={analyticsStyles.legendDot} style={{ background: COGNITIVE_STATES[state].color }} /><span className={analyticsStyles.legendLabel}><span className={styles.distributionLabel}>{COGNITIVE_STATES[state].label}{!reportLoading && <StateTrend state={state} data={data} />}</span></span><span className={analyticsStyles.legendPct}>{hasSamples ? `${distribution[state]}%` : '\u2014'}</span></div>)}</div></div></div>
       </div>
-      <div className={analyticsStyles.stateCard}><span className={analyticsStyles.chartTitle}>Share of valid EEG samples by state</span><div className={analyticsStyles.stateBars}>{states.map((state) => <div className={analyticsStyles.stateRow} key={state}><StateBadge state={state} size="sm" /><div className={analyticsStyles.stateTrack}><div className={analyticsStyles.stateFill} style={{ width: `${distribution[state]}%`, background: COGNITIVE_STATES[state].color }} /></div><span className={analyticsStyles.statePct}>{distribution[state]}%</span></div>)}</div></div>
         <p className={styles.statsNote}>EEG percentages use valid samples from completed sessions.</p>
       </section>
       <section className={styles.liveSection}>

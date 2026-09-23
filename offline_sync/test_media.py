@@ -1,6 +1,7 @@
 import hashlib
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.test import SimpleTestCase, override_settings
 
@@ -55,6 +56,22 @@ class MediaTests(SimpleTestCase):
         (self.cloud / "lesson.txt").write_bytes(b"different")
         with self.assertRaisesRegex(SyncError, "differ"):
             prepare_media(self.data(), {})
+
+    def test_unchanged_cloud_version_avoids_download_after_cache_expires(self):
+        (self.local / "lesson.txt").write_bytes(b"lesson")
+        (self.cloud / "lesson.txt").write_bytes(b"lesson")
+        with patch("offline_sync.media.cloud_version", return_value=("version-1",)):
+            prepare_media(self.data(), {})
+            fingerprint, _, version = _verified["lesson.txt"]
+            _verified["lesson.txt"] = (fingerprint, -1000, version)
+            with patch("offline_sync.media.digest", side_effect=AssertionError("Downloaded unchanged bytes")):
+                prepare_media(self.data(), {})
+            self.assertTrue(media_ready(self.data()))
+        (self.cloud / "lesson.txt").write_bytes(b"changed")
+        _verified["lesson.txt"] = (fingerprint, -1000, version)
+        with patch("offline_sync.media.cloud_version", return_value=("version-2",)):
+            with self.assertRaisesRegex(SyncError, "differ"):
+                prepare_media(self.data(), {})
 
     def test_missing_and_unsafe_files_cannot_be_marked_ready(self):
         self.assertFalse(media_ready(self.data()))

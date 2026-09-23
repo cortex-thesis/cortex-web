@@ -1434,12 +1434,27 @@ def _teacher_dashboard_data(profile, filters=None):
     now = timezone.now()
     month = filters.get('month', timezone.localtime(now).strftime('%Y-%m'))
     start = end = None
-    if month != 'all':
+    period = filters.get('period', 'all' if month == 'all' else 'month')
+    previous_start = None
+    if period not in ('week', 'month', 'year', 'all'):
+        raise ValueError('Choose a valid reporting period.')
+    if period != 'all':
         try:
-            start = timezone.make_aware(datetime.strptime(month, '%Y-%m'))
-            end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
-        except ValueError:
-            raise ValueError('Choose a valid reporting month.')
+            if period == 'week':
+                start = timezone.make_aware(datetime.strptime(filters.get('date', timezone.localdate().isoformat()), '%Y-%m-%d'))
+                start -= timedelta(days=start.weekday())
+                end = start + timedelta(days=7)
+                previous_start = start - timedelta(days=7)
+            elif period == 'year':
+                start = timezone.make_aware(datetime(int(filters.get('year', timezone.localdate().year)), 1, 1))
+                end = start.replace(year=start.year + 1)
+                previous_start = start.replace(year=start.year - 1)
+            else:
+                start = timezone.make_aware(datetime.strptime(month, '%Y-%m'))
+                end = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
+                previous_start = (start - timedelta(days=1)).replace(day=1)
+        except (ValueError, OverflowError):
+            raise ValueError('Choose a valid reporting date.')
     selected_class = filters.get('class_id', '')
     if selected_class and not str(selected_class).isdigit():
         raise ValueError('Choose a valid class.')
@@ -1487,6 +1502,19 @@ def _teacher_dashboard_data(profile, filters=None):
         reporting = reporting.filter(started_at__gte=start, started_at__lt=end)
     measured_samples = SessionEEGSample.objects.filter(session__in=reporting)
     distribution, sample_count = sample_distribution(measured_samples)
+    comparison = None
+    if previous_start:
+        previous_sessions = sessions.filter(ended_at__isnull=False, started_at__gte=previous_start, started_at__lt=start)
+        previous_samples = SessionEEGSample.objects.filter(session__in=previous_sessions)
+        previous_distribution, previous_count = sample_distribution(previous_samples)
+        comparison = {
+            'start': previous_start, 'end_exclusive': start,
+            'total_sessions': previous_sessions.count(),
+            'average_focus': previous_distribution['focused'] if previous_count else None,
+            'state_distribution': previous_distribution,
+            'sample_count': previous_count,
+            'measured_sessions': previous_samples.filter(accepted_channels__gt=0).values('session_id').distinct().count(),
+        }
     class_counts = {}
     for row in measured_samples.filter(accepted_channels__gt=0).values('session__school_class_id', 'state').annotate(count=Count('pk')):
         counts = class_counts.setdefault(row['session__school_class_id'], dict.fromkeys(StatePrediction.State.values, 0))
@@ -1522,7 +1550,8 @@ def _teacher_dashboard_data(profile, filters=None):
         "total_sessions": reporting.count(),
         "average_focus": distribution['focused'] if sample_count else None,
         "state_distribution": distribution,
-        "reporting": {"month": month, "start": start, "end_exclusive": end, "generated_at": now,
+        "comparison": comparison,
+        "reporting": {"period": period, "is_partial": bool(start and start <= now < end), "month": month, "start": start, "end_exclusive": end, "generated_at": now,
                       "sample_count": sample_count, "measured_sessions": measured_samples.filter(accepted_channels__gt=0).values('session_id').distinct().count(),
                       "basis": "Valid EEG samples in completed sessions, grouped by session start date"},
         "live_sessions": active_session_rows,
@@ -1660,7 +1689,7 @@ def teacher_class_analytics(request, class_id):
     slides = list(Slide.objects.filter(lesson_id=selected_lesson).order_by('position', 'pk').values('id', 'title', 'position')) if selected_lesson else []
     # Keep separate attempts as separate lines so repeated sessions do not blur a trend.
     grouped = {}
-    for row in SessionEEGSample.objects.filter(session__in=sessions, slide__lesson_id=selected_lesson).order_by().values(
+    for row in SessionEEGSample.objects.filter(session__in=sessions, slide__lesson_id=selected_lesson, accepted_channels__gt=0).order_by().values(
             'session_id', 'session__student_id', 'session__student__display_name', 'session__started_at', 'slide_id', 'state').annotate(count=Count('id')) if selected_lesson else []:
         key = str(row['session_id'])
         line = grouped.setdefault(key, {'session_id': key, 'student_id': row['session__student_id'],
@@ -1669,8 +1698,14 @@ def teacher_class_analytics(request, class_id):
     timeline = []
     for line in grouped.values():
         counts = line.pop('counts')
-        line['points'] = [{'slide_id': slide['id'], 'state': max(counts[slide['id']], key=counts[slide['id']].get) if slide['id'] in counts else None,
-            'samples': sum(counts.get(slide['id'], {}).values())} for slide in slides]
+        line['points'] = []
+        for slide in slides:
+            slide_counts = counts.get(slide['id'], {})
+            highest = max(slide_counts.values(), default=0)
+            leaders = [state for state, count in slide_counts.items() if count == highest]
+            line['points'].append({'slide_id': slide['id'],
+                'state': leaders[0] if len(leaders) == 1 else None,
+                'samples': sum(slide_counts.values())})
         timeline.append(line)
     return JsonResponse({
         "generated_at": timezone.now(),

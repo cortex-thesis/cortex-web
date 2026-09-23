@@ -6,6 +6,7 @@ and coverage (including bulk SQL and deletes) over large-dataset throughput.
 import json
 import hashlib
 import sys
+from copy import deepcopy
 from contextlib import ExitStack, contextmanager
 from datetime import date, datetime, time
 
@@ -19,6 +20,7 @@ from .models import IdAllocation, ReplicaState
 
 APP_LABELS = {"web", "auth", "contenttypes", "admin"}
 BLOCK_SIZE = 100_000
+_cloud_snapshots = {}
 
 
 class SyncError(Exception):
@@ -45,6 +47,42 @@ def snapshot(alias, model_list=None):
         # Normalize UUIDs/dates/Decimals consistently across SQLite/PostgreSQL.
         rows = json.loads(json.dumps(list(rows), cls=SnapshotEncoder))
         result[model._meta.db_table] = {str(row[model._meta.pk.attname]): row for row in rows}
+    return result
+
+
+def cloud_snapshot(model_list):
+    """Transfer row fingerprints, then only changed rows, under cloud locks.
+
+    Cache is process-local and disposable: restarting performs one full import.
+    Fingerprints include every column, so bulk SQL edits and deletes are visible.
+    Never expose cached dictionaries to the merge/apply code for mutation.
+    """
+    connection = connections["cloud"]
+    if connection.vendor != "postgresql":
+        return snapshot("cloud", model_list)
+    result = {}
+    identity = cloud_identity()
+    with connection.cursor() as cursor:
+        for model in model_list:
+            table = model._meta.db_table
+            quote = connection.ops.quote_name
+            cursor.execute(
+                f"SELECT t.{quote(model._meta.pk.column)}, md5(row_to_json(t)::text) "
+                f"FROM {quote(table)} t"
+            )
+            fingerprints = {str(key): digest for key, digest in cursor.fetchall()}
+            old_hashes, old_rows = _cloud_snapshots.get((identity, table), ({}, {}))
+            changed = [key for key, digest in fingerprints.items()
+                       if old_hashes.get(key) != digest]
+            changed_keys = set(changed)
+            rows = {key: old_rows[key] for key in fingerprints if key not in changed_keys}
+            for offset in range(0, len(changed), 500):
+                keys = changed[offset:offset + 500]
+                fetched = model._base_manager.using("cloud").filter(pk__in=keys).values()
+                for row in json.loads(json.dumps(list(fetched), cls=SnapshotEncoder)):
+                    rows[str(row[model._meta.pk.attname])] = row
+            _cloud_snapshots[(identity, table)] = (fingerprints, rows)
+            result[table] = deepcopy(rows)
     return result
 
 
@@ -141,7 +179,7 @@ def sync_transaction(model_list):
     remote_transaction.__enter__()
     try:
         lock_cloud(model_list)
-        remote = snapshot("cloud", model_list)
+        remote = cloud_snapshot(model_list)
         local_transaction = transaction.atomic(using="default")
         local_transaction.__enter__()
     except BaseException:
@@ -265,7 +303,11 @@ def sync_once(initialize=False):
     # File transfers happen without a SQLite write lock, keeping offline reads
     # and writes responsive while slow storage requests time out.
     from .media import prepare_media
-    before_local, before_cloud = snapshot("default", model_list), snapshot("cloud", model_list)
+    # Only assets are needed before taking the transaction locks. Fetching every
+    # application table here used to double the database download each cycle.
+    asset_models = [model for model in model_list if model._meta.db_table == "web_asset"]
+    before_local = snapshot("default", asset_models)
+    before_cloud = snapshot("cloud", asset_models)
     prepare_media(before_local, before_cloud)
     with sync_transaction(model_list) as remote:
         state, _ = ReplicaState.objects.get_or_create(pk=1)

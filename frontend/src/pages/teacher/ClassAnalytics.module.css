@@ -3,9 +3,28 @@
   flex-direction: column;
   gap: var(--space-5);
 }
-.trendScroll { overflow-x: auto; width: 100%; }
-.trendScroll svg { display: block; color: var(--color-text-primary); }
-.trendLegend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+.trendScroll { overflow-x: auto; width: 100%; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-white); padding: 8px; }
+.trendScroll svg { display: block; min-width: 100%; color: var(--color-text-primary); font-family: var(--font-family); }
+.trendLegend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; }
+.trendLegend { max-height: 160px; overflow-y: auto; padding: 3px; }
+.trendLegend > button { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-white); color: var(--color-text-primary); font: inherit; text-align: left; cursor: pointer; }
+.trendLegend > button:hover, .trendLegend > button[aria-pressed="true"] { background: var(--color-surface-1); border-color: var(--color-interface-purple); }
+.trendLegend button > i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.trendLegend button > span { display: grid; gap: 3px; }
+.trendLegend small { color: var(--color-text-secondary); font-size: 10px; }
+.trendLegend button:focus-visible, .resetSessions:focus-visible { outline: 2px solid var(--color-interface-purple); outline-offset: 2px; }
+.lessonToolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.lessonToolbar .sessionSelect { flex: 1 1 280px; min-width: 0; }
+.lessonToolbar .sessionSelect select { width: 100%; }
+.resetSessions { height: 38px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-interface-purple); background: var(--color-white); font: inherit; font-size: 12px; cursor: pointer; }
+.plotMeta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--color-text-secondary); }
+.lessonCard { min-width: 0; }
+.lessonHeader { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.lessonHeader h2 { margin: 0; }
+.lessonSelect { display: grid; gap: 5px; max-width: 100%; font-size: 11px; color: var(--color-text-secondary); }
+.lessonSelect select { max-width: 100%; width: 250px; min-height: 38px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-1); color: var(--color-text-primary); font: inherit; }
+.lessonSelect select:focus-visible { outline: 2px solid var(--color-interface-purple); outline-offset: 2px; }
+.emptyTrend { padding: 32px 16px; text-align: center; color: var(--color-text-secondary); font-size: 12px; border-radius: 10px; background: var(--color-surface-1); }
 .filters { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
 .filters label { display: grid; gap: 5px; color: var(--color-text-secondary); font-size: 11px; font-weight: var(--font-weight-medium); }
 .filters input, .filters select { min-height: 38px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-1); color: var(--color-text-primary); font: inherit; color-scheme: light; }

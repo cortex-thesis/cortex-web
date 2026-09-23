@@ -26,6 +26,9 @@ def run_cycle(initialize=False):
         message = ("Cloud unavailable. Changes remain saved on this laptop." if offline
                    else str(error) if isinstance(error, SyncError)
                    else "Sync could not finish. Check schema, constraints and file storage; local changes are preserved.")
+        if offline and "connection timeout" in str(error).lower():
+            message = ("Supabase connection timed out. Check network access to the database port "
+                       "and project availability. Changes remain saved on this laptop.")
         if isinstance(error, IntegrityError):
             cause = error.__cause__
             diagnostics = getattr(cause, "diag", None)
