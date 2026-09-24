@@ -4,7 +4,7 @@
 .choice:hover, .itemButton:hover, .matchButton:hover, .pictureChoice:hover { border-color: var(--color-interface-purple); background: #f7f6ff; }
 .pictureGrid { grid-template-columns: repeat(var(--activity-columns, auto-fit), minmax(0, 1fr)); }
 .targetGrid { padding: var(--space-4); border-radius: var(--radius-md); background: #eef6ff; }
-.pictureChoice { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; border: 2px solid transparent; border-radius: var(--radius-md); background: var(--color-white); cursor: pointer; color: var(--color-text-primary); font-family: var(--font-family); }
+.pictureChoice { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: clamp(8px, 1.5vh, 12px); border: 2px solid transparent; border-radius: var(--radius-md); background: var(--color-white); cursor: pointer; color: var(--color-text-primary); font-family: var(--font-family); }
 .pictureChoice img { width: 100%; max-width: 150px; height: min(var(--activity-image-height, 120px), 120px); object-fit: contain; border-radius: 7px; }
 .imagePlaceholder { width: 100%; height: 90px; display: grid; place-items: center; border-radius: 7px; background: #f0efff; color: var(--color-interface-purple); }
 .sequenceAnswer > button { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 90px; min-height: 44px; padding: 10px; border: 1px solid var(--color-border); border-radius: 12px; background: white; color: var(--color-text-primary); font: inherit; cursor: grab; }
@@ -34,8 +34,8 @@
 .check:disabled { opacity: .45; cursor: default; }
 .matchGrid { --match-image-size: 64px; width: 100%; max-width: 860px; margin-inline: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .matchGrid > div { min-width: 0; display: grid; grid-auto-rows: 1fr; gap: 8px; }
-.matchButton { min-height: 80px; padding: 8px 10px; }
-.matchButton img { width: 64px; max-width: 35%; height: 64px; object-fit: contain; flex: 0 0 64px; }
+.matchButton { min-height: clamp(60px, 9dvh, 80px); padding: 7px 10px; }
+.matchButton img { width: clamp(48px, 7dvh, 64px); max-width: 35%; height: clamp(48px, 7dvh, 64px); object-fit: contain; flex: 0 1 64px; }
 .matchButton strong { min-width: 0; white-space: normal; overflow-wrap: normal; }
 .matchButton > svg { flex-shrink: 0; }
 .matchButton:disabled { opacity: .45; text-decoration: line-through; }
@@ -57,21 +57,24 @@ button:focus-visible { outline: 3px solid var(--color-interface-blue); outline-o
 .toolChoice { min-width: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); color: var(--color-text-primary); cursor: pointer; font-family: var(--font-family); }
 .toolChoice:hover { border-color: var(--color-interface-purple); background: #f7f6ff; }
 .toolChoice img { width: 100%; height: clamp(70px, 14dvh, 110px); object-fit: contain; }
-.brushBoard { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 390px; overflow: hidden; display: grid; place-items: center; touch-action: none; user-select: none; border: 2px solid #b5d9f4; border-radius: var(--radius-lg, 14px); background: radial-gradient(circle at 50% 20%, #fff 0 8%, #eef8ff 55%, #e4f2fb); cursor: ew-resize; }
-.teethImage { width: min(72%, 560px); height: min(82%, 320px); object-fit: contain; animation: teethChange .35s ease both; }
-.movingBrush { position: absolute; width: clamp(80px, 15vw, 150px); height: auto; right: 13%; bottom: 14%; transform: rotate(-25deg); transform-origin: 80% 80%; pointer-events: none; animation: brushHint 1.25s ease-in-out infinite; }
+.brushBoard { width: 100%; height: clamp(250px, 42dvh, 360px); min-height: 250px; overflow: hidden; display: grid; place-items: center; padding: clamp(8px, 1.5vw, 14px); box-sizing: border-box; touch-action: none; user-select: none; border: 2px solid #b5d9f4; border-radius: var(--radius-lg, 14px); background: #eef8ff; cursor: ew-resize; }
+.brushScene { width: min(94%, 660px); height: 100%; display: grid; place-items: center; }
+.brushScene > * { grid-area: 1 / 1; }
+.teethImage { width: 100%; height: 100%; max-height: 330px; object-fit: contain; animation: teethChange .35s ease both; }
+.movingBrush { width: clamp(112px, 26%, 180px); height: auto; max-height: 48%; align-self: end; justify-self: end; object-fit: contain; transform: rotate(-25deg); transform-origin: 80% 80%; pointer-events: none; animation: brushHint 1.25s ease-in-out infinite; }
 .movingBrushActive { animation-duration: .38s; }
-.cleanSparkles { position: absolute; inset: 12% 10% auto; text-align: center; color: #f2b22f; font-size: clamp(24px, 4vw, 44px); letter-spacing: 12vw; animation: sparklePop .7s ease both; }
+.cleanSparkles { align-self: start; width: 100%; padding-top: 4%; box-sizing: border-box; text-align: center; color: #f2b22f; font-size: clamp(24px, 4vw, 44px); letter-spacing: clamp(28px, 8vw, 90px); animation: sparklePop .7s ease both; }
 .brushComplete { border-color: var(--state-focused); background: linear-gradient(180deg, #f8fffc, var(--state-focused-fill)); cursor: default; }
 .brushFooter { display: flex; align-items: center; gap: 12px; }
 .brushProgress { height: 10px; min-width: 120px; flex: 1; overflow: hidden; border-radius: var(--radius-full); background: #e8e6ef; }
 .brushProgress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--color-interface-purple), var(--state-focused)); transition: width .25s ease; }
 .brushButton { min-height: 42px; padding: 0 16px; display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: var(--radius-md); background: var(--color-interface-purple); color: var(--color-white); cursor: pointer; font: var(--font-weight-semibold) var(--text-caption)/1 var(--font-family); }
-@keyframes brushHint { 50% { transform: translateX(-70px) rotate(-15deg); } }
+@keyframes brushHint { 50% { transform: translateX(-55%) rotate(-15deg); } }
 @keyframes teethChange { from { opacity: .35; transform: scale(.97); } to { opacity: 1; transform: none; } }
 @keyframes sparklePop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .movingBrush, .teethImage, .cleanSparkles { animation: none; } }
 @media (max-width: 560px) { .toolChoices { grid-template-columns: 1fr 1fr 1fr; gap: 6px; } .toolChoice { padding: 6px; font-size: 12px; } .brushFooter { align-items: stretch; flex-direction: column; } }
+@media (max-width: 560px) { .brushBoard { height: clamp(230px, 48dvh, 310px); min-height: 230px; } .brushScene { width: 100%; } .movingBrush { width: clamp(96px, 30%, 145px); } }
 .pictureChoice .imagePlaceholder { max-width: 150px; height: min(var(--activity-image-height, 120px), 120px); flex-shrink: 0; }
 .sortLayout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(210px, 260px); align-items: start; gap: 16px; }
 .sortItems { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
@@ -82,3 +85,11 @@ button:focus-visible { outline: 3px solid var(--color-interface-blue); outline-o
 .sortGroups .dropReady { border-color: #534ab6; background: #eeebff; }
 .category .sortedChip { padding: 5px 7px; border-radius: 6px; background: white; color: var(--color-text-primary); }
 @media (max-width: 760px) { .sortLayout { grid-template-columns: 1fr; } .categoryGrid.sortGroups { order: -1; grid-template-columns: repeat(2, minmax(0, 1fr)); } .sortItems { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-height: 820px) and (min-width: 761px) {
+  .stack, .brushActivity { gap: 8px; }
+  .sortItems .sortCard { min-height: 86px; padding: 7px; }
+  .sortItems .sortCard img { width: 48px; height: 44px; }
+  .sortGroups .category { min-height: 82px; padding: 9px; }
+  .categoryGrid { margin-top: 10px; padding-top: 10px; }
+  .toolChoice img { height: 72px; }
+}

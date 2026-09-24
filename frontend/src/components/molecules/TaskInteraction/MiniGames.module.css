@@ -1,4 +1,4 @@
-.game { display: grid; gap: 12px; min-width: 0; }
+.game { display: grid; gap: clamp(8px, 1.5vh, 12px); min-width: 0; }
 .game button { min-height: 44px; border: 1.5px solid var(--color-border); border-radius: 12px; padding: 10px 14px; background: var(--color-white); color: var(--color-text-primary); font: inherit; cursor: pointer; }
 .game button:focus-visible { outline: 3px solid var(--color-interface-purple); outline-offset: 3px; }
 .game button:disabled { cursor: default; opacity: .7; }
@@ -13,16 +13,18 @@
 .blueFolder { color: #286aaf; fill: #e5f2ff; }
 .redFolder { color: #b74949; fill: #ffe8e8; }
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.game .resetIcon { width: 44px; min-width: 44px; padding: 0; display: inline-grid; place-items: center; color: var(--color-interface-purple); background: transparent; }
+.game .resetIcon:hover:not(:disabled) { background: #f3f1fb; }
 .game .primary, .game .listen { background: var(--color-interface-purple); color: white; }
 .game .selected { border-color: var(--color-interface-purple); background: #efedfc; }
 .game .correct, .found { background: #e1f4e9; border-color: #238461; color: #19634a; }
 .game .incorrect { background: #ffebe9; border-color: #b64646; color: #973434; }
 .feedback { flex: 1; margin: 0; padding: 10px 12px; border-radius: 10px; min-width: min(100%, 180px); }
-.wordLayout { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 20px; }
-.letters { display: grid; gap: 4px; width: min(100%, 380px); touch-action: none; user-select: none; }
+.wordLayout { width: min(100%, 780px); margin-inline: auto; display: grid; grid-template-columns: minmax(320px, 400px) minmax(220px, 300px); justify-content: center; align-items: start; gap: clamp(16px, 3vw, 32px); }
+.letters { display: grid; gap: 4px; width: min(100%, 400px, 48dvh); touch-action: none; user-select: none; }
 .letters button { min-width: 0; min-height: 44px; padding: 0; aspect-ratio: 1; font-size: clamp(17px, 3vw, 23px); font-weight: 600; }
 .game .letters button.found { background: #d4efe2; border: 2px solid #238461; color: #14543e; opacity: 1; box-shadow: inset 0 -3px 0 #238461; }
-.wordList > span.found { background: #d4efe2; border: 1.5px solid #238461; color: #14543e; font-weight: 700; }
+.wordList > span.found { background: #e7f5ed; border: 0; border-left: 4px solid #238461; color: #14543e; font-weight: 700; cursor: default; }
 .foundBadge { margin-left: auto; font-size: 12px; white-space: nowrap; }
 .flipGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 850px; width: 100%; min-width: 0; margin-inline: auto; }
 @media (max-width: 600px) { .flipGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -41,15 +43,16 @@
 @media (max-width: 600px) { .flipGridCompact { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { .flipInner, .game .flipCard { transition: none; } }
 .cardBack { font-size: 32px; color: var(--color-interface-purple); }
-.wordList { display: grid; gap: 8px; min-width: 140px; }
+.wordList { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; min-width: 0; }
 .wordListHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.wordListHeader, .wordList > .feedback, .wordList > .followUp { flex: 0 0 100%; width: 100%; }
 .wordListHeader button { min-height: 44px; padding: 8px 12px; border: 1px solid #ddd7ee; border-radius: 10px; background: #fff; color: #534ab7; font: inherit; cursor: pointer; }
 .wordListHeader button:focus-visible { outline: 3px solid #8970bd; outline-offset: 3px; }
-.wordList > span { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 7px; }
+.wordList > span { flex: 1 1 calc(50% - 4px); width: auto; min-width: min(124px, 100%); min-height: 40px; display: flex; align-items: center; gap: 6px; border-radius: 8px; padding: 6px 9px; overflow-wrap: anywhere; }
 .wordList img { width: 44px; height: 44px; object-fit: contain; }
 .followUp { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--color-border); border-radius: 14px; }
 .followUp img { width: 110px; height: 100px; object-fit: contain; }
-.wordListExpanded { width: min(100%, 330px); }
+.wordListExpanded { width: min(100%, 300px); }
 .wordList .followUp { border: 2px solid var(--color-interface-purple); background: #f5f3ff; scroll-margin-block: 12px; }
 .followUp:focus { outline: 3px solid #d8d2f3; outline-offset: 3px; }
 .nextStep { color: var(--color-interface-purple); font-size: 12px; font-weight: 700; }
@@ -60,3 +63,12 @@
 .mission { margin: 0; color: var(--color-interface-purple); }
 .prompt { background: #efedfc; border-radius: 12px; padding: 12px; }
 @media (max-width: 380px) { .letters { gap: 2px; } .letters button { min-height: 38px; } }
+@media (max-width: 700px) { .wordLayout { grid-template-columns: 1fr; justify-items: center; } .wordList { width: min(100%, 400px); } }
+@media (max-height: 760px) and (min-width: 641px) { .letters button { min-height: 38px; font-size: clamp(15px, 2.3vw, 20px); } }
+@media (max-height: 820px) and (min-width: 601px) {
+  .game .flipCard { min-height: 94px; }
+  .flipInner { min-height: 112px; }
+  .flipFront img { flex-basis: 48px; height: 48px; }
+  .workspace { padding: 10px; }
+  .workspaceTitle { margin-bottom: 8px; }
+}

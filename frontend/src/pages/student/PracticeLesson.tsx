@@ -94,6 +94,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
   }) : []
   const task = tasks[position]
   const videoSlide = Boolean(task && (task.contentType === 'video' || task.template === 'instructional_video'))
+  const wideSlide = task?.layout?.size === 'wide' || task?.layout?.size === 'immersive'
   const isActivity = Boolean(task && (task.taskTemplate || (task.template ?? 'multiple_choice') === 'multiple_choice'))
   const requiresMedia = Boolean(!task?.videoOptional && task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
   const canAdvance = answered[position] || (!isActivity && !requiresMedia)
@@ -104,7 +105,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>
     </header>
     {lesson && !complete && <div className={playerStyles.musicToolbar}><ModeBgm mode="focus" suspended={Boolean(task?.taskTemplate === 'audio_sequence' || (task?.mediaUrl && (videoSlide || task.contentType === 'audio' || task.template === 'calming_soundscape')))} /></div>}
-    <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : ''}`} aria-label="Lesson activities">
+    <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}>
           <span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length - 1) * 100)}%` }} />

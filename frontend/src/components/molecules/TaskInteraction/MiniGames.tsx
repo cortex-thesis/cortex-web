@@ -1,6 +1,6 @@
 import { Children, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Backpack, Clock, Eraser, Folder, NotebookPen, Ruler } from 'lucide-react'
+import { Backpack, Clock, Eraser, Folder, NotebookPen, RotateCcw, Ruler } from 'lucide-react'
 import type { Task, TaskItem } from '../../../types'
 import { playLessonSound } from '../../../lib/lessonSounds'
 import { validObjectSelection, wordAtEndpoints } from '../../../lib/miniGameLogic'
@@ -21,10 +21,10 @@ function Visual({ item }: { item: TaskItem }) {
   return item.imageUrl ? <img src={item.imageUrl} alt={item.altText ?? item.label} /> : <span className={styles.symbol}>{item.symbol ?? '◇'}</span>
 }
 function Feedback({ correct, task, message }: { correct: boolean | null; task: Task; message?: string }) {
-  return correct === null && !message ? null : <p className={`${styles.feedback} ${correct === false ? styles.incorrect : correct ? styles.correct : ''}`} role="status">{message ?? (correct ? ` ${task.correctFeedback}` : `↻ ${task.retryFeedback}`)}</p>
+  return correct === null && !message ? null : <p className={`${styles.feedback} ${correct === false ? styles.incorrect : correct ? styles.correct : ''}`} role="status">{message ?? (correct ? task.correctFeedback : task.retryFeedback)}</p>
 }
 
-export function FindIt({ task, onAnswered, onChanged, quiet, narrowed }: Props) {
+export function FindIt({ task, onAnswered, quiet, narrowed }: Props) {
   const [picked, setPicked] = useState<string[]>([])
   const [result, setResult] = useState<boolean | null>(null)
   const [checked, setChecked] = useState(false)
@@ -38,7 +38,7 @@ export function FindIt({ task, onAnswered, onChanged, quiet, narrowed }: Props) 
     <div className={styles.workspace}><span className={styles.workspaceTitle}>{task.workspaceLabel ?? 'Find It'}</span>
       <ObjectChoices pageSize={quiet ? 2 : narrowed ? 4 : undefined}>{(task.items ?? []).map(item => <button type="button" key={item.id} aria-pressed={picked.includes(item.id)} disabled={result !== null} className={`${styles.object} ${picked.includes(item.id) ? styles.selected : ''} ${checked && picked.includes(item.id) ? expected.includes(item.id) ? styles.correct : styles.incorrect : ''}`} onClick={() => setPicked(value => value.includes(item.id) ? value.filter(id => id !== item.id) : [...value, item.id])}><Visual item={item} /><span>{picked.includes(item.id) ? ' ' : ''}{item.label}</span></button>)}</ObjectChoices>
     </div>
-    <div className={styles.actions}><button type="button" onClick={() => { setPicked([]); setResult(null); setChecked(false); onChanged?.() }}>Reset</button><span>{picked.length} selected</span><Feedback correct={result} task={task} /><button type="button" className={styles.primary} disabled={!picked.length || result !== null} onClick={check}>Check my choices</button></div>
+    <div className={styles.actions}><Feedback correct={result} task={task} /><button type="button" className={styles.primary} disabled={!picked.length || result !== null} onClick={check}>Check my choices</button></div>
   </div>
 }
 
@@ -90,7 +90,8 @@ export function WordSearch({ task, onAnswered, onChanged, quiet }: Props) {
         return <button type="button" key={`${r},${c}`} data-cell={`${r},${c}`} disabled={pending !== null || result === true} className={`${highlighted ? styles.found : ''} ${start?.[0] === r && start?.[1] === c ? styles.selected : ''}`} aria-label={`${letter}, row ${r + 1}, column ${c + 1}${highlighted ? ', found' : ''}`} onPointerDown={() => { dragStart.current = [r, c]; suppressClick.current = false }} onClick={() => { if (suppressClick.current) { suppressClick.current = false; return } select([r, c]) }}>{letter}</button>
       }))}
     </div><div className={`${styles.wordList} ${pending ? styles.wordListExpanded : ''}`} aria-label="Words to find">
-      <div className={styles.wordListHeader}><strong role="status">{found.length} of {targets.length} found</strong><button type="button" onClick={() => { setFound([]); setStart(null); setPending(null); setResult(null); setMessage(''); followUps.current = {}; dragStart.current = null; suppressClick.current = false; onChanged?.() }}>Reset</button></div>
+      <div className={styles.wordListHeader}><strong role="status">{found.length} of {targets.length} found</strong><button type="button" className={styles.resetIcon} aria-label="Reset word search" title="Reset word search" onClick={() => { setFound([]); setStart(null); setPending(null); setResult(null); setMessage(''); followUps.current = {}; dragStart.current = null; suppressClick.current = false; onChanged?.() }}><RotateCcw size={18} aria-hidden="true" /></button></div>
+      {message && !pending && <Feedback correct={null} task={task} message={message} />}
       {target?.followUpQuestion && <section ref={followUpRef} tabIndex={-1} className={styles.followUp} aria-label={`${target.displayLabel} found. Choose the sign's meaning.`}>
         <span className={styles.nextStep}>Next: understand the sign</span>
         {target.revealImage && <img src={target.revealImage} alt={`${target.displayLabel} sign`} />}
@@ -100,7 +101,6 @@ export function WordSearch({ task, onAnswered, onChanged, quiet }: Props) {
       </section>}
       {targets.map(item => <span key={item.word} className={found.includes(item.word) ? styles.found : ''}>{item.displayLabel}{found.includes(item.word) && <small className={styles.foundBadge}>{pending === item.word ? 'Found · answer next' : 'Found'}</small>}{found.includes(item.word) && pending !== item.word && item.revealImage && <img src={item.revealImage} alt={item.displayLabel} />}</span>)}
     </div></div>
-    {message && !pending && <Feedback correct={null} task={task} message={message} />}
   </div>
 }
 

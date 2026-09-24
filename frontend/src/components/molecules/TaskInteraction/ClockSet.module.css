@@ -4,8 +4,8 @@
 .activity button:focus-visible, .activity input:focus-visible { outline: 3px solid #6653ad; outline-offset: 3px; }
 .header, .footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .instruction { margin: 0; font-weight: 600; }
-.workspace { display: grid; grid-template-columns: minmax(0,1fr) minmax(230px,1fr); gap: 24px; align-items: center; }
-.workspace figure { margin: 0; text-align: center; }
+.workspace { width: min(100%, 920px); margin-inline: auto; display: grid; grid-template-columns: minmax(280px, 360px) minmax(320px, 1fr); justify-content: center; gap: clamp(24px, 5vw, 56px); align-items: center; }
+.workspace figure { width: 100%; margin: 0; justify-self: center; text-align: center; }
 .clock { width: min(100%,300px); height: auto; touch-action: none; }
 .workspace figcaption { font-size: 13px; color: #52645b; }
 .controls { display: grid; gap: 12px; }
@@ -17,4 +17,5 @@
 .digital { font-size: 25px; font-weight: 700; color: #243b35; }
 .activity .primary { background: #dceee2; border-color: #86afa1; font-weight: 600; }
 .footer p { margin: 0; }
-@media(max-width:600px) { .workspace { grid-template-columns: 1fr; gap: 12px; } .clock { max-width: 230px; } .footer { flex-wrap: wrap; } }
+@media(max-width:760px) { .workspace { grid-template-columns: 1fr; gap: 12px; } .clock { max-width: 250px; } .controls { width: min(100%, 520px); margin-inline: auto; } .footer { flex-wrap: wrap; } }
+@media (max-height: 820px) and (min-width: 761px) { .workspace { grid-template-columns: minmax(240px, 310px) minmax(320px, 1fr); } .clock { max-width: 270px; } .controls { gap: 8px; } }

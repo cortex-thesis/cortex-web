@@ -7,20 +7,30 @@ test('shared activity instructions appear once in a responsive title row', async
   const source = await readFile(new URL('../src/components/molecules/TaskCard/TaskCard.tsx', import.meta.url), 'utf8')
   assert.match(source, /className=\{styles.titleRow\}/)
   assert.match(source, /AdaptiveLessonText text=\{headingInstruction\}/)
+  assert.doesNotMatch(source, /templateLabel|typeLabel/)
+  assert.match(source, /isLessonOverview[\s\S]*task\.steps\?\.length === 1/)
   assert.doesNotMatch(source, /<p className=\{styles.question\}><AdaptiveLessonText text=\{task.question\}/)
   const css = await readFile(new URL('../src/components/molecules/TaskCard/TaskCard.module.css', import.meta.url), 'utf8')
   assert.match(css, /\.titleRow \{[^}]*flex-wrap: wrap/)
+  assert.match(css, /\.contentHeading h2 \{[^}]*color: var\(--color-interface-purple\)/)
+  assert.match(css, /\.card\.lessonOverview \{[^}]*max-width: 960px[^}]*margin-inline: auto/)
+  const playerCss = await readFile(new URL('../src/pages/student/PracticeLesson.module.css', import.meta.url), 'utf8')
+  assert.match(playerCss, /data-lesson-overview="true"[^}]*max-width: 960px[^}]*margin-inline: auto/)
+  assert.match(playerCss, /\.actions \.next \{[^}]*grid-column: 3[^}]*justify-self: end/)
 })
 
 test('both lesson players apply the shared video layout and dot-aligned progress', async () => {
   for (const name of ['PracticeLesson', 'LiveEEG']) {
     const source = await readFile(new URL(`../src/pages/student/${name}.tsx`, import.meta.url), 'utf8')
     assert.match(source, /videoSlide \? playerStyles.videoPlayer/)
+    assert.match(source, /wideSlide \? playerStyles.widePlayer/)
     assert.match(source, /Math\.max\(1, lesson\.slides\.length - 1\)/)
   }
   const css = await readFile(new URL('../src/pages/student/PracticeLesson.module.css', import.meta.url), 'utf8')
   assert.match(css, /\.videoPlayer \.stage \{ height: auto/)
   assert.match(css, /max-width: 1000px/)
+  assert.match(css, /\.player \{[^}]*width: min\(100%, 860px\)[^}]*max-width: 860px/)
+  assert.match(css, /\.widePlayer \{[^}]*max-width: 1000px/)
   const videoCss = await readFile(new URL('../src/components/molecules/ActivityTemplate/ActivityTemplate.module.css', import.meta.url), 'utf8')
   assert.match(videoCss, /aspect-ratio: 16 \/ 9/)
 })
@@ -29,6 +39,29 @@ test('EEG navigation requests sound before asynchronous saving', async () => {
   const source = await readFile(new URL('../src/pages/student/LiveEEG.tsx', import.meta.url), 'utf8')
   const advance = source.slice(source.indexOf('async function advance()'), source.indexOf('const controls ='))
   assert.ok(advance.indexOf('playLessonSound(') < advance.indexOf('await trackStudentSlide('))
+})
+
+test('development headset bypass does not trigger the connection-lost overlay', async () => {
+  const source = await readFile(new URL('../src/pages/student/LiveEEG.tsx', import.meta.url), 'utf8')
+  assert.match(source, /const isDevBypass = import\.meta\.env\.DEV && context\.devBypass === true/)
+  assert.match(source, /const connectionInterrupted = !isDevBypass && lessonStarted/)
+})
+
+test('refocus word activity accepts physical keyboard input without a global listener', async () => {
+  const source = await readFile(new URL('../src/pages/student/EEGRegulation.tsx', import.meta.url), 'utf8')
+  assert.match(source, /onKeyDown=\{handleWordKey\}/)
+  assert.match(source, /event\.key === 'Backspace'/)
+  assert.match(source, /event\.key === 'Enter'/)
+  assert.doesNotMatch(source, /window\.addEventListener\(['"]keydown/)
+})
+
+test('tooth brushing keeps the brush and teeth in one responsive visual cluster', async () => {
+  const source = await readFile(new URL('../src/components/molecules/TaskInteraction/ToothBrushingTask.tsx', import.meta.url), 'utf8')
+  const css = await readFile(new URL('../src/components/molecules/TaskInteraction/TaskInteraction.module.css', import.meta.url), 'utf8')
+  assert.match(source, /className=\{styles\.brushScene\}/)
+  assert.match(css, /\.brushScene \{[^}]*display: grid[^}]*place-items: center/)
+  assert.match(css, /\.teethImage \{[^}]*width: 100%[^}]*height: 100%[^}]*object-fit: contain/)
+  assert.doesNotMatch(css, /\.movingBrush \{[^}]*position: absolute/)
 })
 
 test('uploaded sound assets exist and replay correctly while respecting mute', async () => {

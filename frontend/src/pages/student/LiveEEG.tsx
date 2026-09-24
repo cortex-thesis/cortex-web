@@ -51,6 +51,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const navigate = useNavigate()
   const location = useLocation()
   const context = (location.state as { sessionId?: string; classId?: number; lessonId?: number; mode?: string; devBypass?: boolean } | null) ?? {}
+  const isDevBypass = import.meta.env.DEV && context.devBypass === true
   const { status, error: museError, deviceName, battery, quality, bands, absoluteBands, relativeBands, baselineProgress, acceptedChannels, disconnect } = useMuseStore()
   const [lesson, setLesson] = useState<LessonData | null>(classroomControl?.lesson ?? null)
   const [remote, setRemote] = useState<{ control_mode: string; presentation_mode: 'focus' | 'refocus' | 'breathing'; status: string; ended_at: string | null } | null>(null)
@@ -94,7 +95,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const [forcedFocusScore, setForcedFocusScore] = useState(90)
   const [hold, setHold] = useState(emptyEEGHoldMeter)
   const holdRef = useRef(emptyEEGHoldMeter())
-  const [forcedState, setForcedState] = useState<CognitiveState | null>(import.meta.env.DEV && context.devBypass ? 'focused' : null)
+  const [forcedState, setForcedState] = useState<CognitiveState | null>(isDevBypass ? 'focused' : null)
   const calmDeck = useRef<number[]>([])
   const [localMode, setMode] = useState<'focus' | 'breathing' | 'refocus' | 'returning'>('focus')
   const adaptive = !teacherControl || teacherControl.presentation_mode === 'adaptive'
@@ -140,7 +141,10 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const calibrated = Boolean(forcedState || (status === 'streaming' && baselineProgress >= 100 && acceptedChannels > 0))
   useEffect(() => { if (calibrated) setLessonStarted(true) }, [calibrated])
   const phase = eegSessionPhase(complete, ending, calibrated, lessonStarted)
-  const connectionInterrupted = lessonStarted && !complete && !ending && status !== 'streaming'
+  // A development bypass intentionally has no Muse connection. It uses the
+  // forced test state above, so an idle device must not pause or cover the
+  // lesson with the production reconnection flow.
+  const connectionInterrupted = !isDevBypass && lessonStarted && !complete && !ending && status !== 'streaming'
   const [reconnectSeconds, setReconnectSeconds] = useState(0)
   useEffect(() => {
     if (!connectionInterrupted) { setReconnectSeconds(0); return }
@@ -248,6 +252,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const requiresMedia = Boolean(!task?.videoOptional && task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
   const canAdvance = !focusGates[task?.id ?? ''] && (answered[position] || (!isActivity && !requiresMedia))
   const videoSlide = Boolean(task && (task.contentType === 'video' || task.template === 'instructional_video')) && displayMode === 'focus'
+  const wideSlide = task?.layout?.size === 'wide' || task?.layout?.size === 'immersive'
   async function advance() {
     if (savingStep || !lesson || teacherControl?.paused || mode !== 'focus') return
     playLessonSound(position === lesson.slides.length - 1 ? 'finished' : 'transition')
@@ -352,7 +357,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
       <div className={styles.monitorQuality}><span>{acceptedChannels}/4 clean channels</span><span>Baseline {baselineProgress}%</span>{MUSE_CHANNELS.map((channel, index) => <i key={channel} title={`${channel} contact`} className={quality[index] === 2 ? styles.contactGood : quality[index] === 1 ? styles.contactFair : styles.contactPoor} />)}</div>
     </section></details>}
     {error && <p className={styles.error}>{error}</p>}
-    <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : ''} ${coolSupport ? styles.coolPlayer : focusTemplate === 'rest' ? styles.restPlayer : ''}`} aria-label="Lesson activities">
+    <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''} ${coolSupport ? styles.coolPlayer : focusTemplate === 'rest' ? styles.restPlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && displayMode === 'focus' && !modeLeaving && <div className={`${playerStyles.progress} ${backgroundSupport ? styles.backgroundProgress : ''}`}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}><span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length - 1) * 100)}%` }} /></div>
         <ol className={playerStyles.dots}>{lesson.slides.map((item, index) => <li key={item.id} aria-current={!complete && index === position ? 'step' : undefined} className={`${playerStyles.dot} ${completed.has(index) ? playerStyles.done : ''} ${!complete && index === position ? playerStyles.current : ''}`}>{completed.has(index) ? <span aria-hidden="true" /> : <span />}</li>)}</ol>

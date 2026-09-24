@@ -1,13 +1,13 @@
 .card {
   transition: border-color 1.6s ease, background-color 1.6s ease, color 1.6s ease, box-shadow 1.6s ease;
   background: var(--color-white);
-  border-radius: var(--radius-xl, 16px);
+  border-radius: var(--radius-xl, 20px);
   border: 1px solid var(--color-border);
   padding: var(--space-6, 24px);
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 16px);
-  box-shadow: var(--shadow-sm, 0 2px 8px rgba(45, 42, 122, 0.08));
+  box-shadow: var(--shadow-card);
   width: 100%;
   max-width: var(--activity-max-width, 760px);
   height: auto;
@@ -18,14 +18,14 @@
 }
 
 .fitSteps { height: 100%; min-height: 0; }
+.card.lessonOverview { width: min(100%, 960px); max-width: 960px; margin-inline: auto; }
 .card[data-delivery-strategy="attention_reengagement"] .question { border-left: 3px solid var(--color-interface-purple); padding-left: 10px; }
 .card[data-delivery-strategy="sensory_cooldown"] *, .card[data-delivery-strategy="sensory_cooldown"] *::before, .card[data-delivery-strategy="sensory_cooldown"] *::after { animation: none !important; }
 .card[data-delivery-strategy="sensory_cooldown"] { box-shadow: none; }
 .fitSteps > :not(ol) { flex-shrink: 0; }
-.contentHeading { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
-.contentHeading > div { display: flex; flex-direction: column; gap: 4px; }
-.contentHeading h2 { margin: 0; font: var(--font-weight-semibold) 18px/1.3 var(--font-family); color: var(--color-text-primary); }
-.typeLabel { width: fit-content; font: var(--font-weight-medium) var(--text-micro, 10px)/1 var(--font-family); color: var(--color-interface-purple); text-transform: uppercase; letter-spacing: .08em; }
+.contentHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.contentHeading > div { display: flex; flex-direction: column; gap: var(--space-2); }
+.contentHeading h2 { margin: 0; font: 700 clamp(22px, 2.35vw, 28px)/1.2 var(--font-family); color: var(--color-interface-purple); }
 .contentHint { max-width: min(40%, 360px); color: var(--color-text-secondary); font: var(--font-weight-regular) var(--text-caption)/1.4 var(--font-family); text-align: right; }
 .contentPreview { width: 100%; min-height: 132px; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
 .visualPreview { position: relative; min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--color-interface-purple); background: linear-gradient(145deg, #eef6ff, #fff7e8); }
@@ -94,19 +94,19 @@
 .question {
   margin: 0;
   font-family: var(--font-family);
-  font-size: var(--text-heading-md, 20px);
+  font-size: clamp(18px, 2.2vw, 22px);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   line-height: 1.4;
 }
 
 .choices { display: grid; grid-template-columns: repeat(var(--activity-columns, auto-fit), minmax(min(100%, 180px), 1fr)); gap: 10px; }
-.attention_reengagement { border-color: #e8a23a; }
+.attention_reengagement { border-color: color-mix(in srgb, var(--state-distracted) 45%, var(--color-border)); box-shadow: none; }
 .attention_reengagement .question { max-width: 42rem; }
 .gentle_reactivation { box-shadow: none; }
 .gentle_reactivation .continueButton { transition-duration: .35s; }
 
-.continueButton { align-self: flex-end; min-width: 132px; min-height: 46px; padding: 0 var(--space-5); border: 0; border-radius: var(--radius-md); background: var(--color-interface-purple); color: var(--color-white); cursor: pointer; font: var(--font-weight-semibold) var(--text-body-d)/1 var(--font-family); }
+.continueButton { align-self: flex-end; min-width: 132px; min-height: 48px; padding: 0 var(--space-5); border: 0; border-radius: var(--radius-md); background: var(--color-interface-purple); color: var(--color-white); cursor: pointer; font: var(--font-weight-semibold) var(--text-body)/1 var(--font-family); }
 .continueButton:hover { filter: brightness(.96); }
 .continueButton:focus-visible { outline: 3px solid var(--color-interface-blue); outline-offset: 3px; }
 .feedback { padding: 11px 14px; border-radius: var(--radius-md); font: var(--font-weight-semibold) var(--text-caption)/1.35 var(--font-family); animation: feedbackAppear .25s ease both; transition: background-color .25s, color .25s; }
@@ -144,16 +144,18 @@
 }
 
 @media (max-width: 620px) {
+  .card { padding: var(--space-4); gap: var(--space-4); border-radius: var(--radius-lg); }
   .contentHeading { align-items: flex-start; flex-direction: column; }
   .contentHint { max-width: none; text-align: left; }
   .waveform { display: none; }
+  .continueButton { width: 100%; }
 }
 .card { position: relative; }
 .headingGroup { width: 100%; min-width: 0; }
-.titleRow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 20px; }
+.titleRow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px clamp(10px, 1.5vw, 16px); }
 .titleRow h2 { flex: 0 1 auto; margin: 0; }
-.inlineInstruction { flex: 1 1 280px; margin: 0; color: var(--color-text-secondary); font: var(--font-weight-regular) var(--text-body-d)/1.45 var(--font-family); }
-@media (max-width: 620px) { .titleRow { flex-direction: column; gap: 4px; } .inlineInstruction { flex: 0 1 auto; } }
+.inlineInstruction { max-width: 72ch; margin: 0; color: var(--color-text-secondary); font: var(--font-weight-medium) var(--text-body)/1.5 var(--font-family); }
+@media (max-width: 620px) { .titleRow { gap: 5px 10px; } }
 .focusContent { display: contents; }
 .adaptiveText { position: relative; }
 /* Keep text metrics identical when support changes so activities do not reflow. */

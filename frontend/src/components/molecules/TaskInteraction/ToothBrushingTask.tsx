@@ -44,9 +44,11 @@ export default function ToothBrushingTask({ task, onAnswered }: { task: Task; on
           onPointerDown={(event) => { if (complete) return; setBrushing(true); lastPoint.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId) }}
           onPointerMove={(event) => { if (!brushing || complete || !lastPoint.current) return; const distance = Math.hypot(event.clientX - lastPoint.current.x, event.clientY - lastPoint.current.y); if (distance > 8) { addProgress(Math.min(8, distance / 5)); lastPoint.current = { x: event.clientX, y: event.clientY } } }}
           onPointerUp={() => { setBrushing(false); lastPoint.current = null }}>
-          {teethImage && <img className={styles.teethImage} src={teethImage} alt={complete ? 'Clean white teeth' : progress ? 'Teeth being brushed with foam' : 'Yellow teeth ready to be cleaned'} />}
-          {!complete && task.toolImageUrl && <img className={`${styles.movingBrush} ${brushing ? styles.movingBrushActive : ''}`} src={task.toolImageUrl} alt="" aria-hidden="true" />}
-          {complete && <span className={styles.cleanSparkles} aria-hidden="true">✦ ✧ ✦</span>}
+          <div className={styles.brushScene}>
+            {teethImage && <img className={styles.teethImage} src={teethImage} alt={complete ? 'Clean white teeth' : progress ? 'Teeth being brushed with foam' : 'Yellow teeth ready to be cleaned'} />}
+            {!complete && task.toolImageUrl && <img className={`${styles.movingBrush} ${brushing ? styles.movingBrushActive : ''}`} src={task.toolImageUrl} alt="" aria-hidden="true" />}
+            {complete && <span className={styles.cleanSparkles} aria-hidden="true">✦ ✧ ✦</span>}
+          </div>
         </div>
         <div className={styles.brushFooter}>
           <div className={styles.brushProgress} role="progressbar" aria-label="Brushing progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}><span style={{ width: `${progress}%` }} /></div>

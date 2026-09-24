@@ -89,9 +89,12 @@ function BreadcrumbBar({
       </div>
 
       {showTaskInfo && !isOffline && (
-        <span className={styles.taskInfo} aria-live="polite">
-          Task {taskIndex} of {taskTotal}
-        </span>
+        <div className={styles.taskProgress} aria-live="polite">
+          <span className={styles.taskInfo}>Step {taskIndex} of {taskTotal}</span>
+          <div className={styles.progressTrack} role="progressbar" aria-label="Lesson progress" aria-valuemin={1} aria-valuemax={taskTotal} aria-valuenow={taskIndex}>
+            <span className={styles.progressFill} style={{ width: `${Math.min(100, (taskIndex / taskTotal) * 100)}%` }} />
+          </div>
+        </div>
       )}
     </div>
   )

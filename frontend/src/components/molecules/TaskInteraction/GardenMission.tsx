@@ -51,13 +51,27 @@ export default function GardenMission({ task, onAnswered, onChanged, quiet }: {
     saveGardenCheckpoint(task, [])
   }
 
+  function selectMission(position: number) {
+    if (position > evidence.current.length) return
+    const completedMission = evidence.current[position]
+    setIndex(position)
+    setTool(completedMission?.tool ?? null)
+    setApplied(Boolean(completedMission))
+    appliedMission.current = completedMission?.id ?? null
+    setMessage(completedMission ? missions[position].feedback : '')
+  }
+
   return <div className={`${styles.mission} ${quiet ? styles.quiet : ''}`}>
     <div className={styles.header}><strong>Mission {index + 1} of {missions.length}</strong>
       <button type="button" onClick={reset}>Reset</button></div>
-    <ol className={styles.steps} aria-label="Mission steps">{missions.map((item, position) =>
-      <li key={item.id} aria-current={position === index ? 'step' : undefined} className={position < index || position === index && applied ? styles.complete : ''}>
-        <span>{position < index || position === index && applied ? '✓' : position + 1}</span>{item.label}
-      </li>)}</ol>
+    <ol className={styles.steps} aria-label="Mission steps">{missions.map((item, position) => {
+      const isComplete = position < evidence.current.length
+      return <li key={item.id}>
+        <button type="button" aria-current={position === index ? 'step' : undefined} aria-pressed={position === index} disabled={position > evidence.current.length} className={isComplete ? styles.complete : ''} onClick={() => selectMission(position)}>
+          <span>{isComplete ? '✓' : position + 1}</span>{item.label}
+        </button>
+      </li>
+    })}</ol>
     <p className={styles.instruction}>{mission.instruction}</p>
     <div className={styles.workspace}>
       <div className={styles.tools} aria-label="Choose a tool or action">

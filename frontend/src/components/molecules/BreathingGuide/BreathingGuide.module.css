@@ -28,7 +28,7 @@
 .ring2 {
   position: absolute;
   border-radius: var(--radius-full);
-  border: 2px solid var(--color-interface-blue);
+  border: 1px solid var(--color-interface-blue);
   pointer-events: none;
 }
 
@@ -49,7 +49,7 @@
   width: 148px;
   height: 148px;
   border-radius: var(--radius-full);
-  border: 3px solid var(--color-interface-blue);
+  border: 2px solid var(--color-interface-blue);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -64,30 +64,18 @@
 }
 
 .in {
-  background: linear-gradient(
-    135deg,
-    var(--color-blue-tint-1, #e6f1fb) 0%,
-    var(--color-blue-tint-2, #c8e2f8) 100%
-  );
+  background: var(--state-relaxed-fill);
   animation: breatheIn 4s ease-in-out forwards;
 }
 
 .hold {
-  background: linear-gradient(
-    135deg,
-    var(--color-blue-tint-2, #d4ebfa) 0%,
-    var(--color-blue-tint-3, #b0d4f5) 100%
-  );
+  background: #d9ebfa;
   width: 168px;
   height: 168px;
 }
 
 .out {
-  background: linear-gradient(
-    135deg,
-    var(--color-blue-tint-1, #e6f1fb) 0%,
-    var(--color-blue-tint-2, #c8e2f8) 100%
-  );
+  background: var(--state-relaxed-fill);
   animation: breatheOut 6s ease-in-out forwards;
   width: 168px;
   height: 168px;
@@ -113,7 +101,7 @@
 
 .circleLabel {
   font-family: var(--font-family);
-  font-size: 13px;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
   color: var(--color-blue-dark);
   text-align: center;
@@ -148,7 +136,7 @@
 
 .audioLabel {
   font-family: var(--font-family);
-  font-size: var(--text-caption);
+  font-size: var(--text-label);
   font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
   flex: 1;
@@ -256,7 +244,7 @@
 
 .stepName {
   font-family: var(--font-family);
-  font-size: 13px;
+  font-size: var(--text-body);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   transition: color var(--transition-base);
@@ -268,7 +256,20 @@
 
 .stepDur {
   font-family: var(--font-family);
-  font-size: var(--text-caption-d);
+  font-size: var(--text-label);
   font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
+}
+
+@media (max-width: 480px) {
+  .circleOuter { width: 190px; height: 190px; }
+  .ring1 { width: 186px; height: 186px; }
+  .ring2 { width: 164px; height: 164px; }
+  .circle { width: 140px; height: 140px; }
+  .hold, .out { width: 154px; height: 154px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .in, .out, .audioWave { animation: none; }
+  .in, .out, .hold { transform: none; width: 154px; height: 154px; }
 }

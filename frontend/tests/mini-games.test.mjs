@@ -15,7 +15,7 @@ const checkpoints = await load(await readFile(new URL('../src/lib/gardenCheckpoi
 const source = await readFile(new URL('../src/components/molecules/TaskInteraction/MiniGames.tsx', import.meta.url), 'utf8')
 const games = await load(source
   .replace("from 'react'", `from '${import.meta.resolve('react')}'`)
-  .replace("import { Backpack, Clock, Eraser, Folder, NotebookPen, Ruler } from 'lucide-react'", "const Backpack = () => null, Clock = Backpack, Eraser = Backpack, Folder = Backpack, NotebookPen = Backpack, Ruler = Backpack")
+  .replace("import { Backpack, Clock, Eraser, Folder, NotebookPen, RotateCcw, Ruler } from 'lucide-react'", "const Backpack = () => null, Clock = Backpack, Eraser = Backpack, Folder = Backpack, NotebookPen = Backpack, RotateCcw = Backpack, Ruler = Backpack")
   .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => undefined')
   .replace("import { validObjectSelection, wordAtEndpoints } from '../../../lib/miniGameLogic'", logicSource)
   .replace("import styles from './MiniGames.module.css'", 'const styles = new Proxy({}, { get: (_, key) => String(key) })')
@@ -37,7 +37,7 @@ globalThis.__miniGameHooks = {
 }
 const interactive = await load(source
   .replace("import { Children, useEffect, useRef, useState } from 'react'", `import { Children } from '${import.meta.resolve('react')}'; const {useEffect, useRef, useState} = globalThis.__miniGameHooks`)
-  .replace("import { Backpack, Clock, Eraser, Folder, NotebookPen, Ruler } from 'lucide-react'", 'const Backpack = () => null, Clock = Backpack, Eraser = Backpack, Folder = Backpack, NotebookPen = Backpack, Ruler = Backpack')
+  .replace("import { Backpack, Clock, Eraser, Folder, NotebookPen, RotateCcw, Ruler } from 'lucide-react'", 'const Backpack = () => null, Clock = Backpack, Eraser = Backpack, Folder = Backpack, NotebookPen = Backpack, RotateCcw = Backpack, Ruler = Backpack')
   .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => undefined')
   .replace("import { validObjectSelection, wordAtEndpoints } from '../../../lib/miniGameLogic'", logicSource)
   .replace("import styles from './MiniGames.module.css'", 'const styles = new Proxy({}, { get: (_, key) => String(key) })'))
@@ -118,7 +118,7 @@ test('word hunt marks a word found immediately and shows its meaning question in
   assert.deepEqual(run.answers[0].value.found, ['STOP'])
   assert.deepEqual(run.answers[0].value.follow_ups, { STOP: 'Stop before proceeding' })
   assert.ok(!nodes(run.render()).some(node => node.type === 'section' && node.props.className === 'followUp'))
-  click(run, 'Reset')
+  nodes(run.render()).find(node => node.props?.['aria-label'] === 'Reset word search').props.onClick()
   tree = run.render()
   assert.match(text(tree), /0 of 1 found/)
   assert.equal(nodes(tree).filter(node => node.props?.['data-cell'] && node.props.className.includes('found')).length, 0)
@@ -246,7 +246,8 @@ test('word hunt has pointer and keyboard button paths and calm responsive styles
   const css = await readFile(new URL('../src/components/molecules/TaskInteraction/MiniGames.module.css', import.meta.url), 'utf8')
   assert.match(css, /min-height: 44px/)
   assert.match(css, /focus-visible/)
-  assert.match(css, /max-width: 380px/)
+  assert.match(css, /width: min\(100%, 780px\)/)
+  assert.match(source, /wordList[\s\S]*message && !pending && <Feedback/)
   assert.doesNotMatch(css, /animation:/)
 })
 
@@ -261,6 +262,7 @@ test('picture self-reflections save neutral selections while scored questions re
     .replace("import ToothBrushingTask from './ToothBrushingTask'", 'const ToothBrushingTask = () => null')
     .replace("import GardenMission from './GardenMission'", 'const GardenMission = () => null')
     .replace("import GardenKit from './GardenKit'", 'const GardenKit = () => null')
+    .replace("import ClockSet from './ClockSet'", 'const ClockSet = () => null')
     .replace("import { DiscoveryBoard, ScenarioClassifier } from './DiscoveryActivities'", 'const DiscoveryBoard = () => null, ScenarioClassifier = DiscoveryBoard')
     .replace(/import .* from '.\/MiniGames'/, 'const AudioSequence = () => null, FindIt = AudioSequence, FlipMatching = AudioSequence, Shopping = AudioSequence, WordSearch = AudioSequence'))
   for (const options of [{correctItemIds:[]}, {scored:false,correctItemIds:['other']}]) {
@@ -346,15 +348,17 @@ test('flip cards use balanced three-column rows and two columns on small screens
   assert.doesNotMatch(css, /\.flipFace\s*\{[^}]*position: absolute/)
 })
 
-test('Find It handler feedback, incorrect selections, reset and completion', () => {
+test('Find It handler feedback, no duplicate reset, and completion', () => {
   const task = { items: [{ id: 'soap', label: 'Soap' }, { id: 'pencil', label: 'Pencil' }], correctItemIds: ['soap'] }
   const run = harness('FindIt', task)
   click(run, 'Pencil'); click(run, 'Check my choices')
   assert.equal(run.answers.at(-1).correct, false)
-  click(run, 'Reset'); assert.equal(run.changed, 1)
-  click(run, 'Soap'); click(run, 'Check my choices')
-  assert.equal(run.answers.at(-1).correct, true)
-  assert.deepEqual(run.answers.at(-1).value.picked, ['soap'])
+  assert.ok(!nodes(run.render()).some(node => node.props?.['aria-label'] === 'Reset choices'))
+  assert.doesNotMatch(text(run.render()), /↻/)
+  const retryRun = harness('FindIt', task)
+  click(retryRun, 'Soap'); click(retryRun, 'Check my choices')
+  assert.equal(retryRun.answers.at(-1).correct, true)
+  assert.deepEqual(retryRun.answers.at(-1).value.picked, ['soap'])
 })
 test('word endpoint handlers complete once and reset found progress', () => {
   const run = harness('WordSearch', { grid: [['S','O','A','P']], targets: [{ word: 'SOAP', displayLabel: 'SOAP', cells: [[0,0], [0,1], [0,2], [0,3]] }] })
@@ -364,7 +368,7 @@ test('word endpoint handlers complete once and reset found progress', () => {
   assert.deepEqual(run.answers.at(-1).value.found, ['SOAP'])
   assert.ok(nodes(run.render()).filter(node => node.props?.['data-cell']).every(node => node.props.className.includes('found')))
   assert.match(text(run.render()), /Found/)
-  click(run, 'Reset'); assert.equal(run.changed, 1)
+  nodes(run.render()).find(node => node.props?.['aria-label'] === 'Reset word search').props.onClick(); assert.equal(run.changed, 1)
   assert.match(text(run.render()), /0 of 1 found/)
 })
 test('audio replay, playback gate, sequence completion and requested prompt evidence', () => {

@@ -66,7 +66,7 @@ export default function RelaxMode() {
           {isElevated && (
             <AlertBanner
               variant="info"
-              message="Noticed things feel like a lot right now — easing off the pace."
+              message="Let’s pause and take one slow breath at a time."
               className={styles.alert}
             />
           )}

@@ -1,4 +1,4 @@
-import { Activity, useEffect, useEffectEvent, useRef, useState } from 'react'
+import { Activity, useEffect, useEffectEvent, useRef, useState, type KeyboardEvent } from 'react'
 import { Apple, Banana, Cherry, Grape, Cat, Dog, Bird, Fish, Bus, Car, Bike, TrainFront, Circle, Square, Triangle, Star } from 'lucide-react'
 import type { CognitiveState } from '../../constants/states'
 import { playLessonSound } from '../../lib/lessonSounds'
@@ -60,6 +60,7 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
   const [feedback, setFeedback] = useState('')
   const [celebrating, setCelebrating] = useState(false)
   const completionLocked = useRef(false)
+  const wordInput = useRef<HTMLDivElement>(null)
   const [breathingSeconds, setBreathingSeconds] = useState(0)
   const [continueUnlocked, setContinueUnlocked] = useState(false)
   const [refocusReady, setRefocusReady] = useState(false)
@@ -86,6 +87,9 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
     return () => window.clearTimeout(timer)
   }, [mode])
   useEffect(() => {
+    if (!intro && mode === 'refocus' && kind === 0) wordInput.current?.focus()
+  }, [intro, mode, kind])
+  useEffect(() => {
     if (!celebrating || paused) return
     const timer = window.setTimeout(() => continueAfterSuccess(), 1600)
     return () => window.clearTimeout(timer)
@@ -105,6 +109,30 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
     completionLocked.current = true
     setCelebrating(true)
   }
+  function handleWordKey(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.ctrlKey || event.metaKey || event.altKey || completionLocked.current) return
+    if ((event.key === 'Enter' || event.key === ' ') && event.target instanceof HTMLButtonElement) return
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+      event.preventDefault()
+      setPickedLetters((previous) => previous.slice(0, -1))
+      setFeedback('')
+      return
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      finishActivity()
+      return
+    }
+    const letter = event.key.toUpperCase()
+    if (!/^[A-Z]$/.test(letter) || pickedLetters.length >= word.answer.length) return
+    const index = letters.findIndex((value, candidate) => value === letter && !pickedLetters.includes(candidate))
+    if (index < 0) return
+    event.preventDefault()
+    const next = [...pickedLetters, index]
+    setPickedLetters(next)
+    setFeedback('')
+    finishActivity(next)
+  }
   return <>
     {mode === 'breathing' && !intro && !ready && <div className={playerStyles.musicToolbar}><ModeBgm mode="relax" suspended={paused} /></div>}
     <div className={`${playerStyles.stage} ${styles.stage}`}>
@@ -120,8 +148,8 @@ export default function EEGRegulation({ mode, state, transitionState, onResume, 
         <div className={styles.activity}>
           {kind === 0 ? <div className={styles.wordGame}>
             <div className={styles.pictures}>{word.pictures.map((Icon, index) => <div key={index}><Icon size={56} aria-label={word.labels[index]} role="img" /></div>)}</div>
-            <div className={styles.wordControls}>
-            <p id="letter-instructions">Pick letters to find the word. Tap a filled space to remove a letter.</p>
+            <div className={styles.wordControls} ref={wordInput} tabIndex={0} onKeyDown={handleWordKey} aria-describedby="letter-instructions">
+            <p id="letter-instructions">Type or pick letters to find the word. Use Backspace to remove a letter.</p>
             <div className={styles.answerSlots} role="group" aria-label={`Your ${word.answer.length}-letter word`} aria-describedby="letter-instructions">
               {Array.from({ length: word.answer.length }, (_, slot) => <button type="button" key={slot} disabled={pickedLetters[slot] === undefined} aria-label={`Letter ${slot + 1}: ${pickedLetters[slot] === undefined ? 'empty' : letters[pickedLetters[slot]] + ', remove'}`} onClick={() => { setPickedLetters(previous => previous.filter((_, index) => index !== slot)); setFeedback('') }}>{pickedLetters[slot] === undefined ? '\u00b7' : letters[pickedLetters[slot]]}</button>)}
             </div>

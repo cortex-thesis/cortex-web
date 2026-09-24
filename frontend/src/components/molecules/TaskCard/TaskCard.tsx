@@ -7,7 +7,6 @@ import { ProgressBar } from '../../atoms'
 import ActivityTemplate from '../ActivityTemplate'
 import TaskInteraction from '../TaskInteraction'
 import { AudioNarration, DiscussionCards } from '../TaskInteraction/DiscoveryActivities'
-import { ACTIVITY_TEMPLATE_BY_ID, TASK_TEMPLATE_BY_ID } from '../../../constants/activityTemplates'
 import { playLessonSound } from '../../../lib/lessonSounds'
 import styles from './TaskCard.module.css'
 import type { FocusTemplate } from '../../../lib/eegTransitions'
@@ -101,10 +100,8 @@ function TaskCard({
   const template = task.template ?? 'multiple_choice'
   const isKnowledgeCheck = template === 'multiple_choice'
   const hasTaskInteraction = Boolean(task.taskTemplate)
+  const isLessonOverview = lessonNavigation && template === 'visual_narrative' && !hasTaskInteraction && task.steps?.length === 1
   const headingInstruction = (hasTaskInteraction || isKnowledgeCheck) ? task.question : ''
-  const templateLabel = task.taskTemplate
-    ? (TASK_TEMPLATE_BY_ID[task.taskTemplate]?.label ?? 'Interactive activity')
-    : (ACTIVITY_TEMPLATE_BY_ID[template]?.label ?? 'Learning activity')
   const maxWidths = { compact: '560px', standard: '760px', wide: '1040px', immersive: 'min(1280px, 100%)' }
   const taskStyle = {
     '--activity-max-width': maxWidths[task.layout?.size ?? 'standard'],
@@ -156,7 +153,7 @@ function TaskCard({
 
   return (
     <FocusSupportContext.Provider value={{ level: focusTemplate, holding: focusHolding, terms, masked: blocked && microKind === 0, reveal: revealCue }}>
-    <div className={`${styles.card} ${styles[deliveryStrategy]} ${focusTemplate !== 'none' ? styles.supportTypography : ''} ${focusTemplate === 'passive' ? styles.anchorPulse : ''} ${focusTemplate === 'rest' ? styles.restTheme : ''} ${lessonNavigation && template === 'visual_narrative' && !hasTaskInteraction ? styles.fitSteps : ''} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy} data-focus-template={focusTemplate}>
+    <div className={`${styles.card} ${styles[deliveryStrategy]} ${focusTemplate !== 'none' ? styles.supportTypography : ''} ${focusTemplate === 'passive' ? styles.anchorPulse : ''} ${focusTemplate === 'rest' ? styles.restTheme : ''} ${lessonNavigation && template === 'visual_narrative' && !hasTaskInteraction ? styles.fitSteps : ''} ${isLessonOverview ? styles.lessonOverview : ''} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy} data-focus-template={focusTemplate} data-lesson-overview={isLessonOverview || undefined}>
       <section className={`${styles.microGate} ${blocked ? styles.microGateVisible : ''} ${flipped ? styles.flippedRecall : ''}`} aria-hidden={!blocked} inert={!blocked} aria-label="A quick focus check">
         {microKind === 0 ? <><h3>Tap to reveal your next action</h3><p><AdaptiveLessonText text={cueText} /></p>{!terms.length && <button onClick={revealCue}>Reveal instruction</button>}</>
           : microKind === 2 && !flipped ? <><h3>A quick recall</h3><p>Think about the step you are working on.</p><button onClick={() => { setFlipped(true); playLessonSound('nudge') }}>Flip card</button></>
@@ -171,7 +168,12 @@ function TaskCard({
       />}
 
       <div className={styles.contentHeading}>
-        <div className={styles.headingGroup}>{templateLabel.toLowerCase() !== task.title.toLowerCase() && <span className={styles.typeLabel}>{templateLabel}</span>}<div className={styles.titleRow}><h2><AdaptiveLessonText text={task.title} /></h2>{headingInstruction && <p className={styles.inlineInstruction}><AdaptiveLessonText text={headingInstruction} /></p>}</div></div>
+        <div className={styles.headingGroup}>
+          <div className={styles.titleRow}>
+            <h2><AdaptiveLessonText text={task.title} /></h2>
+          </div>
+          {headingInstruction && <p className={styles.inlineInstruction}><AdaptiveLessonText text={headingInstruction} /></p>}
+        </div>
         {!headingInstruction && task.contentDescription && <span className={styles.contentHint}><AdaptiveLessonText text={task.contentDescription} /></span>}
       </div>
 

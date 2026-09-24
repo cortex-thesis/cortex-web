@@ -147,7 +147,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
         {showModeAlert && currentState === 'distracted' && isElevated && (
           <AlertBanner
             variant="warning"
-            message="Your focus seems to be drifting. Adjusting content..."
+            message="Let’s focus on this step together."
             className={styles.alert}
           />
         )}
@@ -175,6 +175,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
             task={deliveredTask}
             deliveryStrategy={deliveryConfig.strategy}
             showNudge={isElevated}
+            showProgress={false}
             nudgeText={NUDGE_MESSAGES[nudgeIndex]}
             onAnswered={handleAnswered}
             className={styles.taskCard}

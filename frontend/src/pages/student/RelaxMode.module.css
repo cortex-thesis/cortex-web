@@ -4,6 +4,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--space-5);
 }
 
 .footer {
@@ -33,7 +34,11 @@
 
 .footerText {
   font-family: var(--font-family);
-  font-size: var(--text-label-d);
+  font-size: var(--text-label);
   font-weight: var(--font-weight-regular);
   color: var(--state-relaxed);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footerDot { animation: none; }
 }

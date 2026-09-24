@@ -90,7 +90,7 @@
 
 .title {
   font-family: var(--font-family);
-  font-size: 20px;
+  font-size: var(--text-subheading);
   font-weight: var(--font-weight-medium);
   color: var(--color-white);
   line-height: var(--leading-snug);
@@ -98,9 +98,9 @@
 
 .sub {
   font-family: var(--font-family);
-  font-size: var(--text-label-d);
+  font-size: var(--text-body);
   font-weight: var(--font-weight-regular);
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.82);
   line-height: var(--leading-normal);
 }
 
@@ -109,8 +109,20 @@
   align-items: center;
   gap: 6px;
   font-family: var(--font-family);
-  font-size: var(--text-caption-d);
-  color: rgba(255, 255, 255, 0.35);
+  font-size: var(--text-label);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 480px) {
+  .wrapper { gap: var(--space-5); padding-inline: var(--space-4); }
+  .progressPill { top: var(--space-4); width: calc(100% - var(--space-8)); }
+  .progressTrack { flex: 1; }
+  .circle { width: 104px; height: 104px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .circle, .dot { animation: none; }
+  .progressFill { transition: none; }
 }
 
 .dots {
