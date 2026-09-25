@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { TeacherTabTemplate } from '../../components/templates'
 import { TableSkeleton } from '../../components/molecules'
-import { Avatar } from '../../components/atoms'
+import { StudentFlowerAvatar } from '../../components/atoms'
 import { getTeacherClass, type TeacherClass } from '../../lib/teacherApi'
 import { useAuthStore } from '../../store/authStore'
 import styles from './ClassStudents.module.css'
@@ -40,7 +40,7 @@ export default function ClassStudents() {
           <div className={styles.tableHeader}><span className={styles.th}>Student</span><span className={styles.th}>Student number</span><span className={styles.th}>Sessions</span><span className={styles.th}>Last state</span><span className={styles.th}>Journal entries</span><span className={styles.th}></span></div>
           {students.map((student) => (
             <div key={student.id} className={styles.tableRow}>
-              <div className={styles.studentInfo}><Avatar name={student.name} imageUrl={student.avatar} size="sm" /><span className={styles.studentName}>{student.name}</span></div>
+              <div className={styles.studentInfo}><StudentFlowerAvatar name={student.name} color={student.avatar_color} size="sm" /><span className={styles.studentName}>{student.name}</span></div>
               <span className={styles.tdMuted}>{student.student_number || 'Not assigned'}</span><span className={styles.tdMuted}>{student.session_count ?? 0}</span><span className={styles.tdMuted}>{student.last_state ? student.last_state.charAt(0).toUpperCase() + student.last_state.slice(1) : 'No sessions'}</span><span className={styles.tdMuted}>{student.journal_count ?? 0} {(student.journal_count ?? 0) === 1 ? 'entry' : 'entries'}</span>
               <div><button className={styles.viewBtn} onClick={() => navigate(`/teacher/class/${classId}/student/${student.id}`)}>View profile</button></div>
             </div>

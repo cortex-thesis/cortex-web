@@ -138,11 +138,67 @@
 
 /* ── Greeting Header ──────────────────────────── */
 
-.greeting {
+.welcome {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
+
+.identityDisplay {
+  position: relative;
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 150px;
+  padding: 15px 18px 15px 10px;
+  overflow: hidden;
+  border: 1px solid rgba(83, 74, 183, .14);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(120deg, rgba(251, 235, 242, .6), rgba(255, 255, 255, .98) 48%, rgba(238, 237, 254, .48));
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.identityDisplay:hover,
+.identityDisplay:focus-visible { border-color: var(--color-interface-purple); box-shadow: var(--shadow-card-hover); outline: none; }
+.topCards { display: grid; grid-template-columns: minmax(270px, .82fr) minmax(390px, 1.18fr); gap: var(--space-4); align-items: stretch; }
+.identityBotanical { position:relative; width:106px; height:118px; display:block; align-self:end; }
+.identityFlower { position:absolute; z-index:2; top:2px; left:21px; width:72px!important; height:72px!important; background:transparent!important; transition:transform var(--transition-base); }
+.identityFlower img { width:100%!important; height:100%!important; filter:drop-shadow(0 5px 5px rgba(83,74,183,.14)); }
+.flowerStem { position:absolute; top:62px; left:54px; width:3px; height:49px; border-radius:99px; background:#65a785; transform:rotate(2deg); }
+.leafLeft,.leafRight { position:absolute; width:19px; height:10px; border-radius:100% 0 100% 0; background:#9ac7aa; }
+.leafLeft { top:18px; right:1px; transform:rotate(25deg); }.leafRight { top:30px; left:1px; transform:scaleX(-1) rotate(25deg); }
+.petalOne,.petalTwo { position:absolute; width:8px; height:5px; border-radius:100% 0 100% 0; background:var(--flower-pink); opacity:.38; }
+.petalOne { top:7px; left:10px; transform:rotate(25deg); }.petalTwo { top:26px; right:3px; transform:rotate(80deg); }
+.identityDisplay:hover .identityFlower { transform:translateY(-2px) rotate(1deg); }
+.identityCopy { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
+.identityEyebrow { color:var(--color-interface-purple); font-size:9px; font-weight:var(--font-weight-semibold); letter-spacing:.1em; text-transform:uppercase; }
+.identityName { overflow:hidden; color:var(--color-deep-purple); font-size:20px; line-height:var(--leading-tight); text-overflow:ellipsis; white-space:nowrap; }
+.studentNumber { margin-top:2px; color:var(--color-text-secondary); font-size:10px; letter-spacing:.02em; }
+.identityLink { display:inline-flex; align-items:center; gap:var(--space-1); margin-top:5px; color:var(--color-interface-purple); font-size:11px; font-weight:var(--font-weight-medium); white-space:nowrap; }
+.continueCard { height: 100%; }
+
+.progressCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border, #e3dfd7);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.progressCard span { display: flex; flex: 1; flex-direction: column; }
+.progressCard strong { font-size: 20px; color: var(--color-deep-purple); }
+.progressCard small { color: var(--color-text-secondary); }
 
 .greetingSub {
   font-family: var(--font-family);
@@ -241,6 +297,17 @@
   .classesGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .topCards { grid-template-columns: minmax(250px, .82fr) minmax(330px, 1.18fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .identityFlower { transition: none; }
+  .identityDisplay:hover .identityFlower { transform: none; }
+}
+
+@media (max-width: 900px) {
+  .topCards { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
@@ -260,6 +327,8 @@
   .greetingName {
     font-size: 25px;
   }
+
+  .topCards { grid-template-columns: 1fr; }
 
   .classesGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

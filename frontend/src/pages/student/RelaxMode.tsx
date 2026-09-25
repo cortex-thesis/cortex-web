@@ -76,7 +76,6 @@ export default function RelaxMode() {
             audioLabel="Calming sounds playing softly"
             pace={isElevated ? 'slow' : 'normal'}
             onCycleComplete={() => {
-              console.log('Breathing cycle complete')
             }}
           />
         </div>

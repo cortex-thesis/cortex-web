@@ -31,6 +31,13 @@ class School(TimeStampedModel):
 
 
 class Profile(models.Model):
+    class AvatarColor(models.TextChoices):
+        PINK = "pink", "Pink"
+        BLUE = "blue", "Blue"
+        YELLOW = "yellow", "Yellow"
+        GREEN = "green", "Green"
+        PURPLE = "purple", "Purple"
+
     class Role(models.TextChoices):
         STUDENT = "student", "Student"
         TEACHER = "teacher", "Teacher"
@@ -57,6 +64,7 @@ class Profile(models.Model):
     display_name = models.CharField(max_length=160)
     pseudonym = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     student_number = models.CharField(max_length=50, blank=True)
+    avatar_color = models.CharField(max_length=10, choices=AvatarColor.choices, default=AvatarColor.PINK)
     birthdate = models.DateField(null=True, blank=True)
     guardian_name = models.CharField(max_length=200, blank=True)
     guardian_contact = models.CharField(max_length=30, blank=True)

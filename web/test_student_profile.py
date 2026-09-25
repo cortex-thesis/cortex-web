@@ -119,3 +119,49 @@ class StudentProfileTests(TestCase):
         self.assertLess(len(summary_queries), len(full_queries))
         Enrollment.objects.filter(student=self.student, school_class=self.school_class).update(removed_at=timezone.now())
         self.assertEqual(self.client.get(url + '?summary=1').status_code, 403)
+
+    def test_student_can_choose_persisted_flower_color(self):
+        self.client.force_login(self.student.user)
+        response = self.client.patch('/api/student/profile/', data='{"avatar_color":"blue"}', content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.student.refresh_from_db()
+        self.assertEqual(self.student.avatar_color, Profile.AvatarColor.BLUE)
+        self.assertEqual(response.json()['avatar_color'], 'blue')
+        invalid = self.client.patch('/api/student/profile/', data='{"avatar_color":"orange"}', content_type='application/json')
+        self.assertEqual(invalid.status_code, 400)
+
+    def test_student_password_change_requires_current_password(self):
+        self.student.user.set_password('current-password-2026!')
+        self.student.user.save(update_fields=['password'])
+        self.client.force_login(self.student.user)
+        wrong = self.client.post(
+            '/api/student/profile/change-password/',
+            data='{"current_password":"wrong-password","new_password":"new-secure-password-2026!"}',
+            content_type='application/json',
+        )
+        self.assertEqual(wrong.status_code, 403)
+        changed = self.client.post(
+            '/api/student/profile/change-password/',
+            data='{"current_password":"current-password-2026!","new_password":"new-secure-password-2026!"}',
+            content_type='application/json',
+        )
+        self.assertEqual(changed.status_code, 200)
+        self.student.user.refresh_from_db()
+        self.assertTrue(self.student.user.check_password('new-secure-password-2026!'))
+
+    def test_interrupted_session_remains_in_progress_and_can_resume(self):
+        self.client.force_login(self.student.user)
+        session = LearningSession.objects.create(
+            student=self.student, school_class=self.school_class,
+            status=LearningSession.Status.INTERRUPTED, ended_at=timezone.now(),
+        )
+        data = self.client.get('/api/student/sessions/').json()
+        item = next(item for item in data['sessions'] if item['id'] == str(session.pk))
+        self.assertEqual(item['status'], 'in_progress')
+        self.assertFalse(item['is_live'])
+        self.assertEqual(data['summary']['completed_sessions'], 0)
+        resumed = self.client.post(f'/api/sessions/{session.pk}/resume/')
+        self.assertEqual(resumed.status_code, 200)
+        session.refresh_from_db()
+        self.assertEqual(session.status, LearningSession.Status.ACTIVE)
+        self.assertIsNone(session.ended_at)

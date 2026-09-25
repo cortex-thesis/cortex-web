@@ -30,7 +30,7 @@ from .models import (
     LessonPracticeProgress, StudentBadge, AdaptationEvent, BaselineRecording, BaselineEpoch,
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ActivityResponse, ConsentRecord,
     DataLifecycleRequest, EEGDevice, Enrollment, Intervention, InterventionAlert, JournalEntry,
-    LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
+    ClassSession, LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
     SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction,
     UserPreference,
 )
@@ -405,6 +405,7 @@ def _profile_data(profile):
         "id": profile.pk, "name": profile.display_name, "role": profile.role,
         "username": profile.user.username,
         "pseudonym": str(profile.pseudonym), "avatar": None,
+        "avatar_color": profile.avatar_color,
         "student_number": profile.student_number,
         "school": profile.school.name if profile.school_id else None,
         "school_id": str(profile.school_id) if profile.school_id else None,
@@ -1102,11 +1103,6 @@ def student_profile(request):
                 last_name = name_parts[-1] if len(name_parts) > 1 else ""
             user.first_name = first_name
             user.last_name = last_name
-            if "password" in data and str(data["password"]).strip():
-                password = str(data["password"])
-                if len(password) < 12:
-                    return JsonResponse({"detail": "Password must be at least 12 characters."}, status=400)
-                user.set_password(password)
             if "first_name" in data or "last_name" in data or "middle_name" in data:
                 first_name = str(data.get("first_name") or "").strip()
                 middle_name = str(data.get("middle_name") or "").strip()
@@ -1121,12 +1117,15 @@ def student_profile(request):
             profile.guardian_name = str(data.get("guardian_name", profile.guardian_name)).strip()
             profile.guardian_contact = str(data.get("guardian_contact", profile.guardian_contact)).strip()
             profile.guardian_email = str(data.get("guardian_email", profile.guardian_email)).strip()
+            if "avatar_color" in data:
+                avatar_color = str(data["avatar_color"]).strip().lower()
+                if avatar_color not in Profile.AvatarColor.values:
+                    return JsonResponse({"detail": "Choose a valid flower color."}, status=400)
+                profile.avatar_color = avatar_color
             user_fields = ["username", "email", "first_name", "last_name"]
-            if "password" in data and str(data["password"]).strip():
-                user_fields.append("password")
             with transaction.atomic():
                 user.save(update_fields=user_fields)
-                profile.save(update_fields=["display_name", "guardian_name", "guardian_contact", "guardian_email", "updated_at"])
+                profile.save(update_fields=["display_name", "guardian_name", "guardian_contact", "guardian_email", "avatar_color", "updated_at"])
             _audit(profile, "profile_updated", profile)
         except ValueError:
             return JsonResponse({"detail": "Profile values are invalid."}, status=400)
@@ -1153,6 +1152,30 @@ def verify_student_profile_password(request):
     if not authenticate(request, username=profile.user.username, password=password):
         return JsonResponse({"detail": "The password is incorrect."}, status=403)
     return JsonResponse({"verified": True})
+
+
+@require_POST
+def change_student_password(request):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    try:
+        data = _body(request)
+        current_password = str(data["current_password"])
+        new_password = str(data["new_password"])
+    except (KeyError, ValueError):
+        return JsonResponse({"detail": "Current and new passwords are required."}, status=400)
+    user = profile.user
+    if not authenticate(request, username=user.username, password=current_password):
+        return JsonResponse({"detail": "The current password is incorrect."}, status=403)
+    try:
+        validate_password(new_password, user=user)
+    except ValidationError as validation_error:
+        return JsonResponse({"detail": " ".join(validation_error.messages)}, status=400)
+    user.set_password(new_password)
+    user.save(update_fields=["password"])
+    _audit(profile, "password_changed", profile)
+    return JsonResponse({"changed": True})
 
 
 @require_POST
@@ -2226,11 +2249,50 @@ def _student_session_data(session, now):
         "duration_seconds": duration_seconds,
         "focus_score": focus_score,
         "state": dominant_state,
-        "status": "in_progress" if session.ended_at is None else "completed",
+        "status": "completed" if session.status == LearningSession.Status.COMPLETED else "in_progress",
+        "is_live": _session_is_live(session) if session.ended_at is None else False,
+        "last_opened_at": session.last_seen_at or session.ended_at or session.started_at,
         "tasks_completed": session.tasks_completed,
         "tasks_total": Slide.objects.filter(lesson_id__in=[item['id'] for item in session.class_session.lesson_history]).filter(_current_garden_rows('activity')).count() if session.class_session_id else session.tasks_total,
         "state_distribution": state_distribution,
     }
+
+
+@require_POST
+def resume_session(request, session_id):
+    profile, error = _require_profile(request, {Profile.Role.STUDENT})
+    if error:
+        return error
+    with transaction.atomic():
+        target = get_object_or_404(
+            LearningSession.objects.select_for_update().select_related("school_class", "lesson", "class_session"),
+            pk=session_id, student=profile,
+        )
+        if target.status == LearningSession.Status.COMPLETED:
+            return JsonResponse({"detail": "This session is already complete."}, status=409)
+        if target.class_session_id:
+            if target.class_session.status != ClassSession.Status.ACTIVE:
+                return JsonResponse({"detail": "This teacher-led session is no longer open."}, status=409)
+            return JsonResponse({"id": str(target.pk), "class_session_id": str(target.class_session_id), "resumed": False})
+        current = LearningSession.objects.select_for_update().filter(student=profile, ended_at__isnull=True).exclude(pk=target.pk).first()
+        if current is not None:
+            latest = current.eeg_samples.order_by("-recorded_at").first()
+            if _session_is_live(current, latest):
+                return JsonResponse({"detail": "Finish or leave your current live session before continuing another lesson."}, status=409)
+            current.ended_at = timezone.now()
+            current.status = LearningSession.Status.INTERRUPTED
+            current.slide_exposures.filter(exited_at__isnull=True).update(exited_at=current.ended_at)
+            current.save(update_fields=["ended_at", "status"])
+        target.started_at = timezone.now()
+        target.ended_at = None
+        target.last_seen_at = timezone.now()
+        target.status = LearningSession.Status.ACTIVE
+        target.save(update_fields=["started_at", "ended_at", "last_seen_at", "status"])
+        _audit(profile, "session_resumed", target)
+    return JsonResponse({
+        "id": str(target.pk), "class_id": target.school_class_id,
+        "lesson_id": target.lesson_id, "class_session_id": None, "resumed": True,
+    })
 
 
 @require_http_methods(["GET"])

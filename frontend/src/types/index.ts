@@ -14,6 +14,7 @@ export interface User {
   avatar: string | null
   classIds: string[]
   student_number?: string
+  avatar_color?: 'pink' | 'blue' | 'yellow' | 'green' | 'purple'
 }
 
 // EEG
@@ -262,6 +263,7 @@ export interface StudentLive {
   id: string
   name: string
   avatar: string | null
+  avatar_color?: 'pink' | 'blue' | 'yellow' | 'green' | 'purple'
   currentState: CognitiveState | null
   signalStrength: 0 | 1 | 2 | 3 | 4
   focusScore: number

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { StudentLive } from '../../../types'
 import type { CognitiveState } from '../../../constants/states'
-import { Avatar, StateBadge } from '../../atoms'
+import { StudentFlowerAvatar, StateBadge } from '../../atoms'
 import styles from './StudentStateCard.module.css'
 import clsx from 'clsx'
 
@@ -41,7 +41,7 @@ function StudentStateCard({
   const {
     id,
     name,
-    avatar,
+    avatar_color,
     currentState,
     focusScore,
     sessionDuration,
@@ -70,7 +70,7 @@ function StudentStateCard({
       aria-label={`${name} — ${currentState ?? 'not connected'}`}
     >
       <div className={styles.top}>
-        <Avatar name={name} imageUrl={avatar} size="sm" showStatus isOnline={isConnected} />
+        <StudentFlowerAvatar name={name} color={avatar_color} size="sm" showStatus isOnline={isConnected} />
         <span className={styles.name}>{name}</span>
         {isConnected && currentState && <StateBadge state={currentState} size="sm" />}
       </div>

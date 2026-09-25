@@ -19,6 +19,7 @@ import LearningJournal from '../pages/student/LearningJournal'
 import Notifications from '../pages/student/Notifications'
 import Settings from '../pages/student/Settings'
 import Profile from '../pages/student/Profile'
+import Achievements from '../pages/student/Achievements'
 import Classes from '../pages/student/Classes'
 import ClassDetail from '../pages/student/ClassDetail'
 import ClassPackageLessons from '../pages/student/ClassPackageLessons'
@@ -96,6 +97,7 @@ export default function AppRouter() {
       <Route path="/student/notifications" element={<Notifications />} />
       <Route path="/student/settings" element={<Settings />} />
       <Route path="/student/profile" element={<Profile />} />
+      <Route path="/student/achievements" element={<Achievements />} />
       <Route path="/student/classes" element={<Classes />} />
       <Route path="/student/sessions" element={<StudentSessions />} />
       <Route path="/student/class/:classId" element={<ClassDetail />} />

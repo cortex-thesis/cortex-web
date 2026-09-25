@@ -1,6 +1,8 @@
 export { default as StateBadge } from './StateBadge'
 export { default as Button } from './Button'
 export { default as Avatar } from './Avatar'
+export { default as StudentFlowerAvatar, FLOWER_COLORS } from './StudentFlowerAvatar'
+export type { FlowerColor } from './StudentFlowerAvatar'
 export { default as ProgressBar } from './ProgressBar'
 export { default as SignalBar } from './SignalBar'
 export { default as PulseRing } from './PulseRing'

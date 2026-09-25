@@ -1,0 +1,51 @@
+.section { display: grid; gap: var(--space-3); }
+.header { display: flex; align-items: end; justify-content: space-between; gap: var(--space-4); }
+.header h2 { margin: 2px 0 0; color: var(--color-deep-purple); font-size: var(--text-subheading); }
+.header p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--text-label); }
+.eyebrow { color: var(--color-interface-purple); font-size: var(--text-tiny); font-weight: var(--font-weight-semibold); letter-spacing: var(--tracking-widest); text-transform: uppercase; }
+.count { padding: 6px 10px; border-radius: var(--radius-full); background: var(--flower-purple-fill); color: var(--color-deep-purple); font-size: var(--text-caption); font-weight: var(--font-weight-medium); white-space: nowrap; }
+
+.garden { position: relative; min-height: 520px; overflow: hidden; border: 1px solid rgba(83, 74, 183, .14); border-radius: var(--radius-xl); background: linear-gradient(180deg, #eef1ff 0%, #f8f5ff 49%, #dfeecf 50%, #cce2b5 72%, #a9c88c 73%); box-shadow: var(--shadow-card); isolation: isolate; }
+.cloud { position: absolute; width: 112px; height: 28px; border-radius: var(--radius-full); background: rgba(255,255,255,.64); filter: blur(.2px); animation: drift 38s linear infinite alternate; }
+.cloud::before, .cloud::after { content: ''; position: absolute; bottom: 4px; border-radius: 50%; background: inherit; }
+.cloud::before { left: 22px; width: 38px; height: 38px; }.cloud::after { right: 20px; width: 48px; height: 48px; }
+.cloudOne { top: 48px; left: 8%; }.cloudTwo { top: 94px; right: 9%; transform: scale(.72); animation-duration: 46s; }
+.distantGarden { position: absolute; inset: auto 0 26% 0; display: flex; align-items: end; justify-content: space-around; height: 90px; opacity: .42; }
+.distantGarden i { width: 16%; height: 52%; border-radius: 55% 55% 12% 12%; background: #6da66c; transform-origin: bottom; animation: sway 7s ease-in-out infinite alternate; }
+.distantGarden i:nth-child(2), .distantGarden i:nth-child(4) { height: 78%; background: #7cad72; animation-delay: -2s; }
+.grass { position: absolute; inset: auto 0 21% 0; height: 72px; background: linear-gradient(170deg, transparent 42%, rgba(93,148,87,.62) 43%), linear-gradient(190deg, transparent 48%, rgba(105,160,96,.72) 49%); background-size: 34px 72px, 45px 72px; opacity: .42; animation: grassShift 9s ease-in-out infinite alternate; }
+.soil { position: absolute; inset: auto 0 0; height: 31%; background: linear-gradient(180deg, #b99369, #9b7655); box-shadow: inset 0 12px 20px rgba(92,63,42,.12); }
+.soil::after { content: ''; position: absolute; inset: 16px 0 auto; height: 3px; background: radial-gradient(circle, rgba(255,255,255,.3) 1px, transparent 2px); background-size: 32px 10px; }
+
+.plots { position: absolute; inset: 82px var(--space-5) 18px; z-index: 2; display: grid; grid-template-columns: repeat(5, minmax(110px, 1fr)); align-items: end; gap: var(--space-2); }
+.plot { display: flex; align-items: end; justify-content: center; min-width: 0; transform: translateY(var(--garden-offset)); }
+.flowerButton { position: relative; display: flex; align-items: center; justify-content: end; flex-direction: column; width: 100%; min-height: 214px; padding: 0 var(--space-1) 8px; border: 0; background: transparent; color: var(--color-text-primary); font: inherit; cursor: pointer; transform: scale(var(--garden-scale)); transform-origin: bottom; }
+.flowerButton:focus-visible { outline: 3px solid rgba(83,74,183,.3); outline-offset: 2px; border-radius: var(--radius-md); }
+.shortLabel { position: absolute; z-index: 4; top: 38px; left: 50%; max-width: 128px; padding: 3px 7px; border-radius: var(--radius-full); background: rgba(255,255,255,.84); color: var(--color-deep-purple); font-size: 10px; font-weight: var(--font-weight-medium); line-height: 1.25; text-align: center; transform: translateX(-50%); box-shadow: var(--shadow-xs); }
+.plant { position: relative; z-index: 2; display: flex; align-items: center; flex-direction: column; transform-origin: bottom; animation: grow .65s var(--transition-spring) both, sway 5.5s calc(var(--garden-delay) + 700ms) ease-in-out infinite alternate; animation-delay: var(--garden-delay); }
+.bloom { z-index: 2; display: flex; width: 68px; height: 68px; align-items: center; justify-content: center; border-radius: 50%; transition: filter var(--transition-base), transform var(--transition-base); }
+.bloom img { width: 100%; height: 100%; filter: drop-shadow(0 5px 4px rgba(45,42,122,.14)); }
+.stem { position: relative; width: 5px; height: 91px; margin-top: -7px; border-radius: var(--radius-full); background: #3f895f; }
+.stem i { position: absolute; width: 27px; height: 15px; border-radius: 90% 12% 90% 12%; background: #55a06c; }
+.stem i:first-child { top: 34px; right: 2px; transform: rotate(19deg); }.stem i:last-child { top: 59px; left: 3px; transform: scaleX(-1) rotate(19deg); }
+.plotShadow { width: 70px; height: 13px; margin-top: -6px; border-radius: 50%; background: rgba(73,48,31,.2); filter: blur(2px); }
+.flowerButton:hover .bloom, .flowerButton:focus .bloom, .flowerButton[aria-expanded='true'] .bloom { filter: brightness(1.06) saturate(1.08); transform: translateY(-5px) scale(1.08); }
+
+.bud { z-index: 2; display: flex; align-items: center; flex-direction: column; color: #527a57; opacity: .58; }
+.bud > span { width: 4px; height: 64px; border-radius: var(--radius-full); background: currentColor; }
+.locked .shortLabel { opacity: .7; }.locked .plotShadow { width: 52px; opacity: .65; }
+.tooltip { position: absolute; z-index: 10; bottom: 205px; left: 50%; display: grid; width: min(210px, calc(100vw - 44px)); gap: 4px; padding: 10px 12px; border: 1px solid rgba(83,74,183,.16); border-radius: var(--radius-md); background: #fff; box-shadow: var(--shadow-md); color: var(--color-text-secondary); font-size: 10px; line-height: 1.4; opacity: 0; pointer-events: none; transform: translate(-50%, 7px); transition: opacity var(--transition-base), transform var(--transition-base); }
+.tooltip::after { content: ''; position: absolute; bottom: -6px; left: calc(50% - 6px); width: 12px; height: 12px; background: #fff; transform: rotate(45deg); }
+.tooltip strong { color: var(--color-deep-purple); font-size: 11px; }.tooltip time { color: var(--state-focused-text); }
+.flowerButton:hover .tooltip, .flowerButton:focus .tooltip, .tooltipOpen { opacity: 1; transform: translate(-50%, 0); }
+.empty { position: absolute; z-index: 5; inset: 44% 50% auto auto; display: flex; align-items: center; flex-direction: column; gap: 6px; width: min(330px, calc(100% - 32px)); padding: var(--space-4); border-radius: var(--radius-lg); background: rgba(255,255,255,.9); text-align: center; transform: translate(50%, -50%); box-shadow: var(--shadow-sm); }
+.empty strong { color: var(--color-deep-purple); }.empty span { color: var(--color-text-secondary); font-size: var(--text-caption); }.empty button { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; padding: 8px 12px; border: 0; border-radius: var(--radius-md); background: var(--color-interface-purple); color: #fff; font: inherit; font-size: var(--text-caption); cursor: pointer; }
+
+@keyframes grow { from { opacity: 0; transform: translateY(50px) scale(.4); } to { opacity: 1; transform: none; } }
+@keyframes sway { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg); } }
+@keyframes drift { from { translate: -16px 0; } to { translate: 20px 4px; } }
+@keyframes grassShift { from { background-position: 0 0, 4px 0; } to { background-position: 8px 2px, -5px 0; } }
+
+@media (max-width: 1000px) { .garden { min-height: 690px; }.plots { top: 90px; grid-template-columns: repeat(4, minmax(100px, 1fr)); }.flowerButton { min-height: 190px; }.shortLabel { top: 4px; }.tooltip { bottom: 164px; } }
+@media (max-width: 680px) { .header { align-items: start; }.header h2 { font-size: 20px; }.garden { min-height: 940px; }.plots { grid-template-columns: repeat(2, minmax(120px, 1fr)); inset: 82px var(--space-2) 14px; }.flowerButton { min-height: 162px; }.bloom { width: 58px; height: 58px; }.stem { height: 66px; }.stem i:first-child { top: 24px; }.stem i:last-child { top: 44px; }.tooltip { bottom: 140px; }.shortLabel { top: -5px; }.count { font-size: 10px; } }
+@media (prefers-reduced-motion: reduce) { .cloud, .distantGarden i, .grass, .plant { animation: none; }.tooltip, .bloom { transition: none; } }

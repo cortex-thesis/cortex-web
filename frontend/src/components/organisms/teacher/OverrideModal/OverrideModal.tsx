@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { Avatar, StateBadge } from '../../../atoms'
+import { StudentFlowerAvatar, StateBadge } from '../../../atoms'
 import type { StudentLive } from '../../../../types'
 import type { InterventionAction } from '../../../../types'
 import type { CognitiveState } from '../../../../constants/states'
@@ -32,9 +32,9 @@ function OverrideModal({ student, onConfirm, onClose }: OverrideModalProps) {
         </div>
 
         <div className={styles.studentRow}>
-          <Avatar
+          <StudentFlowerAvatar
             name={student.name}
-            imageUrl={student.avatar}
+            color={student.avatar_color}
             size="md"
             showStatus
             isOnline={student.isConnected}

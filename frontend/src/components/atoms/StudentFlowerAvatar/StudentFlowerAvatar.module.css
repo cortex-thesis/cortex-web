@@ -1,0 +1,16 @@
+.wrapper { position: relative; display: inline-flex; flex-shrink: 0; }
+.avatar { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: var(--radius-full); }
+.avatar img { width: 68%; height: 68%; object-fit: contain; }
+.xs { width: 24px; height: 24px; }
+.sm { width: 32px; height: 32px; }
+.md { width: 40px; height: 40px; }
+.lg { width: 56px; height: 56px; }
+.xl { width: 64px; height: 64px; }
+.pink { background: var(--flower-pink-fill); }
+.blue { background: var(--flower-blue-fill); }
+.yellow { background: var(--flower-yellow-fill); }
+.green { background: var(--flower-green-fill); }
+.purple { background: var(--flower-purple-fill); }
+.statusDot { position: absolute; right: 1px; bottom: 1px; width: 10px; height: 10px; border: 2px solid var(--color-cream); border-radius: var(--radius-full); }
+.online { background: var(--state-focused); }
+.offline { background: var(--color-text-muted); }

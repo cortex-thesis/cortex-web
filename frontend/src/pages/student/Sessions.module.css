@@ -28,6 +28,6 @@
 .sessionStatus { flex: 0 0 auto; align-self: center; margin-left: auto; justify-content: center; text-align: center; }
 .inProgress { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 3px var(--space-2); border-radius: 999px; background: #faeeda; color: #633806; font: var(--font-weight-medium) var(--text-caption-d) var(--font-family); line-height: 1; white-space: nowrap; }
 .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 9px; color: var(--color-text-secondary); font-size: 10px; }
-.openBtn { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; border: 0; border-radius: 9px; background: var(--color-cool-surface); color: var(--color-interface-purple); cursor: pointer; }
+.openBtn { min-width:44px; min-height:44px; padding:0 12px; display:flex; align-items:center; justify-content:center; gap:4px; flex:0 0 auto; border:0; border-radius:9px; background:var(--color-cool-surface); color:var(--color-interface-purple); font:500 11px var(--font-family); cursor:pointer; }
 .empty { padding: 35px; border: 1px dashed var(--color-border); border-radius: 15px; color: var(--color-text-secondary); text-align: center; font-size: 12px; }
 @media (max-width: 680px) { .header, .toolbar { flex-direction: column; } .summaryGrid { grid-template-columns: 1fr; } .searchWrap { width: 100%; } .sessionCard { align-items: flex-start; } .sessionStatus { align-self: center; margin-left: 0; } }

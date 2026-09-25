@@ -42,6 +42,7 @@ export interface RosterStudent {
   name: string
   role: 'student'
   avatar: string | null
+  avatar_color: 'pink' | 'blue' | 'yellow' | 'green' | 'purple'
   student_number: string
   school: string | null
   session_count?: number
