@@ -39,7 +39,7 @@ function SessionCard({ session, loading = false, onResume, onStart, emptyIllustr
     return <div className={clsx(styles.empty, className)}>
       <div className={styles.emptyIcon} aria-hidden="true">{emptyIllustration}</div>
       <span className={styles.emptyCopy}><strong className={styles.emptyTitle}>Ready for your next lesson?</strong><span className={styles.emptySub}>Choose a class and find something new to learn.</span></span>
-      <button className={styles.startBtn} onClick={onStart} aria-label="Browse classes">Browse classes <span aria-hidden="true">→</span></button>
+      <button className={styles.startBtn} onClick={onStart} aria-label="Go to classes">Go <span aria-hidden="true">→</span></button>
     </div>
   }
 

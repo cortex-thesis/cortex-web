@@ -5,6 +5,7 @@ import { School } from 'lucide-react'
 interface ClassTileProps {
   name: string
   illustrationSrc?: string
+  layout?: 'vertical' | 'horizontal'
   studentCount?: number
   unreadCount?: number
   onClick?: () => void
@@ -14,6 +15,7 @@ interface ClassTileProps {
 function ClassTile({
   name,
   illustrationSrc,
+  layout = 'vertical',
   studentCount,
   unreadCount,
   onClick,
@@ -22,7 +24,7 @@ function ClassTile({
   return (
     <div className={clsx(styles.wrapper, className)}>
       <button
-        className={styles.tile}
+        className={clsx(styles.tile, layout === 'horizontal' && styles.horizontal)}
         onClick={onClick}
         aria-label={`${name}${unreadCount ? `, ${unreadCount} new notifications` : ''}`}
       >

@@ -40,6 +40,30 @@
   color: var(--color-interface-purple);
 }
 
+.horizontal {
+  min-height: 128px;
+  padding: 20px;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.horizontal .iconWrap {
+  width: 64px;
+  height: 64px;
+}
+
+.horizontal .illustration {
+  width: 58px;
+  height: 58px;
+}
+
+.horizontal .name {
+  font-size: 18px;
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+}
+
 .illustration {
   width: 50px;
   height: 50px;
@@ -53,6 +77,13 @@
   text-align: center;
   line-height: var(--leading-snug);
   word-break: break-word;
+}
+
+@media (max-width: 520px) {
+  .horizontal {
+    min-height: 120px;
+    padding: 20px;
+  }
 }
 
 .count {
