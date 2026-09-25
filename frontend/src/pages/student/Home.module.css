@@ -109,7 +109,8 @@
 .body {
   flex: 1;
   display: flex;
-  gap: var(--space-8);
+  flex-direction: column;
+  gap: var(--space-5);
   padding: var(--space-4) var(--student-shell-gutter) 96px;
   position: relative;
   z-index: var(--z-raised);
@@ -144,15 +145,25 @@
   gap: 2px;
 }
 
+.homeGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
 .identityDisplay {
   position: relative;
   display: grid;
-  grid-template-columns: 116px minmax(0, 1fr);
+  grid-template-columns: 64px minmax(0, 1fr);
   align-items: center;
   gap: var(--space-3);
-  width: 100%;
-  min-height: 150px;
-  padding: 15px 18px 15px 10px;
+  width: max-content;
+  min-width: 300px;
+  max-width: 390px;
+  min-height: 132px;
+  padding: 14px 16px;
   overflow: hidden;
   border: 1px solid rgba(83, 74, 183, .14);
   border-radius: var(--radius-lg);
@@ -166,19 +177,9 @@
 
 .identityDisplay:hover,
 .identityDisplay:focus-visible { border-color: var(--color-interface-purple); box-shadow: var(--shadow-card-hover); outline: none; }
-.topCards { display: grid; grid-template-columns: minmax(270px, .82fr) minmax(390px, 1.18fr); gap: var(--space-4); align-items: stretch; }
-.identityBotanical { position:relative; width:106px; height:118px; display:block; align-self:end; }
-.identityFlower { position:absolute; z-index:2; top:2px; left:21px; width:72px!important; height:72px!important; background:transparent!important; transition:transform var(--transition-base); }
-.identityFlower img { width:100%!important; height:100%!important; filter:drop-shadow(0 5px 5px rgba(83,74,183,.14)); }
-.flowerStem { position:absolute; top:62px; left:54px; width:3px; height:49px; border-radius:99px; background:#65a785; transform:rotate(2deg); }
-.leafLeft,.leafRight { position:absolute; width:19px; height:10px; border-radius:100% 0 100% 0; background:#9ac7aa; }
-.leafLeft { top:18px; right:1px; transform:rotate(25deg); }.leafRight { top:30px; left:1px; transform:scaleX(-1) rotate(25deg); }
-.petalOne,.petalTwo { position:absolute; width:8px; height:5px; border-radius:100% 0 100% 0; background:var(--flower-pink); opacity:.38; }
-.petalOne { top:7px; left:10px; transform:rotate(25deg); }.petalTwo { top:26px; right:3px; transform:rotate(80deg); }
-.identityDisplay:hover .identityFlower { transform:translateY(-2px) rotate(1deg); }
+.topCards { display:grid; grid-template-columns:auto minmax(390px,1fr); gap:var(--space-4); align-items:stretch; }
 .identityCopy { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
-.identityEyebrow { color:var(--color-interface-purple); font-size:9px; font-weight:var(--font-weight-semibold); letter-spacing:.1em; text-transform:uppercase; }
-.identityName { overflow:hidden; color:var(--color-deep-purple); font-size:20px; line-height:var(--leading-tight); text-overflow:ellipsis; white-space:nowrap; }
+.identityName { min-width:0; color:var(--color-deep-purple); font-size:20px; line-height:var(--leading-tight); overflow-wrap:anywhere; }
 .studentNumber { margin-top:2px; color:var(--color-text-secondary); font-size:10px; letter-spacing:.02em; }
 .identityLink { display:inline-flex; align-items:center; gap:var(--space-1); margin-top:5px; color:var(--color-interface-purple); font-size:11px; font-weight:var(--font-weight-medium); white-space:nowrap; }
 .continueCard { height: 100%; }
@@ -290,29 +291,33 @@
     padding-inline: var(--space-6);
   }
 
-  .right {
-    width: 270px;
-  }
+  .homeGrid { grid-template-columns: minmax(0,1fr); }
+  .right { width:100%; display:grid; grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr); align-items:start; }
 
   .classesGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .topCards { grid-template-columns: minmax(250px, .82fr) minmax(330px, 1.18fr); }
+  .topCards { grid-template-columns:auto minmax(360px,1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .identityFlower { transition: none; }
-  .identityDisplay:hover .identityFlower { transform: none; }
+}
+
+@media (max-width: 1120px) {
+  .topCards { grid-template-columns:1fr; }
+  .identityDisplay { width:100%; min-width:0; max-width:none; }
+  .continueCard { height:auto; }
 }
 
 @media (max-width: 900px) {
   .topCards { grid-template-columns: 1fr; }
+  .identityDisplay { width:100%; min-width:0; max-width:none; min-height:118px; }
+  .continueCard { height: auto; }
 }
 
 @media (max-width: 760px) {
   .body {
-    flex-direction: column;
     overflow-y: auto;
   }
 
@@ -320,9 +325,7 @@
     overflow: visible;
   }
 
-  .right {
-    width: 100%;
-  }
+  .right { display:flex; width:100%; }
 
   .greetingName {
     font-size: 25px;
@@ -334,3 +337,23 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Class preview plus a distinct start-new-learning action. */
+.learningGrid { display:grid; grid-template-columns:repeat(2,minmax(140px,180px)) minmax(260px,1fr); gap:var(--space-4); align-items:stretch; }
+.singleClassGrid { grid-template-columns:minmax(140px,180px) minmax(280px,1fr); }
+.noClassGrid { grid-template-columns:minmax(280px,560px); }
+.startLearningCard { min-width:0; min-height:104px; display:grid; grid-template-columns:56px minmax(0,1fr) auto; align-items:center; gap:var(--space-3); padding:12px 16px; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-white); color:var(--color-interface-purple); text-align:left; font:inherit; cursor:pointer; box-shadow:var(--shadow-sm); }
+.startLearningCard:hover,.startLearningCard:focus-visible { border-color:var(--color-interface-purple); box-shadow:var(--shadow-card-hover); outline:none; }
+.startLearningIcon { width:56px; height:56px; display:grid; place-items:center; border-radius:var(--radius-md); background:var(--color-surface-1); }
+.continueIllustration,.emptyContinueIllustration { width:52px; height:52px; object-fit:contain; }
+.startLearningIcon img { width:48px; height:48px; object-fit:contain; }
+.gardenIllustration { width:30px; height:30px; object-fit:contain; }
+.startLearningCopy { min-width:0; display:grid; gap:3px; }
+.startLearningCopy small { color:var(--color-interface-purple); font-size:9px; font-weight:var(--font-weight-semibold); letter-spacing:var(--tracking-wider); text-transform:uppercase; }
+.startLearningCopy strong { color:var(--color-deep-purple); font-size:15px; }
+.startLearningCopy > span { color:var(--color-text-secondary); font-size:11px; line-height:1.4; }
+.startLearningAction { display:inline-flex; align-items:center; gap:4px; color:var(--color-interface-purple); font-size:11px; font-weight:var(--font-weight-medium); white-space:nowrap; }
+@media (max-width:1100px) { .learningGrid { grid-template-columns:repeat(2,minmax(140px,180px)) minmax(230px,1fr); } .singleClassGrid { grid-template-columns:minmax(140px,180px) minmax(260px,1fr); } .noClassGrid { grid-template-columns:minmax(280px,560px); } }
+@media (max-width:900px) { .learningGrid { grid-template-columns:repeat(2,minmax(0,180px)); } .startLearningCard { grid-column:1 / -1; max-width:560px; } }
+@media (max-width:760px) { .learningGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:520px) { .learningGrid { grid-template-columns:1fr; } .startLearningCard { grid-column:auto; max-width:none; } }

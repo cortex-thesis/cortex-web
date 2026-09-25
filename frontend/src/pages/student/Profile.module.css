@@ -104,3 +104,67 @@
 .inlineError { margin:0 0 10px; color:var(--state-overstimulated); font-size:12px; }
 @media (max-width:800px) { .learningLinks,.progressList { grid-template-columns:1fr; } }
 @media (max-width:650px) { .profileHero { padding:16px; } .statsGrid { grid-template-columns:1fr; } .learningEntry { grid-template-columns:56px minmax(0,1fr) auto; } }
+
+/* Unified profile overview */
+.profileTop { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr); gap:var(--space-4); align-items:stretch; }
+.profileTop .profileHero { min-width:0; }
+.gardenPreview { min-width:0; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:5px; padding:18px 20px; border:1px solid rgba(83,74,183,.16); border-radius:16px; background:linear-gradient(135deg,#faf9fd,#f1f6ea); color:var(--color-interface-purple); text-align:left; font:inherit; cursor:pointer; box-shadow:var(--shadow-card); }
+.gardenPreview:hover,.gardenPreview:focus-visible { border-color:var(--color-interface-purple); box-shadow:var(--shadow-card-hover); outline:none; }
+.gardenPreview strong { color:var(--color-deep-purple); font-size:15px; }
+.previewFlowers { min-height:46px; display:flex; align-items:center; margin:2px 0; }
+.previewFlowers > span { width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; margin-right:-5px; border-radius:var(--radius-full); background:rgba(255,255,255,.72); }
+.previewFlowers img { width:34px; height:34px; object-fit:contain; }
+.previewEmpty,.previewLoading { min-height:46px; display:flex; align-items:center; gap:var(--space-2); color:var(--color-text-secondary); font-size:11px; }
+.previewLink { display:inline-flex; align-items:center; gap:5px; color:var(--color-interface-purple); font-size:10px; font-weight:var(--font-weight-medium); }
+.accountSection { display:flex; align-items:center; justify-content:space-between; gap:var(--space-4); margin-top:14px; padding:14px 18px; border-top:1px solid var(--color-border); }
+.accountSection > div { display:grid; gap:3px; }
+.accountSection strong { color:var(--color-deep-purple); font-size:12px; }
+.accountSection small { color:var(--color-text-secondary); font-size:10px; }
+.signOutBtn { min-height:40px; display:inline-flex; align-items:center; gap:7px; padding:0 14px; border:1px solid rgba(190,65,77,.25); border-radius:var(--radius-sm); background:transparent; color:#a43d49; font:var(--font-weight-medium) 11px var(--font-family); cursor:pointer; }
+.signOutBtn:hover,.signOutBtn:focus-visible { background:rgba(190,65,77,.06); border-color:#a43d49; outline:none; }
+.dialogBackdrop { position:fixed; inset:0; z-index:calc(var(--z-modal) + 1); display:grid; place-items:center; padding:var(--space-4); background:rgba(31,28,74,.28); }
+.dialog { width:min(390px,100%); padding:var(--space-5); border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-white); box-shadow:0 24px 64px rgba(31,28,74,.24); }
+.dialog h2 { margin:0; color:var(--color-deep-purple); font-size:18px; }
+.dialog p { margin:var(--space-2) 0 0; color:var(--color-text-secondary); font-size:12px; line-height:1.5; }
+.dialog .syncNote { padding:var(--space-2) var(--space-3); border-radius:var(--radius-sm); background:var(--flower-yellow-fill); color:var(--color-text-primary); font-size:10px; }
+.dialogActions { display:flex; justify-content:flex-end; gap:var(--space-2); margin-top:var(--space-5); }
+.dialogActions button { min-height:40px; padding:0 14px; border:1px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-white); color:var(--color-text-primary); font:var(--font-weight-medium) 11px var(--font-family); cursor:pointer; }
+.dialogActions .confirmSignOut { border-color:#a43d49; background:#a43d49; color:var(--color-white); }
+.dialogActions button:focus-visible { outline:2px solid var(--color-interface-purple); outline-offset:2px; }
+.dialogActions button:disabled { opacity:.55; cursor:default; }
+@media (max-width:900px) { .profileTop { grid-template-columns:1fr; } }
+@media (max-width:650px) { .accountSection { align-items:flex-start; flex-direction:column; } }
+
+/* Compact desktop density: preserve hierarchy without oversized surfaces. */
+.page { padding-top:var(--space-3); }
+.profileHero { padding:14px 18px; }
+.identity { gap:14px; }
+.name { margin:2px 0; font-size:22px; }
+.gardenPreview { display:grid; grid-template-columns:minmax(0,1fr) auto; align-content:center; gap:4px 12px; padding:14px 16px; }
+.gardenPreview > .sectionEyebrow,.gardenPreview > strong,.gardenPreview > .previewLink { grid-column:1; }
+.previewFlowers,.previewEmpty,.previewLoading { grid-column:2; grid-row:1 / span 3; align-self:center; margin:0; min-height:38px; }
+.previewFlowers > span { width:32px; height:32px; }
+.previewFlowers img { width:29px; height:29px; }
+.previewEmpty { max-width:150px; }
+.statsGrid { margin:10px 0 12px; gap:10px; }
+.statCard { min-height:64px; gap:11px; padding:8px 12px; }
+.statIcon { width:38px; height:38px; border-radius:10px; }
+.statValue { font-size:17px; line-height:1.15; }
+.statLabel { margin-top:1px; }
+.statDetail { margin-top:1px; }
+.groupHeading { margin:0 0 6px; }
+.groupHeading h2 { margin-top:2px; font-size:15px; }
+.learningLinks { gap:10px; }
+.learningEntry { min-height:78px; grid-template-columns:46px minmax(0,1fr) auto; gap:11px; padding:10px 13px; }
+.learningIcon { width:42px; height:42px; border-radius:11px; }
+.learningEntry strong { margin-top:2px; font-size:13px; }
+.learningEntry small { margin-top:2px; }
+.progressCard { margin-top:12px; padding:13px 16px; }
+.progressCard .sectionHeader { margin-bottom:6px; }
+.progressList { gap:5px 20px; }
+.progressItem { min-height:32px; grid-template-columns:30px minmax(110px,.9fr) minmax(70px,1fr) 32px; }
+.packageIcon { width:30px; height:30px; border-radius:9px; font-size:17px; }
+.progressTrack { height:6px; }
+.accountSection { margin-top:10px; padding:11px 16px; }
+@media (max-width:900px) { .gardenPreview { min-height:96px; } }
+@media (max-width:650px) { .page { padding-top:var(--space-2); } .profileHero { padding:13px 14px; } .gardenPreview { display:flex; padding:13px 14px; } .previewFlowers,.previewEmpty,.previewLoading { min-height:36px; } .statCard { min-height:62px; } }

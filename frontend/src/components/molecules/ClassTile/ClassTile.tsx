@@ -1,10 +1,10 @@
 import styles from './ClassTile.module.css'
 import clsx from 'clsx'
+import { School } from 'lucide-react'
 
 interface ClassTileProps {
   name: string
-  iconEmoji: string
-  iconBg: string
+  illustrationSrc?: string
   studentCount?: number
   unreadCount?: number
   onClick?: () => void
@@ -13,8 +13,7 @@ interface ClassTileProps {
 
 function ClassTile({
   name,
-  iconEmoji,
-  iconBg,
+  illustrationSrc,
   studentCount,
   unreadCount,
   onClick,
@@ -27,12 +26,8 @@ function ClassTile({
         onClick={onClick}
         aria-label={`${name}${unreadCount ? `, ${unreadCount} new notifications` : ''}`}
       >
-        <div
-          className={styles.iconWrap}
-          style={{ background: iconBg }}
-          aria-hidden="true"
-        >
-          <span className={styles.iconEmoji}>{iconEmoji}</span>
+        <div className={styles.iconWrap} aria-hidden="true">
+          {illustrationSrc ? <img className={styles.illustration} src={illustrationSrc} alt="" /> : <School size={22} strokeWidth={1.75} />}
         </div>
         <span className={styles.name}>{name}</span>
         {studentCount !== undefined && (

@@ -1,5 +1,4 @@
 import type { CurriculumPackage } from '../constants/states'
-import { PACKAGE_META } from '../constants/packages'
 import { api } from './api'
 
 export interface StudentPackage { id: number; slug: CurriculumPackage; name: string; lesson_count: number }
@@ -42,8 +41,7 @@ export const PACKAGE_EMOJI: Record<CurriculumPackage, string> = {
 }
 
 export function classPresentation(item: StudentClass) {
-  const packageKey: CurriculumPackage = item.packages?.[0]?.slug ?? 'life'
-  return { ...item, package: packageKey, iconEmoji: PACKAGE_EMOJI[packageKey], iconBg: PACKAGE_META[packageKey].bg }
+  return item
 }
 
 export const getStudentDashboard = () => api<DashboardData>('/student/dashboard/')

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, QrCode } from 'lucide-react'
+import { ArrowLeft, QrCode, GraduationCap } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { CodeInput, AlertBanner, InlineSkeleton } from '../../components/molecules'
 import { api } from '../../lib/api'
@@ -32,7 +32,7 @@ export default function JoinClass() {
     <PlayfulZoneTemplate showNav={false}>
       <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Go back"><ArrowLeft size={16} strokeWidth={1.75} /></button><h1 className={styles.title}>Join a class</h1></div>
       <div className={styles.content}>
-        <span className={styles.emoji} aria-hidden="true">🎓</span>
+        <span className={styles.heroIcon} aria-hidden="true"><GraduationCap size={30} strokeWidth={1.75} /></span>
         <div className={styles.textBlock}><h2 className={styles.heading}>Enter your class code</h2><p className={styles.sub}>Type the code your teacher gave you</p></div>
         {status === 'error' && <AlertBanner variant="error" message={errorMsg} className={styles.alert} />}
         {status === 'success' && foundClass && <AlertBanner variant="success" title={`Joined ${PACKAGE_EMOJI[foundClass.packages?.[0]?.slug ?? 'life']} ${foundClass.name}`} message="Opening your class..." className={styles.alert} />}

@@ -60,6 +60,13 @@
   gap: var(--space-3);
 }
 
+.intro {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--text-caption-d);
+  color: var(--color-text-secondary);
+}
+
 .searchWrap {
   position: relative;
   width: 100%;
@@ -91,59 +98,65 @@
   border-color: var(--color-interface-purple);
 }
 
-.chipRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 13px;
-  border-radius: var(--radius-full, 999px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #fff;
-  font-family: var(--font-family);
-  font-size: 12px;
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.chip:hover {
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.chipActive {
-  background: var(--color-interface-purple);
-  border-color: var(--color-interface-purple);
-  color: #fff;
-}
-
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 180px));
-  gap: var(--space-4) var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 220px));
+  gap: var(--space-4);
   margin-top: var(--space-2);
 }
 
-.tileWrap {
+.classCard {
+  min-height: 176px;
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
 }
 
-.packagePill {
-  font-family: var(--font-family);
-  font-size: 10px;
+.classCard:hover {
+  border-color: var(--color-interface-purple);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(83, 74, 183, 0.12));
+  transform: translateY(-1px);
+}
+
+.classCard:focus-visible {
+  outline: 3px solid var(--flower-purple-fill);
+  outline-offset: 2px;
+}
+
+.classIcon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--flower-purple-fill);
+  color: var(--color-interface-purple);
+}
+
+.className {
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-snug);
+  color: var(--color-deep-purple);
+  text-align: center;
+}
+
+.viewClass {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
   font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  padding: 2px 9px;
-  border-radius: var(--radius-full, 999px);
+  color: var(--color-interface-purple);
 }
 
 .emptyState {

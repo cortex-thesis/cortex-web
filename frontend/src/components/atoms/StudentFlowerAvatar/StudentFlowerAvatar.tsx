@@ -29,5 +29,8 @@ export default function StudentFlowerAvatar({
   )
 
   if (!showStatus) return flower
-  return <span className={styles.wrapper}>{flower}<span className={clsx(styles.statusDot, isOnline ? styles.online : styles.offline)} aria-label={isOnline ? 'Online' : 'Offline'} /></span>
+  return <span className={styles.wrapper}>
+    {flower}
+    {showStatus && <span className={clsx(styles.statusDot, isOnline ? styles.online : styles.offline)} aria-label={isOnline ? 'Online' : 'Offline'} />}
+  </span>
 }

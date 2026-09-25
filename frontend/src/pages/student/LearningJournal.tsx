@@ -107,7 +107,7 @@ export default function LearningJournal() {
   }
 
   return (
-    <PlayfulZoneTemplate showNav={false}>
+    <PlayfulZoneTemplate showNav={false} showHeader>
       <div className={styles.page}>
         <header className={styles.header}>
           <button className={styles.backBtn} onClick={() => navigate('/student/home', { replace: true })} aria-label="Go back">
