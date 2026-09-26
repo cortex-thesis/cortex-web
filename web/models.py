@@ -432,6 +432,9 @@ class SessionEEGSample(models.Model):
         ("focused", "Focused"), ("relaxed", "Relaxed"),
         ("distracted", "Distracted"), ("overstimulated", "Overstimulated"),
     ))
+    confidence_score = models.DecimalField(max_digits=7, decimal_places=6, null=True, blank=True)
+    model_version = models.ForeignKey("ModelVersion", null=True, blank=True, on_delete=models.PROTECT, related_name="session_samples")
+    cluster_number = models.SmallIntegerField(null=True, blank=True)
 
     class Meta:
         ordering = ("recorded_at",)
@@ -543,7 +546,7 @@ class EEGDevice(TimeStampedModel):
         INACTIVE = "inactive", "Inactive"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey(School, on_delete=models.PROTECT, related_name="eeg_devices")
+    school = models.ForeignKey(School, null=True, blank=True, on_delete=models.PROTECT, related_name="eeg_devices")
     device_name = models.CharField(max_length=100)
     manufacturer = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
@@ -691,7 +694,28 @@ class EEGFeature(models.Model):
     beta_zscore = models.FloatField(null=True, blank=True)
     gamma_zscore = models.FloatField(null=True, blank=True)
     tbr_zscore = models.FloatField(null=True, blank=True)
+    channel_features = models.JSONField(default=dict, blank=True)
+    units = models.JSONField(default=dict, blank=True)
+    processing_settings = models.JSONField(default=dict, blank=True)
     extracted_at = models.DateTimeField(auto_now_add=True)
+
+
+class EEGRawChunk(models.Model):
+    """Timestamped raw samples retained for authorized session review/replay."""
+    recording = models.ForeignKey(EEGRecording, on_delete=models.CASCADE, related_name="raw_chunks")
+    sequence_number = models.PositiveIntegerField()
+    captured_at = models.DateTimeField(default=timezone.now)
+    start_offset_ms = models.PositiveIntegerField()
+    end_offset_ms = models.PositiveIntegerField()
+    sampling_rate_hz = models.PositiveIntegerField(default=256)
+    channel_names = models.JSONField(default=list)
+    samples = models.JSONField(default=dict)
+    sample_count = models.PositiveIntegerField()
+
+    class Meta:
+        ordering = ("recording", "sequence_number")
+        constraints = [models.UniqueConstraint(fields=("recording", "sequence_number"), name="unique_recording_raw_chunk")]
+        indexes = [models.Index(fields=("recording", "captured_at"))]
 
 
 class ModelVersion(models.Model):
