@@ -23,7 +23,7 @@ from web.models import BaselineEpoch
 
 
 SAMPLE_RATE = 256
-BANDS = {"delta": (1, 4), "theta": (4, 8), "alpha": (8, 13), "beta": (13, 30), "gamma": (30, 45)}
+BANDS = {"delta": (1, 4), "theta": (4, 8), "alpha": (8, 13), "beta": (13, 30), "gamma": (30, 40)}
 
 
 def _band_power(frequencies, spectrum, low, high):
