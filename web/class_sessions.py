@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .models import (
-    AdaptationEvent, ClassSession, Enrollment, LearningSession, Lesson, Notification, Profile,
+    AdaptationEvent, ClassSession, EEGConnection, EEGDevice, EEGRecording, Enrollment, LearningSession, Lesson, Notification, Profile,
     SchoolClass, SessionAnalytics, SessionSlideExposure, Slide,
 )
 from .statistics import percentages
@@ -136,6 +136,14 @@ def finalize_student(session, now):
     session.completion_percentage = min(100, round(viewed * 100 / task_total, 2)) if task_total else 0
     session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=now)
     session.save(update_fields=['ended_at', 'status', 'completion_percentage'])
+    recording = session.eeg_recordings.filter(ended_at__isnull=True).first()
+    if recording:
+        recording.ended_at = now
+        recording.processing_status = EEGRecording.ProcessingStatus.COMPLETED
+        recording.save(update_fields=['ended_at', 'processing_status', 'updated_at'])
+        EEGConnection.objects.filter(pk=recording.connection_id, disconnected_at__isnull=True).update(
+            disconnected_at=now, connection_status=EEGConnection.Status.DISCONNECTED)
+        EEGDevice.objects.filter(pk=recording.connection.device_id).update(status=EEGDevice.Status.AVAILABLE)
     counts = {state: session.eeg_samples.filter(state=state).count() for state in STATES}
     total = sum(counts.values())
     duration = max(0, int((now - session.started_at).total_seconds()))

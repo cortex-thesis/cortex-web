@@ -5,6 +5,7 @@ import os
 import secrets
 import string
 import sys
+import time
 from datetime import timedelta, datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -29,9 +30,9 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import (
     LessonPracticeProgress, StudentBadge, AdaptationEvent, BaselineRecording, BaselineEpoch,
     Asset, AuditLog, ContentAssignment, CurriculumPackage, Activity, ActivityResponse, ConsentRecord,
-    DataLifecycleRequest, EEGDevice, Enrollment, Intervention, InterventionAlert, JournalEntry,
+    DataLifecycleRequest, EEGConnection, EEGDevice, EEGEpoch, EEGFeature, EEGRawChunk, EEGRecording, Enrollment, Intervention, InterventionAlert, JournalEntry,
     LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School,
-    SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction,
+    ModelVersion, SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction,
     UserPreference,
 )
 from .statistics import percentages, sample_distribution
@@ -1810,10 +1811,10 @@ def teacher_advanced_reports(request):
     predictions_by_session = {}
     for prediction in StatePrediction.objects.filter(session_id__in=session_map).order_by("classified_at"):
         predictions_by_session.setdefault(prediction.session_id, []).append(prediction)
-    # Browser-side Muse processing stores privacy-conscious feature windows without
-    # pretending that the research ML model produced them. They still feed the
-    # descriptive per-slide report with confidence marked as 1.0 for the rule label.
-    for sample in SessionEEGSample.objects.filter(session_id__in=session_map).order_by("recorded_at"):
+    # Legacy sessions have browser-rule samples but no versioned predictions.
+    # Current sessions use StatePrediction and must not be counted twice.
+    predicted_session_ids = set(predictions_by_session)
+    for sample in SessionEEGSample.objects.filter(session_id__in=session_map).exclude(session_id__in=predicted_session_ids).order_by("recorded_at"):
         predictions_by_session.setdefault(sample.session_id, []).append(SimpleNamespace(
             state=sample.state, confidence_score=1.0, classified_at=sample.recorded_at,
         ))
@@ -2344,6 +2345,9 @@ def _eeg_sample_data(sample):
         "absolute_bands": sample.absolute_bands, "relative_bands": sample.relative_bands,
         "signal_quality": sample.signal_quality, "accepted_channels": sample.accepted_channels,
         "battery_level": sample.battery_level, "state": sample.state,
+        "confidence_score": float(sample.confidence_score) if sample.confidence_score is not None else None,
+        "model_version": sample.model_version.version if sample.model_version_id else None,
+        "cluster_number": sample.cluster_number,
     }
 
 
@@ -2382,6 +2386,7 @@ def session_eeg_samples(request, session_id):
         return JsonResponse({"detail": "You do not teach this class."}, status=403)
     if request.method == "GET":
         latest = session.eeg_samples.select_related("slide").order_by("-recorded_at").first()
+        recording = session.eeg_recordings.order_by('-created_at').first()
         return JsonResponse({
             "session": _student_session_data(session, timezone.now()) if hasattr(session, "focused_count") else {
                 "id": str(session.pk), "class_id": session.school_class_id, "lesson_id": session.lesson_id,
@@ -2390,6 +2395,9 @@ def session_eeg_samples(request, session_id):
             },
             "lesson": _lesson_data(session.lesson) if session.lesson_id else None,
             "latest": _eeg_sample_data(latest) if latest else None,
+            "recording": {"id": str(recording.pk), "status": recording.processing_status,
+                          "started_at": recording.started_at, "ended_at": recording.ended_at,
+                          "total_samples": recording.total_samples, "channel_names": recording.channel_names} if recording else None,
         })
     if profile.role != Profile.Role.STUDENT or session.ended_at is not None:
         return JsonResponse({"detail": "Only the student can record an active session."}, status=403)
@@ -2409,7 +2417,22 @@ def session_eeg_samples(request, session_id):
         accepted = int(data.get("accepted_channels", 0))
         battery = data.get("battery_level")
         battery = int(battery) if battery is not None else None
-        if accepted not in range(5) or (battery is not None and battery not in range(101)):
+        if accepted not in range(1, 5) or (battery is not None and battery not in range(101)):
+            raise ValueError
+        channel_names = ["TP9", "AF7", "AF8", "TP10"]
+        raw = data.get("raw_channels") or {}
+        if set(raw) != set(channel_names):
+            raise ValueError
+        cleaned_raw = {name: [float(value) for value in raw[name]] for name in channel_names}
+        lengths = {len(values) for values in cleaned_raw.values()}
+        if len(lengths) != 1 or not 256 <= next(iter(lengths)) <= 2048 or any(not math.isfinite(value) or abs(value) > 5000 for values in cleaned_raw.values() for value in values):
+            raise ValueError
+        captured_at_ms = int(data.get("captured_at_ms", 0))
+        captured_at = datetime.fromtimestamp(captured_at_ms / 1000, tz=timezone.get_current_timezone())
+        if abs((timezone.now() - captured_at).total_seconds()) > 15:
+            return JsonResponse({"detail": "The EEG window is stale. Wait for a fresh Muse signal."}, status=409)
+        sequence = int(data.get("sequence_number", 0))
+        if sequence < 1:
             raise ValueError
         slide = None
         if data.get("slide_id") is not None:
@@ -2425,16 +2448,97 @@ def session_eeg_samples(request, session_id):
                 return JsonResponse({'detail': 'This lesson session is not recording.'}, status=409)
             if slide and current_session.lesson_id != slide.lesson_id:
                 return JsonResponse({'detail': 'Your teacher has changed the lesson.'}, status=409)
+            process_started = time.perf_counter()
+            from .services.live_eeg import classify_and_update, ensure_model_version, extract
+            extracted = extract(cleaned_raw)
+            if not extracted or extracted["accepted_channels"] < 1:
+                return JsonResponse({"detail": "This EEG window was rejected because no channel passed quality control."}, status=422)
+            school = current_session.school_class.school or profile.school
+            school_key = school.pk if school else "unassigned"
+            device, _ = EEGDevice.objects.get_or_create(serial_number=f"browser-muse-{school_key}-{profile.pk}", defaults={
+                "school": school, "device_name": str(data.get("device_name") or "Muse 2")[:100], "manufacturer": "InteraXon",
+                "model": "Muse 2", "sampling_rate_hz": 256, "channel_count": 4, "channel_names": channel_names,
+                "status": EEGDevice.Status.CONNECTED})
+            connection = current_session.eeg_connections.filter(disconnected_at__isnull=True).first()
+            if connection is None:
+                EEGConnection.objects.filter(device=device, disconnected_at__isnull=True).update(
+                    disconnected_at=captured_at, connection_status=EEGConnection.Status.DROPPED)
+                connection = EEGConnection.objects.create(session=current_session, device=device, connected_at=captured_at)
+            recording = current_session.eeg_recordings.filter(ended_at__isnull=True).first()
+            if recording is None:
+                recording = EEGRecording.objects.create(session=current_session, connection=connection, started_at=captured_at,
+                    sampling_rate_hz=256, channel_count=4, channel_names=channel_names,
+                    storage_location="database", format="json-chunks", processing_status=EEGRecording.ProcessingStatus.RECORDING)
+            previous_chunk = recording.raw_chunks.order_by('-captured_at').first()
+            if previous_chunk and (captured_at - previous_chunk.captured_at).total_seconds() > 5:
+                connection.dropout_count += 1
+                connection.connection_status = EEGConnection.Status.CONNECTED
+                connection.save(update_fields=['dropout_count', 'connection_status'])
+            sample_count = next(iter(lengths)); end_offset = max(1, int((captured_at - recording.started_at).total_seconds() * 1000)); start_offset = max(0, end_offset - round(sample_count / 256 * 1000))
+            chunk, chunk_created = EEGRawChunk.objects.get_or_create(recording=recording, sequence_number=sequence, defaults={
+                "captured_at": captured_at, "start_offset_ms": start_offset, "end_offset_ms": end_offset,
+                "sampling_rate_hz": 256, "channel_names": channel_names, "samples": cleaned_raw, "sample_count": sample_count})
+            if not chunk_created:
+                return JsonResponse({"detail": "This EEG window was already recorded."}, status=409)
+            epoch_number = recording.epochs.count() + 1
+            epoch = EEGEpoch.objects.create(recording=recording, epoch_number=epoch_number, start_offset_ms=start_offset,
+                end_offset_ms=max(start_offset + 1, end_offset), started_at=captured_at - timedelta(milliseconds=end_offset-start_offset),
+                signal_quality_index=round(extracted["accepted_channels"] / 4, 4), is_usable=True)
+            EEGFeature.objects.create(epoch=epoch, theta_power=extracted["average"]["theta"], alpha_power=extracted["average"]["alpha"],
+                beta_power=extracted["average"]["beta"], gamma_power=extracted["average"]["gamma"],
+                theta_beta_ratio=extracted["theta_beta_ratio"] or 0, channel_features=extracted["channel_features"],
+                units={"absolute_power": "uV^2/Hz", "relative_power": "ratio", "theta_beta_ratio": "ratio"},
+                processing_settings=extracted["settings"] | {"rejected_channels": extracted["rejected_channels"]})
+            version = ensure_model_version()
+            state, confidence, cluster_number, rationale = classify_and_update(profile, device, extracted["vector"], version)
+            prediction = StatePrediction.objects.create(session=current_session, epoch=epoch, model_version=version, state=state,
+                cluster_number=cluster_number, confidence_score=round(confidence, 6), classified_at=captured_at,
+                processing_time_ms=max(1, round((time.perf_counter() - process_started) * 1000)),
+                is_critical=state == StatePrediction.State.OVERSTIMULATED)
             sample = SessionEEGSample.objects.create(
                 session=session, slide=slide, bands=bands, absolute_bands=absolute,
                 relative_bands=relative, signal_quality=quality, accepted_channels=accepted,
-                battery_level=battery, state=_classify_muse_window(bands),
+                battery_level=battery, state=state, recorded_at=captured_at, confidence_score=round(confidence, 6),
+                model_version=version, cluster_number=cluster_number,
             )
+            recording.total_samples += sample_count
+            recording.save(update_fields=["total_samples", "updated_at"])
     except (KeyError, TypeError, ValueError, Slide.DoesNotExist):
         return JsonResponse({"detail": "Valid processed Muse values are required."}, status=400)
     recent_states = list(session.eeg_samples.filter(accepted_channels__gt=0).order_by('-recorded_at', '-pk').values_list('state', flat=True)[:30])
     focus_score = round(100 * recent_states.count('focused') / len(recent_states)) if recent_states else None
-    return JsonResponse(_eeg_sample_data(sample) | {'focus_score': focus_score}, status=201)
+    return JsonResponse(_eeg_sample_data(sample) | {'focus_score': focus_score, 'confidence': confidence,
+        'model_version': version.version, 'cluster_number': cluster_number, 'classification_basis': rationale,
+        'epoch_id': epoch.pk, 'recording_id': str(recording.pk)}, status=201)
+
+
+@require_http_methods(["GET"])
+def session_eeg_recording(request, session_id):
+    """Authorized raw recording review/replay, paginated by chunk sequence."""
+    profile, error = _require_profile(request, {Profile.Role.STUDENT, Profile.Role.TEACHER, Profile.Role.ADMIN})
+    if error:
+        return error
+    session = get_object_or_404(LearningSession.objects.select_related("school_class", "student"), pk=session_id)
+    allowed = (profile.role == Profile.Role.STUDENT and session.student_id == profile.pk) or (
+        profile.role == Profile.Role.TEACHER and session.school_class.teacher_id == profile.pk) or (
+        profile.role == Profile.Role.ADMIN and (profile.is_super_admin or profile.school_id == session.school_class.school_id))
+    if not allowed:
+        return JsonResponse({"detail": "You are not authorized to review this EEG recording."}, status=403)
+    recording = get_object_or_404(EEGRecording.objects.select_related("connection__device"), session=session)
+    try:
+        after = max(0, int(request.GET.get("after", 0))); limit = min(100, max(1, int(request.GET.get("limit", 25))))
+    except ValueError:
+        return JsonResponse({"detail": "after and limit must be integers."}, status=400)
+    chunks = list(recording.raw_chunks.filter(sequence_number__gt=after).order_by("sequence_number")[:limit])
+    return JsonResponse({"recording": {"id": str(recording.pk), "session_id": str(session.pk),
+        "student_id": session.student_id, "started_at": recording.started_at, "ended_at": recording.ended_at,
+        "sampling_rate_hz": recording.sampling_rate_hz, "channel_names": recording.channel_names,
+        "total_samples_per_channel": recording.total_samples, "status": recording.processing_status},
+        "chunks": [{"sequence_number": item.sequence_number, "captured_at": item.captured_at,
+                    "start_offset_ms": item.start_offset_ms, "end_offset_ms": item.end_offset_ms,
+                    "sample_count": item.sample_count, "channel_names": item.channel_names, "samples": item.samples}
+                   for item in chunks],
+        "next_after": chunks[-1].sequence_number if chunks else None})
 
 
 @require_http_methods(["GET"])
@@ -2695,6 +2799,14 @@ def end_session(request, session_id):
         viewed = session.slide_exposures.filter(completed_at__isnull=False, slide_id__in=active_slide_ids).values("slide_id").distinct().count()
         session.completion_percentage = round(viewed * 100 / slide_count, 2) if slide_count else 0
         session.save(update_fields=["ended_at", "status", "completion_percentage"])
+        recording = session.eeg_recordings.filter(ended_at__isnull=True).first()
+        if recording:
+            recording.ended_at = session.ended_at
+            recording.processing_status = EEGRecording.ProcessingStatus.COMPLETED
+            recording.save(update_fields=["ended_at", "processing_status", "updated_at"])
+            EEGConnection.objects.filter(pk=recording.connection_id, disconnected_at__isnull=True).update(
+                disconnected_at=session.ended_at, connection_status=EEGConnection.Status.DISCONNECTED)
+            EEGDevice.objects.filter(pk=recording.connection.device_id).update(status=EEGDevice.Status.AVAILABLE)
         counts = {state: session.eeg_samples.filter(state=state).count() for state in ("focused", "relaxed", "distracted", "overstimulated")}
         total = sum(counts.values())
         duration = max(0, int((session.ended_at - session.started_at).total_seconds()))
