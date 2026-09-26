@@ -52,7 +52,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const location = useLocation()
   const context = (location.state as { sessionId?: string; classId?: number; lessonId?: number; mode?: string; devBypass?: boolean } | null) ?? {}
   const isDevBypass = import.meta.env.DEV && context.devBypass === true
-  const { status, error: museError, deviceName, battery, quality, bands, absoluteBands, relativeBands, baselineProgress, acceptedChannels, disconnect } = useMuseStore()
+  const { status, error: museError, deviceName, battery, quality, samples, bands, absoluteBands, relativeBands, baselineProgress, acceptedChannels, disconnect } = useMuseStore()
   const [lesson, setLesson] = useState<LessonData | null>(classroomControl?.lesson ?? null)
   const [remote, setRemote] = useState<{ control_mode: string; presentation_mode: 'focus' | 'refocus' | 'breathing'; status: string; ended_at: string | null } | null>(null)
   const [controlError, setControlError] = useState('')
@@ -125,6 +125,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
     return currentState === 'focused' || currentState === 'relaxed' ? currentState : 'distracted'
   }
   const lastStoredAt = useRef(0)
+  const eegSequence = useRef(0)
   const sessionId = context.sessionId
   const reportMode = mode === 'breathing' || mode === 'refocus' ? 'relax' : 'focus'
   useEffect(() => {
@@ -144,7 +145,8 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   // A development bypass intentionally has no Muse connection. It uses the
   // forced test state above, so an idle device must not pause or cover the
   // lesson with the production reconnection flow.
-  const connectionInterrupted = !isDevBypass && lessonStarted && !complete && !ending && status !== 'streaming'
+  const poorSignal = status === 'streaming' && acceptedChannels < 1
+  const connectionInterrupted = !isDevBypass && lessonStarted && !complete && !ending && (status !== 'streaming' || poorSignal)
   const [reconnectSeconds, setReconnectSeconds] = useState(0)
   useEffect(() => {
     if (!connectionInterrupted) { setReconnectSeconds(0); return }
@@ -209,13 +211,16 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   }, [sessionId, slide, mode, calibrated, complete, ending, teacherControl?.paused])
 
   useEffect(() => {
-    if (!sessionId || complete || ending || teacherControl?.paused || status !== 'streaming' || baselineProgress < 100) return
+    if (!sessionId || complete || ending || teacherControl?.paused || status !== 'streaming' || baselineProgress < 100 || acceptedChannels < 1) return
     if (Date.now() - lastStoredAt.current < 2000) return
     lastStoredAt.current = Date.now()
+    eegSequence.current += 1
     void api<{ state: CognitiveState; focus_score: number | null }>(`/sessions/${sessionId}/eeg/`, {
-      method: 'POST', body: JSON.stringify({ slide_id: mode === 'focus' ? slide?.id ?? null : null, bands, absolute_bands: absoluteBands, relative_bands: relativeBands, signal_quality: quality, accepted_channels: acceptedChannels, battery_level: battery }),
+      method: 'POST', body: JSON.stringify({ slide_id: mode === 'focus' ? slide?.id ?? null : null, bands, absolute_bands: absoluteBands, relative_bands: relativeBands, signal_quality: quality, accepted_channels: acceptedChannels, battery_level: battery,
+        device_name: deviceName || 'Muse 2', sequence_number: eegSequence.current, captured_at_ms: Date.now(),
+        raw_channels: Object.fromEntries(MUSE_CHANNELS.map((channel, index) => [channel, samples[index].slice(-512)])) }),
     }).then(sample => { if (!recordingStopped.current) { setDeviceState(acceptedChannels > 0 ? sample.state : null); setDeviceFocusScore(sample.focus_score) } }).catch((reason: Error) => { if (!recordingStopped.current) { setDeviceState(null); setDeviceFocusScore(null); setError(reason.message) } })
-  }, [sessionId, complete, ending, teacherControl?.paused, status, baselineProgress, mode, slide?.id, bands, absoluteBands, relativeBands, quality, acceptedChannels, battery])
+  }, [sessionId, complete, ending, teacherControl?.paused, status, baselineProgress, mode, slide?.id, bands, absoluteBands, relativeBands, quality, acceptedChannels, battery, deviceName, samples])
 
   const tasks = useMemo<Task[]>(() => lesson ? lesson.slides.map((item, index) => {
     const configuration = taskConfiguration(item.activity.configuration) as Partial<Task>
@@ -326,9 +331,9 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
     <section className={styles.connectionCard}>
       <span className={styles.connectionIcon}><WifiOff size={24} /></span>
       <span className={styles.connectionEyebrow}>Muse 2 connection</span>
-      <h1 id="connection-title">{status === 'connecting' ? 'Reconnecting to your headset' : 'Connection lost'}</h1>
-      <p>{status === 'connecting' ? 'Keep your headset switched on and nearby. Your lesson is paused and your place is safe.' : 'Automatic reconnection could not restore the signal. Your lesson progress is still saved.'}</p>
-      {status === 'connecting' ? <><div className={styles.reconnectSteps} aria-label={`Reconnecting for ${reconnectSeconds} seconds`}>{[1,2,3,4,5].map(step => <i key={step} data-active={step <= reconnectSeconds % 6} />)}</div><small>Reconnecting… {reconnectSeconds}s</small></> : <button onClick={() => navigate('/student/eeg-pairing', { replace: true, state: context })}>Reconnect Muse 2</button>}
+      <h1 id="connection-title">{poorSignal ? 'Adjust your headset' : status === 'connecting' ? 'Reconnecting to your headset' : 'Connection lost'}</h1>
+      <p>{poorSignal ? 'No channel currently passes signal-quality checks. Adjust the sensors; predictions resume automatically after the signal recovers.' : status === 'connecting' ? 'Keep your headset switched on and nearby. Your lesson is paused and your place is safe.' : 'Automatic reconnection could not restore the signal. Your lesson progress is still saved.'}</p>
+      {status === 'connecting' || poorSignal ? <><div className={styles.reconnectSteps} aria-label={`${poorSignal ? 'Waiting for a clean signal' : 'Reconnecting'} for ${reconnectSeconds} seconds`}>{[1,2,3,4,5].map(step => <i key={step} data-active={step <= reconnectSeconds % 6} />)}</div><small>{poorSignal ? 'Checking sensors' : 'Reconnecting'}… {reconnectSeconds}s</small></> : <button onClick={() => navigate('/student/eeg-pairing', { replace: true, state: context })}>Reconnect Muse 2</button>}
       {museError && <small className={styles.connectionDetail}>{museError}</small>}
     </section>
   </div>}

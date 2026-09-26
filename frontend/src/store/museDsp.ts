@@ -5,7 +5,7 @@ const EPOCH_SIZE = 1024
 const WELCH_SIZE = 512
 const WELCH_STEP = 256
 const BAND_RANGES: Record<keyof BandPowers, [number, number]> = {
-  delta: [1, 4], theta: [4, 8], alpha: [8, 13], beta: [13, 30], gamma: [30, 45],
+  delta: [1, 4], theta: [4, 8], alpha: [8, 13], beta: [13, 30], gamma: [30, 40],
 }
 
 export interface BandAnalysis {
