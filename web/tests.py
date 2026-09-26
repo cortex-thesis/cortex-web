@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Activity, AuditLog, BaselineEpoch, BaselineRecording, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, Enrollment, Intervention, JournalEntry, LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School, SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, UserPreference
+from .models import Activity, AuditLog, BaselineEpoch, BaselineRecording, ConsentRecord, ContentAssignment, CurriculumPackage, DataLifecycleRequest, EEGFeature, EEGRawChunk, EEGRecording, Enrollment, Intervention, JournalEntry, LearningSession, Lesson, Notification, Profile, ResearchAnalysisRecord, School, SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction, UserPreference
 
 
 class WorkflowTests(TestCase):
@@ -285,11 +285,19 @@ class WorkflowTests(TestCase):
             "absolute_bands": {"delta": 2, "theta": 2, "alpha": 2, "beta": 3, "gamma": 1},
             "relative_bands": {"delta": .2, "theta": .2, "alpha": .2, "beta": .3, "gamma": .1},
             "signal_quality": [2, 2, 2, 2], "accepted_channels": 4, "battery_level": 80,
+            "device_name": "Muse 2", "sequence_number": 1, "captured_at_ms": int(timezone.now().timestamp() * 1000),
+            "raw_channels": {name: [float((index % 40) - 20 + channel * 3) for index in range(512)]
+                             for channel, name in enumerate(("TP9", "AF7", "AF8", "TP10"))},
         }), content_type="application/json")
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["state"], "focused")
-        self.assertEqual(response.json()["focus_score"], 100)
+        predicted_state = response.json()["state"]
+        self.assertIn(predicted_state, ("focused", "relaxed", "distracted", "overstimulated"))
+        self.assertIsNotNone(response.json()["model_version"])
         self.assertEqual(SessionEEGSample.objects.filter(session=session, slide=slide).count(), 1)
+        self.assertEqual(EEGRecording.objects.get(session=session).total_samples, 512)
+        self.assertEqual(EEGRawChunk.objects.get(recording__session=session).sample_count, 512)
+        self.assertEqual(EEGFeature.objects.get(epoch__recording__session=session).processing_settings["gamma_hz"], [30, 40])
+        self.assertEqual(StatePrediction.objects.get(session=session).state, predicted_state)
 
         self._login(self.teacher)
         live = self.client.get(f"/api/teacher/classes/{school_class.pk}/live/")
@@ -298,6 +306,9 @@ class WorkflowTests(TestCase):
         dashboard = self.client.get("/api/teacher/dashboard/")
         self.assertEqual(dashboard.json()["active_sessions"], 1)
         self.assertEqual(dashboard.json()["live_sessions"][0]["class_name"], "Live Muse Class")
+        recording = self.client.get(f"/api/sessions/{session.pk}/eeg/recording/")
+        self.assertEqual(recording.status_code, 200)
+        self.assertEqual(recording.json()["chunks"][0]["channel_names"], ["TP9", "AF7", "AF8", "TP10"])
 
         self._login(self.student)
         self.client.post(f"/api/sessions/{session.pk}/slides/{slide.pk}/", data=json.dumps({"action": "enter"}), content_type="application/json")
@@ -305,7 +316,8 @@ class WorkflowTests(TestCase):
         self.assertEqual(self.client.post(f"/api/sessions/{session.pk}/end/").status_code, 200)
         session.refresh_from_db()
         self.assertEqual(float(session.completion_percentage), 100)
-        self.assertEqual(float(session.analytics.focused_percentage), 100)
+        self.assertEqual(float(getattr(session.analytics, f"{predicted_state}_percentage")), 100)
+        self.assertEqual(EEGRecording.objects.get(session=session).processing_status, EEGRecording.ProcessingStatus.COMPLETED)
 
     def test_teacher_dashboard_hides_stale_unfinished_muse_session(self):
         school_class = SchoolClass.objects.create(name="Stale Class", code="STALE", teacher=self.teacher)

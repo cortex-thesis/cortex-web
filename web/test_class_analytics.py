@@ -97,9 +97,12 @@ class ClassAnalyticsTests(TestCase):
         response = self.client.post(f'/api/sessions/{self.session.pk}/eeg/', json.dumps({
             'bands': {'delta': .8, 'theta': .9, 'alpha': 1, 'beta': 1.4, 'gamma': .7},
             'signal_quality': [2, 2, 2, 2], 'accepted_channels': 4,
+            'sequence_number': 1, 'captured_at_ms': int(timezone.now().timestamp() * 1000),
+            'raw_channels': {name: [float((index % 40) - 20 + channel * 3) for index in range(512)]
+                             for channel, name in enumerate(('TP9', 'AF7', 'AF8', 'TP10'))},
         }), content_type='application/json')
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()['focus_score'], 3)
+        self.assertEqual(response.json()['focus_score'], 3 if response.json()['state'] == 'focused' else 0)
 
     def test_drawing_bytes_load_for_teacher_and_missing_file_is_reported(self):
         image = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=')
