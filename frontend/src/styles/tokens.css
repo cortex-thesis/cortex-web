@@ -30,6 +30,18 @@
   --color-cool-surface: #f8f8fc;
   --color-white: #ffffff;
 
+  /* Student flower avatar palette */
+  --flower-pink: #d4537e;
+  --flower-pink-fill: #fbeaf0;
+  --flower-blue: #378add;
+  --flower-blue-fill: #e6f1fb;
+  --flower-yellow: #fac775;
+  --flower-yellow-fill: #fff4d6;
+  --flower-green: #1d9e75;
+  --flower-green-fill: #e1f5ee;
+  --flower-purple: #534ab7;
+  --flower-purple-fill: #eeedfe;
+
   --color-text-primary: #1a1a2e;
   --color-text-secondary: #5f5e5a;
   --color-text-muted: #b4b2a9;

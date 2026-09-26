@@ -61,7 +61,7 @@ export default function Dashboard() {
     const started = Date.parse(session.started_at)
     const beta = latest?.bands.beta ?? 0
     return {
-      id: session.id, name: session.student.name, avatar: session.student.avatar,
+      id: session.id, name: session.student.name, avatar: session.student.avatar, avatar_color: session.student.avatar_color,
       currentState: latest?.state ?? null, signalStrength: accepted as 0 | 1 | 2 | 3 | 4,
       focusScore: session.focus_score,
       sessionDuration: Math.max(0, Math.floor((Date.parse(data?.reporting.generated_at ?? session.started_at) - started) / 1000)),

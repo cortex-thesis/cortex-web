@@ -1,0 +1,6 @@
+.page { width: 100%; max-width: var(--student-shell-width); margin: 0 auto; padding: var(--space-5) var(--student-shell-gutter) 92px; }
+.back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: var(--space-3); padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-interface-purple); font: inherit; font-size: var(--text-caption); cursor: pointer; }
+.back:hover, .back:focus-visible { background: var(--flower-purple-fill); outline: none; }
+.loading, .error { padding: var(--space-8); border-radius: var(--radius-lg); background: #fff; color: var(--color-text-secondary); text-align: center; }
+@media (max-width: 1000px) { .page { padding-inline: var(--space-6); } }
+@media (max-width: 640px) { .page { padding-inline: var(--space-4); } }

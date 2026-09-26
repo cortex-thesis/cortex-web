@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Gamepad2, Presentation } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import styles from './ModeSelect.module.css'
 import { startStudentSession } from '../../lib/studentApi'
@@ -11,7 +11,7 @@ type SessionMode = 'teacher' | 'free'
 
 interface ModeOption {
   value: SessionMode
-  emoji: string
+  icon: React.ReactNode
   name: string
   description: string
   badge: string
@@ -23,7 +23,7 @@ interface ModeOption {
 const MODES: ModeOption[] = [
   {
     value: 'teacher',
-    emoji: '🧑‍🏫',
+    icon: <Presentation size={28} strokeWidth={1.75} />,
     name: 'Teacher-directed',
     description: 'Your teacher controls the session and content for the class.',
     badge: 'Recommended',
@@ -33,7 +33,7 @@ const MODES: ModeOption[] = [
   },
   {
     value: 'free',
-    emoji: '🎮',
+    icon: <Gamepad2 size={28} strokeWidth={1.75} />,
     name: 'Free explore',
     description: 'Explore content at your own pace, in any order you like.',
     badge: 'Independent',
@@ -143,7 +143,7 @@ export default function ModeSelect() {
                 style={{ background: mode.iconBg }}
                 aria-hidden="true"
               >
-                {mode.emoji}
+                {mode.icon}
               </div>
               <span className={styles.cardName}>{mode.name}</span>
               <span className={styles.cardDesc}>{mode.description}</span>

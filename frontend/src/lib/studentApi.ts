@@ -1,11 +1,10 @@
 import type { CurriculumPackage } from '../constants/states'
-import { PACKAGE_META } from '../constants/packages'
 import { api } from './api'
 
 export interface StudentPackage { id: number; slug: CurriculumPackage; name: string; lesson_count: number }
 export interface StudentLesson { id: number; package: CurriculumPackage; title: string; description: string }
 export interface StudentClass { id: number; name: string; code: string; description: string; school_year: string; packages: StudentPackage[]; package_count: number; teacher: { id: number; name: string } }
-export interface StudentIdentity { id: number; name: string; role: 'student'; avatar: string | null; student_number: string; school: string | null }
+export interface StudentIdentity { id: number; name: string; role: 'student'; avatar: string | null; avatar_color: 'pink' | 'blue' | 'yellow' | 'green' | 'purple'; student_number: string; school: string | null }
 export interface DashboardData { student: StudentIdentity; classes: StudentClass[]; unread_notifications: number; active_session: null }
 export interface StudentSessionItem {
   id: string
@@ -21,6 +20,8 @@ export interface StudentSessionItem {
   focus_score: number
   state: 'focused' | 'relaxed' | 'distracted' | 'overstimulated' | null
   status: 'in_progress' | 'completed'
+  is_live?: boolean
+  last_opened_at?: string
   tasks_completed: number
   tasks_total: number
   state_distribution: Record<'focused' | 'relaxed' | 'distracted' | 'overstimulated', number>
@@ -40,19 +41,20 @@ export const PACKAGE_EMOJI: Record<CurriculumPackage, string> = {
 }
 
 export function classPresentation(item: StudentClass) {
-  const packageKey: CurriculumPackage = item.packages?.[0]?.slug ?? 'life'
-  return { ...item, package: packageKey, iconEmoji: PACKAGE_EMOJI[packageKey], iconBg: PACKAGE_META[packageKey].bg }
+  return item
 }
 
 export const getStudentDashboard = () => api<DashboardData>('/student/dashboard/')
 export const getStudentClasses = () => api<{ classes: StudentClass[] }>('/classes/')
 export const getStudentClass = (id: string) => api<StudentClass>(`/classes/${id}/?summary=1`)
 export const getStudentClassPackage = (classId: string, packageSlug: string) => api<{ class: StudentClass; package: StudentPackage; lessons: StudentLesson[] }>(`/student/classes/${classId}/packages/${packageSlug}/`, { cache: 'no-store' })
-export const getStudentSessions = () => api<StudentSessionsData>('/student/sessions/')
+export const getStudentSessions = () => api<StudentSessionsData>('/student/sessions/', { cache: 'no-store' })
 export const startStudentSession = (data: { class_id: number; lesson_id?: number; class_session_id?: string; control_mode: 'teacher' | 'free' }) =>
   api<{ id: string; class_id: number; lesson_id: number | null; control_mode: string; started_at: string }>('/sessions/start/', { method: 'POST', body: JSON.stringify(data) })
 export const endStudentSession = (sessionId: string) =>
   api<{ id: string; ended_at: string }>(`/sessions/${sessionId}/end/`, { method: 'POST' })
+export const resumeStudentSession = (sessionId: string) =>
+  api<{ id: string; class_id: number; lesson_id: number | null; class_session_id: string | null; resumed: boolean }>(`/sessions/${sessionId}/resume/`, { method: 'POST' })
 export const trackStudentSlide = (sessionId: string, slideId: number, action: 'enter' | 'exit' | 'complete' = 'enter') =>
   api<{ id?: string; status: string; entered_at?: string; exited_at?: string }>(`/sessions/${sessionId}/slides/${slideId}/`, { method: 'POST', body: JSON.stringify({ action }) })
 export const getStudentJournal = (sessionId?: string) => api<StudentJournalData>(sessionId ? `/student/journals/?session_id=${encodeURIComponent(sessionId)}` : '/student/journals/')

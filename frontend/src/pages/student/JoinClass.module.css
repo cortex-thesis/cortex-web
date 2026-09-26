@@ -52,13 +52,18 @@
   }
 }
 
-.emoji {
-  font-size: 52px;
-  line-height: 1;
-  animation: emojiIn 0.4s var(--transition-spring) forwards;
+.heroIcon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--flower-purple-fill);
+  color: var(--color-interface-purple);
+  animation: iconIn 0.4s var(--transition-spring) forwards;
 }
 
-@keyframes emojiIn {
+@keyframes iconIn {
   0% {
     transform: scale(0.5);
     opacity: 0;

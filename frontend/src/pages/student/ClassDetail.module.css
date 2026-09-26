@@ -35,6 +35,8 @@
   justify-content: center;
   font-size: 16px;
   flex-shrink: 0;
+  background: var(--flower-purple-fill);
+  color: var(--color-interface-purple);
 }
 
 .className {

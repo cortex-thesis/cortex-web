@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, School } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { DetailSkeleton } from '../../components/molecules'
 import { PACKAGE_META } from '../../constants/packages'
@@ -17,7 +17,7 @@ export default function ClassDetail() {
   useEffect(() => { void getStudentClass(classId).then(setClassData).catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load class.')) }, [classId])
   if (!classData) return <PlayfulZoneTemplate><div className={styles.body}>{error || <DetailSkeleton />}</div></PlayfulZoneTemplate>
   return <PlayfulZoneTemplate>
-    <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate('/student/classes', { replace: true })} aria-label="Back to classes"><ChevronLeft size={18} /></button><span className={styles.classIconSm} style={{ background: '#EEEDFE' }}>🏫</span><h1 className={styles.className}>{classData.name}</h1><span className={styles.packagePill}>{classData.package_count} learning packages</span></div>
+    <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate('/student/classes', { replace: true })} aria-label="Back to classes"><ChevronLeft size={18} /></button><span className={styles.classIconSm} aria-hidden="true"><School size={20} strokeWidth={1.75} /></span><h1 className={styles.className}>{classData.name}</h1><span className={styles.packagePill}>{classData.package_count} learning packages</span></div>
     <div className={styles.body}>
       <span className={styles.sectionLabel}>Learning packages</span>
       <main className={styles.main}><div className={selectionStyles.packageGrid}>{classData.packages.map((pkg) => <button key={pkg.id} className={selectionStyles.packageCard} onClick={() => navigate(`/student/class/${classId}/package/${pkg.slug}`)}><span className={selectionStyles.packageIcon} style={{ background: PACKAGE_META[pkg.slug].bg }}>{PACKAGE_EMOJI[pkg.slug]}</span><span className={selectionStyles.packageName}>{pkg.name}</span><span className={selectionStyles.lessonCount}>{pkg.lesson_count ?? 0} {pkg.lesson_count === 1 ? 'lesson' : 'lessons'}</span><ChevronRight className={selectionStyles.chevron} size={18} /></button>)}</div></main>

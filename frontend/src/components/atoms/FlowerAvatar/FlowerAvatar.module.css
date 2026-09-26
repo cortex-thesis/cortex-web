@@ -1,0 +1,4 @@
+.avatar { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; border:1px solid rgba(83,74,183,.1); border-radius:var(--radius-full); }
+.avatar img { width:68%; height:68%; object-fit:contain; }
+.sm { width:40px; height:40px; }.md { width:52px; height:52px; }.lg { width:64px; height:64px; }
+.pink { background:var(--flower-pink-fill); }.blue { background:var(--flower-blue-fill); }.purple { background:var(--flower-purple-fill); }.yellow { background:var(--flower-yellow-fill); }.green { background:var(--flower-green-fill); }

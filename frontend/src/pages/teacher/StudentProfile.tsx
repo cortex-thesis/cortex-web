@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, CalendarDays, Clock3, Download, FileCheck2, Target, TrendingUp } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { DetailSkeleton } from '../../components/molecules'
-import { Avatar, StateBadge } from '../../components/atoms'
+import { StudentFlowerAvatar, StateBadge } from '../../components/atoms'
 import { getTeacherStudentReport, type TeacherStudentReport } from '../../lib/teacherApi'
 import { useAuthStore } from '../../store/authStore'
 import type { CognitiveState } from '../../constants/states'
@@ -48,7 +48,7 @@ export default function StudentProfile() {
             <button className={styles.backButton} onClick={() => navigate(`/teacher/class/${classId}/students`)} aria-label="Back to class students">
               <ArrowLeft size={17} />
             </button>
-            <Avatar name={student.name} imageUrl={student.avatar} size="lg" />
+            <StudentFlowerAvatar name={student.name} color={student.avatar_color} size="lg" />
             <div>
               <span className={styles.eyebrow}>Student learning profile</span>
               <h1>{student.name}</h1>
