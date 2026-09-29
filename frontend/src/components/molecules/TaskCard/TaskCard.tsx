@@ -98,6 +98,7 @@ function TaskCard({
   const progress = Math.min(100, Math.max(0, ((task.index - 1) / safeTotal) * 100))
   const contentType = task.contentType ?? 'image'
   const template = task.template ?? 'multiple_choice'
+  const isVideoSlide = contentType === 'video' || template === 'instructional_video'
   const isKnowledgeCheck = template === 'multiple_choice'
   const hasTaskInteraction = Boolean(task.taskTemplate)
   const isLessonOverview = lessonNavigation && template === 'visual_narrative' && !hasTaskInteraction && task.steps?.length === 1
@@ -174,7 +175,7 @@ function TaskCard({
           </div>
           {headingInstruction && <p className={styles.inlineInstruction}><AdaptiveLessonText text={headingInstruction} /></p>}
         </div>
-        {!headingInstruction && task.contentDescription && <span className={styles.contentHint}><AdaptiveLessonText text={task.contentDescription} /></span>}
+        {!headingInstruction && !isVideoSlide && task.contentDescription && <span className={styles.contentHint}><AdaptiveLessonText text={task.contentDescription} /></span>}
       </div>
 
       {task.narrationScript && <AudioNarration script={task.narrationScript} />}

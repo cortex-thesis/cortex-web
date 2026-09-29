@@ -388,6 +388,11 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
       {phase !== 'complete' && task && <nav className={playerStyles.actions} aria-label="Activity navigation">
         <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || savingStep} onClick={() => { playLessonSound('transition'); setVisited(previous => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
         {isActivity && !['audio_sequence', 'memory_flip', 'scenario_classifier'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} onClick={() => { setRetry(previous => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered(previous => { const next = { ...previous }; delete next[position]; return next }) }}><RotateCcw size={18} />Try again</button>}
+        {videoSlide && !answered[position] && <button type="button" className={`${playerStyles.button} ${playerStyles.skipVideo}`} disabled={savingStep} onClick={() => {
+          setAnswered(previous => ({ ...previous, [position]: true }))
+          setCompleted(previous => new Set(previous).add(position))
+          saveAnswer(position, true, 'continued_without_video')
+        }}>Continue without video</button>}
         <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || savingStep} onClick={() => void advance()}>{savingStep ? 'Saving progress…' : position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next activity'}<ArrowRight size={18} /></button>
       </nav>}
       </Activity>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Image as ImageIcon, Pause, Play, Sparkles, Volume2 } from 'lucide-react'
+import { AlertCircle, Image as ImageIcon, Pause, Play, Sparkles, Volume2 } from 'lucide-react'
 import type { Task } from '../../../types'
 import BreathingGuide from '../BreathingGuide'
 import styles from './ActivityTemplate.module.css'
@@ -74,7 +74,7 @@ let youtubeApiPromise: Promise<NonNullable<Window['YT']>> | null = null
 function loadYouTubeApi() {
   if (window.YT?.Player) return Promise.resolve(window.YT)
   if (youtubeApiPromise) return youtubeApiPromise
-  youtubeApiPromise = new Promise((resolve) => {
+  youtubeApiPromise = new Promise((resolve, reject) => {
     const previousReady = window.onYouTubeIframeAPIReady
     window.onYouTubeIframeAPIReady = () => {
       previousReady?.()
@@ -83,10 +83,25 @@ function loadYouTubeApi() {
     if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
       const script = document.createElement('script')
       script.src = 'https://www.youtube.com/iframe_api'
+      script.onerror = () => {
+        youtubeApiPromise = null
+        reject(new Error('YouTube player could not be loaded.'))
+      }
       document.head.appendChild(script)
     }
   })
   return youtubeApiPromise
+}
+
+function VideoFallback({ onContinue }: { onContinue?: () => void }) {
+  return <div className={styles.videoFallback} role="status">
+    <AlertCircle size={28} aria-hidden="true" />
+    <div>
+      <strong>This video is unavailable</strong>
+      <span>You can continue with the lesson. Your teacher can use the examples on the next slides instead.</span>
+    </div>
+    <button type="button" onClick={onContinue}>Continue without video</button>
+  </div>
 }
 
 function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: string; onHalfWatched?: () => void }) {
@@ -128,7 +143,7 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
           }
         }, 750)
       }, onError: (event) => { if (!cancelled) setErrorCode(event.data) } } })
-    })
+    }).catch(() => { if (!cancelled) setErrorCode(-1) })
     return () => {
       cancelled = true
       window.removeEventListener('cortex:pause-media', pause)
@@ -139,18 +154,17 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
   }, [src, title, reload])
 
   return <>
-    <div ref={hostRef} className={styles.youtubeHost} />
+    {errorCode === null && <div ref={hostRef} className={styles.youtubeHost} />}
     {errorCode !== null && <div role="alert">
-      <p>YouTube could not play this video (error {errorCode}). Try opening this lesson in Edge or Chrome.</p>
-      <button type="button" onClick={() => { setErrorCode(null); setReload(value => value + 1) }}>Retry video</button>{' '}
-      <a href={`https://www.youtube.com/watch?v=${new URL(src).pathname.split('/').pop()}`} target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
-      {' '}<button type="button" onClick={() => { completedRef.current = true; callbackRef.current?.() }}>I watched it on YouTube</button>
+      <VideoFallback onContinue={() => { completedRef.current = true; callbackRef.current?.() }} />
+      <button type="button" className={styles.retryVideo} onClick={() => { setErrorCode(null); setReload(value => value + 1) }}>Try the video again</button>
     </div>}
   </>
 }
 
 function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
   const [playing, setPlaying] = useState(false)
+  const [mediaUnavailable, setMediaUnavailable] = useState(false)
   const template = task.template ?? 'multiple_choice'
   const youtubeUrl = youtubeEmbedUrl(task.mediaUrl)
   const mediaRef = useRef<HTMLMediaElement | null>(null)
@@ -184,7 +198,9 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
       </section>
     }
     return <section className={styles.panel}>
-      <video ref={(node) => { mediaRef.current = node }} className={styles.video} src={task.mediaUrl} controls preload="metadata" onEnded={onCompleted} aria-label={task.contentLabel ?? task.title} />
+      {mediaUnavailable
+        ? <VideoFallback onContinue={onCompleted} />
+        : <video ref={(node) => { mediaRef.current = node }} className={styles.video} src={task.mediaUrl} controls preload="metadata" onEnded={onCompleted} onError={() => setMediaUnavailable(true)} aria-label={task.contentLabel ?? task.title} />}
     </section>
   }
 
@@ -193,15 +209,7 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
   if (template === 'instructional_video') {
     return (
       <section className={`${styles.panel} ${styles.videoPanel}`} aria-label="Instructional video">
-        {task.mediaUrl ? (
-          <video className={styles.video} src={task.mediaUrl} controls preload="metadata" aria-label={task.contentLabel ?? task.title} />
-        ) : (
-          <>
-            <MediaButton playing={playing} label="instructional video" onClick={() => setPlaying((value) => !value)} />
-            <div className={styles.mediaCopy}><strong>{task.contentLabel ?? task.title}</strong><span>{task.contentDescription}</span></div>
-            <span className={styles.duration}>{task.durationSeconds ? `${task.durationSeconds}s` : 'Short video'}</span>
-          </>
-        )}
+        <VideoFallback onContinue={onCompleted} />
       </section>
     )
   }

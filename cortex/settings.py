@@ -150,8 +150,17 @@ if OFFLINE_SYNC_ENABLED and "test" not in sys.argv:
         raise RuntimeError("Offline sync requires Supabase DB_* or DATABASE_URL and CORTEX_TEMPLATE_ONLY=false.")
     DATABASES["cloud"] = DATABASES["default"]
     DATABASES["cloud"]["CONN_MAX_AGE"] = 0
-    DATABASES["cloud"]["OPTIONS"]["connect_timeout"] = 3
-    DATABASES["cloud"]["OPTIONS"]["options"] += " -c statement_timeout=5000 -c lock_timeout=2000"
+    # A full replica cycle reads every shared table. Supabase poolers can need
+    # more than a few seconds to establish a connection or return larger
+    # snapshots, especially after an idle project resumes. Keep the limits
+    # bounded, but allow enough time for legitimate team synchronization.
+    cloud_connect_timeout = max(5, int(os.environ.get("CORTEX_CLOUD_CONNECT_TIMEOUT", "15")))
+    cloud_statement_timeout = max(5000, int(os.environ.get("CORTEX_CLOUD_STATEMENT_TIMEOUT_MS", "60000")))
+    cloud_lock_timeout = max(2000, int(os.environ.get("CORTEX_CLOUD_LOCK_TIMEOUT_MS", "10000")))
+    DATABASES["cloud"]["OPTIONS"]["connect_timeout"] = cloud_connect_timeout
+    DATABASES["cloud"]["OPTIONS"]["options"] += (
+        f" -c statement_timeout={cloud_statement_timeout} -c lock_timeout={cloud_lock_timeout}"
+    )
     local_database = Path(os.environ.get("CORTEX_LOCAL_DATABASE", BASE_DIR / ".runtime" / "offline.sqlite3"))
     local_database.parent.mkdir(parents=True, exist_ok=True)
     DATABASES["default"] = {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import { clearApiCache } from '../lib/api'
 
 type SyncState = {
@@ -22,6 +23,7 @@ const labels: Record<string, string> = {
 
 export default function SyncStatus() {
   const [state, setState] = useState<SyncState | null>(null)
+  const [dismissedAlert, setDismissedAlert] = useState<string | null>(null)
   useEffect(() => {
     let disposed = false
     let timer: ReturnType<typeof setTimeout>
@@ -56,14 +58,23 @@ export default function SyncStatus() {
   }, [])
 
   if (!state?.enabled) return null
+  const alertKey = `${state.status ?? ''}:${state.message ?? ''}`
+  if (dismissedAlert === alertKey) return null
   const healthy = state.status === 'online'
   return <aside role="status" aria-live="polite" title={state.message || undefined} style={{
     position: 'fixed', bottom: 12, left: 12, zIndex: 10000,
-    maxWidth: 'min(440px, calc(100vw - 24px))', padding: '8px 12px',
+    boxSizing: 'border-box', width: 'max-content', maxWidth: 'min(550px, calc(100vw - 24px))', padding: '8px 44px 8px 16px',
     borderRadius: 10, border: `1px solid ${healthy ? '#a3d5b5' : '#e4bd72'}`,
     background: healthy ? '#ecf8f0' : '#fff4dc', color: '#26332c',
     boxShadow: '0 2px 8px #0002', fontSize: 13,
   }}>
+    <button type="button" aria-label="Close sync status message" title="Close" onClick={() => setDismissedAlert(alertKey)} style={{
+      position: 'absolute', top: 6, right: 6, width: 32, height: 32,
+      display: 'grid', placeItems: 'center', padding: 0, border: 0, borderRadius: 8,
+      background: 'transparent', color: 'currentColor', cursor: 'pointer',
+    }}>
+      <X size={18} aria-hidden="true" />
+    </button>
     <strong>{labels[state.status ?? ''] ?? 'Checking sync status…'}</strong>
     {!!state.pending && <span> · {state.pending} pending changes</span>}
     {!healthy && state.message && <div style={{ fontSize: 12, marginTop: 4 }}>{state.message}</div>}

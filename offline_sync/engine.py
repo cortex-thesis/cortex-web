@@ -5,6 +5,7 @@ and coverage (including bulk SQL and deletes) over large-dataset throughput.
 """
 import json
 import hashlib
+import re
 import sys
 from copy import deepcopy
 from contextlib import ExitStack, contextmanager
@@ -137,11 +138,28 @@ def check_schema():
         raise SyncError("Database migrations differ. Stop syncing and apply the same migrations on both databases.")
 
 
-def cloud_identity():
+def _identity_hash(search_path):
     config = connections["cloud"].settings_dict
     identity = {key: config.get(key) for key in ("HOST", "PORT", "NAME", "USER")}
-    identity["search_path"] = config.get("OPTIONS", {}).get("options", "")
+    identity["search_path"] = search_path
     return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+
+
+def cloud_identity():
+    """Identify the cloud using stable settings, not connection tuning values."""
+    options = connections["cloud"].settings_dict.get("OPTIONS", {}).get("options", "")
+    match = re.search(r"(?:^|\s)-c\s+search_path=([^\s]+)", options)
+    return _identity_hash(match.group(1) if match else "public")
+
+
+def legacy_cloud_identities():
+    """Hashes produced before timeout settings were removed from the identity."""
+    options = connections["cloud"].settings_dict.get("OPTIONS", {}).get("options", "")
+    base = re.sub(r"\s+-c\s+(?:statement_timeout|lock_timeout)=\d+", "", options).strip()
+    return {
+        _identity_hash(f"{base} -c statement_timeout=5000 -c lock_timeout=2000"),
+        _identity_hash(options),
+    }
 
 
 def assert_fresh_replica(local):
@@ -297,7 +315,8 @@ def sync_once(initialize=False):
     model_list = replicated_models()
     identity = cloud_identity()
     existing = ReplicaState.objects.only("initialized", "cloud_identity").filter(pk=1).first()
-    if existing and existing.initialized and existing.cloud_identity != identity:
+    if (existing and existing.initialized and existing.cloud_identity != identity
+            and existing.cloud_identity not in legacy_cloud_identities()):
         raise SyncError("This replica belongs to a different cloud configuration. Restore its settings or initialize a fresh replica.")
     check_schema()
     # File transfers happen without a SQLite write lock, keeping offline reads
