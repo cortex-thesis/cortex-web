@@ -7,7 +7,11 @@ from django.core.management import call_command
 from django.db import IntegrityError, OperationalError, connections, transaction
 from django.test import SimpleTestCase, TransactionTestCase, override_settings
 
-from web.models import School, CurriculumPackage
+from web.models import (
+    CalibrationProfile, CurriculumPackage, EEGConnection, EEGDevice, EEGEpoch,
+    EEGFeature, EEGRawChunk, EEGRecording, ModelVersion, School,
+    SessionEEGSample, StatePrediction,
+)
 from .engine import (SyncError, changed_count, install_guards, merge, replicated_models,
                      snapshot, sync_once, write_changes)
 from .ids import allocate, install_allocators
@@ -109,6 +113,18 @@ class LocalStorageTests(TransactionTestCase):
         with transaction.atomic():
             write_changes("default", desired, {}, [School])
         self.assertFalse(School.objects.exists())
+
+    def test_complete_eeg_pipeline_is_part_of_the_local_replica(self):
+        """Keep every database-backed EEG artifact available without internet."""
+        replicated_tables = {model._meta.db_table for model in replicated_models()}
+        eeg_models = {
+            EEGDevice, CalibrationProfile, EEGConnection, EEGRecording,
+            EEGRawChunk, EEGEpoch, EEGFeature, ModelVersion,
+            StatePrediction, SessionEEGSample,
+        }
+        self.assertTrue(
+            {model._meta.db_table for model in eeg_models}.issubset(replicated_tables)
+        )
 
     @override_settings(OFFLINE_SYNC_ENABLED=True)
     def test_api_blocks_until_bootstrap_and_status_never_exposes_snapshot(self):
