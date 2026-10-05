@@ -118,6 +118,9 @@ export default function LearningJournal() {
             <h1>My Learning Journal</h1>
             <p>Take a moment to celebrate what you learned today.</p>
           </div>
+          <button className={styles.skipBtn} onClick={() => navigate('/student/journal/history')}>
+            History
+          </button>
           <button className={styles.skipBtn} onClick={() => navigate('/student/home', { replace: true })}>
             Skip for now
           </button>

@@ -302,7 +302,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   </details>
 
 
-  async function finish() {
+  async function finish(goToJournal = false) {
     if (finishing.current || savingStep) return
     finishing.current = true
     await Promise.all([...pendingAnswers.current])
@@ -315,6 +315,10 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
     if (!sessionId) return navigate('/student/sessions', { replace: true })
     try {
       if (!sessionSaved.current) { await endStudentSession(sessionId); sessionSaved.current = true }
+      if (goToJournal) {
+        navigate('/student/journal', { replace: true, state: { sessionId } })
+        return
+      }
       const data = await getStudentSessions(); const session = data.sessions.find((item) => item.id === sessionId)
       if (!session) throw new Error('Session unavailable')
       navigate('/student/session-summary', { replace: true, state: { summary: { sessionId, duration: session.duration_seconds, focusScore: session.focus_score, stateDistribution: session.state_distribution, taskCompleted: session.tasks_completed, taskTotal: session.tasks_total } } })
@@ -400,6 +404,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
       {saveFailed && <button className={styles.endSession} onClick={() => Object.entries(unsavedAnswers.current).forEach(([index, answer]) => saveAnswer(Number(index), answer.correct, answer.selected))}>Retry saving answers</button>}
     </section>
     {phase !== 'complete' && <button className={styles.endSession} onClick={() => void finish()}>{teacherControl ? 'Leave and save my session' : 'End and save session'}</button>}
+    <button className={styles.endSession} disabled={savingSession || savingStep} onClick={() => void finish(true)}>End session and write journal</button>
     {controls}
   </div></PlayfulZoneTemplate></Activity></div></>
 }

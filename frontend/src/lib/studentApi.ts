@@ -35,6 +35,22 @@ export interface StudentJournalData {
   entry: null | { id: string; prompt: string; response_type: 'text' | 'drawing' | 'audio'; text_response: string; mood: string; shared_with_teacher: boolean; created_at: string }
 }
 
+export interface StudentJournalHistoryEntry {
+  id: string
+  session_id: string
+  session_title: string
+  class_name: string
+  session_started_at: string
+  created_at: string
+  prompt: string
+  response_type: 'text' | 'drawing' | 'audio'
+  text_response: string
+  mood: string
+  asset_url: string | null
+}
+
+export const getStudentJournalHistory = () => api<{ entries: StudentJournalHistoryEntry[] }>('/student/journals/?history=1', { cache: 'no-store' })
+
 export const PACKAGE_EMOJI: Record<CurriculumPackage, string> = {
   care: '🤲', life: '🍳', pre_vocational: '🛠️', livelihood: '🌱',
   functional_academics: '📖', career: '💼', enrichment: '🎨',

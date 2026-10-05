@@ -440,6 +440,31 @@ class WorkflowTests(TestCase):
         self.assertEqual(JournalEntry.objects.filter(session=session, student=self.student).count(), 1)
         self.assertEqual(self.client.get(f"/api/student/journals/?session_id={session.pk}").json()["entry"]["text_response"], payload["text_response"])
 
+    def test_student_journal_history_only_returns_own_entries_in_session_order(self):
+        school_class = SchoolClass.objects.create(name="History Class", code="JHIST", teacher=self.teacher)
+        older = LearningSession.objects.create(school_class=school_class, student=self.student)
+        LearningSession.objects.filter(pk=older.pk).update(started_at=timezone.now() - timedelta(days=2), ended_at=timezone.now() - timedelta(days=1), status=LearningSession.Status.COMPLETED)
+        newer = LearningSession.objects.create(school_class=school_class, student=self.student)
+        private = LearningSession.objects.create(school_class=school_class, student=self.other_student)
+        LearningSession.objects.filter(pk__in=[newer.pk, private.pk]).update(ended_at=timezone.now(), status=LearningSession.Status.COMPLETED)
+        for session, response_type in [(older, "text"), (newer, "audio"), (private, "text")]:
+            JournalEntry.objects.create(session=session, student=session.student, prompt="What did you learn?", response_type=response_type, text_response="My reflection", shared_with_teacher=False)
+        self._login(self.student)
+        response = self.client.get("/api/student/journals/?history=1")
+        self.assertEqual(response.status_code, 200)
+        entries = response.json()["entries"]
+        self.assertEqual([entry["session_id"] for entry in entries], [str(newer.pk), str(older.pk)])
+        self.assertEqual(entries[0]["response_type"], "audio")
+        self.assertEqual(entries[1]["text_response"], "My reflection")
+        self.assertEqual(entries[0]["session_title"], school_class.name)
+        self.assertIn("session_started_at", entries[0])
+
+    def test_student_journal_history_is_empty_before_first_session(self):
+        self._login(self.student)
+        response = self.client.get("/api/student/journals/?history=1")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"entries": []})
+
     def test_student_cannot_write_journal_for_another_students_session(self):
         school_class = SchoolClass.objects.create(name="Private Journal", code="JRNL2", teacher=self.teacher)
         session = LearningSession.objects.create(school_class=school_class, student=self.other_student)

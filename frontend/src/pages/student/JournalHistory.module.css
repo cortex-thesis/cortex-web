@@ -1,0 +1,18 @@
+.page { width: 100%; max-width: var(--student-shell-width); height: 100%; margin: 0 auto; padding: 24px 32px; overflow-y: auto; color: var(--color-deep-purple); }
+.header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.header h1 { margin: 0 0 8px; font-size: clamp(24px, 3vw, 36px); }
+.header p, .meta { color: var(--color-text-secondary); }
+.filters { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin-bottom: 24px; }
+.filters label { display: flex; flex-direction: column; gap: 8px; max-width: 100%; font-weight: 600; }
+.filters select, .filters input, .button { border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-deep-purple); font: inherit; padding: 10px 14px; }
+.filters select { width: 380px; max-width: 100%; }
+.button { cursor: pointer; }
+.entries { display: grid; gap: 18px; }
+.card { background: white; border: 1px solid var(--color-border); border-radius: 18px; padding: 24px; }
+.card h2 { margin: 0 0 8px; font-size: 22px; }
+.card h3 { margin: 20px 0 12px; font-size: 18px; }
+.meta { font-size: 14px; margin: 6px 0; }
+.response { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+.drawing { display: block; max-width: 100%; max-height: 360px; object-fit: contain; border-radius: 12px; }
+.card audio { max-width: 100%; }
+@media (max-width: 600px) { .page { padding: 20px 16px; } .card { padding: 18px; } .filters label { width: 100%; } }

@@ -6,12 +6,21 @@ import styles from './ClassSessionInvitation.module.css'
 
 export default function ClassSessionInvitation() {
   const user = useAuthStore(state => state.user)
-  const navigate = useNavigate()
+  const authenticated = useAuthStore(state => state.isAuthenticated)
+  const initialized = useAuthStore(state => state.isInitialized)
   const location = useLocation()
+  // Mount only inside the verified student's area. Unmounting also cancels
+  // polling and clears invitations/dismissals on logout or account changes.
+  if (!initialized || !authenticated || user?.role !== 'student' ||
+      !location.pathname.startsWith('/student/') || location.pathname.startsWith('/student/class-session/')) return null
+  return <StudentInvitations key={user.id} />
+}
+
+function StudentInvitations() {
+  const navigate = useNavigate()
   const [sessions, setSessions] = useState<ClassroomSession[]>([])
   const [dismissed, setDismissed] = useState<string[]>([])
   useEffect(() => {
-    if (user?.role !== 'student') return
     let cancelled = false
     let timer: ReturnType<typeof setTimeout>
     const refresh = async () => {
@@ -21,8 +30,7 @@ export default function ClassSessionInvitation() {
     }
     void refresh()
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [user?.id, user?.role])
-  if (user?.role !== 'student' || location.pathname.startsWith('/student/class-session/')) return null
+  }, [])
   const invitation = sessions.find(item => !item.student_session && !dismissed.includes(`${item.id}:${item.invitation_revision}`))
   if (!invitation) return null
   return <aside className={styles.prompt} role="status" aria-label="Teacher-led session invitation"><div><strong>{invitation.teacher_name} is inviting you to {invitation.class_name}</strong><p>Join your classmates in the lobby. Your teacher will start the lesson.</p></div><button onClick={() => navigate(`/student/class-session/${invitation.id}`)}>Join lobby</button><button className={styles.later} onClick={() => setDismissed(previous => [...previous, `${invitation.id}:${invitation.invitation_revision}`])}>Later</button></aside>

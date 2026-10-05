@@ -2742,6 +2742,20 @@ def student_journals(request):
     if error:
         return error
     is_multipart = request.method == "POST" and (request.content_type or "").startswith("multipart/form-data")
+    if request.method == "GET" and request.GET.get("history") == "1":
+        entries = JournalEntry.objects.filter(student=profile, session__student=profile).select_related(
+            "session__lesson", "session__school_class", "asset",
+        ).order_by("-session__started_at", "-created_at")
+        return JsonResponse({"entries": [{
+            "id": str(item.pk), "session_id": str(item.session_id),
+            "session_title": item.session.lesson.title if item.session.lesson_id else item.session.school_class.name,
+            "class_name": item.session.school_class.name,
+            "session_started_at": item.session.started_at,
+            "created_at": item.created_at, "prompt": item.prompt,
+            "response_type": item.response_type, "text_response": item.text_response,
+            "mood": item.mood,
+            "asset_url": f"/api/content/assets/{item.asset_id}/preview/" if item.asset_id else None,
+        } for item in entries]})
     try:
         data = request.POST if is_multipart else (_body(request) if request.method == "POST" else request.GET)
     except ValueError:

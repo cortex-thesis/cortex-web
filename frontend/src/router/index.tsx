@@ -16,6 +16,7 @@ import RelaxMode from '../pages/student/RelaxMode'
 import SwitchingModes from '../pages/student/SwitchingModes'
 import SessionSummary from '../pages/student/SessionSummary'
 import LearningJournal from '../pages/student/LearningJournal'
+import JournalHistory from '../pages/student/JournalHistory'
 import Settings from '../pages/student/Settings'
 import Profile from '../pages/student/Profile'
 import Achievements from '../pages/student/Achievements'
@@ -94,6 +95,7 @@ export default function AppRouter() {
       <Route path="/student/switching" element={<SwitchingModes />} />
       <Route path="/student/session-summary" element={<SessionSummary />} />
       <Route path="/student/journal" element={<LearningJournal />} />
+      <Route path="/student/journal/history" element={<JournalHistory />} />
       <Route path="/student/notifications" element={<Navigate to="/student/home" replace />} />
       <Route path="/student/settings" element={<Settings />} />
       <Route path="/student/profile" element={<Profile />} />
