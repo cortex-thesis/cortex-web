@@ -9,7 +9,7 @@ from django.test.runner import DiscoverRunner
 
 def category(test_id):
     name = test_id.lower()
-    if "validation_api" in name:
+    if "validation_api" in name or "account_management" in name:
         return "security"
     if any(word in name for word in ("login", "logout", "role_access", "registration")):
         return "access"

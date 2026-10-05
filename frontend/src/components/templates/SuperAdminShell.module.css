@@ -1,0 +1,4 @@
+.root { font-family: var(--font-family); }
+.links a { text-decoration: none; }
+.nav :is(a, button):focus-visible { outline: 3px solid var(--color-interface-purple); outline-offset: 3px; }
+@media (max-width: 800px) { .nav { height: auto; min-height: 58px; flex-wrap: wrap; gap: 10px; padding: 14px 16px; } .links { display: flex !important; flex-wrap: wrap; } }

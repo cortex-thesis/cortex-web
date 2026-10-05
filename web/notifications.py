@@ -4,7 +4,15 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from .models import InterventionAlert
+from .models import InterventionAlert, Notification, Profile
+
+
+def account_event(title, body):
+    """Real account administration events in active super administrators' inboxes."""
+    recipients = Profile.objects.filter(role=Profile.Role.ADMIN, admin_scope=Profile.AdminScope.SUPER,
+                                        account_status=Profile.AccountStatus.ACTIVE, user__is_active=True)
+    Notification.objects.bulk_create([Notification(recipient=profile, kind='account', title=title, body=body,
+                                                  link='/admin/accounts') for profile in recipients])
 
 
 @require_http_methods(['GET', 'POST'])

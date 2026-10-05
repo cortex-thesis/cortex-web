@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Activity, ArrowDownToLine, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, FlaskConical, Play, RefreshCw, Search, ShieldCheck, TriangleAlert } from 'lucide-react'
-import { useAuthStore } from '../../store/authStore'
+﻿import { useCallback, useEffect, useState } from 'react'
+import SuperAdminShell from '../../components/templates/SuperAdminShell'
+import { Activity, ArrowDownToLine, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, FlaskConical, Play, RefreshCw, Search, TriangleAlert } from 'lucide-react'
+
 import { api } from '../../lib/api'
 import admin from '../prototype/Prototype.module.css'
 import styles from './Validation.module.css'
@@ -20,8 +20,8 @@ export default function Validation() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
   const [page, setPage] = useState(0)
-  const navigate = useNavigate()
-  const logout = useAuthStore(state => state.logout)
+
+
   const [manual, setManual] = useState({ check: 'headset', status: 'passed', expected: '', actual: '' })
   const refresh = useCallback(async () => {
     try {
@@ -90,12 +90,7 @@ export default function Validation() {
     anchor.href = url; anchor.download = `cortex-validation-${run.id}.json`; anchor.click()
     URL.revokeObjectURL(url)
   }
-  return <div className={`${admin.adminRoot} ${styles.shell}`}>
-    <nav className={`${admin.adminNav} ${styles.navigation}`} aria-label="Administration">
-      <div className={admin.adminBrand}><ShieldCheck size={20} aria-hidden="true" /> Cortex Admin</div>
-      <div className={`${admin.adminLinks} ${styles.navigationLinks}`}><Link className={admin.adminLink} aria-label="← System overview" to="/admin/dashboard">Overview</Link><Link className={admin.adminLink} to="/admin/accounts">Accounts</Link><Link className={`${admin.adminLink} ${admin.adminLinkActive}`} aria-current="page" to="/admin/evaluation">Validation</Link><button className={admin.adminLink} onClick={() => void logout().then(() => navigate('/', { replace: true }))}>Sign out</button></div>
-    </nav>
-    <main className={`${admin.page} ${styles.root}`}>
+  return <SuperAdminShell active="validation"><main className={`${admin.page} ${styles.root} ${styles.shell}`}>
     <header className={admin.header}><div><span className={admin.eyebrow}>Quality assurance</span><h1 className={admin.title}>System validation</h1><p className={admin.subtitle}>Review system reliability, investigate unsuccessful checks, and track corrections over time.</p></div>
       <div className={admin.actions}><button className={admin.primary} disabled={busy || running} onClick={() => void start()}><Play size={14} aria-hidden="true" />{busy || running ? 'Tests running…' : 'Run all automated tests'}</button>{run && <button className={admin.secondary} onClick={download}><ArrowDownToLine size={14} aria-hidden="true" />Download results</button>}</div>
     </header>
@@ -112,7 +107,7 @@ export default function Validation() {
         <article className={`${admin.card} ${styles.metric}`}><div className={styles.metricLabel}><ClipboardCheck size={16} aria-hidden="true" />Manual verification</div><strong className={styles.metricValue}>{manualPassed}<span> / {manualTotal}</span></strong><p>{manualTotal - manualPassed} pending or unsuccessful</p><span className={styles.metricNote}>Headset & device evidence tracked separately</span></article>
       </div>
       {run.detail && <p className={`${admin.alert} ${admin.alertDanger}`}>{run.detail}</p>}
-      <p className={styles.methodNote}>Pass rate = passed ÷ all recorded automated checks. Failures, errors and skips stay in the denominator. Synthetic tests do not verify physical headset pairing.</p>
+      <p className={styles.methodNote}>Pass rate = passed Ã· all recorded automated checks. Failures, errors and skips stay in the denominator. Synthetic tests do not verify physical headset pairing.</p>
       <section aria-labelledby="category-heading" className={`${admin.card} ${styles.section}`}><div className={styles.sectionHeading}><div><h2 id="category-heading" className={admin.sectionTitle}>Checklist coverage</h2><p className={admin.cardSub}>Compare proportions with the check counts that support them.</p></div><span className={styles.legend}><i className={styles.passSwatch} />Passed<i className={styles.failSwatch} />Failed / error<i className={styles.skipSwatch} />Skipped</span></div><div className={styles.categories}>{Object.entries(data?.categories ?? {}).map(([key, title]) => {
         const checks = tests.filter(test => test.category === key)
         const successes = checks.filter(test => test.status === 'passed').length
@@ -133,5 +128,6 @@ export default function Validation() {
         <form className={styles.manualForm} onSubmit={event => void saveManual(event)}><label className={admin.field}><span className={admin.label}>Check</span><select className={admin.select} value={manual.check} onChange={event => setManual({ ...manual, check: event.target.value })}>{data?.manual_checks.map(([id]) => <option key={id}>{id}</option>)}</select></label><label className={admin.field}><span className={admin.label}>Result</span><select className={admin.select} value={manual.status} onChange={event => setManual({ ...manual, status: event.target.value })}><option value="passed">Passed</option><option value="failed">Failed</option><option value="blocked">Blocked</option></select></label><label className={admin.field}><span className={admin.label}>Expected result</span><textarea className={admin.textarea} required maxLength={2000} value={manual.expected} onChange={event => setManual({ ...manual, expected: event.target.value })} /></label><label className={admin.field}><span className={admin.label}>Actual result and measurements</span><textarea className={admin.textarea} required maxLength={2000} value={manual.actual} onChange={event => setManual({ ...manual, actual: event.target.value })} /></label><div><button className={admin.primary} disabled={busy || run.status === 'running'} type="submit">Save manual check</button></div></form>
       </details>
     </>}
-  </main></div>
+  </main></SuperAdminShell>
 }
+

@@ -526,6 +526,8 @@ def admin_accounts(request):
     except IntegrityError:
         return JsonResponse({"detail": "That username is already in use."}, status=409)
     _audit(admin, "account_created_by_admin", profile, {"role": role, "school_id": str(school.pk) if school else None})
+    from .notifications import account_event
+    account_event('Account created', f'{admin.display_name} created an account for {profile.display_name}.')
     response = _profile_data(profile)
     if not data.get("temporary_password"):
         response["temporary_password"] = password
@@ -538,6 +540,7 @@ def admin_account_status(request, profile_id):
     if error:
         return error
     target = get_object_or_404(Profile.objects.select_related("school", "user"), pk=profile_id)
+    previous_status = target.account_status
     if not _admin_can_manage(admin, target) or target.is_super_admin:
         return JsonResponse({"detail": "You cannot manage this account."}, status=403)
     if request.method == "DELETE":
@@ -568,6 +571,9 @@ def admin_account_status(request, profile_id):
     except (KeyError, ValueError):
         return JsonResponse({"detail": "A valid status is required."}, status=400)
     _audit(admin, "account_status_changed", target, {"status": status})
+    if previous_status != status:
+        from .notifications import account_event
+        account_event('Account status changed', f'{admin.display_name} changed {target.display_name}\u2019s account status to {status}.')
     return JsonResponse(_profile_data(target))
 
 

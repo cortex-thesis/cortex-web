@@ -1,4 +1,5 @@
 from .notifications import notifications
+from .account_management import account_detail
 from .validation import validation_runs, validation_manual
 from .session_controls import session_control
 from .class_sessions import class_sessions, class_session_detail, class_session_join, class_session_report, class_session_lessons
@@ -74,6 +75,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path('admin/accounts/<int:profile_id>/', account_detail, name='admin-account-detail'),
     path("admin/validation/", validation_runs, name="validation-runs"),
     path("admin/validation/<str:run_id>/manual/", validation_manual, name="validation-manual"),
     path("notifications/", notifications, name="notifications"),

@@ -154,7 +154,7 @@
 .itemTime {
   font-family: var(--font-family);
   font-size: 11px;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -184,4 +184,13 @@
 
 .tools { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
 .tools label { display: grid; gap: 4px; font-size: 13px; }
+.tools label:has(input[type="checkbox"]) { display: flex; align-items: center; gap: 7px; min-height: 38px; }
+.tools { padding-bottom: 16px; }
+.description { font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; }
+.filterItem { text-transform: capitalize; }
+.list { padding: 0; margin: 0; }
+.itemBody { overflow-wrap: anywhere; }
+.markAllBtn:disabled { opacity: .5; cursor: not-allowed; }
+.content :is(button, input):focus-visible { outline: 3px solid var(--color-interface-purple); outline-offset: 2px; }
+@media (max-width: 700px) { .layout { flex-direction: column; } .sidebar { width: 100%; } .filterNav { flex-direction: row; flex-wrap: wrap; } .main { width: 100%; } .tools > label:first-child { width: 100%; } }
 .tools input:not([type="checkbox"]), .tools select { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: white; }
