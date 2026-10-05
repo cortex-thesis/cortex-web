@@ -44,13 +44,14 @@ function youtubeEmbedUrl(value?: string | null) {
   if (!value) return null
   try {
     const url = new URL(value)
+    if (!['https:', 'http:'].includes(url.protocol)) return null
     const id = url.hostname === 'youtu.be'
       ? url.pathname.slice(1).split('/')[0]
-      : url.hostname.endsWith('youtube.com')
-        ? url.pathname.startsWith('/embed/') ? url.pathname.split('/')[2] : url.searchParams.get('v')
+      : ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtube-nocookie.com', 'www.youtube-nocookie.com'].includes(url.hostname)
+        ? /^\/(embed|shorts|live)\//.test(url.pathname) ? url.pathname.split('/')[2] : url.searchParams.get('v')
         : null
     const origin = typeof window === 'undefined' ? '' : `&origin=${encodeURIComponent(window.location.origin)}`
-    return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}?rel=0&enablejsapi=1${origin}` : null
+    return id && /^[\w-]{11}$/.test(id) ? `https://www.youtube.com/embed/${id}?rel=0&enablejsapi=1${origin}` : null
   } catch {
     return null
   }
@@ -84,6 +85,7 @@ function loadYouTubeApi() {
       const script = document.createElement('script')
       script.src = 'https://www.youtube.com/iframe_api'
       script.onerror = () => {
+        script.remove()
         youtubeApiPromise = null
         reject(new Error('YouTube player could not be loaded.'))
       }
@@ -128,12 +130,22 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
     let player: YouTubePlayer | null = null
     let timer: number | null = null
     let cancelled = false
+    const fail = (code: number) => {
+      if (cancelled) return
+      cancelled = true
+      window.clearTimeout(readyTimeout)
+      if (timer !== null) window.clearInterval(timer)
+      setErrorCode(code)
+    }
+    // Blocked scripts/iframes may never emit a YouTube error event.
+    const readyTimeout = window.setTimeout(() => fail(-1), 15000)
     const pause = () => player?.pauseVideo()
     window.addEventListener('cortex:pause-media', pause)
     void loadYouTubeApi().then((YT) => {
       if (cancelled || !frame.isConnected) return
       player = new YT.Player(frame, { events: { onReady: () => {
         if (cancelled) return
+        window.clearTimeout(readyTimeout)
         timer = window.setInterval(() => {
           if (!player || completedRef.current) return
           const duration = player.getDuration()
@@ -142,10 +154,11 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
             callbackRef.current?.()
           }
         }, 750)
-      }, onError: (event) => { if (!cancelled) setErrorCode(event.data) } } })
-    }).catch(() => { if (!cancelled) setErrorCode(-1) })
+      }, onError: (event) => fail(event.data) } })
+    }).catch(() => fail(-1))
     return () => {
       cancelled = true
+      window.clearTimeout(readyTimeout)
       window.removeEventListener('cortex:pause-media', pause)
       if (timer !== null) window.clearInterval(timer)
       player?.destroy()
@@ -156,7 +169,7 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
   return <>
     {errorCode === null && <div ref={hostRef} className={styles.youtubeHost} />}
     {errorCode !== null && <div role="alert">
-      <VideoFallback onContinue={() => { completedRef.current = true; callbackRef.current?.() }} />
+      <VideoFallback onContinue={() => { if (!completedRef.current) { completedRef.current = true; callbackRef.current?.() } }} />
       <button type="button" className={styles.retryVideo} onClick={() => { setErrorCode(null); setReload(value => value + 1) }}>Try the video again</button>
     </div>}
   </>
@@ -167,6 +180,7 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
   const [mediaUnavailable, setMediaUnavailable] = useState(false)
   const template = task.template ?? 'multiple_choice'
   const youtubeUrl = youtubeEmbedUrl(task.mediaUrl)
+  const youtubeLink = Boolean(task.mediaUrl && /(?:youtube(?:-nocookie)?\.com|youtu\.be)/i.test(task.mediaUrl))
   const mediaRef = useRef<HTMLMediaElement | null>(null)
   useEffect(() => {
     const media = mediaRef.current
@@ -175,9 +189,11 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
 
   if (youtubeUrl) {
     return <section className={`${styles.panel} ${styles.youtubePanel}`}>
-      <YouTubeVideo src={youtubeUrl} title={task.contentLabel ?? task.title} onHalfWatched={onCompleted} />
+      <YouTubeVideo key={youtubeUrl} src={youtubeUrl} title={task.contentLabel ?? task.title} onHalfWatched={onCompleted} />
     </section>
   }
+
+  if (youtubeLink) return <section className={styles.panel}><VideoFallback onContinue={onCompleted} /></section>
 
   if (task.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || template === 'instructional_video' || template === 'calming_soundscape')) {
     if (task.contentType === 'audio' || template === 'calming_soundscape') {

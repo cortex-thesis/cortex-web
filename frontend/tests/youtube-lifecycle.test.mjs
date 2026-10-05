@@ -18,6 +18,7 @@ test('YouTube recreates its iframe after Activity cleanup without losing complet
   }
   globalThis.window = {
     addEventListener() {}, removeEventListener() {},
+    setTimeout() { return 2 }, clearTimeout() {},
     setInterval(callback) { poll = callback; return 1 }, clearInterval() { poll = null },
     YT: { Player: class {
       constructor(frame, options) { this.frame = frame; options.events.onReady() }
