@@ -1,4 +1,6 @@
 import json
+import csv
+import io
 from unittest.mock import patch
 from datetime import timedelta
 
@@ -11,6 +13,90 @@ from .models import Activity, ActivityResponse, ClassSession, ConsentRecord, Cur
 
 
 class TeacherLedSessionTests(TestCase):
+    def eeg_payload(self, **extra):
+        return {'slide_id': self.slide.pk,
+                'bands': {name: 1.0 for name in ('delta', 'theta', 'alpha', 'beta', 'gamma')},
+                'signal_quality': [2, 2, 2, 2], 'accepted_channels': 4, 'device_name': 'Synthetic Muse',
+                'sequence_number': 1, 'captured_at_ms': int(timezone.now().timestamp() * 1000),
+                'raw_channels': {name: [float((index % 40) - 20 + channel * 3) for index in range(512)]
+                                 for channel, name in enumerate(('TP9', 'AF7', 'AF8', 'TP10'))}, **extra}
+
+    def test_end_to_end_synthetic_headset_lesson_adaptation_and_teacher_report(self):
+        """A synthetic headset window creates prediction/connection records; an answered and completed adaptive lesson appears in the persisted teacher report."""
+        from .models import StatePrediction
+        group = self.open()
+        session = self.join(group)
+        self.assertEqual(self.control('start').status_code, 200)
+        self.assertEqual(self.control('set_mode', mode='adaptive').status_code, 200)
+        self.client.force_login(self.student.user)
+        self.assertEqual(self.post('/api/sessions/start/', {'class_id': self.school_class.pk, 'class_session_id': str(group.pk), 'control_mode': 'teacher'}).status_code, 200)
+        eeg = self.post(f'/api/sessions/{session.pk}/eeg/', self.eeg_payload())
+        self.assertEqual(eeg.status_code, 201, eeg.content)
+        self.assertIn(eeg.json()['state'], ('focused', 'relaxed', 'distracted', 'overstimulated'))
+        self.assertTrue(session.eeg_connections.filter(disconnected_at__isnull=True).exists())
+        self.assertEqual(StatePrediction.objects.filter(session=session).count(), 1)
+        self.assertEqual(self.post(f'/api/sessions/{session.pk}/eeg/', self.eeg_payload()).status_code, 409)
+        self.assertEqual(StatePrediction.objects.filter(session=session).count(), 1)
+        self.assertEqual(self.control('set_mode', mode='refocus').status_code, 200)
+        self.client.force_login(self.student.user)
+        self.assertEqual(self.post(self.url, {'action': 'heartbeat'}).json()['presentation_mode'], 'refocus')
+        self.assertEqual(self.control('set_mode', mode='adaptive').status_code, 200)
+        self.client.force_login(self.student.user)
+        slide_url = f'/api/sessions/{session.pk}/slides/{self.slide.pk}/'
+        self.assertEqual(self.post(slide_url, {'action': 'enter'}).status_code, 201)
+        self.assertEqual(self.post(slide_url, {'action': 'answer', 'correct': True, 'selected': 'Yes', 'attempt': 1}).status_code, 200)
+        self.assertEqual(self.post(slide_url, {'action': 'complete'}).status_code, 200)
+        ended = self.control('end')
+        self.assertEqual(ended.status_code, 200)
+        report = ended.json()['report']
+        self.assertEqual(report['answered'], 1)
+        self.assertEqual(report['correct'], 1)
+        self.assertEqual(report['participants'][0]['eeg_samples'], 1)
+        self.assertEqual(self.client.get(self.url + 'report/').json(), report)
+        session.refresh_from_db()
+        self.assertIsNotNone(session.ended_at)
+        self.assertFalse(session.eeg_connections.filter(disconnected_at__isnull=True).exists())
+
+    def test_rejects_stale_future_and_invalid_signal_without_prediction(self):
+        from .models import StatePrediction
+        group = self.open()
+        session = self.join(group)
+        self.control('start')
+        self.client.force_login(self.student.user)
+        self.assertEqual(self.post('/api/sessions/start/', {'class_id': self.school_class.pk, 'class_session_id': str(group.pk), 'control_mode': 'teacher'}).status_code, 200)
+        url = f'/api/sessions/{session.pk}/eeg/'
+        for offset in (-120, 120):
+            data = self.eeg_payload(captured_at_ms=int((timezone.now() + timedelta(seconds=offset)).timestamp() * 1000))
+            self.assertEqual(self.post(url, data).status_code, 409)
+        flat = {name: [0.0] * 512 for name in ('TP9', 'AF7', 'AF8', 'TP10')}
+        self.assertEqual(self.post(url, self.eeg_payload(raw_channels=flat)).status_code, 422)
+        self.assertFalse(StatePrediction.objects.filter(session=session).exists())
+
+    def test_teacher_commands_target_only_group_and_retries_preserve_state(self):
+        """Retries cannot duplicate adaptation events; class commands leave unrelated sessions unchanged."""
+        from .models import AdaptationEvent
+        group = self.open()
+        session = self.join(group)
+        unrelated = LearningSession.objects.create(student=self.outsider, school_class=self.school_class, lesson=self.lesson)
+        self.assertEqual(self.control('start').status_code, 200)
+        group.refresh_from_db()
+        started = group.started_at
+        self.assertEqual(self.control('start').status_code, 409)
+        for _ in range(2):
+            self.assertEqual(self.control('set_mode', mode='breathing').status_code, 200)
+        self.assertEqual(AdaptationEvent.objects.filter(session=session, source=AdaptationEvent.Source.TEACHER).count(), 1)
+        unrelated.refresh_from_db()
+        self.assertEqual(unrelated.active_presentation_mode, 'focus')
+        self.assertEqual(self.control('pause').status_code, 200)
+        group.refresh_from_db()
+        history = list(group.control_history)
+        self.assertEqual(self.control('pause').status_code, 409)
+        group.refresh_from_db()
+        self.assertEqual(group.control_history, history)
+        self.assertEqual(group.started_at, started)
+        self.assertEqual(self.control('resume').status_code, 200)
+        self.assertEqual(self.control('resume').status_code, 409)
+
     @classmethod
     def setUpTestData(cls):
         cls.teacher = Profile.objects.create(user=User.objects.create_user('class-control-teacher'), display_name='Teacher', role=Profile.Role.TEACHER)
@@ -201,6 +287,16 @@ class TeacherLedSessionTests(TestCase):
         self.assertIn('attachment;', downloaded['Content-Disposition'])
         self.assertIn('Live Class', downloaded.content.decode('utf-8-sig'))
         self.assertEqual(self.client.get(self.url + 'report/').json(), report)
+        rows = list(csv.reader(io.StringIO(downloaded.content.decode('utf-8-sig'))))
+        header = next(index for index, row in enumerate(rows) if row and row[0] == 'Student')
+        exported = rows[header + 1]
+        participant = report['participants'][0]
+        self.assertEqual(exported[0], participant['name'])
+        keys = ('completed_steps', 'task_total', 'progress_percentage', 'answered', 'correct', 'attempts', 'duration_seconds', 'eeg_samples')
+        for index, key in enumerate(keys, 1):
+            self.assertEqual(float(exported[index]), float(participant[key]), key)
+        for index, state in enumerate(('focused', 'relaxed', 'distracted', 'overstimulated'), 9):
+            self.assertEqual(float(exported[index]), float(participant['state_distribution'][state]), state)
 
     def test_access_is_restricted_and_invalid_controls_are_rejected(self):
         group = self.open()

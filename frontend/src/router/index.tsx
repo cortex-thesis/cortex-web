@@ -52,13 +52,14 @@ import SchoolAdminDirectory from '../pages/schoolAdmin/Directory'
 import SuperAdminAccounts from '../pages/superAdmin/Accounts'
 import SuperAdminDashboard from '../pages/superAdmin/Dashboard'
 import SuperAdminRequests from '../pages/superAdmin/Requests'
+import SystemValidation from '../pages/superAdmin/Validation'
 import {
   AdminDashboard as TemplateAdminDashboard, AdminAccounts as TemplateAdminAccounts,
   TeacherJournals as TemplateTeacherJournals, Reports as TemplateReports, ClassSetup as TemplateClassSetup,
   StudentRegistration, TeacherRegistration,
   ForgotPassword, ResetPassword, StudentCalibration, EEGDiagnostics,
   HardwareRequired, Enrollment,
-  StudentHistory, Evaluation,
+  StudentHistory,
 } from '../pages/prototype'
 
 const templateOnly = import.meta.env.VITE_TEMPLATE_ONLY === 'true'
@@ -164,7 +165,7 @@ export default function AppRouter() {
         <Route path="/admin/dashboard" element={templateOnly ? <TemplateAdminDashboard /> : <SuperAdminDashboard />} />
         <Route path="/admin/accounts" element={templateOnly ? <TemplateAdminAccounts /> : <SuperAdminAccounts />} />
         <Route path="/admin/requests" element={<SuperAdminRequests />} />
-        <Route path="/admin/evaluation" element={<Evaluation />} />
+        <Route path="/admin/evaluation" element={<SystemValidation />} />
         <Route path="/admin/analysis" element={<ResearchAnalysis />} />
         <Route path="/admin/schools" element={<AdminSchools />} />
       </Route>

@@ -1,4 +1,5 @@
 from .notifications import notifications
+from .validation import validation_runs, validation_manual
 from .session_controls import session_control
 from .class_sessions import class_sessions, class_session_detail, class_session_join, class_session_report, class_session_lessons
 from django.urls import path
@@ -73,6 +74,8 @@ from .views import (
 )
 
 urlpatterns = [
+    path("admin/validation/", validation_runs, name="validation-runs"),
+    path("admin/validation/<str:run_id>/manual/", validation_manual, name="validation-manual"),
     path("notifications/", notifications, name="notifications"),
     path("sessions/<uuid:session_id>/control/", session_control, name="session-control"),
     path("sync/status/", sync_status, name="sync-status"),

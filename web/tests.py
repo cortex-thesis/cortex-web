@@ -10,6 +10,19 @@ from .models import Activity, AuditLog, BaselineEpoch, BaselineRecording, Consen
 
 
 class WorkflowTests(TestCase):
+    def test_failed_login_does_not_create_authenticated_session(self):
+        """Wrong passwords and unknown accounts cannot authenticate or read protected dashboards."""
+        for username in ('student', 'unknown-account'):
+            response = self.client.post('/api/auth/login/', data=json.dumps({'username': username, 'password': 'incorrect-password'}), content_type='application/json')
+            self.assertEqual(response.status_code, 401)
+            self.assertEqual(self.client.get('/api/student/dashboard/').status_code, 401)
+
+    def test_direct_admin_route_is_not_exposed_by_backend(self):
+        self.assertEqual(self.client.get('/admin/evaluation/').status_code, 404)
+        for profile in (self.student, self.teacher):
+            self._login(profile)
+            self.assertEqual(self.client.get('/admin/evaluation/').status_code, 404)
+
     def test_nested_lesson_asset_preview_allows_only_approved_references(self):
         from unittest.mock import patch
         from types import SimpleNamespace

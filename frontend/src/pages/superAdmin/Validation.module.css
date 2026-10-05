@@ -1,0 +1,28 @@
+.root { max-width: 1200px; margin: auto; padding: 24px; color: #172b46; background: #fff; min-height: 100vh; line-height: 1.6; }
+.root a { color: #174d97; }
+.root h1 { font-size: 2rem; }
+.root h2 { margin-top: 32px; }
+.root h3 { font-size: 1rem; margin: 0; }
+.toolbar { display: flex; gap: 12px; flex-wrap: wrap; }
+.root button { background: #174d97; color: #fff; border: 0; padding: 10px 16px; border-radius: 8px; font: inherit; cursor: pointer; }
+.root button:disabled { background: #516174; cursor: wait; }
+.root :is(button, a, select, textarea, input, summary):focus-visible { outline: 3px solid #824400; outline-offset: 3px; }
+.root select, .root textarea { font: inherit; color: #172b46; background: white; border: 1px solid #516174; border-radius: 6px; padding: 8px; max-width: 100%; }
+.root label { display: block; margin: 12px 0; }
+.root label select, .root textarea { display: block; width: 100%; }
+.root textarea { min-height: 90px; }
+.summary { display: grid; gap: 8px; background: #edf4fc; padding: 20px; border-radius: 10px; margin-top: 20px; }
+.summary strong { font-size: 1.5rem; }
+.categories { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.categories article, .manual { border: 1px solid #b4bfcc; border-radius: 8px; padding: 16px; }
+.tests { margin-top: 16px; }
+.tests details { padding: 12px; border-bottom: 1px solid #b4bfcc; overflow-wrap: anywhere; }
+.tests summary { cursor: pointer; }
+.tests summary span { font-size: .9rem; }
+.tests dd { margin-left: 0; }
+.tests pre { white-space: pre-wrap; font: inherit; }
+.passed strong { color: #1c633a; }
+.failed strong, .error { color: #9b2222; }
+.manual { margin: 12px 0; }
+@media (max-width: 600px) { .root { padding: 16px; } .toolbar button { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .root *, .root *::before, .root *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
