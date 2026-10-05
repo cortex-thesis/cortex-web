@@ -4,6 +4,8 @@ Open **System overview → Validation** (`/admin/evaluation`) and select **Run a
 
 The page shows overall and category pass percentages, passed/failed/error/skipped counts, individual durations, expected and actual results, run history, and JSON downloads. Expand a failed check for details, or enable the unsuccessful-check filter. Failures create a defect record automatically. A subsequent completed run identifies previously failed tests as **corrected** or **still failing**. Manual evidence revisions also retain previous observations in the downloaded report.
 
+The review interface separates automated pass rate, failures/errors, skips and manual verification into summary cards. Category bars share a 0–100% scale and show the passed/total counts. Previous-run percentage-point comparisons appear only for completed runs with identical test identifiers. Test details prioritize errors, failures and skips, with search, category filtering and twenty checks per page. Expand the manual evidence section to review or record physical-device observations.
+
 Percentages are `passed / all recorded automated checks × 100`. Skips and runner errors do not count as passes. An in-progress percentage is provisional. Manual headset/device evidence is shown separately, so a 100% automated result does not imply that a physical headset or every device/browser has been verified.
 
 ## Isolation and execution

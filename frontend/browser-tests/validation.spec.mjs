@@ -25,6 +25,7 @@ async function fixture(page, role = 'super', runs = [structuredClone(sample)]) {
       value = runs[0]
     } else if (pathname === '/api/notifications/') value = { notifications: [], unread_count: 0 }
     else if (pathname === '/api/sync/status/') value = { enabled: false }
+    else if (!['/api/auth/csrf/', '/api/auth/logout/', '/api/admin/dashboard/'].includes(pathname)) { status = 404; value = { detail: 'Endpoint outside this browser fixture.' } }
     await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(value) })
   })
   return runs
@@ -33,12 +34,41 @@ async function fixture(page, role = 'super', runs = [structuredClone(sample)]) {
 test('[regression] dashboard calculates percentage including failed and skipped checks and shows expected/actual defects', async ({ page }) => {
   await fixture(page)
   await page.goto('/admin/evaluation')
-  await expect(page.getByText('33.3% automated checks passed')).toBeVisible()
+  await expect(page.getByTestId('pass-rate')).toHaveText('33.3%')
   await page.getByLabel('Show unsuccessful checks only').check()
   await expect(page.getByText('Synthetic signal processing', { exact: false })).toHaveCount(0)
   await page.getByText('Synthetic failure detail', { exact: false }).click()
   await expect(page.getByText('Two report records', { exact: true })).toBeVisible()
   await expect(page.getByText('Expected 2, received 1')).toBeVisible()
+})
+
+test('[regression] test review supports pagination, search and category filtering', async ({ page }) => {
+  const run = structuredClone(sample)
+  run.tests = Array.from({ length: 25 }, (_, index) => ({ ...sample.tests[0], id: `fixture.${index}`, name: `Case ${String(index).padStart(2, '0')}`, category: index === 24 ? 'reports' : 'eeg' }))
+  await fixture(page, 'super', [run])
+  await page.goto('/admin/evaluation')
+  await expect(page.locator('#test-results details')).toHaveCount(20)
+  await page.getByRole('button', { name: 'Next page' }).click()
+  await expect(page.locator('#test-results details')).toHaveCount(5)
+  await page.getByLabel('Search tests').fill('Case 24')
+  await expect(page.locator('#test-results details')).toHaveCount(1)
+  await page.getByLabel('Search tests').fill('')
+  await page.getByLabel(/^Category/).selectOption('reports')
+  await expect(page.locator('#test-results details')).toHaveCount(1)
+  await expect(page.getByText('Case 24', { exact: false })).toBeVisible()
+})
+
+test('[regression] previous-run comparison requires an identical test cohort', async ({ page }) => {
+  const latest = structuredClone(sample)
+  latest.id = 'c'.repeat(32)
+  latest.started_at = '2026-02-01T00:00:00Z'
+  latest.tests[1].status = 'passed'
+  await fixture(page, 'super', [latest, structuredClone(sample)])
+  await page.goto('/admin/evaluation')
+  await expect(page.getByText('+33.3 percentage points vs. previous run')).toBeVisible()
+  latest.tests[0].id = 'different-check'
+  await page.getByRole('button', { name: 'Refresh results' }).click()
+  await expect(page.getByText('Test coverage changed · comparison unavailable')).toBeVisible()
 })
 
 test('[regression] run button starts a run and prevents duplicate browser requests', async ({ page }) => {
@@ -52,6 +82,7 @@ test('[regression] run button starts a run and prevents duplicate browser reques
 test('[regression] manual expected and actual results are saved and displayed', async ({ page }) => {
   await fixture(page)
   await page.goto('/admin/evaluation')
+  await page.getByText('Headset, device and accessibility evidence', { exact: true }).click()
   await page.getByLabel('Expected result', { exact: true }).fill('Connect within ten seconds')
   await page.getByLabel('Actual result and measurements').fill('Connected in four seconds')
   await page.getByRole('button', { name: 'Save manual check' }).click()
@@ -75,6 +106,7 @@ for (const width of [360, 390, 768, 1280]) {
     await expect(page.getByRole('heading', { name: 'System validation' })).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
     if (width === 1280) await page.screenshot({ path: '../.runtime/validation-preview.png', fullPage: true })
+    if (width === 390) await page.screenshot({ path: '../.runtime/validation-mobile-preview.png', fullPage: true })
   })
 }
 
@@ -92,8 +124,8 @@ test('[usability] keyboard can reach and activate validation controls with visib
   await expect(page.getByRole('heading', { name: 'System validation' })).toBeVisible()
   await page.keyboard.press('Tab')
   await expect(page.getByRole('link', { name: '← System overview' })).toBeFocused()
-  await page.keyboard.press('Tab')
   const button = page.getByRole('button', { name: 'Run all automated tests' })
+  for (let index = 0; index < 8 && !await button.evaluate(element => element === document.activeElement); index++) await page.keyboard.press('Tab')
   await expect(button).toBeFocused()
   expect(await button.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none')
   await page.keyboard.press('Enter')
@@ -114,7 +146,7 @@ test('[usability] validation renders within five seconds with synthetic API resp
   await fixture(page)
   const started = Date.now()
   await page.goto('/admin/evaluation')
-  await expect(page.getByText('33.3% automated checks passed')).toBeVisible()
+  await expect(page.getByTestId('pass-rate')).toHaveText('33.3%')
   expect(Date.now() - started).toBeLessThan(5000)
 })
 
