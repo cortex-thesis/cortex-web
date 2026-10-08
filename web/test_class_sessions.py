@@ -161,6 +161,8 @@ class TeacherLedSessionTests(TestCase):
         group = self.open()
         device = Client()
         device.force_login(self.student.user)
+        self.assertEqual(device.get('/api/class-sessions/').json()['sessions'], [])
+        self.control('start')
         invitations = device.get('/api/class-sessions/').json()['sessions']
         self.assertEqual(invitations[0]['id'], str(group.pk))
         self.assertIsNone(invitations[0]['student_session'])
@@ -169,7 +171,6 @@ class TeacherLedSessionTests(TestCase):
         self.assertEqual(teacher_view['roster'], [{'student_id': self.student.pk, 'name': 'Student', 'joined': False}])
         self.assertEqual(device.post(self.url + 'join/', '{}', content_type='application/json').status_code, 201)
         self.assertTrue(self.client.get(self.url).json()['roster'][0]['joined'])
-        self.control('start')
         self.control('pause')
         self.assertEqual(device.get(self.url).json()['status'], 'paused')
         self.control('resume')
@@ -179,11 +180,13 @@ class TeacherLedSessionTests(TestCase):
         self.assertNotIn('roster', student_view)
 
     def test_reinvite_is_durable_idempotent_and_includes_new_enrollments(self):
-        group = self.open(lesson=False)
+        group = self.open()
+        self.assertEqual(self.control('invite').status_code, 409)
+        self.control('start')
         link = f'/student/class-session/{group.pk}'
         Notification.objects.filter(link=link).update(read_at=timezone.now())
         Enrollment.objects.create(school_class=self.school_class, student=self.outsider, enrolled_by=self.teacher)
-        for revision in (1, 2):
+        for revision in (2, 3):
             response = self.control('invite')
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json()['invitation_revision'], revision)
@@ -221,7 +224,7 @@ class TeacherLedSessionTests(TestCase):
 
     def test_invitation_lobby_and_activation_require_teacher_start(self):
         group = self.open(lesson=False)
-        self.assertEqual(Notification.objects.filter(recipient=self.student, link=f'/student/class-session/{group.pk}').count(), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.student, link=f'/student/class-session/{group.pk}').count(), 0)
         self.assertFalse(Notification.objects.filter(recipient=self.outsider).exists())
         session = self.join(group)
         self.assertEqual(session.status, LearningSession.Status.JOINED)
@@ -420,3 +423,52 @@ class TeacherLedSessionTests(TestCase):
         self.assertEqual(row['progress_percentage'], 0)
         session.refresh_from_db()
         self.assertEqual(session.completion_percentage, 0)
+
+    def test_offline_teacher_closes_active_session_and_persists_report_once(self):
+        group = self.open()
+        self.control('start')
+        session = self.join(group)
+        cutoff = timezone.now() - timedelta(seconds=61)
+        ClassSession.objects.filter(pk=group.pk).update(teacher_last_seen_at=cutoff)
+        self.client.force_login(self.student.user)
+        self.assertEqual(self.client.get('/api/class-sessions/').json()['sessions'], [])
+        group.refresh_from_db()
+        session.refresh_from_db()
+        self.assertEqual(group.status, ClassSession.Status.COMPLETED)
+        self.assertEqual(group.ended_at, cutoff + timedelta(seconds=60))
+        self.assertEqual(session.status, LearningSession.Status.COMPLETED)
+        self.assertTrue(session.analytics.pk)
+        self.assertEqual(group.overview_report['participant_count'], 1)
+        self.assertEqual(group.control_history[-1]['action'], 'teacher_offline')
+        self.assertFalse(Notification.objects.filter(link=f'/student/class-session/{group.pk}').exists())
+        self.assertEqual(self.post(self.url + 'join/', {}).status_code, 409)
+        snapshot = group.overview_report
+        self.assertEqual(self.control('heartbeat').json()['status'], 'completed')
+        self.assertEqual(self.control('start').status_code, 409)
+        self.assertEqual(self.client.get(self.url + 'report/').json(), snapshot)
+
+    def test_teacher_heartbeat_keeps_session_alive_without_control_history_noise(self):
+        group = self.open()
+        ClassSession.objects.filter(pk=group.pk).update(teacher_last_seen_at=timezone.now() - timedelta(seconds=59))
+        before = group.control_history
+        self.assertEqual(self.control('heartbeat').status_code, 200)
+        group.refresh_from_db()
+        self.assertGreater(group.teacher_last_seen_at, timezone.now() - timedelta(seconds=5))
+        self.assertEqual(group.control_history, before)
+        self.client.force_login(self.student.user)
+        self.post(self.url, {'action': 'heartbeat'})
+        group.refresh_from_db()
+        teacher_seen = group.teacher_last_seen_at
+        self.client.get(self.url)
+        group.refresh_from_db()
+        self.assertEqual(group.teacher_last_seen_at, teacher_seen)
+
+    def test_abandoned_lobby_and_legacy_sessions_do_not_block_a_new_lesson(self):
+        group = self.open(lesson=False)
+        ClassSession.objects.filter(pk=group.pk).update(teacher_last_seen_at=None)
+        replacement = self.open()
+        group.refresh_from_db()
+        self.assertEqual(group.status, ClassSession.Status.COMPLETED)
+        self.assertEqual(group.overview_report['participant_count'], 0)
+        self.assertIsNone(group.overview_report['started_at'])
+        self.assertNotEqual(replacement.pk, group.pk)

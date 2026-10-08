@@ -354,6 +354,7 @@ class ClassSession(TimeStampedModel):
     lesson_history = models.JSONField(default=list, blank=True)
     control_history = models.JSONField(default=list, blank=True)
     overview_report = models.JSONField(default=dict, blank=True)
+    teacher_last_seen_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=("school_class",), condition=models.Q(status="active"), name="one_active_class_session")]
