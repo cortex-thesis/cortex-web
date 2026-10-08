@@ -41,10 +41,12 @@ test('EEG navigation requests sound before asynchronous saving', async () => {
   assert.ok(advance.indexOf('playLessonSound(') < advance.indexOf('await trackStudentSlide('))
 })
 
-test('development headset bypass does not trigger the connection-lost overlay', async () => {
+test('headset signal loss does not cover or disable a started lesson', async () => {
   const source = await readFile(new URL('../src/pages/student/LiveEEG.tsx', import.meta.url), 'utf8')
   assert.match(source, /const isDevBypass = import\.meta\.env\.DEV && context\.devBypass === true/)
-  assert.match(source, /const connectionInterrupted = !isDevBypass && lessonStarted/)
+  assert.doesNotMatch(source, /connectionInterrupted|Adjust your headset|Reconnecting to your headset/)
+  assert.match(source, /const calibrated = Boolean\(forcedState \|\| status === 'streaming'\)/)
+  assert.match(source, /inert=\{remotelyPaused\}/)
 })
 
 test('refocus word activity accepts physical keyboard input without a global listener', async () => {

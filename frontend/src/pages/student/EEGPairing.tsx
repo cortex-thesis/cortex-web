@@ -16,12 +16,10 @@ const STEPS = [
 export default function EEGPairing() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { status, error, deviceName, battery, quality, samples, baselineProgress, connect, disconnect } = useMuseStore()
-  const hasSignal = quality.some((value) => value > 0)
+  const { status, error, deviceName, battery, quality, baselineProgress, connect, disconnect } = useMuseStore()
   const cleanContacts = quality.filter((value) => value > 0).length
-  const contactsReady = cleanContacts === MUSE_CHANNELS.length && samples.every((channel) => channel.length >= 128)
-  const ready = status === 'streaming' && contactsReady
-  const currentStep = ready ? 4 : status === 'streaming' && hasSignal ? 3 : status === 'streaming' || status === 'connecting' ? 2 : 1
+  const ready = status === 'streaming'
+  const currentStep = ready ? 4 : status === 'connecting' ? 2 : 1
   const progress = ((currentStep - 1) / (STEPS.length - 1)) * 100
   const busy = status === 'requesting' || status === 'connecting'
   const [showGuide, setShowGuide] = useState(false)
@@ -37,14 +35,13 @@ export default function EEGPairing() {
           </div>
           <div className={styles.centerStatus}>{ready ? <span aria-hidden="true" /> : <Bluetooth size={42} />}</div>
         </div>
-        <div className={styles.textBlock}><h1 className={styles.title}>{ready ? 'Signal check complete' : status === 'streaming' ? 'Adjust the sensor contact' : busy ? 'Connecting to Muse 2' : 'Connect your Muse 2'}</h1><p className={styles.sub}>{ready ? `${deviceName} has a usable signal. You can continue now while Cortex refines the baseline in the background.` : status === 'streaming' ? 'Adjust any highlighted sensor until all four contacts are ready.' : 'Charge and turn on the headband, enable Bluetooth, stay within 1 metre, then choose it from the browser window.'}</p><button className={styles.guideButton} onClick={() => setShowGuide(true)}><HelpCircle size={15} /> How to wear and prepare Muse 2</button></div>
+        <div className={styles.textBlock}><h1 className={styles.title}>{ready ? 'Muse 2 connected' : busy ? 'Connecting to Muse 2' : 'Connect your Muse 2'}</h1><p className={styles.sub}>{ready ? `${deviceName} is connected. You can continue while Cortex checks the signal quietly in the background.` : 'Charge and turn on the headband, enable Bluetooth, stay within 1 metre, then choose it from the browser window.'}</p><button className={styles.guideButton} onClick={() => setShowGuide(true)}><HelpCircle size={15} /> How to wear and prepare Muse 2</button></div>
         {status === 'streaming' && <div className={styles.calibration} role="status"><span><b>{cleanContacts}/4</b> sensor contacts ready</span><span><b>{baselineProgress}%</b> background refinement</span></div>}
         <div className={styles.waveProgress} role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={4}><svg className={styles.waveLine} viewBox="4 0 292 44" preserveAspectRatio="none"><path className={styles.waveTrack} pathLength="100" d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" /><path className={`${styles.waveFill} ${ready ? styles.waveSuccess : ''}`} pathLength="100" strokeDasharray={`${progress} 100`} d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" /></svg><div className={styles.stepNodes}>{STEPS.map((step, index) => { const Icon = step.icon; const number = index + 1; return <span key={step.label} className={`${styles.stepNode} ${number < currentStep ? styles.stepComplete : ''} ${number === currentStep ? styles.stepActive : ''}`}><Icon size={14} /></span> })}</div></div>
       </div>
       {error && <AlertBanner variant="error" title="Muse connection" message={error} className={styles.errorBanner} />}
       <div className={styles.actions}>
         {status !== 'streaming' && <button className={styles.startBtn} disabled={busy} onClick={() => void connect()}>{busy ? 'Connecting…' : 'Choose Muse 2'}</button>}
-        {status === 'streaming' && !ready && <button className={styles.retryBtn} onClick={disconnect}>Disconnect</button>}
         {ready && <button className={styles.startBtn} onClick={() => navigate('/student/mode-select', { state: location.state })}>Continue</button>}
         {import.meta.env.DEV && <button className={styles.retryBtn} onClick={() => navigate('/student/mode-select', { state: { ...(location.state ?? {}), devBypass: true } })}>Development: test without a headset</button>}
       </div>

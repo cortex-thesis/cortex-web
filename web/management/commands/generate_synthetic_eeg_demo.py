@@ -16,8 +16,6 @@ from sklearn.preprocessing import StandardScaler
 
 FEATURES = ["absolute_theta", "absolute_alpha", "absolute_beta", "absolute_gamma", "theta_beta_ratio"]
 CLASSES = ["focused", "relaxed", "distracted", "overstimulated"]
-# Artificial class centers for software demonstrations only. They are intentionally
-# separable and must not be presented as measured physiological reference ranges.
 PROFILES = {
     "focused": np.array([3.00, 2.90, 3.38, 2.92]),
     "relaxed": np.array([3.06, 3.38, 2.96, 2.72]),
@@ -38,8 +36,6 @@ class Command(BaseCommand):
         rows = max(4, options["rows"]); participants = max(4, options["participants"]); seed = options["seed"]
         rng = np.random.default_rng(seed)
         participant_ids = [f"SYNTH-{index:03d}" for index in range(1, participants + 1)]
-        # Deliberately overlapping distributions make this a less trivial demo.
-        # These values are calibration parameters, not physiological estimates.
         participant_offsets = {participant: rng.normal(0, 0.09, 4) for participant in participant_ids}
         x, y, groups = [], [], []
         per_class = rows // len(CLASSES); remainder = rows % len(CLASSES)
