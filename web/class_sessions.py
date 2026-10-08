@@ -1,9 +1,10 @@
 """Durable teacher-led classrooms, student lobby membership, and overview reports."""
 import csv
 import io
+from datetime import timedelta
 
 from django.db import IntegrityError, transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -18,6 +19,49 @@ from .views import _audit, _body, _lesson_data, _require_profile, _session_is_li
 
 OPEN_STATUSES = (ClassSession.Status.SCHEDULED, ClassSession.Status.ACTIVE, ClassSession.Status.PAUSED)
 STATES = ('focused', 'relaxed', 'distracted', 'overstimulated')
+TEACHER_TIMEOUT = timedelta(seconds=60)
+
+
+def expire_offline_sessions():
+    """Recheck presence under the same lock used by teacher controls."""
+    cutoff = timezone.now() - TEACHER_TIMEOUT
+    candidates = ClassSession.objects.filter(status__in=OPEN_STATUSES).filter(
+        Q(teacher_last_seen_at__lt=cutoff) | Q(teacher_last_seen_at__isnull=True))
+    closed = 0
+    for group_id in candidates.values_list('pk', flat=True):
+        with transaction.atomic():
+            group = ClassSession.objects.select_for_update(of=('self',)).select_related(
+                'school_class', 'lesson', 'started_by').get(pk=group_id)
+            if group.status in OPEN_STATUSES and (
+                    group.teacher_last_seen_at is None or group.teacher_last_seen_at < cutoff):
+                ended_at = (group.teacher_last_seen_at + TEACHER_TIMEOUT
+                            if group.teacher_last_seen_at else timezone.now())
+                finish_group(group, ended_at, 'teacher_offline')
+                group.save()
+                closed += 1
+    return closed
+
+
+def finish_group(group, now, action='end'):
+    group.status = ClassSession.Status.COMPLETED
+    group.ended_at = now
+    for session in group.student_sessions.all():
+        finalize_student(session, now)
+    event(group, action, lesson_id=group.lesson_id, mode=group.presentation_mode)
+    rows = [participant_data(session, group) for session in group.student_sessions.select_related('student')]
+    for row in rows:
+        if row['last_seen_at']:
+            row['last_seen_at'] = row['last_seen_at'].isoformat()
+    group.overview_report = {
+        'class_name': group.school_class.name, 'teacher_name': group.started_by.display_name,
+        'started_at': group.started_at.isoformat() if group.started_at else None,
+        'ended_at': now.isoformat(), 'lessons': group.lesson_history,
+        'participants': rows, 'participant_count': len(rows),
+        'answered': sum(row['answered'] for row in rows), 'correct': sum(row['correct'] for row in rows),
+        'controls': group.control_history,
+    }
+    Notification.objects.filter(kind=Notification.Kind.CLASS,
+                                link=f'/student/class-session/{group.pk}').delete()
 
 
 def available_lessons(school_class):
@@ -115,8 +159,8 @@ def invite_students(group):
         Notification.objects.update_or_create(
             recipient=enrollment.student, kind=Notification.Kind.CLASS,
             link=f'/student/class-session/{group.pk}',
-            defaults={'title': 'Your teacher has opened a session',
-                      'body': f'Join {group.school_class.name} and wait for your teacher to begin.',
+            defaults={'title': 'Your teacher has started a lesson',
+                      'body': f'Join the lesson in {group.school_class.name}.',
                       'read_at': None},
         )
 
@@ -164,7 +208,8 @@ def class_sessions(request):
         if profile.role == Profile.Role.TEACHER:
             groups = groups.filter(school_class__teacher=profile)
         else:
-            groups = groups.filter(school_class__enrollments__student=profile, school_class__enrollments__removed_at__isnull=True, status__in=OPEN_STATUSES).distinct()
+            groups = groups.filter(school_class__enrollments__student=profile, school_class__enrollments__removed_at__isnull=True,
+                                   status__in=(ClassSession.Status.ACTIVE, ClassSession.Status.PAUSED)).distinct()
         return JsonResponse({'sessions': [group_data(group, profile, detailed=False) for group in groups[:50]]})
     if profile.role != Profile.Role.TEACHER:
         return JsonResponse({'detail': 'Only teachers can open a class session.'}, status=403)
@@ -180,7 +225,6 @@ def class_sessions(request):
                 group.lesson_history = [{'id': lesson.pk, 'title': lesson.title}]
             event(group, 'open_lobby')
             group.save()
-            invite_students(group)
     except (KeyError, ValueError, TypeError, SchoolClass.DoesNotExist, Lesson.DoesNotExist):
         return JsonResponse({'detail': 'Choose one of your active classes and an available lesson.'}, status=400)
     _audit(profile, 'class_session_opened', group)
@@ -219,10 +263,16 @@ def class_session_detail(request, group_id):
     with transaction.atomic():
         group = ClassSession.objects.select_for_update(of=('self',)).select_related('school_class', 'lesson', 'started_by').get(pk=group.pk)
         if group.status not in OPEN_STATUSES:
-            if action == 'end':
+            if action in ('end', 'heartbeat'):
                 return JsonResponse(group_data(group, profile))
             return JsonResponse({'detail': 'This class session has ended.'}, status=409)
+        if action == 'heartbeat':
+            group.teacher_last_seen_at = timezone.now()
+            group.save(update_fields=['teacher_last_seen_at'])
+            return JsonResponse(group_data(group, profile, include_lesson=True))
         if action == 'invite':
+            if group.status == ClassSession.Status.SCHEDULED:
+                return JsonResponse({'detail': 'Start a lesson before inviting students.'}, status=409)
             invite_students(group)
         elif action == 'set_lesson':
             try:
@@ -248,33 +298,20 @@ def class_session_detail(request, group_id):
                 return JsonResponse({'detail': 'Choose a lesson before starting the lobby session.'}, status=409)
             group.status = ClassSession.Status.ACTIVE
             group.started_at = timezone.now()
+            invite_students(group)
+            event(group, 'invite')
         elif action == 'pause' and group.status == ClassSession.Status.ACTIVE:
             group.status = ClassSession.Status.PAUSED
             SessionSlideExposure.objects.filter(session__class_session=group, exited_at__isnull=True).update(exited_at=timezone.now())
         elif action == 'resume' and group.status == ClassSession.Status.PAUSED:
             group.status = ClassSession.Status.ACTIVE
         elif action == 'end':
-            group.status = ClassSession.Status.COMPLETED
-            group.ended_at = timezone.now()
-            for session in group.student_sessions.all():
-                finalize_student(session, group.ended_at)
+            finish_group(group, timezone.now())
         else:
             return JsonResponse({'detail': 'This action is not available in the current session state.'}, status=409)
-        event(group, action, lesson_id=group.lesson_id, mode=group.presentation_mode)
-        if action == 'end':
-            rows = [participant_data(session, group) for session in group.student_sessions.select_related('student')]
-            group.overview_report = {
-                'class_name': group.school_class.name, 'teacher_name': group.started_by.display_name,
-                'started_at': group.started_at.isoformat() if group.started_at else None,
-                'ended_at': group.ended_at.isoformat(), 'lessons': group.lesson_history,
-                'participants': rows, 'participant_count': len(rows),
-                'answered': sum(row['answered'] for row in rows), 'correct': sum(row['correct'] for row in rows),
-                'controls': group.control_history,
-            }
-            # JSON snapshots contain only scalar values and ISO timestamps.
-            for row in rows:
-                if row['last_seen_at']:
-                    row['last_seen_at'] = row['last_seen_at'].isoformat()
+        if action != 'end':
+            event(group, action, lesson_id=group.lesson_id, mode=group.presentation_mode)
+        group.teacher_last_seen_at = timezone.now()
         group.save()
     _audit(profile, 'class_session_control', group, {'action': action})
     return JsonResponse(group_data(group, profile, include_lesson=True))
