@@ -8,6 +8,7 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   onOpen?: () => void
+  role?: 'student' | 'teacher'
 }
 
 function relativeTime(value: string) {
@@ -30,7 +31,7 @@ function NotificationIcon({ kind }: { kind: string }) {
   return <Info size={17} />
 }
 
-export default function StudentNotificationPopover({ open, onOpenChange, onOpen }: Props) {
+export default function StudentNotificationPopover({ open, onOpenChange, onOpen, role = 'student' }: Props) {
   const navigate = useNavigate()
   const anchorRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -61,7 +62,7 @@ export default function StudentNotificationPopover({ open, onOpenChange, onOpen 
 
   async function select(item: AppNotification) {
     if (!item.read && !await markRead(item.id)) return
-    const destination = item.link.startsWith('/student/') && !item.link.includes('\\') && !item.link.startsWith('//') ? item.link : ''
+    const destination = item.link.startsWith(`/${role}/`) && !item.link.includes('\\') && !item.link.startsWith('//') ? item.link : ''
     onOpenChange(false)
     if (destination) navigate(destination)
   }
@@ -91,7 +92,7 @@ export default function StudentNotificationPopover({ open, onOpenChange, onOpen 
       {error && <p className={styles.message} role="alert">{error}</p>}
       <div className={styles.list}>
         {loading ? <p className={styles.message} role="status">Loading notifications…</p> : visible.length === 0 ? <div className={styles.empty}><Bell size={20} /><strong>You’re all caught up.</strong><span>No new notifications right now.</span></div> : visible.map(item => {
-          const actionable = item.link.startsWith('/student/')
+          const actionable = item.link.startsWith(`/${role}/`)
           return <button key={item.id} className={styles.item} data-unread={!item.read} disabled={busy} onClick={() => void select(item)} aria-label={`${item.title}. ${item.body}. ${relativeTime(item.createdAt)}${!item.read ? '. Unread' : ''}${actionable ? '' : '. Marks as read'}`}>
             <span className={styles.itemIcon} aria-hidden="true"><NotificationIcon kind={item.kind} /></span>
             <span className={styles.itemContent}>

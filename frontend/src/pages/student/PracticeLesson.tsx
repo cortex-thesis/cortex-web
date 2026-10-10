@@ -1,4 +1,4 @@
-import { Activity, useEffect, useState } from 'react'
+import { Activity, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, RotateCcw} from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
@@ -50,6 +50,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
   const [retry, setRetry] = useState<Record<number, number>>({})
   const [visited, setVisited] = useState<Set<number>>(() => new Set())
   const [saving, setSaving] = useState(false)
+  const advancing = useRef(false)
   const [saveError, setSaveError] = useState('')
   const [completed, setCompleted] = useState<Set<number>>(() => new Set())
   useEffect(() => {
@@ -68,18 +69,19 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
   }, [classId, lessonId])
   const back = () => navigate(lesson ? `/student/class/${classId}/package/${lesson.package}` : `/student/class/${classId}`, { replace: true })
   const slide = lesson?.slides[position]
-  async function advance() {
-    if (!slide || saving) return
+  async function advance(selected = responses[position]) {
+    if (!slide || advancing.current) return
+    advancing.current = true
     setSaving(true)
     setSaveError('')
     try {
-      await api(`/student/classes/${classId}/lessons/${lessonId}/`, { method: 'POST', body: JSON.stringify({ slide_id: slide.id, selected: responses[position] }) })
+      await api(`/student/classes/${classId}/lessons/${lessonId}/`, { method: 'POST', body: JSON.stringify({ slide_id: slide.id, selected }) })
       setPosition((value) => value + 1)
       setVisited((previous) => new Set(previous).add(position + 1))
       setCompleted((previous) => new Set(previous).add(position))
     } catch (reason) {
       setSaveError(reason instanceof Error ? reason.message : 'Progress could not be saved. Please try again.')
-    } finally { setSaving(false) }
+    } finally { advancing.current = false; setSaving(false) }
   }
   const tasks: Task[] = lesson ? lesson.slides.map((slide, index) => {
     const configuration = taskConfiguration(slide.activity.configuration) as Partial<Task>
@@ -118,7 +120,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       <div className={eegStyles.modeStage}>
       <div className={`${playerStyles.stage} ${videoSlide ? playerStyles.videoStage : ''}`}>
         {tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}>
-            <TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onChanged={() => {
+            <TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onContinueWithoutVideo={() => void advance('continued_without_video')} onChanged={() => {
               setAnswered(previous => { const next = { ...previous }; delete next[index]; return next })
               setResponses(previous => { const next = { ...previous }; delete next[index]; return next })
               setCompleted(previous => { const next = new Set(previous); next.delete(index); return next })
@@ -135,9 +137,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || saving} onClick={() => { playLessonSound('transition'); setVisited((previous) => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
         {isActivity && !['audio_sequence', 'memory_flip', 'scenario_classifier'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry((previous) => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered((previous) => { const next = { ...previous }; delete next[position]; return next }); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
         {videoSlide && !answered[position] && <button type="button" className={`${playerStyles.button} ${playerStyles.skipVideo}`} disabled={saving} onClick={() => {
-          setResponses(previous => ({ ...previous, [position]: 'continued_without_video' }))
-          setAnswered(previous => ({ ...previous, [position]: true }))
-          setCompleted(previous => new Set(previous).add(position))
+          void advance('continued_without_video')
         }}>Continue without video</button>}
         <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || saving} onClick={() => { playLessonSound(position === lesson!.slides.length - 1 ? 'finished' : 'transition'); void advance() }}>{saving ? 'Saving progress…' : position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next activity'}<ArrowRight size={18} /></button>
       </nav>}

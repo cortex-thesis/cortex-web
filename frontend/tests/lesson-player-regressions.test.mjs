@@ -37,7 +37,7 @@ test('both lesson players apply the shared video layout and dot-aligned progress
 
 test('EEG navigation requests sound before asynchronous saving', async () => {
   const source = await readFile(new URL('../src/pages/student/LiveEEG.tsx', import.meta.url), 'utf8')
-  const advance = source.slice(source.indexOf('async function advance()'), source.indexOf('const controls ='))
+  const advance = source.slice(source.indexOf('async function advance('), source.indexOf('const controls ='))
   assert.ok(advance.indexOf('playLessonSound(') < advance.indexOf('await trackStudentSlide('))
 })
 

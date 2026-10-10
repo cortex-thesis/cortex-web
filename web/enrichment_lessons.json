@@ -40,8 +40,9 @@
             {
               "id": "sports",
               "title": "Sports Area",
-              "description": "Physical and sport skills. PNG/video needed.",
-              "alt_text": "Sports activity placeholder"
+              "description": "Coordination, teamwork, and physical skills.",
+              "alt_text": "Sports ball",
+              "image_url": "/assets/enrichment/sports.svg"
             }
           ],
           "action_label": "Enter the gallery",
@@ -60,7 +61,7 @@
           "choices": [],
           "answer": "",
           "template": "visual_narrative",
-          "content_description": "Short locally validated demonstrations are still needed for each gallery space.",
+          "content_description": "Notice what each activity asks a person to create or do.",
           "steps": [
             {
               "id": "sing",
@@ -86,7 +87,9 @@
             {
               "id": "move",
               "title": "Participate in sport",
-              "description": "Develop approved physical or sport skills."
+              "description": "Develop approved physical or sport skills.",
+              "image_url": "/assets/enrichment/sports.svg",
+              "alt_text": "Sports ball"
             }
           ],
           "action_label": "Continue",
@@ -97,15 +100,13 @@
         }
       },
       {
-        "title": "Identify the Talent Area",
-        "type": "image",
+        "title": "Behind the Gallery Doors",
+        "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "",
+          "question": "Turn over the cards. Match each activity picture to the skill it uses.",
           "choices": [],
           "answer": "",
-          "template": "visual_narrative",
-          "content_description": "Identify what the person is doing rather than ranking the talent.",
           "steps": [
             {
               "id": "instrument",
@@ -120,7 +121,48 @@
               "alt_text": "Drawing activity"
             }
           ],
-          "action_label": "Try sorting"
+          "action_label": "Try sorting",
+          "task_template": "memory_flip",
+          "pairs": [
+            {
+              "id": "music",
+              "left": {
+                "id": "instrument",
+                "label": "Playing an instrument",
+                "image_url": "/assets/pre-vocational/common/music.png"
+              },
+              "right": {
+                "id": "sound",
+                "label": "Making music"
+              }
+            },
+            {
+              "id": "art",
+              "left": {
+                "id": "drawing",
+                "label": "Drawing",
+                "image_url": "/assets/pre-vocational/common/drawing-interest.png"
+              },
+              "right": {
+                "id": "visual",
+                "label": "Creating visual art"
+              }
+            },
+            {
+              "id": "acting",
+              "left": {
+                "id": "scene",
+                "label": "Acting in a scene",
+                "image_url": "/assets/pre-vocational/common/movie-recreation.png"
+              },
+              "right": {
+                "id": "perform",
+                "label": "Telling a story through performance"
+              }
+            }
+          ],
+          "correct_feedback": "You connected each activity with its skill.",
+          "retry_feedback": "Look for the skill that goes with the activity."
         }
       },
       {
@@ -150,7 +192,9 @@
             },
             {
               "id": "sport",
-              "label": "Participating in a sport"
+              "label": "Participating in a sport",
+              "image_url": "/assets/enrichment/sports.svg",
+              "alt_text": "Sports ball"
             }
           ],
           "categories": [
@@ -186,36 +230,96 @@
         }
       },
       {
-        "title": "More Than One Skill",
+        "title": "Build a School Showcase",
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Can one activity involve more than one skill?",
+          "question": "Your class is preparing a showcase. Choose the skill needed for each job.",
           "choices": [
             "Yes",
             "No"
           ],
           "answer": "Yes",
-          "task_template": "yes_no",
+          "task_template": "scenario_classifier",
           "correct_feedback": "Correct. Activities may combine several abilities.",
-          "retry_feedback": "Think about a performance that uses movement, timing, and cooperation."
+          "retry_feedback": "Think about what the team needs to create: sound, a picture, or a performance.",
+          "scenarios": [
+            {
+              "clue": "The welcome song needs a steady beat. Which team can help?",
+              "choices": [
+                "Music team",
+                "Poster team",
+                "Sports team"
+              ],
+              "answer": "Music team",
+              "feedback": "Musicians can keep the beat together."
+            },
+            {
+              "clue": "Visitors need a colourful poster showing where to go. Which team fits?",
+              "choices": [
+                "Acting team",
+                "Visual arts team",
+                "Music team"
+              ],
+              "answer": "Visual arts team",
+              "feedback": "Visual artists use images and design to communicate."
+            },
+            {
+              "clue": "A short scene will show how to welcome a new classmate. Who can bring it to life?",
+              "choices": [
+                "Sports team",
+                "Performing arts team",
+                "Poster team"
+              ],
+              "answer": "Performing arts team",
+              "feedback": "Performers use characters and actions to tell the story."
+            }
+          ]
         }
       },
       {
-        "title": "Which Area Is Shown?",
+        "title": "Skills Can Work Together",
         "type": "interactive",
         "configuration": {
-          "image_url": "/assets/pre-vocational/common/music.png",
-          "question": "A person is playing a musical instrument. Which area is shown?",
+          "image_url": null,
+          "question": "A performance has singing AND acting. Select both skill areas it uses.",
           "choices": [
             "Music",
             "Visual Arts",
             "Sports"
           ],
           "answer": "Music",
-          "task_template": "multiple_choice",
-          "correct_feedback": "Correct. Playing an instrument is a music skill.",
-          "retry_feedback": "Look at what the person is using to create sound."
+          "task_template": "picture_choice",
+          "correct_feedback": "Yes. Singing and acting combine music and performing arts.",
+          "retry_feedback": "Select two areas: one for singing and one for acting.",
+          "selection_mode": "multiple",
+          "items": [
+            {
+              "id": "music",
+              "label": "Music",
+              "image_url": "/assets/pre-vocational/common/music.png"
+            },
+            {
+              "id": "art",
+              "label": "Visual arts",
+              "image_url": "/assets/pre-vocational/common/drawing-interest.png"
+            },
+            {
+              "id": "perform",
+              "label": "Performing arts",
+              "image_url": "/assets/pre-vocational/common/movie-recreation.png"
+            },
+            {
+              "id": "sport",
+              "label": "Sports",
+              "image_url": "/assets/enrichment/sports.svg",
+              "alt_text": "Sports ball"
+            }
+          ],
+          "correct_item_ids": [
+            "music",
+            "perform"
+          ]
         }
       },
       {
@@ -242,7 +346,9 @@
             },
             {
               "id": "sports",
-              "label": "Sports"
+              "label": "Sports",
+              "image_url": "/assets/enrichment/sports.svg",
+              "alt_text": "Sports ball"
             },
             {
               "id": "other",
@@ -290,17 +396,26 @@
     "description": "Integrated enrichment lesson for student practice and teacher review.",
     "slides": [
       {
-        "title": "My Music Studio",
-        "type": "audio",
+        "title": "Your Rhythm Studio",
+        "type": "image",
         "configuration": {
           "image_url": null,
           "question": "",
           "choices": [],
           "answer": "",
-          "content_label": "Audio needed: brief approved music sample",
-          "content_description": "How might a person participate in making music?",
+          "content_description": "Replay as often as you need. A visual prompt is available for every listening round.",
           "duration_seconds": 12,
-          "action_label": "Enter the studio"
+          "action_label": "Enter the studio",
+          "template": "visual_narrative",
+          "steps": [
+            {
+              "id": "mission",
+              "title": "Listen, copy, then solve",
+              "description": "Explore voice and instruments, copy three sound patterns, then solve a music-team challenge.",
+              "image_url": "/assets/pre-vocational/common/music.png",
+              "alt_text": "Music studio"
+            }
+          ]
         }
       },
       {
@@ -333,138 +448,276 @@
         }
       },
       {
-        "title": "Station 1: Voice",
-        "type": "video",
-        "configuration": {
-          "image_url": null,
-          "question": "",
-          "choices": [],
-          "answer": "",
-          "template": "instructional_video",
-          "content_label": "Video needed: brief age-respectful singing demonstration",
-          "content_description": "Learners may participate through an appropriate alternative communication or music mode.",
-          "duration_seconds": 25,
-          "action_label": "Continue"
-        }
-      },
-      {
-        "title": "Station 2: Instrument",
-        "type": "video",
-        "configuration": {
-          "image_url": null,
-          "question": "",
-          "choices": [],
-          "answer": "",
-          "template": "instructional_video",
-          "content_label": "Video needed: familiar approved instrument demonstration",
-          "content_description": "Tapping an on-screen instrument does not prove instrumental proficiency.",
-          "duration_seconds": 25,
-          "action_label": "Continue"
-        }
-      },
-      {
-        "title": "Station 3: Follow the Sound",
+        "title": "Discover Your Music Tools",
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Follow the short pattern: tap, tap, pause, tap.",
+          "question": "Find the pairs: match each music tool with how it makes sound.",
           "choices": [],
           "answer": "",
-          "task_template": "sequence_order",
-          "items": [
+          "duration_seconds": 25,
+          "action_label": "Continue",
+          "task_template": "memory_flip",
+          "pairs": [
             {
-              "id": "tap-1",
+              "id": "voice",
+              "left": {
+                "id": "singer",
+                "label": "Voice",
+                "image_url": "/assets/enrichment/voice.svg",
+                "alt_text": "Voice"
+              },
+              "right": {
+                "id": "singing",
+                "label": "Humming or singing"
+              }
+            },
+            {
+              "id": "drum",
+              "left": {
+                "id": "drum",
+                "label": "Drum",
+                "image_url": "/assets/enrichment/drum.svg",
+                "alt_text": "Drum"
+              },
+              "right": {
+                "id": "tapping",
+                "label": "Tapping a surface"
+              }
+            },
+            {
+              "id": "shaker",
+              "left": {
+                "id": "shaker",
+                "label": "Shaker",
+                "image_url": "/assets/enrichment/shaker.svg",
+                "alt_text": "Shaker"
+              },
+              "right": {
+                "id": "shaking",
+                "label": "Moving small pieces inside a container"
+              }
+            }
+          ],
+          "correct_feedback": "You matched three different ways to make sound.",
+          "retry_feedback": "Think about the action that makes each sound."
+        }
+      },
+      {
+        "title": "Complete the Rhythm",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "A rest is a silent beat. Find the next beat in this repeating rhythm.",
+          "choices": [],
+          "answer": "rest",
+          "duration_seconds": 25,
+          "action_label": "Continue",
+          "task_template": "pattern_builder",
+          "pattern": [
+            {
+              "id": "a",
               "label": "Tap"
             },
             {
-              "id": "tap-2",
+              "id": "b",
               "label": "Tap"
             },
             {
-              "id": "pause",
-              "label": "Pause"
+              "id": "c",
+              "label": "Rest"
             },
             {
-              "id": "tap-3",
+              "id": "d",
+              "label": "Tap"
+            },
+            {
+              "id": "e",
               "label": "Tap"
             }
           ],
-          "correct_order": [
-            "tap-1",
-            "tap-2",
-            "pause",
-            "tap-3"
+          "items": [
+            {
+              "id": "tap",
+              "label": "Tap"
+            },
+            {
+              "id": "rest",
+              "label": "Rest"
+            },
+            {
+              "id": "hum",
+              "label": "Hum"
+            }
           ],
-          "correct_feedback": "You followed the pattern.",
-          "retry_feedback": "Listen again and follow one sound at a time.",
-          "content_description": "Audio pattern needed; one trial must not be used as a talent rating."
+          "correct_feedback": "The silent beat completes tap, tap, rest.",
+          "retry_feedback": "Compare the first three beats with the next three."
         }
       },
       {
-        "title": "What Music Skill Is This?",
+        "title": "Echo the Sound Pattern",
         "type": "interactive",
         "configuration": {
-          "image_url": "/assets/pre-vocational/common/music.png",
-          "question": "A person is using their voice to make music. Which skill is shown?",
+          "image_url": null,
+          "question": "Listen, then copy the order. Low note: a deep tone. High note: a bright tone. Tap: a short click.",
+          "choices": [],
+          "answer": "",
+          "task_template": "audio_sequence",
+          "items": [
+            {
+              "id": "low",
+              "label": "Low note",
+              "symbol": "●"
+            },
+            {
+              "id": "high",
+              "label": "High note",
+              "symbol": "▲"
+            },
+            {
+              "id": "tap",
+              "label": "Tap",
+              "symbol": "◆"
+            }
+          ],
+          "correct_feedback": "You copied all three patterns.",
+          "retry_feedback": "Replay the pattern or reveal the visual prompt, then try again.",
+          "content_description": "Low note: a deep tone. High note: a bright tone. Tap: a short click.",
+          "rounds": [
+            {
+              "direction": "Low note, high note.",
+              "correct_order": [
+                "low",
+                "high"
+              ],
+              "audio_url": "/assets/sounds/enrichment/echo-1.wav"
+            },
+            {
+              "direction": "Tap, low note, high note.",
+              "correct_order": [
+                "tap",
+                "low",
+                "high"
+              ],
+              "audio_url": "/assets/sounds/enrichment/echo-2.wav"
+            },
+            {
+              "direction": "High note, tap, low note.",
+              "correct_order": [
+                "high",
+                "tap",
+                "low"
+              ],
+              "audio_url": "/assets/sounds/enrichment/echo-3.wav"
+            }
+          ]
+        }
+      },
+      {
+        "title": "Solve the Band Challenge",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Choose what helps the musicians work together.",
           "choices": [
             "Singing",
             "Painting",
             "Gardening"
           ],
           "answer": "Singing",
-          "task_template": "multiple_choice",
+          "task_template": "scenario_classifier",
           "correct_feedback": "Correct. The person is using their voice to sing.",
-          "retry_feedback": "Is the person using their voice, creating visual art, or gardening?"
+          "retry_feedback": "Choose the action that makes listening and practising together easier.",
+          "scenarios": [
+            {
+              "clue": "The group starts at different times. What should they try?",
+              "choices": [
+                "Agree on a count-in",
+                "Play louder",
+                "Ignore the others"
+              ],
+              "answer": "Agree on a count-in",
+              "feedback": "A shared count-in helps everyone start together."
+            },
+            {
+              "clue": "The singer cannot hear the beat. What could the drummer do?",
+              "choices": [
+                "Speed up",
+                "Play a steady, quieter beat",
+                "Change the pattern every time"
+              ],
+              "answer": "Play a steady, quieter beat",
+              "feedback": "A clear, steady beat supports the singer."
+            },
+            {
+              "clue": "A pattern is difficult to remember. What is a useful next step?",
+              "choices": [
+                "Break it into shorter parts",
+                "Skip listening",
+                "Guess faster"
+              ],
+              "answer": "Break it into shorter parts",
+              "feedback": "Short parts make it easier to listen and practise."
+            }
+          ]
         }
       },
       {
-        "title": "My Music Skill Board",
+        "title": "Plan Your Next Studio Visit",
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Place the activities where they fit for you. There are no wrong personal responses.",
+          "question": "Choose what you enjoy and what you want to practise. You may choose the same activity in both areas.",
           "choices": [],
           "answer": "",
-          "task_template": "sort_groups",
+          "task_template": "discovery_board",
           "scored": false,
           "items": [
             {
               "id": "sing",
-              "label": "Singing"
+              "label": "Using my voice",
+              "image_url": "/assets/pre-vocational/common/music.png"
             },
             {
               "id": "instrument",
-              "label": "Playing an instrument"
+              "label": "Playing an instrument",
+              "image_url": "/assets/pre-vocational/common/music.png"
             },
             {
               "id": "pattern",
-              "label": "Following a simple pattern"
+              "label": "Remembering sound patterns"
             },
             {
               "id": "group",
-              "label": "Participating with others"
+              "label": "Making music with others"
+            },
+            {
+              "id": "unsure",
+              "label": "Not sure yet",
+              "image_url": "/assets/pre-vocational/common/not-sure-yet.png"
             }
           ],
           "categories": [
             {
-              "id": "can",
-              "label": "I can do this"
+              "id": "enjoy",
+              "label": "I enjoyed this"
             },
             {
-              "id": "practise",
-              "label": "I am practising this"
-            },
-            {
-              "id": "try",
-              "label": "I would like to try this"
+              "id": "practice",
+              "label": "My next challenge"
             }
           ],
           "sort_answers": {},
-          "correct_feedback": "Your music reflection has been saved.",
+          "correct_feedback": "Your studio plan is saved. Share it with your teacher.",
           "retry_feedback": "Place each activity in the category that fits you.",
-          "content_description": "Teacher observation may supplement this non-scored self-reflection.",
+          "content_description": "Your choices are personal reflections, not a talent score.",
           "layout": {
             "size": "wide"
+          },
+          "evidence_role": "self_report",
+          "self_report_fields": {
+            "enjoy": "music_interests",
+            "practice": "music_practice_goal"
           }
         }
       },
@@ -516,22 +769,7 @@
         }
       },
       {
-        "title": "Watch the Whole Movement",
-        "type": "video",
-        "configuration": {
-          "image_url": null,
-          "question": "",
-          "choices": [],
-          "answer": "",
-          "template": "instructional_video",
-          "content_label": "Video needed: full teacher-approved movement sequence",
-          "content_description": "Watch first. Notice where and how the demonstrator moves.",
-          "duration_seconds": 35,
-          "action_label": "I watched first"
-        }
-      },
-      {
-        "title": "Break It Down",
+        "title": "Meet the Three-Beat Sequence",
         "type": "image",
         "configuration": {
           "image_url": null,
@@ -539,7 +777,42 @@
           "choices": [],
           "answer": "",
           "template": "visual_narrative",
-          "content_description": "Movement videos/cards needed after Panorama approves the accessible movement set.",
+          "content_description": "Ask your teacher to approve or adapt these actions. You can follow the cards while seated, point to them, or imagine the actions.",
+          "duration_seconds": 35,
+          "action_label": "I watched first",
+          "steps": [
+            {
+              "id": "tap",
+              "title": "1. Tap",
+              "description": "Gently tap your lap or desk once.",
+              "image_url": "/assets/enrichment/tap.svg",
+              "alt_text": "1. Tap"
+            },
+            {
+              "id": "clap",
+              "title": "2. Clap",
+              "description": "Clap once, or bring your hands together comfortably.",
+              "image_url": "/assets/enrichment/clap.svg",
+              "alt_text": "2. Clap"
+            },
+            {
+              "id": "pause",
+              "title": "3. Pause",
+              "description": "Rest for one beat. Start again only when ready.",
+              "image_url": "/assets/enrichment/pause.svg",
+              "alt_text": "3. Pause"
+            }
+          ]
+        }
+      },
+      {
+        "title": "Find the Missing Beat",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "The sequence repeats: tap, clap, pause. What comes next?",
+          "choices": [],
+          "answer": "pause",
           "steps": [
             {
               "id": "one",
@@ -561,19 +834,62 @@
           "layout": {
             "size": "wide",
             "preferred_columns": 3
-          }
+          },
+          "task_template": "pattern_builder",
+          "pattern": [
+            {
+              "id": "a",
+              "label": "Tap"
+            },
+            {
+              "id": "b",
+              "label": "Clap"
+            },
+            {
+              "id": "c",
+              "label": "Pause"
+            },
+            {
+              "id": "d",
+              "label": "Tap"
+            },
+            {
+              "id": "e",
+              "label": "Clap"
+            }
+          ],
+          "items": [
+            {
+              "id": "tap",
+              "label": "Tap",
+              "image_url": "/assets/enrichment/tap.svg",
+              "alt_text": "Tap"
+            },
+            {
+              "id": "clap",
+              "label": "Clap",
+              "image_url": "/assets/enrichment/clap.svg",
+              "alt_text": "Clap"
+            },
+            {
+              "id": "pause",
+              "label": "Pause",
+              "image_url": "/assets/enrichment/pause.svg",
+              "alt_text": "Pause"
+            }
+          ],
+          "correct_feedback": "Pause completes the repeating three-beat sequence.",
+          "retry_feedback": "Look at the first three beats, then complete the same sequence."
         }
       },
       {
-        "title": "Mirror Practice",
-        "type": "image",
+        "title": "Remember the Movement Cue",
+        "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "",
+          "question": "Listen, then select the actions in order. You can point to the cards without performing the movements.",
           "choices": [],
           "answer": "",
-          "template": "visual_narrative",
-          "content_description": "The screen coaches while the learner performs away from the primary interaction surface.",
           "steps": [
             {
               "id": "watch",
@@ -595,89 +911,183 @@
           "layout": {
             "size": "wide",
             "preferred_columns": 3
-          }
+          },
+          "task_template": "audio_sequence",
+          "items": [
+            {
+              "id": "tap",
+              "label": "Tap",
+              "symbol": "◆",
+              "image_url": "/assets/enrichment/tap.svg",
+              "alt_text": "Tap"
+            },
+            {
+              "id": "clap",
+              "label": "Clap",
+              "symbol": "●",
+              "image_url": "/assets/enrichment/clap.svg",
+              "alt_text": "Clap"
+            },
+            {
+              "id": "pause",
+              "label": "Pause",
+              "symbol": "■",
+              "image_url": "/assets/enrichment/pause.svg",
+              "alt_text": "Pause"
+            }
+          ],
+          "rounds": [
+            {
+              "direction": "Tap, clap.",
+              "correct_order": [
+                "tap",
+                "clap"
+              ]
+            },
+            {
+              "direction": "Clap, pause, tap.",
+              "correct_order": [
+                "clap",
+                "pause",
+                "tap"
+              ]
+            },
+            {
+              "direction": "Tap, clap, pause.",
+              "correct_order": [
+                "tap",
+                "clap",
+                "pause"
+              ]
+            }
+          ],
+          "correct_feedback": "You remembered each cue sequence.",
+          "retry_feedback": "Listen again or reveal the visual prompt."
         }
       },
       {
-        "title": "Put the Movements Together",
+        "title": "Arrange Your Three-Beat Routine",
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Arrange the approved movement cards in the demonstrated order.",
+          "question": "Put the routine in order: first tap, then clap, then pause.",
           "choices": [],
           "answer": "",
           "task_template": "sequence_order",
           "items": [
             {
-              "id": "move-1",
-              "label": "Movement 1"
+              "id": "tap",
+              "label": "Tap once",
+              "image_url": "/assets/enrichment/tap.svg",
+              "alt_text": "Tap once"
             },
             {
-              "id": "move-2",
-              "label": "Movement 2"
+              "id": "clap",
+              "label": "Clap once",
+              "image_url": "/assets/enrichment/clap.svg",
+              "alt_text": "Clap once"
             },
             {
-              "id": "move-3",
-              "label": "Movement 3"
+              "id": "pause",
+              "label": "Pause for one beat",
+              "image_url": "/assets/enrichment/pause.svg",
+              "alt_text": "Pause for one beat"
             }
           ],
           "correct_order": [
-            "move-1",
-            "move-2",
-            "move-3"
+            "tap",
+            "clap",
+            "pause"
           ],
-          "correct_feedback": "Correct. You arranged the demonstrated movements in order.",
-          "retry_feedback": "Replay the demonstration and watch what comes next.",
-          "content_description": "PLACEHOLDER: cards and final order depend on the approved movement sequence."
+          "correct_feedback": "Your routine is ready: tap, clap, pause.",
+          "retry_feedback": "Start with the tap and end with the pause."
         }
       },
       {
-        "title": "Your Turn: Perform",
-        "type": "video",
-        "configuration": {
-          "image_url": null,
-          "question": "",
-          "choices": [],
-          "answer": "",
-          "template": "instructional_video",
-          "content_label": "Teacher-observed performance checkpoint",
-          "content_description": "Perform the approved sequence independently or with appropriate prompts/support. Screen completion alone is not mastery.",
-          "duration_seconds": 45,
-          "action_label": "Teacher records observation"
-        }
-      },
-      {
-        "title": "A Movement I Enjoyed",
+        "title": "Make the Routine Work for You",
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Choose one approved movement you enjoyed or would like to repeat.",
+          "question": "Solve these practice situations before trying your routine with your teacher.",
+          "choices": [],
+          "answer": "",
+          "content_description": "With teacher approval, try your routine or an adapted version. The screen records knowledge practice; your teacher observes physical participation.",
+          "duration_seconds": 45,
+          "action_label": "Teacher records observation",
+          "task_template": "scenario_classifier",
+          "scenarios": [
+            {
+              "clue": "The routine feels too fast. What helps?",
+              "choices": [
+                "Slow down and practise one part",
+                "Move faster",
+                "Skip the pause"
+              ],
+              "answer": "Slow down and practise one part",
+              "feedback": "A slower pace gives you time to learn the sequence."
+            },
+            {
+              "clue": "A movement is uncomfortable. What should you do?",
+              "choices": [
+                "Push through it",
+                "Pause and ask for an adapted action",
+                "Copy someone faster"
+              ],
+              "answer": "Pause and ask for an adapted action",
+              "feedback": "Your teacher can help choose a comfortable alternative."
+            },
+            {
+              "clue": "You are ready to practise with a partner. How can you start together?",
+              "choices": [
+                "Agree on a count-in",
+                "Start whenever you like",
+                "Both use different sequences"
+              ],
+              "answer": "Agree on a count-in",
+              "feedback": "Count together, then try the same routine at a comfortable pace."
+            }
+          ],
+          "retry_feedback": "Choose the action that supports comfortable, clear practice."
+        }
+      },
+      {
+        "title": "Choose Your Next Practice",
+        "type": "interactive",
+        "configuration": {
+          "image_url": null,
+          "question": "Which part would you like to practise or adapt next?",
           "choices": [],
           "answer": "",
           "task_template": "picture_choice",
           "scored": false,
           "items": [
             {
-              "id": "move-1",
-              "label": "Movement 1"
+              "id": "tap",
+              "label": "The tap",
+              "image_url": "/assets/enrichment/tap.svg",
+              "alt_text": "The tap"
             },
             {
-              "id": "move-2",
-              "label": "Movement 2"
-            },
-            {
-              "id": "move-3",
-              "label": "Movement 3"
+              "id": "clap",
+              "label": "The clap",
+              "image_url": "/assets/enrichment/clap.svg",
+              "alt_text": "The clap"
             },
             {
               "id": "pause",
-              "label": "I would like to pause"
+              "label": "Keeping the pause",
+              "image_url": "/assets/enrichment/pause.svg",
+              "alt_text": "Keeping the pause"
+            },
+            {
+              "id": "adapt",
+              "label": "An adapted routine with my teacher"
             }
           ],
           "correct_item_ids": [],
           "correct_feedback": "Your choice has been saved.",
           "retry_feedback": "Choose a movement or the option to pause.",
-          "content_description": "This preference is non-scored, and adapted/seated participation may be used when approved.",
+          "content_description": "Choose your own next step. There is no wrong preference.",
           "layout": {
             "size": "wide",
             "preferred_columns": 4

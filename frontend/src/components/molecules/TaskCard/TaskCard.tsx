@@ -18,6 +18,7 @@ interface TaskCardProps {
   task: Task
   onAnswered?: (correct: boolean, selected: string) => void
   onChanged?: () => void
+  onContinueWithoutVideo?: () => void
   nudgeText?: string
   showNudge?: boolean
   className?: string
@@ -33,6 +34,7 @@ function TaskCard({
   task,
   onAnswered,
   onChanged,
+  onContinueWithoutVideo,
   nudgeText = 'Focus music playing softly. Keep going!',
   showNudge = false,
   className,
@@ -179,7 +181,7 @@ function TaskCard({
       </div>
 
       {task.narrationScript && <AudioNarration script={task.narrationScript} />}
-      {task.discussion ? <DiscussionCards task={task} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement' || focusTemplate === 'active'} /> : !hasTaskInteraction && (task.template || task.mediaUrl) ? <ActivityTemplate task={task} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
+      {task.discussion ? <DiscussionCards task={task} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement' || focusTemplate === 'active'} /> : !hasTaskInteraction && (task.template || task.mediaUrl) ? <ActivityTemplate task={task} onContinueWithoutVideo={onContinueWithoutVideo} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
       {task.videoOptional && <p>Video unavailable? You can continue and reflect on the lesson examples instead.</p>}
 
       {task.imageUrl && (

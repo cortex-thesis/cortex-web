@@ -55,6 +55,25 @@ class NotificationsAndControlsTests(TestCase):
         badge.save()
         self.assertEqual(self.student.notifications.filter(kind='achievement').count(), 1)
 
+    def test_shared_journal_reaches_teacher_inbox_and_can_be_marked_read(self):
+        self.session.ended_at = timezone.now()
+        self.session.save(update_fields=['ended_at'])
+        self.client.force_login(self.student.user)
+        response = self.post('/api/student/journals/', {
+            'session_id': str(self.session.pk), 'prompt': 'What did you learn?',
+            'response_type': 'text', 'text_response': 'I practised a rhythm.',
+            'mood': 'proud', 'shared_with_teacher': True,
+        })
+        self.assertEqual(response.status_code, 201)
+        self.client.force_login(self.teacher.user)
+        inbox = self.client.get('/api/notifications/').json()
+        notification = next(item for item in inbox['notifications'] if item['kind'] == 'journal')
+        self.assertFalse(notification['read'])
+        self.assertTrue(notification['link'].startswith('/teacher/journals'))
+        self.assertEqual(self.post('/api/notifications/', {'notification_id': notification['id']}).status_code, 200)
+        self.assertEqual(self.client.get('/api/notifications/').json()['unread_count'], 0)
+        self.assertFalse(self.other.notifications.filter(kind='journal').exists())
+
     def test_override_lifecycle_and_permissions(self):
         self.client.force_login(self.teacher.user)
         self.assertEqual(self.post(self.url, {'action': 'claim'}).status_code, 409)

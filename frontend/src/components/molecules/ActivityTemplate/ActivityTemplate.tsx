@@ -8,6 +8,7 @@ import { AdaptiveLessonText } from '../TaskCard/FocusSupport'
 interface ActivityTemplateProps {
   task: Task
   onCompleted?: () => void
+  onContinueWithoutVideo?: () => void
 }
 
 function MediaButton({ playing, label, onClick }: { playing: boolean; label: string; onClick: () => void }) {
@@ -106,7 +107,7 @@ function VideoFallback({ onContinue }: { onContinue?: () => void }) {
   </div>
 }
 
-function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: string; onHalfWatched?: () => void }) {
+function YouTubeVideo({ src, title, onHalfWatched, onContinueWithoutVideo }: { src: string; title: string; onHalfWatched?: () => void; onContinueWithoutVideo?: () => void }) {
   const [errorCode, setErrorCode] = useState<number | null>(null)
   const [reload, setReload] = useState(0)
   const hostRef = useRef<HTMLDivElement | null>(null)
@@ -169,13 +170,13 @@ function YouTubeVideo({ src, title, onHalfWatched }: { src: string; title: strin
   return <>
     {errorCode === null && <div ref={hostRef} className={styles.youtubeHost} />}
     {errorCode !== null && <div role="alert">
-      <VideoFallback onContinue={() => { if (!completedRef.current) { completedRef.current = true; callbackRef.current?.() } }} />
+      <VideoFallback onContinue={onContinueWithoutVideo ?? (() => { if (!completedRef.current) { completedRef.current = true; callbackRef.current?.() } })} />
       <button type="button" className={styles.retryVideo} onClick={() => { setErrorCode(null); setReload(value => value + 1) }}>Try the video again</button>
     </div>}
   </>
 }
 
-function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
+function ActivityTemplate({ task, onCompleted, onContinueWithoutVideo }: ActivityTemplateProps) {
   const [playing, setPlaying] = useState(false)
   const [mediaUnavailable, setMediaUnavailable] = useState(false)
   const template = task.template ?? 'multiple_choice'
@@ -189,11 +190,11 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
 
   if (youtubeUrl) {
     return <section className={`${styles.panel} ${styles.youtubePanel}`}>
-      <YouTubeVideo key={youtubeUrl} src={youtubeUrl} title={task.contentLabel ?? task.title} onHalfWatched={onCompleted} />
+      <YouTubeVideo key={youtubeUrl} src={youtubeUrl} title={task.contentLabel ?? task.title} onHalfWatched={onCompleted} onContinueWithoutVideo={onContinueWithoutVideo} />
     </section>
   }
 
-  if (youtubeLink) return <section className={styles.panel}><VideoFallback onContinue={onCompleted} /></section>
+  if (youtubeLink) return <section className={styles.panel}><VideoFallback onContinue={onContinueWithoutVideo ?? onCompleted} /></section>
 
   if (task.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || template === 'instructional_video' || template === 'calming_soundscape')) {
     if (task.contentType === 'audio' || template === 'calming_soundscape') {
@@ -215,7 +216,7 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
     }
     return <section className={styles.panel}>
       {mediaUnavailable
-        ? <VideoFallback onContinue={onCompleted} />
+        ? <VideoFallback onContinue={onContinueWithoutVideo ?? onCompleted} />
         : <video ref={(node) => { mediaRef.current = node }} className={styles.video} src={task.mediaUrl} controls preload="metadata" onEnded={onCompleted} onError={() => setMediaUnavailable(true)} aria-label={task.contentLabel ?? task.title} />}
     </section>
   }
@@ -225,7 +226,7 @@ function ActivityTemplate({ task, onCompleted }: ActivityTemplateProps) {
   if (template === 'instructional_video') {
     return (
       <section className={`${styles.panel} ${styles.videoPanel}`} aria-label="Instructional video">
-        <VideoFallback onContinue={onCompleted} />
+        <VideoFallback onContinue={onContinueWithoutVideo ?? onCompleted} />
       </section>
     )
   }

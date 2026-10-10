@@ -128,7 +128,7 @@
   color: var(--color-text-muted);
 }
 
-.qrBtn {
+.retryBtn {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -147,7 +147,7 @@
   transition: background var(--transition-base);
 }
 
-.qrBtn:hover {
+.retryBtn:hover {
   background: var(--state-relaxed-fill);
 }
 

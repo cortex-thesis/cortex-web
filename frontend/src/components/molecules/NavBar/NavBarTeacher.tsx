@@ -1,7 +1,7 @@
-import { useNotifications } from '../../../hooks/useNotifications'
+import StudentNotificationPopover from '../../organisms/StudentNotificationPopover/StudentNotificationPopover'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, LogOut, Settings, UserRound } from 'lucide-react'
+import { LogOut, Settings, UserRound } from 'lucide-react'
 import type { User } from '../../../types'
 import { Logo } from '../../atoms'
 import styles from './NavBarTeacher.module.css'
@@ -36,8 +36,7 @@ function getInitials(name: string): string {
 }
 
 function NavBarTeacher({ user }: NavBarTeacherProps) {
-  const { unread_count } = useNotifications()
-  const hasNotification = unread_count > 0
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const logout = useAuthStore((state) => state.logout)
@@ -86,30 +85,12 @@ function NavBarTeacher({ user }: NavBarTeacherProps) {
       </div>
 
       <div className={styles.right}>
-        <button
-          className={styles.notifBtn}
-          onClick={() => navigate('/teacher/notifications')}
-          aria-label={
-            hasNotification
-              ? 'Notifications — you have unread notifications'
-              : 'Notifications'
-          }
-        >
-          <Bell
-            size={18}
-            strokeWidth={1.75}
-            fill={hasNotification ? '#D4537E' : 'none'}
-            color={hasNotification ? '#D4537E' : '#5F5E5A'}
-          />
-          {hasNotification && (
-            <span className={styles.notifDot} aria-hidden="true" />
-          )}
-        </button>
+        <StudentNotificationPopover role="teacher" open={notificationsOpen} onOpenChange={setNotificationsOpen} onOpen={() => setIsMenuOpen(false)} />
 
         <div className={styles.accountMenu} ref={menuRef}>
         <button
           className={styles.avatarBtn}
-          onClick={() => setIsMenuOpen((open) => !open)}
+          onClick={() => { setNotificationsOpen(false); setIsMenuOpen((open) => !open) }}
           aria-label={`Open account menu for ${user.name}`}
           aria-expanded={isMenuOpen}
           aria-haspopup="menu"

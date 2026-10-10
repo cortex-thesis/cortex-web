@@ -66,5 +66,15 @@ FUNC_LESSONS = [
 
 from .func03_refresh import upgrade_func03
 upgrade_func03(FUNC_LESSONS)
+# Concrete contextual pictures for every communication screen.
+_communication = '/assets/functional-academics/func-01/'
+_images = ['needs-assistance', None, None, 'show-gratitude', 'communicate-boundaries', 'social-interaction', None, None]
+for screen, image in zip(FUNC_LESSONS[0]['slides'], _images):
+    if image:
+        screen['configuration'].update(image_url=_communication + image + '.png', alt_text=screen['title'])
+FUNC_LESSONS[0]['slides'][1]['configuration']['steps'][1].update(
+    image_url=_communication + 'communicate-hunger.png', alt_text='Communicating hunger and needs')
+FUNC_LESSONS[0]['slides'][7]['configuration']['steps'][0].update(
+    image_url=_communication + 'social-interaction.png', alt_text='Everyday social communication')
 from .lesson_assets import attach_definitions
 attach_definitions(FUNC_LESSONS)

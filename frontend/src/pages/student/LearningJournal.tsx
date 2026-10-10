@@ -19,6 +19,7 @@ import { PlayfulZoneTemplate } from '../../components/templates'
 import { InlineSkeleton } from '../../components/molecules'
 import type { JournalResponseType, MoodOption } from '../../types'
 import styles from './LearningJournal.module.css'
+import { ApiError } from '../../lib/api'
 import { getStudentJournal, saveStudentJournal, type StudentJournalData } from '../../lib/studentApi'
 
 const MOODS: { value: MoodOption; icon: ReactNode; label: string }[] = [
@@ -56,6 +57,8 @@ export default function LearningJournal() {
   const navigate = useNavigate()
   const location = useLocation()
   const state = (location.state as LocationState) ?? {}
+  const [loading, setLoading] = useState(true)
+  const [noSession, setNoSession] = useState(false)
   const [journalData, setJournalData] = useState<StudentJournalData | null>(null)
   const [mood, setMood] = useState<MoodOption | null>(null)
   const [prompt, setPrompt] = useState(() => PROMPTS[Math.floor(Math.random() * PROMPTS.length)])
@@ -66,8 +69,14 @@ export default function LearningJournal() {
   const tasksDone = journalData?.session.completed_tasks ?? state.tasksDone ?? []
 
   useEffect(() => {
+    let active = true
+    setLoading(true)
+    setNoSession(false)
+    setJournalData(null)
+    setError('')
     void getStudentJournal(state.sessionId)
       .then((data) => {
+        if (!active) return
         setJournalData(data)
         if (data.entry) {
           setPrompt(data.entry.prompt)
@@ -76,7 +85,12 @@ export default function LearningJournal() {
           setResponseType(data.entry.response_type)
         }
       })
-      .catch((reason: Error) => setError(reason.message))
+      .catch((reason: Error) => {
+        if (!active) return
+        if (!state.sessionId && reason instanceof ApiError && reason.status === 404) setNoSession(true)
+        else setError(reason.message)
+      }).finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
   }, [state.sessionId])
 
   async function handleSave() {
@@ -106,6 +120,22 @@ export default function LearningJournal() {
     setResponseType(value)
   }
 
+  if (!journalData) return <PlayfulZoneTemplate showNav={false} showHeader>
+    <div className={styles.page}>
+      <header className={styles.header}><h1>My Learning Journal</h1><button className={styles.skipBtn} onClick={() => navigate('/student/journal/history')}>History</button></header>
+      <section className={styles.reflectionCard}>
+        {loading ? <p role="status">Loading your latest completed session...</p> : noSession ? <>
+          <h2>Your first reflection starts after a session</h2>
+          <p>Complete a learning session, then come back to write, draw, or record what you learned.</p>
+          <button className={styles.saveBtn} onClick={() => navigate('/student/sessions')}>Start a learning session</button>
+        </> : <p role="alert">{error || 'This session is unavailable.'}</p>}
+        <button className={styles.skipBtn} onClick={() => navigate('/student/home')}>Back to home</button>
+      </section>
+    </div>
+  </PlayfulZoneTemplate>
+  const minutes = Math.round(journalData.session.duration_seconds / 60)
+  const learningTime = journalData.session.duration_seconds < 60 ? 'Less than a minute' : `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`
+
   return (
     <PlayfulZoneTemplate showNav={false} showHeader>
       <div className={styles.page}>
@@ -133,7 +163,7 @@ export default function LearningJournal() {
           </div>
           <div className={styles.summaryItem}>
             <span className={`${styles.summaryIcon} ${styles.yellowIcon}`}><Clock3 size={22} /></span>
-            <span><strong>{journalData ? `${Math.max(1, Math.round(journalData.session.duration_seconds / 60))} minutes` : <InlineSkeleton width={70} height={14} />}</strong><small>Learning time</small></span>
+            <span><strong>{journalData ? learningTime : <InlineSkeleton width={70} height={14} />}</strong><small>Learning time</small></span>
           </div>
           <div className={styles.summaryItem}>
             <span className={`${styles.summaryIcon} ${styles.coralIcon}`}><Target size={22} /></span>

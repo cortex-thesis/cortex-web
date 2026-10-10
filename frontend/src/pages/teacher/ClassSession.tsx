@@ -81,7 +81,7 @@ export default function TeacherClassSession() {
     {connectionError && <p className={styles.connection} role="status">{connectionError}</p>}
     {!groupId ? <>
       <section className={styles.panel}><h2>Prepare your classroom</h2><div className={styles.fields}>
-        <label>Class<select value={selectedClass} onChange={event => setSelectedClass(event.target.value)}><option value="">Choose a class</option>{classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label>Class<select value={selectedClass} onChange={event => setSelectedClass(event.target.value)}><option value="" disabled>Choose a class</option>{classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       </div><button className={styles.primary} disabled={!selectedClass || busy} onClick={() => void openLobby()}>{busy ? 'Opening…' : 'Prepare lobby'}</button><p>Select a lesson, then start it to invite students. Sessions close after 60 seconds without teacher presence.</p></section>
       <section className={styles.panel}><h2>Recent sessions and reports</h2>{history.length ? history.map(item => <Link className={styles.history} key={item.id} to={`/teacher/class-session/${item.id}`}><strong>{item.class_name}</strong><span>{item.lesson_title ?? 'Lesson not selected'}</span><span>{item.status === 'completed' ? 'View overview report' : item.status === 'scheduled' ? 'Reopen lobby' : item.status}</span></Link>) : <p>No teacher-led sessions yet.</p>}</section>
     </> : !session ? <p role="status">Loading classroom…</p> : ended ? <section className={styles.panel}>

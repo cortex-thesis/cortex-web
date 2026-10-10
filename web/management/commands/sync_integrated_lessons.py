@@ -15,10 +15,11 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--owner', help='Username of the content owner; defaults to an administrator.')
+        parser.add_argument('--enrichment-only', action='store_true', help='Update only the three enrichment lessons.')
 
     @transaction.atomic
     def handle(self, *args, **options):
-        for package in ('care', 'life', 'prev', 'live', 'func', 'career'):
+        for package in (() if options['enrichment_only'] else ('care', 'life', 'prev', 'live', 'func', 'career')):
             call_command(f'sync_{package}_lessons', owner=options['owner'], stdout=self.stdout)
         owners = Profile.objects.select_related('user')
         owner = owners.filter(user__username=options['owner']).first() if options['owner'] else owners.filter(role=Profile.Role.ADMIN).order_by('pk').first()
@@ -52,9 +53,12 @@ class Command(BaseCommand):
             if existing:
                 raise CommandError('Obsolete slides require a reviewed migration; no content was changed.')
             self.stdout.write(f"{definition['lesson_id']}: {lesson.title} ({len(definition['slides'])} screens)")
+        packages = CurriculumPackage.objects.filter(is_active=True)
+        if options['enrichment_only']:
+            packages = packages.filter(slug='enrichment')
         ClassPackage.objects.bulk_create([
             ClassPackage(school_class_id=class_id, package_id=package_id)
             for class_id in SchoolClass.objects.values_list('pk', flat=True)
-            for package_id in CurriculumPackage.objects.filter(is_active=True).values_list('pk', flat=True)
+            for package_id in packages.values_list('pk', flat=True)
         ], ignore_conflicts=True)
-        self.stdout.write(self.style.SUCCESS('All integrated lessons are available to enrolled students.'))
+        self.stdout.write(self.style.SUCCESS('Enrichment lessons updated.' if options['enrichment_only'] else 'All integrated lessons are available to enrolled students.'))

@@ -244,10 +244,12 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const isActivity = Boolean(task && (task.taskTemplate || (task.template ?? 'multiple_choice') === 'multiple_choice'))
   const requiresMedia = Boolean(!task?.videoOptional && task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
   const canAdvance = !focusGates[task?.id ?? ''] && (answered[position] || (!isActivity && !requiresMedia))
+  const advancing = useRef(false)
   const videoSlide = Boolean(task && (task.contentType === 'video' || task.template === 'instructional_video')) && displayMode === 'focus'
   const wideSlide = task?.layout?.size === 'wide' || task?.layout?.size === 'immersive'
-  async function advance() {
-    if (savingStep || !lesson || teacherControl?.paused || mode !== 'focus') return
+  async function advance(selected?: string) {
+    if (advancing.current || !lesson || teacherControl?.paused || mode !== 'focus' || focusGates[task?.id ?? '']) return
+    advancing.current = true
     playLessonSound(position === lesson.slides.length - 1 ? 'finished' : 'transition')
     if (sessionId) {
       setSavingStep(true)
@@ -258,13 +260,20 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
         } else {
           await trackStudentSlide(sessionId, lesson.slides[position].id, 'enter')
         }
+        if (selected) {
+          await api(`/sessions/${sessionId}/slides/${lesson.slides[position].id}/`, {
+            method: 'POST', body: JSON.stringify({ action: 'answer', correct: true, selected, attempt: (retry[position] ?? 0) + 1 }),
+          })
+          setAnswered(previous => ({ ...previous, [position]: true }))
+        }
         await trackStudentSlide(sessionId, lesson.slides[position].id, 'complete')
       } catch {
         setError('Your lesson progress could not be saved. Please try Next again.')
         return
-      } finally { setSavingStep(false) }
+      } finally { advancing.current = false; setSavingStep(false) }
     }
     setCompleted(previous => new Set(previous).add(position))
+    advancing.current = false
     setPosition(position + 1)
     setVisited(previous => new Set(previous).add(position + 1))
     if (position + 1 >= lesson!.slides.length) recordingStopped.current = true
@@ -363,7 +372,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
       {phase !== 'complete' && (displayMode === 'breathing' || displayMode === 'refocus') && <EEGRegulation key={displayMode} mode={displayMode} nextCalmActivity={() => nextCalmActivity(calmDeck.current)} paused={teacherControl?.paused} allowResume={adaptive && !modeLeaving} state={currentState} transitionState={adaptive ? transitionState : () => 'distracted'} onResume={resumeLesson} onBreathing={() => setMode('breathing')} />}
       {phase !== 'complete' && displayMode === 'returning' && <div className={styles.returnTransition} role="status"><span aria-hidden="true" /><h2>Let's ease back into your lesson</h2><p>One activity at a time. You can go at your own pace.</p></div>}
       <Activity mode={displayMode === 'focus' || phase === 'complete' ? 'visible' : 'hidden'}>
-      <div className={playerStyles.stage}>{phase === 'complete' ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>{ending ? 'Session complete' : 'Lesson complete'}</h2><p role="status">{savingSession ? 'Saving your recorded session...' : teacherControl && !ending ? 'Wait here for your teacher to choose the next lesson or end the session.' : 'Your recorded session is ready to save.'}</p>{(!teacherControl || ending) && <button disabled={savingSession} className={`${playerStyles.button} ${playerStyles.next}`} onClick={() => void finish()}>{savingSession ? 'Saving...' : 'Save and finish session'}</button>}</div> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}><TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} focusTemplate={index === position ? focusTemplate : 'none'} focusHolding={currentState === 'focused' || currentState === 'relaxed'} onFocusGateChange={blocked => setFocusGates(previous => previous[item.id] === blocked ? previous : { ...previous, [item.id]: blocked })} deliveryStrategy={focusTemplate === 'rest' ? 'sensory_cooldown' : 'steady_instruction'} onChanged={() => setAnswered(previous => { const next = { ...previous }; delete next[index]; return next })} onAnswered={(correct, selected) => {
+      <div className={playerStyles.stage}>{phase === 'complete' ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>{ending ? 'Session complete' : 'Lesson complete'}</h2><p role="status">{savingSession ? 'Saving your recorded session...' : teacherControl && !ending ? 'Wait here for your teacher to choose the next lesson or end the session.' : 'Your recorded session is ready to save.'}</p>{(!teacherControl || ending) && <button disabled={savingSession} className={`${playerStyles.button} ${playerStyles.next}`} onClick={() => void finish()}>{savingSession ? 'Saving...' : 'Save and finish session'}</button>}</div> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}><TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onContinueWithoutVideo={() => void advance('continued_without_video')} focusTemplate={index === position ? focusTemplate : 'none'} focusHolding={currentState === 'focused' || currentState === 'relaxed'} onFocusGateChange={blocked => setFocusGates(previous => previous[item.id] === blocked ? previous : { ...previous, [item.id]: blocked })} deliveryStrategy={focusTemplate === 'rest' ? 'sensory_cooldown' : 'steady_instruction'} onChanged={() => setAnswered(previous => { const next = { ...previous }; delete next[index]; return next })} onAnswered={(correct, selected) => {
         setAnswered(previous => ({ ...previous, [index]: correct }))
         saveAnswer(index, correct, selected)
       }} /></Activity>) : null}</div>
@@ -371,9 +380,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
         <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || savingStep} onClick={() => { playLessonSound('transition'); setVisited(previous => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
         {isActivity && !['audio_sequence', 'memory_flip', 'scenario_classifier'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} onClick={() => { setRetry(previous => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered(previous => { const next = { ...previous }; delete next[position]; return next }) }}><RotateCcw size={18} />Try again</button>}
         {videoSlide && !answered[position] && <button type="button" className={`${playerStyles.button} ${playerStyles.skipVideo}`} disabled={savingStep} onClick={() => {
-          setAnswered(previous => ({ ...previous, [position]: true }))
-          setCompleted(previous => new Set(previous).add(position))
-          saveAnswer(position, true, 'continued_without_video')
+          void advance('continued_without_video')
         }}>Continue without video</button>}
         <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || savingStep} onClick={() => void advance()}>{savingStep ? 'Saving progress…' : position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next activity'}<ArrowRight size={18} /></button>
       </nav>}

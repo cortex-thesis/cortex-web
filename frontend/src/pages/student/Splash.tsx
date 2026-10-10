@@ -29,7 +29,7 @@ const STUDENT_STEPS: SplashStep[] = [
   {
     icon: Headphones,
     title: 'Join your class',
-    sub: 'Enter the code your teacher gave you, or scan the QR code to join your class.',
+    sub: 'Enter the code your teacher gave you to join your class.',
     cta: 'Join a class',
   },
   {
