@@ -21,6 +21,7 @@ from .models import IdAllocation, ReplicaState
 
 APP_LABELS = {"web", "auth", "contenttypes", "admin"}
 BLOCK_SIZE = 100_000
+CLOUD_FETCH_BATCH_SIZE = 25
 _cloud_snapshots = {}
 
 
@@ -51,10 +52,10 @@ def snapshot(alias, model_list=None):
     return result
 
 
-def cloud_snapshot(model_list):
+def cloud_snapshot(model_list, baseline=None):
     """Transfer row fingerprints, then only changed rows, under cloud locks.
 
-    Cache is process-local and disposable: restarting performs one full import.
+    Validate durable baseline rows with PostgreSQL fingerprints on restart.
     Fingerprints include every column, so bulk SQL edits and deletes are visible.
     Never expose cached dictionaries to the merge/apply code for mutation.
     """
@@ -73,12 +74,32 @@ def cloud_snapshot(model_list):
             )
             fingerprints = {str(key): digest for key, digest in cursor.fetchall()}
             old_hashes, old_rows = _cloud_snapshots.get((identity, table), ({}, {}))
+            if not old_rows and baseline and baseline.get(table):
+                old_rows = {
+                    key: {field.attname: row.get(field.attname)
+                          for field in model._meta.concrete_fields}
+                    for key, row in baseline[table].items()
+                }
+                candidates = [
+                    {field.column: row[field.attname]
+                     for field in model._meta.concrete_fields}
+                    for row in old_rows.values()
+                ]
+                cursor.execute(
+                    f"SELECT t.{quote(model._meta.pk.column)}, md5(row_to_json(t)::text) "
+                    f"FROM json_populate_recordset(NULL::{quote(table)}, %s::json) t",
+                    [json.dumps(candidates, cls=SnapshotEncoder)],
+                )
+                old_hashes = {str(key): digest for key, digest in cursor.fetchall()}
             changed = [key for key, digest in fingerprints.items()
                        if old_hashes.get(key) != digest]
             changed_keys = set(changed)
             rows = {key: old_rows[key] for key in fingerprints if key not in changed_keys}
-            for offset in range(0, len(changed), 500):
-                keys = changed[offset:offset + 500]
+            # EEG rows contain raw-channel JSON. Keep pooler responses small
+            # while retaining the same locked snapshot and every changed row.
+            batch_size = 1 if table in {"web_baselineepoch", "web_eegrawchunk"} else CLOUD_FETCH_BATCH_SIZE
+            for offset in range(0, len(changed), batch_size):
+                keys = changed[offset:offset + batch_size]
                 fetched = model._base_manager.using("cloud").filter(pk__in=keys).values()
                 for row in json.loads(json.dumps(list(fetched), cls=SnapshotEncoder)):
                     rows[str(row[model._meta.pk.attname])] = row
@@ -197,7 +218,8 @@ def sync_transaction(model_list):
     remote_transaction.__enter__()
     try:
         lock_cloud(model_list)
-        remote = cloud_snapshot(model_list)
+        checkpoint = ReplicaState.objects.filter(pk=1).only("baseline").first()
+        remote = cloud_snapshot(model_list, checkpoint.baseline if checkpoint else None)
         local_transaction = transaction.atomic(using="default")
         local_transaction.__enter__()
     except BaseException:

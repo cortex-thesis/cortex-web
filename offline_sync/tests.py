@@ -19,6 +19,72 @@ from .models import IdAllocation, ReplicaState
 
 
 class MergeTests(SimpleTestCase):
+    def test_large_cloud_snapshot_is_complete_across_small_batches(self):
+        from .engine import cloud_snapshot, _cloud_snapshots, CLOUD_FETCH_BATCH_SIZE
+        _cloud_snapshots.clear()
+        connection = MagicMock(vendor='postgresql')
+        connection.ops.quote_name.side_effect = lambda name: '"' + name + '"'
+        count = CLOUD_FETCH_BATCH_SIZE * 2 + 3
+        connection.cursor.return_value.__enter__.return_value.fetchall.return_value = [
+            (key, str(key)) for key in range(count)
+        ]
+        model = MagicMock()
+        model._meta.db_table = 'test_eeg'
+        model._meta.pk.attname = model._meta.pk.column = 'id'
+        query = model._base_manager.using.return_value.filter
+
+        def fetch(pk__in):
+            batch = MagicMock()
+            batch.values.return_value = [{'id': int(key), 'raw_channels': {'channel': [int(key)] * 100}}
+                                         for key in pk__in]
+            return batch
+
+        query.side_effect = fetch
+        try:
+            with patch('offline_sync.engine.connections', {'cloud': connection}), patch('offline_sync.engine.cloud_identity', return_value='batch-test'):
+                result = cloud_snapshot([model])['test_eeg']
+            self.assertEqual(len(result), count)
+            self.assertEqual(query.call_count, 3)
+            self.assertTrue(all(len(call.kwargs['pk__in']) <= CLOUD_FETCH_BATCH_SIZE for call in query.call_args_list))
+            for key in range(count):
+                self.assertEqual(result[str(key)]['raw_channels']['channel'], [key] * 100)
+        finally:
+            _cloud_snapshots.clear()
+
+    def test_durable_baseline_is_validated_before_reuse(self):
+        from .engine import cloud_snapshot, _cloud_snapshots
+        _cloud_snapshots.clear()
+        connection = MagicMock(vendor='postgresql')
+        connection.ops.quote_name.side_effect = lambda name: '"' + name + '"'
+        cursor = connection.cursor.return_value.__enter__.return_value
+        cursor.fetchall.side_effect = [[(1, 'same'), (2, 'new')], [(1, 'same'), (2, 'old'), (3, 'deleted')]]
+        model = MagicMock()
+        model._meta.db_table = 'test_table'
+        model._meta.pk.attname = model._meta.pk.column = 'id'
+        fields = []
+        for name in ['id', 'name', 'new_nullable']:
+            field = MagicMock(attname=name, column=name)
+            fields.append(field)
+        model._meta.concrete_fields = fields
+        baseline = {'test_table': {
+            '1': {'id': 1, 'name': 'unchanged'},
+            '2': {'id': 2, 'name': 'old'},
+            '3': {'id': 3, 'name': 'deleted'},
+        }}
+        query = model._base_manager.using.return_value.filter
+        query.return_value.values.return_value = [{'id': 2, 'name': 'changed', 'new_nullable': None}]
+        try:
+            with patch('offline_sync.engine.connections', {'cloud': connection}), patch('offline_sync.engine.cloud_identity', return_value='baseline-test'):
+                result = cloud_snapshot([model], baseline)
+            query.assert_called_once_with(pk__in=['2'])
+            self.assertEqual(result['test_table'], {
+                '1': {'id': 1, 'name': 'unchanged', 'new_nullable': None},
+                '2': {'id': 2, 'name': 'changed', 'new_nullable': None},
+            })
+            self.assertNotIn('new_nullable', baseline['test_table']['1'])
+        finally:
+            _cloud_snapshots.clear()
+
     def test_cloud_fingerprints_fetch_only_changed_rows_and_detect_deletes(self):
         from .engine import cloud_snapshot, _cloud_snapshots
         _cloud_snapshots.clear()
