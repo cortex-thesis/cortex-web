@@ -1,3 +1,4 @@
+from .school_years import school_years
 from .notifications import notifications
 from .account_management import account_detail
 from .validation import validation_runs, validation_manual
@@ -75,6 +76,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("admin/school-years/", school_years, name="school-years"),
     path('admin/accounts/<int:profile_id>/', account_detail, name='admin-account-detail'),
     path("admin/validation/", validation_runs, name="validation-runs"),
     path("admin/validation/<str:run_id>/manual/", validation_manual, name="validation-manual"),

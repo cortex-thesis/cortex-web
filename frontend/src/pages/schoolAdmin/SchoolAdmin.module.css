@@ -44,3 +44,9 @@
 @media (max-width: 780px) { .stats { grid-template-columns: repeat(2, 1fr); } .classRow { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 780px) { .performanceRow { grid-template-columns: 1fr; gap: 12px; } }
 @media (max-width: 520px) { .stats, .performanceGrid, .formGrid { grid-template-columns: 1fr; } .header { align-items: flex-start; flex-direction: column; } .search { width: 100%; min-width: 0; } }
+
+.yearRow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #eeece6; }
+.yearActions, .yearForm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.yearForm { margin-top: 16px; }
+.yearForm label { display: grid; gap: 6px; }
+.yearForm .search { min-width: 0; max-width: 100%; }

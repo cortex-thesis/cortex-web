@@ -35,6 +35,7 @@ from .models import (
     ModelVersion, SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction,
     UserPreference,
 )
+from .school_years import report_year_scope, visible_classes, year_key
 from .statistics import percentages, sample_distribution
 from .activity_templates import ACTIVITY_TEMPLATES, LAYOUT_OPTIONS, TASK_TEMPLATES, validate_activity_configuration
 
@@ -431,7 +432,7 @@ def admin_dashboard(request):
             "active_users": profiles.filter(account_status=Profile.AccountStatus.ACTIVE).count(),
             "pending_invitations": profiles.filter(account_status=Profile.AccountStatus.PENDING).count(),
             "school_count": School.objects.filter(is_active=True).count(),
-            "class_count": SchoolClass.objects.filter(status=SchoolClass.Status.ACTIVE).count(),
+            "class_count": visible_classes(SchoolClass.objects.filter(status=SchoolClass.Status.ACTIVE)).count(),
             "active_sessions": sessions.filter(ended_at__isnull=True).count(),
             "total_sessions": sessions.count(),
             "device_count": devices.count(),
@@ -442,7 +443,7 @@ def admin_dashboard(request):
         })
     if not admin.is_school_admin or not admin.school_id:
         return JsonResponse({"detail": "School-administrator scope is required."}, status=403)
-    classes = SchoolClass.objects.filter(school=admin.school).select_related("teacher", "teacher__school", "teacher__user").annotate(
+    classes = visible_classes(SchoolClass.objects.filter(school=admin.school, status=SchoolClass.Status.ACTIVE)).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
         session_count=Count("sessions", distinct=True),
         average_completion=Avg("sessions__completion_percentage"),
@@ -1233,10 +1234,10 @@ def student_dashboard(request):
 
 
 def _student_dashboard_data(profile):
-    classes_qs = SchoolClass.objects.filter(
+    classes_qs = visible_classes(SchoolClass.objects.filter(
         enrollments__student=profile, enrollments__removed_at__isnull=True,
         status=SchoolClass.Status.ACTIVE,
-    ).select_related("teacher", "teacher__school", "teacher__user").annotate(
+    )).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
         average_focus=Avg("sessions__analytics__focused_percentage"),
     ).distinct()
@@ -1488,17 +1489,16 @@ def _teacher_dashboard_data(profile, filters=None):
     selected_class = filters.get('class_id', '')
     if selected_class and not str(selected_class).isdigit():
         raise ValueError('Choose a valid class.')
-    class_items = list(SchoolClass.objects.filter(
+    class_items = list(visible_classes(SchoolClass.objects.filter(
         teacher=profile, status=SchoolClass.Status.ACTIVE,
-    ).select_related("teacher", "teacher__school", "teacher__user").annotate(
+    )).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
         average_focus=Avg("sessions__analytics__focused_percentage"),
         latest_session_at=Max("sessions__started_at"),
     ).order_by(F('latest_session_at').desc(nulls_last=True), '-created_at', '-pk'))
     packages = _active_packages()
     student_ids = Enrollment.objects.filter(
-        school_class__teacher=profile, school_class__status=SchoolClass.Status.ACTIVE,
-        removed_at__isnull=True,
+        school_class__in=class_items, removed_at__isnull=True,
     ).values_list("student_id", flat=True).distinct()
     sessions = LearningSession.objects.filter(school_class__in=class_items)
     # Recent activity spans all assigned active classes, independently of report filters.
@@ -1819,7 +1819,10 @@ def teacher_advanced_reports(request):
         return error
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
-    classes = list(SchoolClass.objects.filter(teacher=profile, status=SchoolClass.Status.ACTIVE).order_by("name"))
+    year_classes, year_data, error = report_year_scope(request, profile)
+    if error is not None:
+        return error
+    classes = list(year_classes.order_by("name"))
     class_id = request.GET.get("class_id")
     school_class = next((item for item in classes if str(item.pk) == class_id), None) if class_id else (classes[0] if classes else None)
     if class_id and school_class is None:
@@ -1927,6 +1930,7 @@ def teacher_advanced_reports(request):
         node["slides"] = sorted(slides, key=lambda item: item["position"])
         lesson_results.append(node)
     return JsonResponse({
+        **year_data,
         "generated_at": timezone.now(),
         "classes": [{"id": item.pk, "name": item.name} for item in classes],
         "selected_class_id": school_class.pk if school_class else None,
@@ -1973,7 +1977,7 @@ def classes(request):
     else:
         queryset = SchoolClass.objects.all() if profile.is_super_admin else SchoolClass.objects.filter(school=profile.school)
     packages = _active_packages()
-    queryset = queryset.select_related("teacher", "teacher__school", "teacher__user").annotate(
+    queryset = visible_classes(queryset).select_related("teacher", "teacher__school", "teacher__user").annotate(
         active_student_count=Count("enrollments", filter=Q(enrollments__removed_at__isnull=True), distinct=True),
     )
     return JsonResponse({"classes": [_class_data(item, packages=packages) for item in queryset]})
@@ -2638,9 +2642,10 @@ def teacher_reports(request):
         return error
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
-    class_items = list(SchoolClass.objects.filter(
-        teacher=profile, status=SchoolClass.Status.ACTIVE,
-    ).order_by("name"))
+    year_classes, year_data, error = report_year_scope(request, profile)
+    if error is not None:
+        return error
+    class_items = list(year_classes.order_by("name"))
     class_id = request.GET.get("class_id")
     selected_class = next((item for item in class_items if str(item.pk) == class_id), None) if class_id else (class_items[0] if class_items else None)
     if class_id and selected_class is None:
@@ -2648,8 +2653,7 @@ def teacher_reports(request):
 
     student_items = list(
         Profile.objects.filter(
-            enrollments__school_class=selected_class,
-            enrollments__removed_at__isnull=True,
+            Q(enrollments__school_class=selected_class) | Q(learning_sessions__school_class=selected_class),
             role=Profile.Role.STUDENT,
         ).select_related("user").distinct().order_by("display_name", "user__username")
     ) if selected_class else []
@@ -2718,8 +2722,9 @@ def teacher_reports(request):
         "selected_class_id": selected_class.pk if selected_class else None,
         "selected_student_id": selected_student.pk if selected_student else None,
         "selected_student_name": (selected_student.display_name or selected_student.user.username) if selected_student else None,
+        **year_data,
         "class_name": selected_class.name if selected_class else None,
-        "school_year": selected_class.school_year if selected_class else "",
+        "school_year": year_key(selected_class.school_year) if selected_class else "",
         "range": range_key, "start_date": start_date, "end_date": today,
         "prepared_by": profile.display_name,
         "summary": {

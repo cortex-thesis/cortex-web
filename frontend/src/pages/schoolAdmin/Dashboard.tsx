@@ -1,3 +1,4 @@
+import SchoolYears from './SchoolYears'
 import { useEffect, useState } from 'react'
 import { BookOpen, Brain, CheckCircle2, Clock, GraduationCap, Users } from 'lucide-react'
 import SchoolAdminDashboard from '../../components/templates/SchoolAdminDashboard'
@@ -18,6 +19,7 @@ export default function Dashboard() {
     {error && <p className={styles.error}>{error}</p>}
     {!data && !error && <><CardGridSkeleton count={4} /><ListSkeleton rows={5} /></>}
     {data && <>
+    <SchoolYears onChange={() => { void api<SchoolDashboardData>('/admin/dashboard/', { cache: 'no-store' }).then(setData).catch((reason: Error) => setError(reason.message)) }} />
     <div className={styles.stats}>{stats.map(([value, label, Icon]) => <div className={`${styles.card} ${styles.stat}`} key={label}><span className={styles.icon}><Icon size={19} /></span><span><strong className={styles.value}>{value}</strong><span className={styles.label}>{label}</span></span></div>)}</div>
     <section className={styles.performanceGrid} aria-label="School performance summary">
       <div className={`${styles.card} ${styles.performanceCard}`}><span className={styles.performanceIcon}><Brain size={20} /></span><div><span className={styles.meta}>Average focus</span><strong className={styles.performanceValue}>{data?.average_focus ?? 0}%</strong><div className={styles.progress}><span style={{ width: `${data?.average_focus ?? 0}%` }} /></div></div></div>

@@ -30,6 +30,20 @@ class School(TimeStampedModel):
         return self.name
 
 
+class SchoolYear(TimeStampedModel):
+    school = models.ForeignKey(School, on_delete=models.PROTECT, related_name="school_years")
+    name = models.CharField(max_length=20)
+    is_active = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=("school", "name"), name="unique_school_year_name"),
+            models.UniqueConstraint(fields=("school",), condition=models.Q(is_active=True), name="unique_active_school_year"),
+            models.CheckConstraint(condition=~models.Q(is_active=True, is_archived=True), name="active_year_not_archived"),
+        ]
+
+
 class Profile(models.Model):
     class AvatarColor(models.TextChoices):
         PINK = "pink", "Pink"
