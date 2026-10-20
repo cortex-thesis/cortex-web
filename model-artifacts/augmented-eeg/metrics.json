@@ -1,0 +1,3676 @@
+{
+  "display_name": "Augmented EEG Classifier",
+  "workflow": "augmented_eeg_random_forest",
+  "deployment_scope": "experimental_system",
+  "biological_validation": false,
+  "purpose": "Augmented EEG system classifier with disclosed artificial demonstration data",
+  "features": [
+    "log_theta",
+    "log_alpha",
+    "log_beta",
+    "log_gamma",
+    "linear_theta_beta_ratio"
+  ],
+  "used_features": [
+    "log_theta",
+    "log_alpha",
+    "log_beta",
+    "log_gamma"
+  ],
+  "ignored_features": [
+    "linear_theta_beta_ratio"
+  ],
+  "feature_transform": "Original-training-only StandardScaler on four log10 band powers",
+  "cluster_to_state": {
+    "0": "overstimulated",
+    "1": "relaxed",
+    "2": "focused",
+    "3": "distracted"
+  },
+  "total_counts": {
+    "real": 95,
+    "eeg_derived_augmented": 300,
+    "artificial_separable_demo": 1000
+  },
+  "training_rows": 1116,
+  "test_rows": 279,
+  "mixed_demo_only": {
+    "rows": 279,
+    "correct": 228,
+    "accuracy": 0.8172043010752689,
+    "macro_f1": 0.8319968934736732,
+    "per_class": {
+      "distracted": {
+        "precision": 1.0,
+        "recall": 0.7142857142857143,
+        "f1-score": 0.8333333333333334,
+        "support": 70.0
+      },
+      "focused": {
+        "precision": 1.0,
+        "recall": 0.6756756756756757,
+        "f1-score": 0.8064516129032258,
+        "support": 74.0
+      },
+      "overstimulated": {
+        "precision": 1.0,
+        "recall": 0.8771929824561403,
+        "f1-score": 0.9345794392523364,
+        "support": 57.0
+      },
+      "relaxed": {
+        "precision": 0.6046511627906976,
+        "recall": 1.0,
+        "f1-score": 0.7536231884057971,
+        "support": 78.0
+      },
+      "accuracy": 0.8172043010752689,
+      "macro avg": {
+        "precision": 0.9011627906976745,
+        "recall": 0.8167885931043826,
+        "f1-score": 0.8319968934736732,
+        "support": 279.0
+      },
+      "weighted avg": {
+        "precision": 0.889472368092023,
+        "recall": 0.8172043010752689,
+        "f1-score": 0.8246035463125714,
+        "support": 279.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        50,
+        0,
+        0,
+        20
+      ],
+      [
+        0,
+        50,
+        0,
+        24
+      ],
+      [
+        0,
+        0,
+        50,
+        7
+      ],
+      [
+        0,
+        0,
+        0,
+        78
+      ]
+    ]
+  },
+  "by_provenance": {
+    "real": {
+      "rows": 19,
+      "correct": 8,
+      "accuracy": 0.42105263157894735,
+      "macro_f1": 0.14814814814814814,
+      "per_class": {
+        "distracted": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 4.0
+        },
+        "focused": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 5.0
+        },
+        "overstimulated": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 2.0
+        },
+        "relaxed": {
+          "precision": 0.42105263157894735,
+          "recall": 1.0,
+          "f1-score": 0.5925925925925926,
+          "support": 8.0
+        },
+        "accuracy": 0.42105263157894735,
+        "macro avg": {
+          "precision": 0.10526315789473684,
+          "recall": 0.25,
+          "f1-score": 0.14814814814814814,
+          "support": 19.0
+        },
+        "weighted avg": {
+          "precision": 0.1772853185595568,
+          "recall": 0.42105263157894735,
+          "f1-score": 0.24951267056530213,
+          "support": 19.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          4
+        ],
+        [
+          0,
+          0,
+          0,
+          5
+        ],
+        [
+          0,
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          0,
+          0,
+          8
+        ]
+      ]
+    },
+    "eeg_derived_augmented": {
+      "rows": 60,
+      "correct": 20,
+      "accuracy": 0.3333333333333333,
+      "macro_f1": 0.125,
+      "per_class": {
+        "distracted": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 16.0
+        },
+        "focused": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 19.0
+        },
+        "overstimulated": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 5.0
+        },
+        "relaxed": {
+          "precision": 0.3333333333333333,
+          "recall": 1.0,
+          "f1-score": 0.5,
+          "support": 20.0
+        },
+        "accuracy": 0.3333333333333333,
+        "macro avg": {
+          "precision": 0.08333333333333333,
+          "recall": 0.25,
+          "f1-score": 0.125,
+          "support": 60.0
+        },
+        "weighted avg": {
+          "precision": 0.1111111111111111,
+          "recall": 0.3333333333333333,
+          "f1-score": 0.16666666666666666,
+          "support": 60.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          16
+        ],
+        [
+          0,
+          0,
+          0,
+          19
+        ],
+        [
+          0,
+          0,
+          0,
+          5
+        ],
+        [
+          0,
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "artificial_separable_demo": {
+      "rows": 200,
+      "correct": 200,
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "per_class": {
+        "distracted": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 50.0
+        },
+        "focused": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 50.0
+        },
+        "overstimulated": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 50.0
+        },
+        "relaxed": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 50.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 200.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 200.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          50,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          50,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          50,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          50
+        ]
+      ]
+    }
+  },
+  "evaluation_scope": "Historical mixed demonstration; not unseen-student EEG accuracy",
+  "test_cases": [
+    {
+      "row_id": "REAL-0076",
+      "provenance": "real",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1054878386986413,
+        -1.2564573431181505,
+        -0.7564368274006398,
+        -0.8893685488269045
+      ]
+    },
+    {
+      "row_id": "REAL-0077",
+      "provenance": "real",
+      "actual": "overstimulated",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.0128407063225953,
+        -1.138477758571837,
+        0.9686814393353356,
+        1.718787033758173
+      ]
+    },
+    {
+      "row_id": "REAL-0078",
+      "provenance": "real",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1417633786588584,
+        -0.7432794506359319,
+        0.10757583602774301,
+        0.5423030462904435
+      ]
+    },
+    {
+      "row_id": "REAL-0079",
+      "provenance": "real",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.547073727627953,
+        1.1767840341651594,
+        -0.11729807155613588,
+        -0.3050368579916707
+      ]
+    },
+    {
+      "row_id": "REAL-0080",
+      "provenance": "real",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.49214523700427165,
+        0.03699522688551793,
+        -0.6082710473510267,
+        -0.5479824577719182
+      ]
+    },
+    {
+      "row_id": "REAL-0081",
+      "provenance": "real",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.8581269511447173,
+        0.4203867606912364,
+        -0.3149527706451074,
+        0.24582003391809598
+      ]
+    },
+    {
+      "row_id": "REAL-0082",
+      "provenance": "real",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7198047072440861,
+        0.3987111523502743,
+        0.9092053641238946,
+        1.2190949323261435
+      ]
+    },
+    {
+      "row_id": "REAL-0083",
+      "provenance": "real",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.4087340402022748,
+        0.7293827491169964,
+        -0.4914774899719734,
+        -0.4918550619317785
+      ]
+    },
+    {
+      "row_id": "REAL-0084",
+      "provenance": "real",
+      "actual": "overstimulated",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7489265838994047,
+        1.3499967809174882,
+        1.3973713754617891,
+        1.246521095062131
+      ]
+    },
+    {
+      "row_id": "REAL-0085",
+      "provenance": "real",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.6560588198204936,
+        -0.42882539101641703,
+        -0.8811739776465682,
+        -0.733885320347632
+      ]
+    },
+    {
+      "row_id": "REAL-0086",
+      "provenance": "real",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9077287538607786,
+        -0.8671046445842793,
+        0.3105528640408988,
+        0.6097836581665812
+      ]
+    },
+    {
+      "row_id": "REAL-0087",
+      "provenance": "real",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.04105781202995374,
+        -0.5267768124295756,
+        -0.6806388508267462,
+        -0.7105922137067261
+      ]
+    },
+    {
+      "row_id": "REAL-0088",
+      "provenance": "real",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.1154119826769286,
+        -0.5926362091922391,
+        -0.7237343024609988,
+        -0.5496136432009674
+      ]
+    },
+    {
+      "row_id": "REAL-0089",
+      "provenance": "real",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.08189185289888527,
+        0.2607500576698617,
+        -0.6656471965746213,
+        -0.9890742691269377
+      ]
+    },
+    {
+      "row_id": "REAL-0090",
+      "provenance": "real",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9695439871088021,
+        -0.7792141066053951,
+        0.11774133303990562,
+        -0.03859158330847821
+      ]
+    },
+    {
+      "row_id": "REAL-0091",
+      "provenance": "real",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.2304500952893463,
+        -0.5567629685488918,
+        -1.2282328075750188,
+        -1.6133313958972764
+      ]
+    },
+    {
+      "row_id": "REAL-0092",
+      "provenance": "real",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.8211328931997975,
+        -0.8357909615231423,
+        -0.9952078335131707,
+        -1.4995040117778966
+      ]
+    },
+    {
+      "row_id": "REAL-0093",
+      "provenance": "real",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1417633786588584,
+        -0.7432794506359319,
+        0.10757583602774301,
+        0.5423030462904435
+      ]
+    },
+    {
+      "row_id": "REAL-0094",
+      "provenance": "real",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1417633786588584,
+        -0.7432794506359319,
+        0.10757583602774301,
+        0.5423030462904435
+      ]
+    },
+    {
+      "row_id": "JITTER-0335",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9531313074010198,
+        -0.8918765331263753,
+        0.2527755304242919,
+        0.5789249763738167
+      ]
+    },
+    {
+      "row_id": "JITTER-0336",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.4655674191441583,
+        0.8167659456447521,
+        -0.40647719367706553,
+        -0.4790339840449119
+      ]
+    },
+    {
+      "row_id": "JITTER-0337",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.5143002695086497,
+        0.011232889568232382,
+        -0.45846934291995955,
+        -0.5665043254800871
+      ]
+    },
+    {
+      "row_id": "JITTER-0338",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.0269712215656182,
+        -0.7873914058072078,
+        0.2573688606860251,
+        -0.0009869811454754087
+      ]
+    },
+    {
+      "row_id": "JITTER-0339",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7941607016101251,
+        0.4035653175376948,
+        -0.30712427379637225,
+        0.1733529642870337
+      ]
+    },
+    {
+      "row_id": "JITTER-0340",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1637417438596367,
+        -1.3047772152205326,
+        -0.9077914523261521,
+        -0.8973238700494499
+      ]
+    },
+    {
+      "row_id": "JITTER-0341",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.4822446403131793,
+        1.1146802143546366,
+        -0.16924521761895867,
+        -0.2723510930294507
+      ]
+    },
+    {
+      "row_id": "JITTER-0342",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.8700450036643734,
+        -0.8442325065738218,
+        -0.9318347974116044,
+        -1.5201892613303665
+      ]
+    },
+    {
+      "row_id": "JITTER-0343",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.5751001739395154,
+        0.049781045011986755,
+        -0.5214178732781506,
+        -0.5790064505106542
+      ]
+    },
+    {
+      "row_id": "JITTER-0344",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.921796487008452,
+        -0.7611961916250254,
+        0.2598997648874944,
+        -0.02210207989743272
+      ]
+    },
+    {
+      "row_id": "JITTER-0345",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.1243472918115227,
+        -0.4596570741690516,
+        -0.7341396271800845,
+        -0.48779699145674194
+      ]
+    },
+    {
+      "row_id": "JITTER-0346",
+      "provenance": "eeg_derived_augmented",
+      "actual": "overstimulated",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.6596401688003982,
+        1.3380511247815938,
+        1.4110503354883501,
+        1.2697067338173635
+      ]
+    },
+    {
+      "row_id": "JITTER-0347",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.6105230812012656,
+        -0.3602548799572456,
+        -0.9160264228274704,
+        -0.7260268511979112
+      ]
+    },
+    {
+      "row_id": "JITTER-0348",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.0017921359370173192,
+        -0.5557725385314289,
+        -0.618061755149145,
+        -0.6702250336380031
+      ]
+    },
+    {
+      "row_id": "JITTER-0349",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1487121465267751,
+        -0.6896596106680862,
+        0.09467060942552857,
+        0.4619314574552422
+      ]
+    },
+    {
+      "row_id": "JITTER-0350",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1358359600121846,
+        -0.7645503079817092,
+        0.16272588791403322,
+        0.5578128604166305
+      ]
+    },
+    {
+      "row_id": "JITTER-0351",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1489940191876067,
+        -1.2507694287006281,
+        -0.7512852598343154,
+        -1.0030757725289248
+      ]
+    },
+    {
+      "row_id": "JITTER-0352",
+      "provenance": "eeg_derived_augmented",
+      "actual": "overstimulated",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7806335798184718,
+        1.2674769334988327,
+        1.3194216645766412,
+        1.3465978312113092
+      ]
+    },
+    {
+      "row_id": "JITTER-0353",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.30424580615275615,
+        -0.5824467373130722,
+        -1.2402994328122605,
+        -1.5201174088775293
+      ]
+    },
+    {
+      "row_id": "JITTER-0354",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7818478019524442,
+        0.4203991974186846,
+        0.8338949339862958,
+        1.1938961492250302
+      ]
+    },
+    {
+      "row_id": "JITTER-0355",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.2255658134090763,
+        -1.3017384241828938,
+        -0.9226882285745107,
+        -0.9323272119360794
+      ]
+    },
+    {
+      "row_id": "JITTER-0356",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9021291873604816,
+        -0.820185083365146,
+        0.30408552446218096,
+        0.6518309069540842
+      ]
+    },
+    {
+      "row_id": "JITTER-0357",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9609291162993376,
+        -0.7936979073693055,
+        0.06068532290525603,
+        -0.030307884327597134
+      ]
+    },
+    {
+      "row_id": "JITTER-0358",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.010571266068077,
+        -1.2425556209341178,
+        -0.6519716333843109,
+        -0.903133471254216
+      ]
+    },
+    {
+      "row_id": "JITTER-0359",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.14957510504331423,
+        -0.5005697017202505,
+        -0.5851658914926846,
+        -0.6918873953560905
+      ]
+    },
+    {
+      "row_id": "JITTER-0360",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.5983766455728063,
+        1.0593816589595355,
+        -0.16528896137159446,
+        -0.3548254150435129
+      ]
+    },
+    {
+      "row_id": "JITTER-0361",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1706266560596799,
+        -0.7357482947828182,
+        0.19257939940943394,
+        0.618697895406327
+      ]
+    },
+    {
+      "row_id": "JITTER-0362",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7581812797896156,
+        0.47921796166567415,
+        0.8597007129016079,
+        1.2517814093688149
+      ]
+    },
+    {
+      "row_id": "JITTER-0363",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.8739252050454754,
+        0.3243071078599714,
+        -0.3418453468498123,
+        0.21848517671259154
+      ]
+    },
+    {
+      "row_id": "JITTER-0364",
+      "provenance": "eeg_derived_augmented",
+      "actual": "overstimulated",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7570969760523935,
+        1.429963649077578,
+        1.3664242250640222,
+        1.224190316426581
+      ]
+    },
+    {
+      "row_id": "JITTER-0365",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9242517859140575,
+        -0.8850679316175105,
+        0.20909275962296445,
+        0.6130528641350151
+      ]
+    },
+    {
+      "row_id": "JITTER-0366",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.1572323948331062,
+        -0.5550984864381201,
+        -0.5468452374549022,
+        -0.6346863261053396
+      ]
+    },
+    {
+      "row_id": "JITTER-0367",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.5052670765197053,
+        -0.001380919584080429,
+        -0.6541444234481022,
+        -0.6580666511743755
+      ]
+    },
+    {
+      "row_id": "JITTER-0368",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.889066615275364,
+        0.5318284241860176,
+        -0.17808486782486205,
+        0.3343875312083871
+      ]
+    },
+    {
+      "row_id": "JITTER-0369",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9271774276670947,
+        -0.9101152465058733,
+        0.3248602002314573,
+        0.6843818640607704
+      ]
+    },
+    {
+      "row_id": "JITTER-0370",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9911306513366026,
+        -0.753245823522287,
+        0.052117451030630604,
+        -0.10990936984026779
+      ]
+    },
+    {
+      "row_id": "JITTER-0371",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.0536993468150357,
+        -1.2564429158961985,
+        -0.6840300309030545,
+        -0.9367799680432509
+      ]
+    },
+    {
+      "row_id": "JITTER-0372",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.11680923929817938,
+        0.11597264942389165,
+        -0.5845877181710838,
+        -0.9557081510128751
+      ]
+    },
+    {
+      "row_id": "JITTER-0373",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.4073094746431203,
+        -0.04373090598295624,
+        -0.6475925504321014,
+        -0.5838476710121215
+      ]
+    },
+    {
+      "row_id": "JITTER-0374",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.6932596241778024,
+        0.45710642405787794,
+        0.9519840677875183,
+        1.2019503811951326
+      ]
+    },
+    {
+      "row_id": "JITTER-0375",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1859611317283474,
+        -0.8158628777566412,
+        0.010178777771895024,
+        0.5125620442271259
+      ]
+    },
+    {
+      "row_id": "JITTER-0376",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.520476369624002,
+        1.1887391976990485,
+        -0.2098574408906244,
+        -0.3518885697165516
+      ]
+    },
+    {
+      "row_id": "JITTER-0377",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.205296117096341,
+        -0.7243222103908818,
+        0.21157620222512422,
+        0.569137546173464
+      ]
+    },
+    {
+      "row_id": "JITTER-0378",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.8597892545850687,
+        0.28756488151023424,
+        -0.20147762157812835,
+        0.19746386161778812
+      ]
+    },
+    {
+      "row_id": "JITTER-0379",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.7252881938550124,
+        -0.45887681490902155,
+        -0.9031051200346286,
+        -0.7815829577135406
+      ]
+    },
+    {
+      "row_id": "JITTER-0380",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.054573120002338375,
+        -0.44925898127907316,
+        -0.5698199074175435,
+        -0.7186344494024921
+      ]
+    },
+    {
+      "row_id": "JITTER-0381",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.8430098169147402,
+        -0.8527957936635026,
+        -1.0536811128454047,
+        -1.4909567272977706
+      ]
+    },
+    {
+      "row_id": "JITTER-0382",
+      "provenance": "eeg_derived_augmented",
+      "actual": "overstimulated",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7754011689728505,
+        1.2791273378947146,
+        1.3472721057286778,
+        1.2927719597574883
+      ]
+    },
+    {
+      "row_id": "JITTER-0383",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.13943148332093588,
+        -0.5828111946468572,
+        -1.054973013036031,
+        -1.5880458965898856
+      ]
+    },
+    {
+      "row_id": "JITTER-0384",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1480098773647978,
+        -0.8855178480340453,
+        0.14144204669134872,
+        0.5221528633526658
+      ]
+    },
+    {
+      "row_id": "JITTER-0385",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.9251652872159695,
+        -0.8123216589166063,
+        0.29329231732687505,
+        0.542172229720836
+      ]
+    },
+    {
+      "row_id": "JITTER-0386",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.18969665086951687,
+        0.3058153541664955,
+        -0.6306368360953187,
+        -1.0113414588305543
+      ]
+    },
+    {
+      "row_id": "JITTER-0387",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.5120878165110356,
+        -0.05645373814295433,
+        -0.5978012733601175,
+        -0.5186571063874684
+      ]
+    },
+    {
+      "row_id": "JITTER-0388",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.142098357531011,
+        -0.7615265852024974,
+        0.02243075960080263,
+        0.46013152336174395
+      ]
+    },
+    {
+      "row_id": "JITTER-0389",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1427535214647424,
+        -1.275210313133921,
+        -0.750310489189464,
+        -0.869336064374169
+      ]
+    },
+    {
+      "row_id": "JITTER-0390",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        1.5028181099323437,
+        1.124656462758206,
+        -0.106363309935799,
+        -0.30871475976450863
+      ]
+    },
+    {
+      "row_id": "JITTER-0391",
+      "provenance": "eeg_derived_augmented",
+      "actual": "overstimulated",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.7779951215169657,
+        1.272979777148288,
+        1.5082170035785696,
+        1.1719139392262095
+      ]
+    },
+    {
+      "row_id": "JITTER-0392",
+      "provenance": "eeg_derived_augmented",
+      "actual": "focused",
+      "predicted": "relaxed",
+      "coordinates": [
+        -1.1603614757740244,
+        -0.6665824283513656,
+        0.04146516940873768,
+        0.5822468445148838
+      ]
+    },
+    {
+      "row_id": "JITTER-0393",
+      "provenance": "eeg_derived_augmented",
+      "actual": "distracted",
+      "predicted": "relaxed",
+      "coordinates": [
+        0.5283574259625076,
+        0.05725890119986481,
+        -0.5521773803184332,
+        -0.6004118429601073
+      ]
+    },
+    {
+      "row_id": "JITTER-0394",
+      "provenance": "eeg_derived_augmented",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -0.7476133924736369,
+        -0.47447384117545366,
+        -0.7888478449639758,
+        -0.6872311399149572
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-000",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.0230500372138405,
+        5.857137674150214,
+        -6.325698902224072,
+        -6.097563001292192
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-001",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.591219212228127,
+        6.091402040713784,
+        -6.6016630664897376,
+        -6.016790284755387
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-002",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.897980980292603,
+        5.97690372006842,
+        -6.07864635299908,
+        -6.4496009400911225
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-003",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.816682804098248,
+        5.559191965600224,
+        -5.971255778710068,
+        -5.44453366089325
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-004",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.521661700123966,
+        6.31859255575706,
+        -6.1790318020473185,
+        -6.3631458871347215
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-005",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.994402901248245,
+        6.502477148824961,
+        -6.465870557924818,
+        -6.105412050990222
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-006",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.2949386025089415,
+        5.920315171513108,
+        -5.941269812823765,
+        -5.55823892820605
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-007",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.9902318285453156,
+        6.1965008944586994,
+        -6.01458775355215,
+        -5.946625927431015
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-008",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.822414455346581,
+        5.862677872170932,
+        -6.155837400603921,
+        -6.206137189433759
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-009",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.809354014954111,
+        6.749910908771399,
+        -5.64307101186834,
+        -5.543225223714987
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-010",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.9600409658912055,
+        4.901365257802378,
+        -5.634799607511543,
+        -6.023813588142769
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-011",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.905789749039559,
+        6.156046308229537,
+        -5.693495479601861,
+        -6.627834038391418
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-012",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.9724803758087495,
+        5.354751293707446,
+        -6.117317624191325,
+        -5.940052400762423
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-013",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.730768373294642,
+        6.0374740552585235,
+        -6.1128482013558365,
+        -6.40463997097786
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-014",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.606884879731487,
+        5.829429585566547,
+        -5.8236367519405325,
+        -5.8712370031110765
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-015",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.091738623609088,
+        5.504933472047112,
+        -5.974295546885793,
+        -5.66086178946666
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-016",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.359929674187408,
+        6.197614075355257,
+        -6.293700556696488,
+        -6.417766900387546
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-017",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.9180697840861844,
+        5.6784754714163865,
+        -6.053690802039554,
+        -6.896435172640529
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-018",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.410632052540864,
+        6.0629135218188015,
+        -6.276369426711067,
+        -6.151567078207357
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-019",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.175076911873881,
+        5.400681425556872,
+        -5.605555451974006,
+        -5.949856103566354
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-020",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.844842433076347,
+        6.080741258406302,
+        -5.538160854583557,
+        -5.992920042161466
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-021",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.108045252434745,
+        6.023213308009264,
+        -6.178224125487808,
+        -6.5184450287985225
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-022",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.336884290552806,
+        5.554034867083631,
+        -6.14244500757389,
+        -5.686331440742084
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-023",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.4683719232807,
+        6.307178244004355,
+        -5.883871863665803,
+        -6.656784888925156
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-024",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.077681103350919,
+        5.7386427395463375,
+        -5.827538655377934,
+        -5.931358697912751
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-025",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.8506731570041275,
+        6.460500581597833,
+        -5.584204683024487,
+        -5.551833107018102
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-026",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.393960804369808,
+        6.217498997400431,
+        -6.126046044356328,
+        -5.903280002835196
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-027",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.926234562956968,
+        5.946565857511563,
+        -5.983277076623326,
+        -6.2084368140574995
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-028",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.67830129590256,
+        5.916654487033174,
+        -6.415852564428929,
+        -5.894291911803998
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-029",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.915946434341968,
+        6.187598727244761,
+        -5.936010958651696,
+        -6.267086512978337
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-030",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.793368318481907,
+        6.624215451476289,
+        -6.744704214992782,
+        -5.785378598014441
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-031",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.40762655756597,
+        6.671911897191054,
+        -5.9499633623485035,
+        -5.687725272234257
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-032",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.920807778063304,
+        6.252541631450281,
+        -5.932385363257954,
+        -6.023120505900845
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-033",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.74740798232812,
+        5.42210295039312,
+        -5.92442945945028,
+        -5.652083011618303
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-034",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.02254428503325,
+        5.920565005321193,
+        -5.405085981410417,
+        -5.689507990235995
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-035",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.2476287261915475,
+        5.683662167282276,
+        -6.004136321666313,
+        -5.679106746808175
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-036",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.20387262078547,
+        5.946267203583358,
+        -6.75152501976209,
+        -6.3962861916736875
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-037",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.335948726673003,
+        5.963438535997604,
+        -5.957155928075697,
+        -6.225903784987031
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-038",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.576226059087209,
+        6.208243133015852,
+        -5.898565500408777,
+        -6.464484221672298
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-039",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.880506539420795,
+        5.575631883930953,
+        -6.40228731948606,
+        -6.1999294105975045
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-040",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.816718529312416,
+        6.0758910035731795,
+        -6.356808483103493,
+        -6.2012813208456325
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-041",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.191758534212637,
+        5.869945779498239,
+        -6.417322237660705,
+        -6.117097527001784
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-042",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.575167264919173,
+        5.840454976605546,
+        -5.947523455975936,
+        -5.319453445464302
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-043",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.104720688879308,
+        6.486696484830806,
+        -5.740089797557832,
+        -5.9903082724934675
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-044",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.466657270034923,
+        5.734497741111203,
+        -6.345492198487948,
+        -6.043619996588121
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-045",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.812937718929156,
+        5.3771489979719815,
+        -6.1816242081560135,
+        -5.878362975771108
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-046",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.681769027108519,
+        5.9802917581434905,
+        -5.929842386796052,
+        -6.0450568873142
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-047",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.3320695306456605,
+        6.381770751669764,
+        -6.248240744050151,
+        -6.798497342059045
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-048",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        5.531791821384983,
+        5.992833823253005,
+        -6.075388621195727,
+        -6.088394101296611
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-0-049",
+      "provenance": "artificial_separable_demo",
+      "actual": "distracted",
+      "predicted": "distracted",
+      "coordinates": [
+        6.145352912669959,
+        6.673208480614753,
+        -5.994714258454841,
+        -5.854125540960161
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-000",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.737962647833373,
+        -6.123321652243702,
+        5.851756009711426,
+        -5.4735931326067995
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-001",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.384481040585126,
+        -5.9214140298142866,
+        5.634556661618129,
+        -5.40650492892163
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-002",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.092151084712875,
+        -5.776755784350855,
+        5.618640760955127,
+        -5.871104554251773
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-003",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.481540297559321,
+        -6.57827978343429,
+        6.01400426178091,
+        -6.690782765934068
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-004",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.378935146446172,
+        -6.444844288341636,
+        5.663950749720483,
+        -5.85794495984213
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-005",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.801623497756474,
+        -6.062408450072271,
+        5.765533619761694,
+        -6.155681476282832
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-006",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.768224796902055,
+        -6.637104890099118,
+        5.937752295282096,
+        -5.593776362585705
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-007",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.886227960663888,
+        -5.8867245943575215,
+        5.982885214591742,
+        -6.465010654739092
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-008",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.411411074662687,
+        -6.432178027138065,
+        5.791182634783829,
+        -6.393443031502108
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-009",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.998323842195586,
+        -6.177720943531676,
+        5.792387395357901,
+        -5.4703094854975705
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-010",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.119918300001088,
+        -5.969197111603851,
+        5.685797952400748,
+        -6.792170032926312
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-011",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.970387096679905,
+        -6.135542998037033,
+        5.919939807632319,
+        -5.606815025473247
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-012",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.006081455010071,
+        -6.142055320978856,
+        6.136294398440873,
+        -6.270950657390488
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-013",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.85727607423491,
+        -5.789741549855561,
+        5.732383049994156,
+        -5.674968001417366
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-014",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.906293656385902,
+        -6.300760125277394,
+        5.72773096407215,
+        -5.875168755134399
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-015",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.181881266583281,
+        -6.427489057861096,
+        6.025978660918565,
+        -6.098181955165501
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-016",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.542814655969238,
+        -6.166665580086217,
+        6.668695046886982,
+        -5.450383448668691
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-017",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.068920746535693,
+        -5.790651682313414,
+        6.068027537515048,
+        -5.713874603545931
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-018",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.533610328387217,
+        -5.826474974458742,
+        5.788862944942157,
+        -6.252057303076164
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-019",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.404088078750469,
+        -6.543588665912684,
+        6.026591605995363,
+        -6.343903020218376
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-020",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.7445921948295755,
+        -6.647612627689163,
+        6.200010714328883,
+        -5.907272764916204
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-021",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.895035517470864,
+        -5.856230765280855,
+        5.825579773466283,
+        -5.7378736005502216
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-022",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.828958399887388,
+        -6.055506781967295,
+        6.226328233032512,
+        -5.879834910590684
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-023",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.39711691461367,
+        -5.79089870948605,
+        6.442146326620651,
+        -5.627656915934119
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-024",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.030382526100885,
+        -5.77041080066978,
+        5.273839500714038,
+        -6.37313797115595
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-025",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.121125170205356,
+        -6.213801677657207,
+        5.937768578037061,
+        -5.7994515677447565
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-026",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.1414502656745285,
+        -6.453741784093137,
+        6.500514407305912,
+        -6.011102664782625
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-027",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.932191396593059,
+        -6.016648035565212,
+        5.971518591797539,
+        -6.105932153757674
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-028",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.905666773602639,
+        -5.364157231009981,
+        5.375120544438527,
+        -6.469668173192388
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-029",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.911778160208347,
+        -5.772136363066766,
+        6.092157711465119,
+        -6.020965163022644
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-030",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.615736280337535,
+        -6.408564857412681,
+        5.457569803598156,
+        -6.682335985330481
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-031",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.7870422076026085,
+        -5.7318569237852115,
+        5.608041693045603,
+        -5.879231210882434
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-032",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.387109704893844,
+        -5.7865187473910655,
+        5.794984349080821,
+        -6.618380312069816
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-033",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.9010641622026885,
+        -5.896558475369969,
+        6.23774016573312,
+        -6.019063141904356
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-034",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.144817807604367,
+        -5.503002818865596,
+        6.598071639590977,
+        -6.4100226117874906
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-035",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.218114947508718,
+        -6.078575670339794,
+        5.821674822751829,
+        -5.9476658155783015
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-036",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.097458232465602,
+        -5.735193493287768,
+        6.210639098838368,
+        -5.854695294712454
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-037",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.932741697755116,
+        -6.338754057393712,
+        6.4466627626342445,
+        -6.352729138658875
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-038",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.344732078901939,
+        -6.2437007592077975,
+        5.936806983868112,
+        -6.6533356367554575
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-039",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.2502121773657215,
+        -5.619353897068351,
+        5.749889194770148,
+        -6.038847469634145
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-040",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.446711482707092,
+        -5.632766019774313,
+        6.363440385765963,
+        -5.908167231516978
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-041",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.758933991580318,
+        -6.1708311261213185,
+        6.786993776663086,
+        -6.415713169693326
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-042",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.12251406944809,
+        -5.753952106739407,
+        6.0911521035544505,
+        -6.222318763107811
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-043",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.127187871601998,
+        -5.559907837840762,
+        5.838419441637485,
+        -5.908171528349091
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-044",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.227116747691113,
+        -6.351389247019516,
+        6.622744735584403,
+        -5.980983567731336
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-045",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.971389962427299,
+        -6.00883701801739,
+        5.840726924179007,
+        -5.370524663440628
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-046",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.935375961646406,
+        -5.804117949763475,
+        6.6290228589891536,
+        -5.517786950668961
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-047",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.063195139662622,
+        -6.514991616429158,
+        5.517821160900397,
+        -5.650939349944375
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-048",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        6.312347535726486,
+        -5.951528946898939,
+        5.569594224747694,
+        -5.895562840383498
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-1-049",
+      "provenance": "artificial_separable_demo",
+      "actual": "focused",
+      "predicted": "focused",
+      "coordinates": [
+        5.622072190060876,
+        -6.302710392144113,
+        6.682717566053911,
+        -6.660784022360572
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-000",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.5566927684880065,
+        5.796817065828519,
+        5.942991768893896,
+        -5.59736039703834
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-001",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.2527094410238755,
+        5.671773224132634,
+        6.121229790262782,
+        -5.712949447430389
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-002",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.416291037015301,
+        5.861307261784771,
+        6.401467563770981,
+        -5.831856138258005
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-003",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.085041906613298,
+        5.843731859723283,
+        5.597522911006801,
+        -5.780425526294945
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-004",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.4334859140119045,
+        6.575440782892104,
+        5.702576742031203,
+        -5.7973235281304625
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-005",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.027439882964178,
+        5.755451005058905,
+        6.132507572859513,
+        -6.114286400332645
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-006",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.3649111286095845,
+        6.029038767113082,
+        5.969306514206119,
+        -6.107413316298529
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-007",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.956372211117004,
+        5.940306828094246,
+        5.908979886669663,
+        -6.034530098541167
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-008",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.545542252390742,
+        5.583840672577625,
+        5.653499048646518,
+        -6.472262879094706
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-009",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.897357695292615,
+        6.265492773923562,
+        6.034401157691478,
+        -5.856417832769752
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-010",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.331323138175777,
+        6.220057002636969,
+        5.878331143055466,
+        -5.829165812583335
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-011",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.702206822751663,
+        5.724812733465434,
+        5.95435675709918,
+        -6.887370612867293
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-012",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.224753906329298,
+        6.481428952410284,
+        6.2993015144534565,
+        -6.098551530861384
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-013",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.885088102792195,
+        6.063171593948304,
+        5.71255673862863,
+        -5.655053730768323
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-014",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.425697215674206,
+        5.199541952057305,
+        5.424362358274843,
+        -5.112453388167028
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-015",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.346555071801985,
+        6.114360099453633,
+        5.569356019888178,
+        -6.121879303330975
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-016",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.024669374240225,
+        5.770896060388287,
+        6.206841669096427,
+        -5.8137738897826745
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-017",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.184291693997175,
+        6.0981319204491955,
+        5.95375905340661,
+        -5.914635998963573
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-018",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.439163053466809,
+        5.816889978296138,
+        6.576798858832484,
+        -6.538893020689664
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-019",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.126163598705683,
+        6.154400838904393,
+        6.8018205107702965,
+        -5.522204533172748
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-020",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.45227911875518,
+        6.015278276926474,
+        6.209501967629969,
+        -5.7577333382384435
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-021",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.15755717588976,
+        5.684599769052095,
+        6.170277951665017,
+        -6.1012927136082915
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-022",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.28314091824284,
+        6.14344365907693,
+        5.547952032334924,
+        -5.727803882053382
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-023",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.168408465477903,
+        6.446148514132641,
+        6.48027892902876,
+        -6.382339741079722
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-024",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.203025250745986,
+        5.821860485119044,
+        5.7442819454060645,
+        -6.328299539950161
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-025",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.062602466145157,
+        5.554714191212405,
+        6.286293858576495,
+        -5.932322822052008
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-026",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.809951735392445,
+        5.934982535196541,
+        5.883647382465438,
+        -6.315358617940507
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-027",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.108103082436252,
+        5.386957269891784,
+        6.014464039349032,
+        -5.848331533671688
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-028",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.7518891697356995,
+        5.664021071709628,
+        6.406607333042352,
+        -5.985027991185444
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-029",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.58949275624883,
+        6.298279004401299,
+        5.486117811640014,
+        -5.650555409822656
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-030",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.695924132938784,
+        5.587955737255723,
+        6.834651378508104,
+        -5.536401376941465
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-031",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.683992504981017,
+        5.65439414749361,
+        5.897257442509315,
+        -6.254990045267054
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-032",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.782733073170375,
+        6.257715544108907,
+        5.154817362359533,
+        -5.875233162418611
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-033",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.994191586741315,
+        6.940489752710765,
+        5.496759640435209,
+        -6.143840010309651
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-034",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.517998334317172,
+        5.326465259855596,
+        6.365917952260499,
+        -6.107385212720678
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-035",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.517066966919452,
+        6.032949341713338,
+        5.713456137673706,
+        -5.624066453113925
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-036",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.3301552620293755,
+        5.90854565631275,
+        5.998458821109705,
+        -5.59034982949322
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-037",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.659772644649356,
+        5.201317125961013,
+        5.97992172149177,
+        -6.21440913514922
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-038",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.7951956117013514,
+        5.842742539732664,
+        5.544020397811364,
+        -5.558186775792381
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-039",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.6120253737160235,
+        6.102036926331859,
+        6.195528763723131,
+        -5.68004110473813
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-040",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.883888159132935,
+        5.568779602077402,
+        6.232753340531641,
+        -6.503488296193503
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-041",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.119795177753872,
+        6.21372294381609,
+        6.700468787387403,
+        -5.740121391981605
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-042",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.642237593945852,
+        6.41042447791516,
+        6.226779350012479,
+        -6.273464869523688
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-043",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.406830613444978,
+        6.058531448819891,
+        5.460269313575186,
+        -6.078247950396816
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-044",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.163680865987571,
+        5.995426189184705,
+        5.6072419202109485,
+        -6.3692871616722995
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-045",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.452789348500689,
+        6.009833184975287,
+        5.6301376167205675,
+        -5.858999100428468
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-046",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.816762265029166,
+        6.441412892074173,
+        5.8745220079076255,
+        -5.67586498766646
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-047",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.511696904148534,
+        5.521887571121486,
+        6.079888954378076,
+        -5.574816725108662
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-048",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -5.758362253859094,
+        6.443587560291658,
+        6.07211071325149,
+        -6.538842628450202
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-2-049",
+      "provenance": "artificial_separable_demo",
+      "actual": "overstimulated",
+      "predicted": "overstimulated",
+      "coordinates": [
+        -6.200135659161306,
+        6.101444834862104,
+        6.2752599316309805,
+        -5.303379860335045
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-000",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.02120348227126,
+        -5.885146354777104,
+        -5.803242621099059,
+        6.147272783907743
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-001",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.008431306517468,
+        -6.463847741571442,
+        -5.871751018621419,
+        6.7974347783102935
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-002",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.159478444194351,
+        -6.317972623349825,
+        -5.886509265964857,
+        5.879695076390142
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-003",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.602979327772677,
+        -6.431792211956164,
+        -6.404952961146298,
+        6.767006293137116
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-004",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.2135006076231,
+        -6.608226368334846,
+        -5.849103863051238,
+        6.639214075755067
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-005",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.41688969906817,
+        -5.639855745898699,
+        -6.479106483800921,
+        6.1661259271886
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-006",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.614361285807656,
+        -5.509836985068152,
+        -5.832672919874582,
+        6.045192451735081
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-007",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.730526582683967,
+        -5.98031492805102,
+        -5.688224636802195,
+        5.80024949292463
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-008",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.896550078706677,
+        -6.594803549953866,
+        -5.890456860249413,
+        6.316971899078235
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-009",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.182974838220037,
+        -5.968346596317025,
+        -6.0605172939495064,
+        6.027043196008335
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-010",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.608742612958968,
+        -6.123916693489433,
+        -5.749566584291593,
+        5.667952966546312
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-011",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.04793735795347,
+        -6.219983065711296,
+        -6.132973874145938,
+        7.003945641357111
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-012",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.98072038924367,
+        -6.625146367619433,
+        -7.131134750920229,
+        5.663972594673772
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-013",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.443716704742024,
+        -6.376772404641698,
+        -6.048851367427488,
+        5.93445773854361
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-014",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.756866536724958,
+        -5.84400916345086,
+        -6.111916292782614,
+        5.080125320838864
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-015",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.588865681779301,
+        -6.657520361187538,
+        -6.588090170058136,
+        6.117610766888639
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-016",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.7213527286042485,
+        -6.071045161154587,
+        -6.194785933600268,
+        5.4643875881007595
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-017",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.389151056198493,
+        -5.734085953702128,
+        -5.87842121413098,
+        5.847055426878598
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-018",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.440091039162008,
+        -6.014456069622137,
+        -5.81522142445402,
+        6.28444733498058
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-019",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.794200027102039,
+        -5.632655060695003,
+        -6.103143640879518,
+        6.343827894910744
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-020",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.667208137198452,
+        -6.366680513724606,
+        -5.389960874037433,
+        5.839125328661736
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-021",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.629308580914217,
+        -6.041069970178933,
+        -6.394151930095174,
+        6.190432429278065
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-022",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.815298821717064,
+        -6.142071695441379,
+        -5.914223099398046,
+        5.9693141639068585
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-023",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.123605375843143,
+        -6.1562054552024446,
+        -6.287435813897871,
+        6.1414275865907175
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-024",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.128226943602588,
+        -5.783920320005305,
+        -6.0778121141753125,
+        5.912628935946801
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-025",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.202145776405131,
+        -6.284906658936583,
+        -6.118520258783691,
+        6.306806059049462
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-026",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.174240335648525,
+        -6.008555632390966,
+        -6.594315947246697,
+        5.650095234768944
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-027",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.922758193196285,
+        -6.514051674821593,
+        -5.742477120819493,
+        6.497788706699267
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-028",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.249776010409915,
+        -5.401632899160529,
+        -6.338440860744559,
+        6.395636225703641
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-029",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.746069568444348,
+        -6.297456878324823,
+        -6.651511261181842,
+        5.442879333184132
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-030",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.15991368965757,
+        -6.584455519611252,
+        -6.199080218747825,
+        6.356708723861193
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-031",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -4.893540942154013,
+        -6.491129728276699,
+        -6.0275883232849665,
+        6.126653992580312
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-032",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.909693080561251,
+        -5.961559963397286,
+        -6.189851182043403,
+        6.256300364400427
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-033",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.009329956037595,
+        -6.244722178130368,
+        -5.553284182888341,
+        5.562131422854563
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-034",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.947309225854428,
+        -6.261824795172179,
+        -5.875869379094449,
+        6.3219383466993575
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-035",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.740329219039392,
+        -5.658455388926646,
+        -5.998552457220743,
+        5.666030840885753
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-036",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.958940617061684,
+        -6.0006065055839874,
+        -6.0725563953356065,
+        5.787859478296714
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-037",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.070499011247085,
+        -5.889458417674452,
+        -5.265224057365101,
+        6.159943543275946
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-038",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.48560029421398,
+        -5.908008381288582,
+        -5.990074889171006,
+        6.653729586861988
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-039",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.644772616802537,
+        -5.78337582060547,
+        -6.423390595954176,
+        5.754268749395546
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-040",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.049593203522477,
+        -6.102109874473289,
+        -6.501391291086922,
+        5.996812704803211
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-041",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.178494921895864,
+        -6.15121222792933,
+        -5.952566651812915,
+        5.595073525004204
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-042",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.4879520517212175,
+        -6.125988723576471,
+        -5.893225245140655,
+        6.227012278633989
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-043",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.426593687456504,
+        -5.8737053588174355,
+        -5.926200839263309,
+        5.982378259518991
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-044",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.878688827914644,
+        -5.839654045060644,
+        -6.210458635076713,
+        5.999479606771511
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-045",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.027558870259662,
+        -5.857394010665577,
+        -7.034559238372135,
+        5.7909833438445455
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-046",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -6.1226005816339795,
+        -6.0022394133777395,
+        -6.238433211975806,
+        5.802503574028625
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-047",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.611432174090401,
+        -5.756077322327772,
+        -5.617246345559915,
+        6.13666694906212
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-048",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.174909245875133,
+        -5.938011135961408,
+        -5.910062800872077,
+        6.0685230490550515
+      ]
+    },
+    {
+      "row_id": "ARTIFICIAL-test-3-049",
+      "provenance": "artificial_separable_demo",
+      "actual": "relaxed",
+      "predicted": "relaxed",
+      "coordinates": [
+        -5.869347056997585,
+        -5.655982469316174,
+        -6.288263734918561,
+        6.157447923578174
+      ]
+    }
+  ],
+  "dataset_sha256": "512c76ce4da9e5107ad5b17ac87f3ccc41011829cb7eb824a2e4cc2e6bfa4a0b",
+  "artifact_sha256": "5d8ad5cfca728334f3301c66dc126a906a08efb64b669ff5f6b416d1918d31c1"
+}

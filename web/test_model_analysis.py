@@ -27,11 +27,21 @@ class ModelAnalysisTests(SimpleTestCase):
 
     def test_serves_generated_report_without_cache(self):
         with TemporaryDirectory() as root, override_settings(MODEL_ARTIFACT_ROOT=Path(root)), patch('web.views._require_profile', return_value=(SimpleNamespace(is_super_admin=True), None)):
-            directory = Path(root) / 'mixed-1395'; directory.mkdir()
+            directory = Path(root) / 'augmented-eeg'; directory.mkdir()
             (directory / 'analysis.html').write_text('<h1>Model analysis</h1>', encoding='utf-8')
             response = model_analysis_report(self.request)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(b''.join(response.streaming_content), b'<h1>Model analysis</h1>')
             self.assertIn('no-store', response['Cache-Control'])
             self.assertIn('sandbox', response['Content-Security-Policy'])
+            response.close()
+
+    def test_selected_augmented_report_contains_real_and_mixed_results(self):
+        with patch('web.views._require_profile', return_value=(SimpleNamespace(is_super_admin=True), None)):
+            response = model_analysis_report(self.request)
+            self.assertEqual(response.status_code, 200)
+            html = b''.join(response.streaming_content).decode()
+            self.assertIn('Augmented EEG Classifier', html)
+            self.assertIn('81.72%', html)
+            self.assertIn('42.11%', html)
             response.close()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from functools import lru_cache
 from pathlib import Path
 
@@ -9,12 +10,10 @@ import numpy as np
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
-from scipy.optimize import linear_sum_assignment
 from scipy.signal import butter, detrend, filtfilt, iirnotch, sosfiltfilt, welch
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
 
-from web.models import CalibrationProfile, ModelVersion
+from web.models import ModelVersion
+from web.services.augmented_eeg import WORKFLOW as AUGMENTED_WORKFLOW, artifact_directory
 
 CHANNELS = ("TP9", "AF7", "AF8", "TP10")
 BANDS = {"theta": (4, 8), "alpha": (8, 13), "beta": (13, 30), "gamma": (30, 40)}
@@ -63,7 +62,7 @@ def extract(raw_channels):
 
 
 def _artifact_paths():
-    root = Path(getattr(settings, "MODEL_ARTIFACT_ROOT", settings.BASE_DIR / "model-artifacts")) / "mixed-1395"
+    root = artifact_directory()
     return root / "classifier.joblib", root / "metrics.json"
 
 
@@ -72,66 +71,40 @@ def global_model():
     model_path, metrics_path = _artifact_paths()
     model = joblib.load(model_path)
     metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    fingerprint = hashlib.sha256(model_path.read_bytes()).hexdigest()
+    if metrics.get('artifact_sha256') and metrics['artifact_sha256'] != fingerprint:
+        raise ValueError('Model artifact does not match its evaluation metadata.')
+    metrics['artifact_sha256'] = fingerprint
     return model, metrics
 
 
 def ensure_model_version():
     model_path, _ = _artifact_paths()
-    _, metrics = global_model()
-    defaults = {"algorithm": "RandomForestClassifier", "storage_path": str(model_path.relative_to(settings.BASE_DIR)),
-                "hyperparameters": {"features": metrics["features"]}, "metrics": metrics,
-                "trained_at": timezone.now(), "is_active": True}
-    version, _ = ModelVersion.objects.get_or_create(name="cortex-global-eeg", version="mixed-1395-v1", defaults=defaults)
+    model, metrics = global_model()
+    snapshot_path = model_path.parent / 'versions' / metrics['artifact_sha256'] / model_path.name
+    version_path = snapshot_path if snapshot_path.exists() else model_path
+    defaults = {"algorithm": "AugmentedClusterRandomForest", "storage_path": str(version_path.relative_to(settings.BASE_DIR)),
+                "hyperparameters": {"features": metrics["features"], **model.named_steps['model'].get_params()}, "metrics": metrics,
+                "dataset_fingerprint": metrics.get('dataset_sha256', ''),
+                "trained_at": timezone.now(), "is_active": False}
+    version, _ = ModelVersion.objects.get_or_create(name="cortex-global-eeg", version=f"augmented-eeg-{metrics['artifact_sha256'][:12]}", defaults=defaults)
     if not version.is_active:
         ModelVersion.objects.filter(name=version.name, is_active=True).exclude(pk=version.pk).update(is_active=False)
         version.is_active = True; version.save(update_fields=["is_active"])
     return version
 
 
-def _cluster_mapping(cluster_ids, labels):
-    states = ["focused", "relaxed", "distracted", "overstimulated"]
-    matrix = np.zeros((4, 4), dtype=int)
-    for cluster, label in zip(cluster_ids, labels):
-        matrix[int(cluster), states.index(label)] += 1
-    rows, cols = linear_sum_assignment(-matrix)
-    return {str(int(row)): states[int(col)] for row, col in zip(rows, cols)}, matrix.tolist()
-
-
 @transaction.atomic
 def classify_and_update(student, device, vector, model_version):
-    model, _ = global_model()
+    model, metadata = global_model()
+    if metadata.get('workflow') != AUGMENTED_WORKFLOW:
+        raise ValueError('The selected artifact is not the Augmented EEG Classifier.')
     values = np.asarray([vector], dtype=float)
-    global_state = str(model.predict(values)[0])
-    probabilities = model.predict_proba(values)[0] if hasattr(model, "predict_proba") else None
-    confidence = float(np.max(probabilities)) if probabilities is not None else 1.0
-    profile, _ = CalibrationProfile.objects.select_for_update().get_or_create(
-        student=student, device=device, is_active=True,
-        defaults={"model_version": model_version, "feature_baseline": {}, "calibrated_at": timezone.now()})
-    payload = dict(profile.feature_baseline or {})
-    observations = list(payload.get("observations", []))
-    labels = list(payload.get("bootstrap_labels", []))
-    observations.append([float(value) for value in vector]); labels.append(global_state)
-    observations, labels = observations[-240:], labels[-240:]
-    state, cluster_number, rationale = global_state, None, "global classifier until student calibration has enough valid epochs"
-    if len(observations) >= 12:
-        scaler = StandardScaler().fit(observations)
-        scaled = scaler.transform(observations)
-        kmeans = KMeans(n_clusters=4, n_init=20, random_state=42).fit(scaled)
-        mapping, composition = _cluster_mapping(kmeans.labels_, labels)
-        cluster_number = int(kmeans.predict(scaler.transform(values))[0])
-        state = mapping[str(cluster_number)]
-        distance = float(np.linalg.norm(scaler.transform(values)[0] - kmeans.cluster_centers_[cluster_number]))
-        confidence = max(0.0, min(1.0, 1 / (1 + distance)))
-        payload.update({"means": scaler.mean_.tolist(), "scales": scaler.scale_.tolist(),
-                        "cluster_centers": kmeans.cluster_centers_.tolist(), "cluster_to_state": mapping,
-                        "cluster_composition": composition, "mapping_rationale": "one-to-one assignment maximizing agreement with validated global bootstrap labels"})
-        rationale = payload["mapping_rationale"]
-    payload.update({"observations": observations, "bootstrap_labels": labels, "updated_at": timezone.now().isoformat(),
-                    "features": ["log_theta", "log_alpha", "log_beta", "log_gamma", "linear_theta_beta_ratio"]})
-    profile.feature_baseline = payload; profile.model_version = model_version
-    profile.quality_score = round(confidence, 4); profile.calibrated_at = timezone.now()
-    profile.save(update_fields=["feature_baseline", "model_version", "quality_score", "calibrated_at", "updated_at"])
-    return state, confidence, cluster_number, rationale
+    state = str(model.predict(values)[0])
+    probabilities = model.predict_proba(values)[0]
+    confidence = float(probabilities[list(model.classes_).index(state)])
+    cluster = int(model.predict_cluster(values)[0])
+    return state, confidence, cluster, 'Augmented EEG Classifier; frozen experimental model'
 
 
 def tbr_baseline(vector):
