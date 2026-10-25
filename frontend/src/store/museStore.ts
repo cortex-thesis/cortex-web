@@ -24,6 +24,7 @@ interface MuseState {
   baselineSamples: BandPowers[]
   acceptedChannels: number
   connectedAt: number | null
+  bandsUpdatedAt: number | null
   lastSignalAt: number | null
   connect: (automatic?: boolean) => Promise<void>
   disconnect: () => void
@@ -68,7 +69,7 @@ function contactQuality(values: number[]) {
 export const useMuseStore = create<MuseState>((set, get) => ({
   client: null, subscriptions: [], status: 'idle', deviceName: '', error: '', battery: null,
   samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands,
-  relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, baselineSamples: [], acceptedChannels: 0, connectedAt: null, lastSignalAt: null,
+  relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, baselineSamples: [], acceptedChannels: 0, connectedAt: null, lastSignalAt: null, bandsUpdatedAt: null,
   connect: async (automatic = false) => {
     if (!window.isSecureContext || !('bluetooth' in navigator)) {
       set({ status: 'error', error: 'Web Bluetooth is unavailable. Use Chrome or Edge on HTTPS/localhost, or Chrome on Android. iPhone and iPad browsers cannot connect directly.' })
@@ -92,12 +93,12 @@ export const useMuseStore = create<MuseState>((set, get) => ({
       signalWatchdog = null
       if (savedGatt && reconnectAttempts < 3) {
         const delay = 1000 * 2 ** reconnectAttempts++
-        set({ status: 'connecting', error: 'Signal lost. Reconnecting to the saved Muse 2…', acceptedChannels: 0, lastSignalAt: null })
+        set({ status: 'connecting', error: 'Signal lost. Reconnecting to the saved Muse 2…', acceptedChannels: 0, lastSignalAt: null, bandsUpdatedAt: null })
         reconnectTimer = setTimeout(() => { reconnectTimer = null; void get().connect(true) }, delay)
-      } else set({ status: 'error', error: 'Automatic reconnection failed. Check the battery and Bluetooth range, then choose Muse 2 again.', acceptedChannels: 0, lastSignalAt: null })
+      } else set({ status: 'error', error: 'Automatic reconnection failed. Check the battery and Bluetooth range, then choose Muse 2 again.', acceptedChannels: 0, lastSignalAt: null, bandsUpdatedAt: null })
     }
     const client = new MuseClient()
-    set({ client, status: automatic ? 'connecting' : 'requesting', error: automatic ? 'Reconnecting to Muse 2…' : '', samples: emptySamples(), quality: [0, 0, 0, 0], absoluteBands: emptyBands, relativeBands: emptyBands, acceptedChannels: 0, lastSignalAt: null })
+    set({ client, status: automatic ? 'connecting' : 'requesting', error: automatic ? 'Reconnecting to Muse 2…' : '', samples: emptySamples(), quality: [0, 0, 0, 0], absoluteBands: emptyBands, relativeBands: emptyBands, acceptedChannels: 0, lastSignalAt: null, bandsUpdatedAt: null })
     try {
       const gatt = reuseSavedDevice && savedGatt ? await savedGatt.connect() : await requestMuseGatt()
       if (activeGeneration !== connectionGeneration) { gatt.disconnect(); return }
@@ -123,9 +124,11 @@ export const useMuseStore = create<MuseState>((set, get) => ({
         const quality = liveSamples.map(contactQuality)
         const shouldAnalyze = now - lastAnalysis >= 500 && liveSamples.every((values) => values.length >= 1024)
         const analysis = shouldAnalyze ? analyzeBands(liveSamples) : null
+        let bandsUpdatedAt = get().bandsUpdatedAt
         let { bands, absoluteBands, relativeBands, bandHistory, baselineProgress, acceptedChannels } = get()
         if (shouldAnalyze) lastAnalysis = now
         if (analysis) {
+          bandsUpdatedAt = now
           if (baselineSamples.length < 30) baselineSamples.push(analysis.relative)
           const baseline = { ...emptyBands }
           for (const key of Object.keys(baseline) as Array<keyof BandPowers>) baseline[key] = baselineSamples.reduce((sum, sample) => sum + sample[key], 0) / baselineSamples.length
@@ -143,7 +146,7 @@ export const useMuseStore = create<MuseState>((set, get) => ({
           acceptedChannels = analysis.acceptedChannels
         } else if (shouldAnalyze) acceptedChannels = 0
         lastPublish = now
-        set({ samples: liveSamples, quality, bands, absoluteBands, relativeBands, bandHistory, baselineProgress, baselineSamples: [...baselineSamples], acceptedChannels })
+        set({ samples: liveSamples, quality, bandsUpdatedAt, bands, absoluteBands, relativeBands, bandHistory, baselineProgress, baselineSamples: [...baselineSamples], acceptedChannels })
       })
       const telemetry = client.telemetryData.subscribe((value: TelemetryData) => set({ battery: Math.round(value.batteryLevel) }))
       const connection = client.connectionStatus.subscribe((connected) => {
@@ -176,6 +179,6 @@ export const useMuseStore = create<MuseState>((set, get) => ({
     const { client, subscriptions } = get()
     subscriptions.forEach((subscription) => subscription.unsubscribe())
     client?.disconnect()
-    set({ client: null, subscriptions: [], status: 'idle', deviceName: '', error: '', battery: null, connectedAt: null, lastSignalAt: null, samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands, relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, baselineSamples: [], acceptedChannels: 0 })
+    set({ client: null, subscriptions: [], status: 'idle', deviceName: '', error: '', battery: null, connectedAt: null, lastSignalAt: null, bandsUpdatedAt: null, samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands, relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, baselineSamples: [], acceptedChannels: 0 })
   },
 }))

@@ -5,6 +5,13 @@
 .video { width: 100%; min-width: 0; height: var(--activity-video-height, min(40dvh, 320px)); border-radius: var(--radius-md); background: #151326; object-fit: contain; }
 .youtubePanel { width: 100%; min-height: 0; align-self: center; flex-direction: column; align-items: stretch; padding: 0; border: 0; background: transparent; }
 .youtubeHost { width: 100%; aspect-ratio: 16 / 9; }
+.videoIntroduction { margin: 0; color: var(--color-text-primary); font-size: 1rem; line-height: 1.5; }
+.videoGuidance { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #faf9ff; }
+.videoGuidance > strong { font-size: 0.875rem; color: #475569; }
+.videoGuidance ul { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 10px 0 0; padding: 0; }
+.videoGuidance li { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 0.9rem; line-height: 1.5; color: #334155; }
+.videoGuidance img { flex: 0 0 42px; width: 42px; height: 42px; object-fit: contain; }
+@media (max-width: 620px) { .videoGuidance ul { grid-template-columns: 1fr; } }
 .youtubePanel .video { width: 100%; height: auto; min-height: 0; aspect-ratio: 16 / 9; border: 0; }
 .videoFallback { width: 100%; min-height: 120px; box-sizing: border-box; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #f6fbff; color: var(--color-text-primary); }
 .videoFallback > div { flex: 1; display: flex; flex-direction: column; gap: 4px; }
@@ -13,7 +20,7 @@
 .retryVideo { margin-top: var(--space-2); background: transparent; color: var(--color-interface-purple); border: 1px solid currentColor; }
 .panel audio { width: 100%; min-width: 0; }
 .readingAudio { width: 100%; min-height: 42px; flex-shrink: 0; }
-.stepCopy { min-width: 0; }
+.step .stepCopy { min-width: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
 .stepTitleRow { display: flex !important; flex-direction: row !important; align-items: flex-start; justify-content: space-between; gap: 8px !important; }
 .stepTitleRow strong { flex: 1; min-width: 0; }
 .listenButton { min-width: 76px; min-height: 32px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex-shrink: 0; border: 1px solid color-mix(in srgb, var(--color-interface-purple) 28%, transparent); border-radius: var(--radius-full); background: var(--state-focused-fill); color: var(--color-interface-purple); cursor: pointer; font: var(--font-weight-semibold) 12px/1 var(--font-family); transition: transform .18s ease, background-color .18s ease, color .18s ease; }
@@ -22,7 +29,7 @@
 .listenButtonPlaying { background: var(--color-interface-purple); color: var(--color-white); }
 .hiddenAudio { display: none; }
 .stepWithAudio .stepVisual { height: clamp(88px, 15dvh, 125px) !important; min-height: 88px !important; }
-.stepWithAudio .stepCopy > span { font-size: 15px !important; line-height: 1.38 !important; }
+.stepWithAudio .stepCopy > span { line-height: 1.5; }
 .mediaButton { width: 52px; height: 52px; display: grid; place-items: center; flex-shrink: 0; border: 0; border-radius: var(--radius-full); background: var(--color-interface-purple); color: var(--color-white); cursor: pointer; }
 .mediaButton:focus-visible { outline: 3px solid var(--color-interface-blue); outline-offset: 3px; }
 .mediaCopy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
@@ -41,13 +48,12 @@
 .step:only-child { min-height: 0; display: grid; grid-template-columns: minmax(100px, 220px) minmax(0, 1fr); align-items: center; gap: clamp(12px, 2vw, 24px); padding: var(--space-3); }
 .step:only-child .stepVisual { width: 100%; max-width: 300px; height: clamp(150px, 27dvh, 230px); justify-self: center; overflow: visible; }
 .step:only-child .stepVisual img { padding: clamp(14px, 2vw, 22px); object-fit: contain; }
-.step:only-child > div:last-child { justify-content: center; }
-.step:only-child > div:last-child strong { font-size: clamp(20px, 2vw, 24px); }
-.step:only-child > div:last-child span { max-width: 52ch; font-size: 18px; line-height: 1.5; }
+.step:only-child .stepCopy { justify-content: center; }
+.step:only-child .stepTitleRow strong { font-size: 1.25rem; }
+.step:only-child .stepCopy > span { max-width: 52ch; }
 .stepNumber { position: absolute; top: 8px; left: 8px; width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; background: var(--color-interface-purple); color: white; font: var(--font-weight-semibold) var(--text-caption)/1 var(--font-family); }
-.step div:last-child { display: flex; flex-direction: column; gap: 2px; }
-.step strong { color: var(--color-text-primary); font: var(--font-weight-semibold) 20px/1.3 var(--font-family); }
-.step div:last-child span { color: var(--color-text-primary); font: var(--font-weight-regular) 17px/1.45 var(--font-family); }
+.step .stepTitleRow strong { margin: 0; color: #1e293b; font: 600 1.125rem/1.4 var(--font-family); }
+.step .stepCopy > span { color: #475569; font: 400 0.95rem/1.5 var(--font-family); }
 .reengagement { justify-content: center; background: #fff8e7; }
 .spark { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; color: #8c5a00; background: #fac775; animation: gentlePulse 1.8s ease-in-out infinite; }
 .reengagement > div { display: flex; flex-direction: column; gap: 4px; }
@@ -79,4 +85,13 @@
 .lessonSteps .step:only-child { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(64px, 1fr); }
 @media (max-width: 620px) {
   .lessonSteps .step, .lessonSteps .step:only-child { grid-template-columns: minmax(64px, 30%) minmax(0, 1fr); grid-template-rows: minmax(64px, 1fr); }
+}
+
+/* Keep Enrichment opening/closing illustrations readable on narrow screens. */
+@media (max-width: 620px) {
+  .enrichmentBoundary.lessonSteps .step:only-child { grid-template-columns: 1fr; grid-template-rows: auto auto; gap: 12px; padding: 16px; }
+  .enrichmentBoundary .step:only-child .stepVisual { width: 120px; height: 120px; background: transparent; }
+  .enrichmentBoundary .step:only-child .stepVisual img { padding: 4px; }
+  .enrichmentBoundary .stepCopy { width: 100%; text-align: center; }
+  .enrichmentBoundary .stepTitleRow { justify-content: center; }
 }

@@ -96,8 +96,20 @@ def validate_game(config):
 
 
 def evaluate_game(config, selected):
+    if config.get('requires_evidence') and config.get('task_template') in ('sort_groups', 'sequence_order'):
+        if not isinstance(selected, str):
+            return False
+        if config['task_template'] == 'sequence_order':
+            return selected.split(',') == config['correct_order']
+        try:
+            return json.loads(selected) == config['sort_answers']
+        except (ValueError, TypeError):
+            return False
     """Return None for legacy templates; otherwise verify a complete successful response."""
     template = config.get("task_template")
+    if template == "creative_experience":
+        from .creative_validation import evaluate_experience
+        return evaluate_experience(config, selected)
     if template == 'garden_kit':
         template = 'find_it'
     if template not in {"word_search", "find_it", "audio_sequence", "shopping", "scenario_classifier", "discovery_board", 'garden_mission', 'clock_set'}:

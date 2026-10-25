@@ -1,0 +1,66 @@
+[
+  {
+    "lesson_id": "CAREER-01",
+    "position": 2,
+    "changes": {
+      "steps": [
+        {
+          "id": "strength",
+          "title": "Follows steps and organizes materials",
+          "description": "At a school supply corner, Ana groups pencils and follows a three-step packing list. Organizing may be one of her strengths.",
+          "image_url": "/assets/pre-vocational/common/organizing.png",
+          "alt_text": "Organized materials"
+        },
+        {
+          "id": "support",
+          "title": "Still practicing customer conversations",
+          "description": "Ana is still learning how to greet customers. A picture cue or practice partner can help her build this skill.",
+          "image_url": "/assets/pre-vocational/common/customer-service.png",
+          "alt_text": "Customer service practice"
+        }
+      ]
+    }
+  },
+  {
+    "lesson_id": "CAREER-02",
+    "position": 3,
+    "changes": {
+      "question": "At a school cooperative, supplies are arranged and counted in the stock room. Why might organization fit this work?",
+      "correct_feedback": "Correct. Arranging and tracking supplies helps the cooperative find what it needs. This skill can also help in other workplaces.",
+      "retry_feedback": "Think about arranging supplies and keeping track of how many are left."
+    }
+  },
+  {
+    "lesson_id": "CAREER-03",
+    "position": 4,
+    "changes": {
+      "question": "While helping at a barangay event, you put the wrong labels on supply boxes. Which response is more helpful?",
+      "correct_feedback": "Correct. Tell the person in charge and ask how to correct the labels. Asking for support helps the work continue.",
+      "retry_feedback": "Which response lets someone help you correct the labels?"
+    }
+  },
+  {
+    "lesson_id": "ENRICH-01",
+    "position": 4,
+    "changes": {
+      "question": "Your class is preparing a school talent showcase for families. Read one job at a time and choose the skill it needs.",
+      "retry_feedback": "Think about what this job needs: a steady beat, a poster, or a scene. Each uses a different skill."
+    }
+  },
+  {
+    "lesson_id": "ENRICH-02",
+    "position": 4,
+    "changes": {
+      "question": "Play the pattern, then choose the sounds in the same order. You can replay it or use the visual prompt.",
+      "content_description": "These practice sounds are electronic tones: low note = deep tone; high note = bright tone; tap = short click. They are not instrument recordings. Use the visual prompt if you prefer."
+    }
+  },
+  {
+    "lesson_id": "ENRICH-03",
+    "position": 6,
+    "changes": {
+      "question": "Choose what helps in each practice situation. Then ask your teacher about trying a comfortable version of tap, clap, pause.",
+      "content_description": "With teacher approval, try the pattern seated (tap a hand on your lap, clap gently, pause) or standing (tap a foot, clap gently, pause). Your teacher can adapt or stop any action. You may point to the cues or observe instead. Screen answers show sequencing knowledge, not physical performance. Your teacher records any directly observed performance separately in your learning profile."
+    }
+  }
+]

@@ -44,7 +44,7 @@ CARE_LESSONS = [
         "lesson_id": "CARE-01", "title": "Wash hands step by step",
         "competency_code": "TPCS_HC-hh-NG-3",
         "competency": "Demonstrate proper hand washing",
-        "description": "Learn the materials and ordered steps for proper handwashing, then practise in a real setting with teacher observation.",
+        "description": "Learn the materials and ordered steps for proper handwashing, then practice in a real setting with teacher observation.",
         "assessment": {
             "digital_scope": "Knowledge of materials, sequence, and everyday application only.",
             "teacher_verification": "required",

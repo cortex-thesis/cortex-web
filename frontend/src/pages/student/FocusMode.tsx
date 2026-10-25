@@ -128,7 +128,7 @@ export function FocusMode({ preview = false }: FocusModeProps) {
       <span className={styles.nudgeDot} aria-hidden="true" />
       <span className={styles.nudgeText}>{NUDGE_MESSAGES[nudgeIndex]}</span>
       </>}
-      <ModeBgm mode="focus" />
+      <ModeBgm mode="focus" suspended={task.taskTemplate === 'creative_experience'} />
     </div>
   )
 

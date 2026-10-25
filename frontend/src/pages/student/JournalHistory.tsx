@@ -40,7 +40,7 @@ export default function JournalHistory() {
         <div><h1>My journal history</h1><p>Look back at what you learned and how you felt.</p></div>
       </header>
       <section className={styles.filters} aria-label="Filter journal history">
-        <label>Session<select value={sessionId} onChange={event => setSessionId(event.target.value)}>
+        <label>Session<select aria-label="Session" value={sessionId} onChange={event => setSessionId(event.target.value)}>
           <option value="">All sessions</option>
           {sessions.map(entry => <option key={entry.session_id} value={entry.session_id}>{entry.session_title} · {new Date(entry.session_started_at).toLocaleString()}</option>)}
         </select></label>

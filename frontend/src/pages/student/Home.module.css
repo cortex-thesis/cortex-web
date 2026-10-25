@@ -357,3 +357,29 @@
 @media (max-width:900px) { .learningGrid { grid-template-columns:repeat(2,minmax(220px,1fr)); } .startLearningCard { grid-column:1 / -1; max-width:560px; } }
 @media (max-width:760px) { .learningGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:520px) { .learningGrid { grid-template-columns:1fr; } .startLearningCard { grid-column:auto; max-width:none; } }
+
+/* Tablet and phone corrections only; preserve the original desktop rules above. */
+@media (max-width: 1000px) {
+  .body { box-sizing: border-box; min-width: 0; padding-inline: 24px; }
+  .homeGrid { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+  .left { overflow: visible; }
+  .right { display: flex; width: 100%; min-width: 0; }
+  .topCards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); min-width: 0; }
+  .identityDisplay { width: 100%; min-width: 0; max-width: 100%; }
+  .learningGrid, .singleClassGrid, .noClassGrid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); min-width: 0; }
+  .startLearningCard { grid-column: auto; max-width: none; grid-template-columns: 64px minmax(0, 1fr); gap: 12px 16px; }
+  .startLearningAction { grid-column: 2; }
+  .qaGrid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); min-width: 0; }
+  .progressCard span { min-width: 0; overflow-wrap: anywhere; }
+  .progressCard > svg { flex-shrink: 0; }
+  .journalShortcut { flex-wrap: wrap; }
+}
+@media (max-width: 760px) {
+  .body { padding-inline: 16px; overflow: visible; }
+  .topCards { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .startLearningCard { grid-template-columns: 48px minmax(0, 1fr); padding: 16px; gap: 12px; }
+  .startLearningIcon { width: 48px; height: 48px; }
+  .startLearningIcon img { width: 42px; height: 42px; }
+}

@@ -65,6 +65,7 @@ export default function LearningJournal() {
   const [responseType, setResponseType] = useState<JournalResponseType>('text')
   const [textContent, setTextContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const tasksDone = journalData?.session.completed_tasks ?? state.tasksDone ?? []
 
@@ -95,12 +96,13 @@ export default function LearningJournal() {
 
   async function handleSave() {
     const sessionId = journalData?.session.id
-    if (!sessionId) return
+    if (!sessionId || isSaving || saved) return
     setIsSaving(true)
     setError('')
     try {
       await saveStudentJournal({ session_id: sessionId, prompt, response_type: 'text', text_response: textContent, mood: mood ?? '', shared_with_teacher: true })
-      navigate('/student/home', { replace: true })
+      setSaved(true)
+      setIsSaving(false)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Unable to save your journal.')
       setIsSaving(false)
@@ -186,6 +188,7 @@ export default function LearningJournal() {
               {RESPONSE_TYPES.map(({ value, icon, label, hint }) => (
                 <button
                   key={value}
+                  disabled={isSaving}
                   className={`${styles.responseBtn} ${responseType === value ? styles.responseActive : ''}`}
                   onClick={() => selectResponseType(value)}
                   aria-pressed={responseType === value}
@@ -201,19 +204,21 @@ export default function LearningJournal() {
               <span>{textContent.length} characters</span>
             </label>
             <textarea
+              disabled={isSaving}
               id="journal-response"
               className={styles.textArea}
               placeholder="Tell me about what you learned, what made you smile, or what you want to try next..."
               value={textContent}
-              onChange={(event) => setTextContent(event.target.value)}
+              onChange={(event) => { setSaved(false); setTextContent(event.target.value) }}
               aria-label={prompt}
             />
 
             <div className={styles.saveArea}>
+              {saved && <p role="status">Your journal was saved. <button onClick={() => navigate('/student/home', { replace: true })}>Continue to home</button></p>}
               <p>Your journal helps you remember how much you are growing.</p>
-              <button className={styles.saveBtn} onClick={() => void handleSave()} disabled={isSaving || !journalData || !textContent.trim()} aria-busy={isSaving}>
+              <button className={styles.saveBtn} onClick={() => void handleSave()} disabled={saved || isSaving || !journalData || !textContent.trim()} aria-busy={isSaving}>
                 <Save size={19} />
-                {isSaving ? 'Saving...' : 'Save my journal'}
+                {saved ? 'Saved' : isSaving ? 'Saving...' : error ? 'Retry save' : 'Save my journal'}
               </button>
             </div>
           </main>
@@ -228,8 +233,9 @@ export default function LearningJournal() {
                 {MOODS.map(({ value, icon, label }) => (
                   <button
                     key={value}
+                    disabled={isSaving}
                     className={`${styles.moodBtn} ${mood === value ? styles.moodActive : ''}`}
-                    onClick={() => setMood(value)}
+                    onClick={() => { setSaved(false); setMood(value) }}
                     aria-pressed={mood === value}
                   >
                     <span>{icon}</span>

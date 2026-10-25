@@ -101,7 +101,7 @@ export default function GardenMission({ task, onAnswered, onChanged, quiet }: {
       </div>
     </div>
     <div className={styles.footer}>
-      <p role="status">{done ? task.correctFeedback : message || 'Try it on screen. Practise real tasks with appropriate support.'}</p>
+      <p role="status">{done ? task.correctFeedback : message || 'Try it on screen. Practice real tasks with appropriate support.'}</p>
       {applied && !done && <button type="button" onClick={() => { setIndex(index + 1); setTool(null); setApplied(false); setMessage('') }}>Next mission →</button>}
     </div>
   </div>

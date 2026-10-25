@@ -23,3 +23,8 @@
 @keyframes pinDrop { from { transform: translate(-50%, -170%); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .pin, .memoryCard { animation: none; transition: none; } }
 @media (max-width: 620px) { .route { padding: 15px 8px; gap: 8px; } }
+
+.pattern > span, .patternChoices button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; box-sizing: border-box; }
+.pattern > span > span { min-width: 0; min-height: 0; padding: 0; border: 0; background: transparent; font: inherit; line-height: 1.4; }
+.pattern img, .patternChoices img { display: block; width: clamp(40px, 8vw, 64px); height: clamp(40px, 8vw, 64px); object-fit: contain; }
+.patternChoices button > span { font: inherit; line-height: 1.4; }

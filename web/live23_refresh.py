@@ -32,7 +32,7 @@ def upgrade_live23(definitions):
 
         def finish(title, summary, image, **metadata):
             screen('complete', title, columns=1, template='visual_narrative', steps=[{
-                'id': 'done', 'title': summary, 'description': 'Practise with real materials and appropriate support.',
+                'id': 'done', 'title': summary, 'description': 'Practice with real materials and appropriate support.',
                 'image_url': ROOT + image}], assessment_metadata={'physical_operation_verified': False, **metadata})
 
         if lid == 'LIVE-02':
@@ -71,7 +71,7 @@ def upgrade_live23(definitions):
             stories([
                 {'clue': 'The task is watering. Someone offers a measuring tape. What should you do?', 'choices': ['Choose a watering can instead', 'Use the tape to pour water', 'Ignore the task'], 'answer': 'Choose a watering can instead', 'feedback': 'Choose by function, not just availability.'},
                 {'clue': 'You have never used a garden tool before. What is a safe first step?', 'choices': ['Ask for guidance and a demonstration', 'Try it without checking', 'Use any tool quickly'], 'answer': 'Ask for guidance and a demonstration', 'feedback': 'Get support before unfamiliar tool use.'}])
-            screen('reflect', 'Which Task Would You Practise?', 'interactive', task_template='picture_choice', scored=False,
+            screen('reflect', 'Which Task Would You Practice?', 'interactive', task_template='picture_choice', scored=False,
                    selection_mode='single', correct_item_ids=[], self_report_field='gardenToolPractice',
                    question='Choose a task to explore. No wrong answers.', items=[
                        {'id': 'soil', 'label': 'Soil work', 'image_url': ROOT + 'hand-trowel.png'},
@@ -81,7 +81,7 @@ def upgrade_live23(definitions):
             finish('Tool Bench Mission Complete', 'Check the task. Choose the tool. Use it safely.', 'gardening.png')
         else:
             screen('goal', 'Become a Seed Inspector', columns=1, template='visual_narrative', steps=[{
-                'id': 'goal', 'title': "Today's goal", 'description': 'Practise inspecting and comparing before choosing seeds.',
+                'id': 'goal', 'title': "Today's goal", 'description': 'Practice inspecting and comparing before choosing seeds.',
                 'image_url': ROOT + 'seed-inspection.png'}])
             screen('discuss', 'Look, Compare, Check', template='visual_narrative', discussion=True,
                    narration_script='Look closely at the seed and its information. Compare using the criteria your teacher has taught. Ask for confirmation if you are unsure. An illustration alone cannot prove that a seed is good or will grow.',
@@ -99,7 +99,7 @@ def upgrade_live23(definitions):
             screen('inspector', 'Seed Inspector Workbench', 'interactive', task_template='garden_mission',
                    question='Choose an inspection action, then apply it to the target.', items=actions, missions=[
                        mission('inspect', 'Inspect', 'Start with the seed sample. What should you do first?', 'look', 'Inspect the sample', 'seed-variety.png', 'Start by looking closely, not choosing immediately.', 'Sample inspected—not yet judged.'),
-                       mission('compare', 'Compare', 'Now use the teacher’s criteria to compare the sample.', 'compare', 'Compare with the reference', 'checklist.png', 'Use the taught criteria, not a guess from colour.', 'Comparison step practised.'),
+                       mission('compare', 'Compare', 'Now use the teacher’s criteria to compare the sample.', 'compare', 'Compare with the reference', 'checklist.png', 'Use the taught criteria, not a guess from colour.', 'Comparison step practiced.'),
                        mission('confirm', 'Confirm', 'You are unsure whether the seed meets the criteria. What next?', 'ask', 'Check with the teacher', 'choose-seed.png', 'Ask for confirmation before choosing when unsure.', 'Confirmation requested before selection.')],
                    correct_feedback='Inspection routine complete. This does not certify seed quality.',
                    assessment_metadata={'seed_quality_verified': False, 'final_assessment_locked': True})

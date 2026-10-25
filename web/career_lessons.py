@@ -1,5 +1,7 @@
 """Authoritative Cortex configuration for CAREER-01--CAREER-03."""
 
+import json as _json
+from pathlib import Path as _Path
 from .care_lessons import ADAPTATION_POLICY
 
 
@@ -20,11 +22,11 @@ CAREER_LESSONS = [
         "assessment": {"teacher_verification": "recommended", "self_report_scored": False, "automated_aptitude_test": False, "eeg_may_label_ability": False},
         "slides": [
             _screen("CAREER-01", "career profile opening", "image", "Career Profile — Step 1", template="visual_narrative", steps=[{"id": "goal", "title": "What can I do?", "description": "Recognize strengths, developing skills, and activities to explore."}]),
-            _screen("CAREER-01", "profile categories", "image", "Build the Career Profile", template="visual_narrative", steps=[{"id": "can", "title": "I can do this", "description": "Something you can do with expected support."}, {"id": "developing", "title": "I am developing this", "description": "Something you are still practising."}, {"id": "explore", "title": "I would like to explore this", "description": "Something you may want to try."}]),
-            _screen("CAREER-01", "strength and support modeling", "image", "Strengths and Support", template="visual_narrative", steps=[{"id": "strength", "title": "Follows steps and organizes materials", "description": "These may be strengths for orderly work."}, {"id": "support", "title": "Still practising customer conversations", "description": "Practice or support may help."}]),
-            _screen("CAREER-01", "concept classification", "interactive", "Strength, Skill, or Developing Area?", task_template="sort_groups", question="Sort each example into the best planning category.", items=[{"id": "instructions", "label": "Can follow a three-step work instruction"}, {"id": "program", "label": "Still learning a computer program"}, {"id": "layouts", "label": "Shows ability in drawing layouts"}], categories=[{"id": "strength", "label": "Strength or skill"}, {"id": "developing", "label": "Developing area"}], sort_answers={"instructions": "strength", "program": "developing", "layouts": "strength"}, correct_feedback="Correct. Skills may be demonstrated or developing.", retry_feedback="Look for what the person can do and what they are practising."),
+            _screen("CAREER-01", "profile categories", "image", "Build the Career Profile", template="visual_narrative", steps=[{"id": "can", "title": "I can do this", "description": "Something you can do with expected support."}, {"id": "developing", "title": "I am developing this", "description": "Something you are still practicing."}, {"id": "explore", "title": "I would like to explore this", "description": "Something you may want to try."}]),
+            _screen("CAREER-01", "strength and support modeling", "image", "Strengths and Support", template="visual_narrative", steps=[{"id": "strength", "title": "Follows steps and organizes materials", "description": "These may be strengths for orderly work."}, {"id": "support", "title": "Still practicing customer conversations", "description": "Practice or support may help."}]),
+            _screen("CAREER-01", "concept classification", "interactive", "Strength, Skill, or Developing Area?", task_template="sort_groups", question="Sort each example into the best planning category.", items=[{"id": "instructions", "label": "Can follow a three-step work instruction"}, {"id": "program", "label": "Still learning a computer program"}, {"id": "layouts", "label": "Shows ability in drawing layouts"}], categories=[{"id": "strength", "label": "Strength or skill"}, {"id": "developing", "label": "Developing area"}], sort_answers={"instructions": "strength", "program": "developing", "layouts": "strength"}, correct_feedback="Correct. Skills may be demonstrated or developing.", retry_feedback="Look for what the person can do and what they are practicing."),
             _screen("CAREER-01", "strength self-reflection", "interactive", "Things I Can Do", task_template="picture_choice", selection_mode="multiple", scored=False, question="Choose activities you believe you can do.", items=[{"id": value, "label": label} for value, label in [("organize", "Organize materials"), ("computer", "Use a computer"), ("garden", "Care for plants"), ("food", "Prepare food"), ("repair", "Repair objects"), ("unsure", "Not sure yet")]], correct_item_ids=[], correct_feedback="Your choices are saved as self-reported strengths.", retry_feedback="Choose any response that fits you."),
-            _screen("CAREER-01", "developing skill reflection", "interactive", "Things I Am Developing", task_template="picture_choice", selection_mode="multiple", scored=False, question="Which activities are you still learning?", items=[{"id": value, "label": label} for value, label in [("organize", "Organize materials"), ("computer", "Use a computer"), ("garden", "Care for plants"), ("food", "Prepare food"), ("repair", "Repair objects")]], correct_item_ids=[], correct_feedback="Your developing areas are saved for supported reflection.", retry_feedback="Choose any activity you want to practise."),
+            _screen("CAREER-01", "developing skill reflection", "interactive", "Things I Am Developing", task_template="picture_choice", selection_mode="multiple", scored=False, question="Which activities are you still learning?", items=[{"id": value, "label": label} for value, label in [("organize", "Organize materials"), ("computer", "Use a computer"), ("garden", "Care for plants"), ("food", "Prepare food"), ("repair", "Repair objects")]], correct_item_ids=[], correct_feedback="Your developing areas are saved for supported reflection.", retry_feedback="Choose any activity you want to practice."),
             _screen("CAREER-01", "career connection", "interactive", "One Skill, Several Workplaces", task_template="picture_choice", selection_mode="multiple", question="Where might organizing materials be useful?", items=[{"id": "office", "label": "Office files"}, {"id": "stock", "label": "Stock room"}, {"id": "kitchen", "label": "Kitchen preparation area"}, {"id": "workshop", "label": "Workshop materials"}], correct_item_ids=["office", "stock", "kitchen", "workshop"], correct_feedback="Correct. One skill may be useful in several contexts.", retry_feedback="Organizing can support each work area."),
             _screen("CAREER-01", "completion", "image", "Career Profile Step 1 Complete", template="visual_narrative", steps=[{"id": "summary", "title": "Know strengths and developing skills", "description": "Use them to guide practice and future exploration."}], assessment_metadata={"teacher_observation_supplements_self_report": True}),
         ],
@@ -57,7 +59,7 @@ CAREER_LESSONS = [
             _choice("CAREER-03", "difficult task response", "A Task Is Difficult", "Which response helps work continue?", ["Ask for clarification and try again", "Leave without telling anyone"], "Ask for clarification and try again", "Correct. Clarification supports another attempt.", "Which response communicates the difficulty?"),
             _choice("CAREER-03", "mistake response", "Respond to a Mistake", "Which response is more helpful after a mistake?", ["Hide it and continue", "Tell the appropriate person and ask how to correct it"], "Tell the appropriate person and ask how to correct it", "Correct. The response helps address the mistake.", "Which response supports correction?"),
             _screen("CAREER-03", "consequence matching", "interactive", "Match Attitudes to Effects", task_template="matching_pairs", question="Match each behavior with its likely effect.", pairs=[{"id": "punctual", "left": {"id": "punctuality", "label": "Punctuality"}, "right": {"id": "ready", "label": "Ready when work begins"}}, {"id": "diligent", "left": {"id": "diligence", "label": "Diligence"}, "right": {"id": "effort", "label": "Careful and continued effort"}}, {"id": "ignore", "left": {"id": "ignoring", "label": "Repeatedly ignoring instructions"}, "right": {"id": "interfere", "label": "May interfere with safe completion"}}], correct_feedback="Correct. Responses can affect how work continues.", retry_feedback="Consider the practical result of each behavior."),
-            _screen("CAREER-03", "personal reflection", "interactive", "An Attitude I Want to Practise", task_template="picture_choice", selection_mode="multiple", scored=False, question="Choose a helpful attitude to practise.", items=[{"id": "prepared", "label": "Arriving prepared"}, {"id": "help", "label": "Asking for help appropriately"}, {"id": "finish", "label": "Finishing a task"}, {"id": "cooperate", "label": "Cooperating"}, {"id": "retry", "label": "Trying again after a mistake"}], correct_item_ids=[], correct_feedback="Your reflection has been saved.", retry_feedback="Choose any attitude to practise."),
+            _screen("CAREER-03", "personal reflection", "interactive", "An Attitude I Want to Practice", task_template="picture_choice", selection_mode="multiple", scored=False, question="Choose a helpful attitude to practice.", items=[{"id": "prepared", "label": "Arriving prepared"}, {"id": "help", "label": "Asking for help appropriately"}, {"id": "finish", "label": "Finishing a task"}, {"id": "cooperate", "label": "Cooperating"}, {"id": "retry", "label": "Trying again after a mistake"}], correct_item_ids=[], correct_feedback="Your reflection has been saved.", retry_feedback="Choose any attitude to practice."),
             _screen("CAREER-03", "completion", "image", "Career Scenario Lab Complete", template="visual_narrative", steps=[{"id": "summary", "title": "Learn, cooperate, complete", "description": "Helpful attitudes support responsibility and appropriate task completion."}], assessment_metadata={"single_event_is_not_final_judgment": True}),
         ],
     },
@@ -66,3 +68,56 @@ CAREER_LESSONS = [
 
 from .lesson_assets import attach_definitions
 attach_definitions(CAREER_LESSONS)
+
+# User-supplied icons for the Career picture-choice cards only. Matching stays text-only.
+for _item in CAREER_LESSONS[1]['slides'][4]['configuration']['items']:
+    _icon = {'ict': 'technical-support', 'printing': 'printing-service'}.get(_item['id'])
+    if _icon:
+        _item['image_url'] = '/assets/career/' + _icon + '.png'
+        _item['alt_text'] = 'Supporting illustration: ' + _item['label']
+
+
+# Small content refinements retain every original activity and answer identity.
+for _refinement in _json.loads((_Path(__file__).parent / "restored_lesson_refinements.json").read_text(encoding="utf-8")):
+    for _lesson in CAREER_LESSONS:
+        if _lesson["lesson_id"] == _refinement["lesson_id"]:
+            _lesson["slides"][_refinement["position"]]["configuration"].update(_refinement["changes"])
+
+
+# Reuse existing bundled illustrations only within Career.
+def attach_career_assets(configuration):
+    mapping = _json.loads((_Path(__file__).parent / "career_asset_reuse.json").read_text(encoding="utf-8"))
+    def visit(value):
+        if isinstance(value, list):
+            for item in value: visit(item)
+        elif isinstance(value, dict):
+            label = value.get("label") or value.get("title")
+            if label in mapping and not value.get("image_url"):
+                value["image_url"] = mapping[label]
+                value["alt_text"] = "Supporting illustration: " + label
+            for key, item in list(value.items()):
+                if key not in ("lesson_metadata", "adaptive_delivery", "assessment_metadata"):
+                    visit(item)
+    visit(configuration)
+
+for _lesson in CAREER_LESSONS:
+    for _slide in _lesson["slides"]:
+        attach_career_assets(_slide["configuration"])
+
+CAREER_LESSONS[2]["slides"][0]["configuration"].update({
+    "image_url": "/assets/pre-vocational/prev-01/skills-and-responsibilities.png",
+    "alt_text": "Work responsibilities symbol",
+    "content_description": "Consider which response helps the work begin. The illustration represents work responsibilities.",
+})
+
+# Shared with the frontend preview. Existing records use the targeted publisher,
+# which clones the current lesson instead of rewriting saved activity identities.
+_career01_revision = _json.loads((_Path(__file__).parent / 'career01_revision.json').read_text(encoding='utf-8'))
+for _position, _screen_revision in _career01_revision['replacements'].items():
+    CAREER_LESSONS[0]['slides'][int(_position)] = _screen_revision
+    _screen_revision['configuration']['publication_revision'] = _career01_revision['revision']
+
+_career03_revision = _json.loads((_Path(__file__).parent / 'career03_revision.json').read_text(encoding='utf-8'))
+for _position, _screen_revision in _career03_revision['replacements'].items():
+    CAREER_LESSONS[2]['slides'][int(_position)] = _screen_revision
+    _screen_revision['configuration']['publication_revision'] = _career03_revision['revision']

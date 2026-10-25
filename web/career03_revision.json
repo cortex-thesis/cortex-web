@@ -1,0 +1,51 @@
+{
+  "revision": "career03-team-sorting-sequence-v2",
+  "lesson_id": "CAREER-03",
+  "competency_code": "TP_CP-cv-NG-1",
+  "replacements": {
+    "3": {
+      "title": "Help the Team Get Ready",
+      "type": "interactive",
+      "configuration": {
+        "task_template": "sort_groups",
+        "question": "Your class is preparing supplies for a barangay event. Which actions help everyone work together?",
+        "content_description": "Drag each card into a group, or tap a card and then its group.",
+        "items": [
+          {"id": "check", "label": "Check the packing list", "image_url": "/assets/livelihood/common/checklist.png", "alt_text": "Supporting checklist illustration"},
+          {"id": "leave", "label": "Leave without telling the person in charge", "image_url": "/assets/pre-vocational/common/organizing.png", "alt_text": "Supporting supplies illustration"},
+          {"id": "ask", "label": "Ask which supplies go in each box", "image_url": "/assets/functional-academics/func-01/ask-for-help.png", "alt_text": "Supporting asking-for-help illustration"},
+          {"id": "hide", "label": "Hide a labeling mistake", "image_url": "/assets/livelihood/common/checklist.png", "alt_text": "Supporting checklist illustration"}
+        ],
+        "categories": [{"id": "helps", "label": "Helps the team"}, {"id": "different", "label": "Needs a different response"}],
+        "sort_answers": {"check": "helps", "ask": "helps", "leave": "different", "hide": "different"},
+        "correct_feedback": "Checking the list and asking questions help the team pack the right supplies. Telling the person in charge before leaving or about a labeling mistake lets the team plan and correct it.",
+        "retry_feedback": "Think about each action’s effect. Checking and asking keep the team informed; leaving without telling anyone or hiding a mistake makes it harder to organize the supplies.",
+        "requires_evidence": true,
+        "evidence_role": "supporting",
+        "digital_mastery_claim": false,
+        "layout": {"size": "wide"}
+      }
+    },
+    "4": {
+      "title": "Oops! What Happens Next?",
+      "type": "interactive",
+      "configuration": {
+        "task_template": "sequence_order",
+        "question": "You notice that you put the wrong labels on the supply boxes. Help fix the mistake. Arrange the three steps for this situation. Other workplace problems may need a different order.",
+        "content_description": "Drag the cards into order, or tap them in order. Tap a placed card to return it.",
+        "items": [
+          {"id": "correct", "label": "Correct the labels with the support you need.", "image_url": "/assets/pre-vocational/common/organizing.png", "alt_text": "Supporting organizing-supplies illustration"},
+          {"id": "tell", "label": "Tell the person in charge what happened.", "image_url": "/assets/functional-academics/func-01/ask-for-help.png", "alt_text": "Supporting communication and help illustration"},
+          {"id": "ask", "label": "Ask which labels belong on the boxes.", "image_url": "/assets/livelihood/common/checklist.png", "alt_text": "Supporting checklist illustration"}
+        ],
+        "correct_order": ["tell", "ask", "correct"],
+        "correct_feedback": "Mistakes can happen. Communicating and asking for help lets the team correct them.",
+        "retry_feedback": "First tell someone what happened. Then ask which labels to use before correcting them.",
+        "requires_evidence": true,
+        "evidence_role": "supporting",
+        "digital_mastery_claim": false,
+        "layout": {"size": "wide", "preferred_columns": 3}
+      }
+    }
+  }
+}

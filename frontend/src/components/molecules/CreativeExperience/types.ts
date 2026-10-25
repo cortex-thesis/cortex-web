@@ -1,0 +1,8 @@
+﻿import type { Task } from '../../../types'
+export interface ObjectCard { id: string; label: string; description?: string; symbol?: string; imageUrl?: string; audioUrl?: string; tool?: string; distractor?: string; action?: string; before?: string; after?: string }
+export interface StoryScene { id: string; label: string; state: string; choices: { id: string; label: string; next: string }[] }
+export interface Experience { mode: 'intro' | 'gallery' | 'map' | 'collection' | 'connect' | 'work' | 'story' | 'order' | 'art' | 'sound' | 'beat' | 'compare' | 'movement' | 'wheel' | 'participation' | 'showcase'; items?: ObjectCard[]; stations?: ObjectCard[]; categories?: ObjectCard[]; links?: Record<string,string[]>; order?: string[]; scenes?: StoryScene[]; start?: string; preset?: string[]; collection?: boolean; performance?: boolean }
+export interface ArtObject { id: number; shape: 'circle' | 'square' | 'triangle' | 'star'; color: string; x: number; y: number }
+export interface Draft { version: string; reviewed?: boolean; reflection?: string[]; visited?: string[]; selections?: Record<string,string[]>; links?: Record<string,string[]>; station?: string; tool?: string; applied?: boolean; path?: {scene:string;choice:string}[]; order?: string[]; route?: string; objects?: ArtObject[]; background?: string; blank?: boolean; grid?: boolean[][]; tempo?: number; rest?: boolean; explored?: string[] }
+export interface ExperienceProps { task: Task; onAnswered?: (ready:boolean,response:string)=>void; onChanged?: ()=>void; quiet?: boolean; narrowed?: boolean }
+export interface WorkspaceProps extends ExperienceProps { value: Draft; update:(next:Partial<Draft>)=>void; complete:(next?:Partial<Draft>)=>void }

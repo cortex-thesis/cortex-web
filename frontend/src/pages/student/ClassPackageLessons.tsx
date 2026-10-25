@@ -8,7 +8,7 @@ import { getStudentClassPackage, PACKAGE_EMOJI, type StudentClass, type StudentL
 import { cachedApiValue } from '../../lib/api'
 import styles from './FreeLessonSelect.module.css'
 
-interface PackageData { class: StudentClass; package: StudentPackage; lessons: (StudentLesson & { progress?: { status: string; percentage: number } })[] }
+interface PackageData { historical_lessons?: (StudentLesson & { progress?: { status:string;percentage:number } })[]; class: StudentClass; package: StudentPackage; lessons: (StudentLesson & { progress?: { status: string; percentage: number } })[] }
 
 export default function ClassPackageLessons() {
   const navigate = useNavigate()

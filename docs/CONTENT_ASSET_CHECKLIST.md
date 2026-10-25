@@ -1,4 +1,23 @@
+> Current status (2026-10-25): The creative redesign below is superseded. Original lesson IDs 16?21 are restored with one display-only refinement per lesson. See [CAREER_ENRICHMENT_RESTORATION.md](CAREER_ENRICHMENT_RESTORATION.md) for the active scope. Archived creative components remain only for saved historical versions.
+
 # Content asset checklist — nine-lesson review
+
+
+## Career / Enrichment creative revision - current production checklist
+
+These statuses supersede the older Career/Enrichment baseline rows below. No pending media is marked approved by the application.
+
+| Lesson | Implemented visual / interaction assets | Still awaiting approved media | Narration / caption / language status |
+|---|---|---|---|
+| CAREER-01 | Discovery-room objects, skill icons, interactive strength board, task/skill connections, saved collection | Strengths-learning video; optional detailed skill illustrations / approved photos | Visible English instruction doubles as requested browser narration. Recorded narration, reviewed video captions and translations pending. |
+| CAREER-02 | Original town diagram, occupation icons, garden/water and work-material scene states, many-to-many connections, exploration map | Community occupations video; optional Philippine workplace photos / detailed scenes | English draft station descriptions and instructions; recorded/localized versions pending. |
+| CAREER-03 | Original worker scene states, changed object positions / expressions, branching repair paths, workday cards | Helpful workplace behavior video; optional richer character artwork | English draft choices/consequences available as text; narration/translation review pending. |
+| ENRICH-01 | Festival diagram, talent icons, editable shapes/backgrounds, persisted creation gallery | Talent showcase video; approved performance/sport examples / optional photos | English draft instructions and written talent examples; reviewed demonstration captions and translations pending. |
+| ENRICH-02 | Instrument icons/descriptions, existing electronic echo WAVs, live electronic-tone composer, saved-beat replay, visual sound comparisons | Five recognizable licensed/approved instrument recordings (drum, piano, guitar, bell, tambourine); music video | No instrument sound is fabricated. Optional native sample controls activate only when a sample URL is actually configured. Recorded narration/translations pending. |
+| ENRICH-03 | Existing tap/clap/pause SVGs, original illustrative movement figure, sequence replay, manual wheel, separate teacher observation | Teacher-reviewed movement demonstrations/adapted alternatives; movement video | Illustrated/text cues are not verified physical demonstrations. English participation instructions present; captioned/localized demonstration content pending. |
+
+Formats: SVG/PNG/WebP for bundled illustration, approved MP3/WAV instrument/narration audio, approved MP4/WebM or user-selected YouTube video, and reviewed text/WebVTT captions where supported. Preserve creator/license/reviewer records when adding media. No new feedback audio is needed; existing optional feedback is reused only where appropriate. Do not use generic feedback sounds as instrument-identification samples.
+
 
 Audit: 2026-09-18; plan only. Existing means found in repository/shared configurations, not automatically validated for curriculum/UAT. No new images or media were uploaded for this planning task. VIDEO references are user-provided, not fabricated; supplied candidates remain pending full review and embedded-playback testing.
 

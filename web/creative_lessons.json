@@ -1,0 +1,4705 @@
+[
+  {
+    "lesson_id": "CAREER-01",
+    "title": "My Strengths and Skills",
+    "competency_code": "TP_CP-cp-NG-1",
+    "competency": "Identify their strengths, weaknesses, talents and skills",
+    "package": "career",
+    "slides": [
+      {
+        "title": "The Discovery Adventure",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Everyone enjoys different activities and can learn new skills. Let us discover yours.",
+          "experience": {
+            "mode": "intro",
+            "items": [
+              {
+                "id": "help",
+                "label": "Helping others",
+                "description": "Offer help and ask what is needed.",
+                "symbol": "heart-handshake"
+              },
+              {
+                "id": "draw",
+                "label": "Drawing pictures",
+                "description": "Use lines and colour to express an idea.",
+                "symbol": "pencil"
+              },
+              {
+                "id": "organize",
+                "label": "Organizing objects",
+                "description": "Put materials where they can be found.",
+                "symbol": "boxes"
+              }
+            ]
+          },
+          "screen_key": "c1-start",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-01",
+            "competency_code": "TP_CP-cp-NG-1",
+            "official_competency": "Identify their strengths, weaknesses, talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Interactive Strength Gallery",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose a skill to see an everyday example.",
+          "experience": {
+            "mode": "gallery",
+            "items": [
+              {
+                "id": "help",
+                "label": "Helping others",
+                "description": "Offer help and ask what is needed.",
+                "symbol": "heart-handshake"
+              },
+              {
+                "id": "draw",
+                "label": "Drawing pictures",
+                "description": "Use lines and colour to express an idea.",
+                "symbol": "pencil"
+              },
+              {
+                "id": "organize",
+                "label": "Organizing objects",
+                "description": "Put materials where they can be found.",
+                "symbol": "boxes"
+              },
+              {
+                "id": "garden",
+                "label": "Caring for plants",
+                "description": "Notice what a plant needs.",
+                "symbol": "sprout"
+              },
+              {
+                "id": "sing",
+                "label": "Singing",
+                "description": "Use your voice to make music.",
+                "symbol": "music"
+              },
+              {
+                "id": "make",
+                "label": "Making things",
+                "description": "Plan and join materials.",
+                "symbol": "scissors"
+              },
+              {
+                "id": "clean",
+                "label": "Cleaning and arranging",
+                "description": "Keep a shared space ready.",
+                "symbol": "brush"
+              },
+              {
+                "id": "solve",
+                "label": "Solving problems",
+                "description": "Try a step and check what changes.",
+                "symbol": "lightbulb"
+              }
+            ]
+          },
+          "screen_key": "c1-gallery",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-01",
+            "competency_code": "TP_CP-cp-NG-1",
+            "official_competency": "Identify their strengths, weaknesses, talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Who Can Help?",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Connect a task to a useful skill. A developing skill is something still being practiced.",
+          "experience": {
+            "mode": "connect",
+            "items": [
+              {
+                "id": "books",
+                "label": "Books are scattered",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "card",
+                "label": "Make a birthday card",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "practice",
+                "label": "Still learning a new program",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ],
+            "stations": [
+              {
+                "id": "organize",
+                "label": "Organizing",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "draw",
+                "label": "Drawing",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "developing",
+                "label": "Developing a skill",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ],
+            "links": {
+              "books": [
+                "organize"
+              ],
+              "card": [
+                "draw"
+              ],
+              "practice": [
+                "developing"
+              ]
+            }
+          },
+          "screen_key": "c1-help",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-01",
+            "competency_code": "TP_CP-cp-NG-1",
+            "official_competency": "Identify their strengths, weaknesses, talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Build My Strength Board",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "These are your choices, not a test of your ability.",
+          "experience": {
+            "mode": "collection",
+            "items": [
+              {
+                "id": "help",
+                "label": "Helping others",
+                "description": "Offer help and ask what is needed.",
+                "symbol": "heart-handshake"
+              },
+              {
+                "id": "draw",
+                "label": "Drawing pictures",
+                "description": "Use lines and colour to express an idea.",
+                "symbol": "pencil"
+              },
+              {
+                "id": "organize",
+                "label": "Organizing objects",
+                "description": "Put materials where they can be found.",
+                "symbol": "boxes"
+              },
+              {
+                "id": "garden",
+                "label": "Caring for plants",
+                "description": "Notice what a plant needs.",
+                "symbol": "sprout"
+              },
+              {
+                "id": "sing",
+                "label": "Singing",
+                "description": "Use your voice to make music.",
+                "symbol": "music"
+              },
+              {
+                "id": "make",
+                "label": "Making things",
+                "description": "Plan and join materials.",
+                "symbol": "scissors"
+              },
+              {
+                "id": "clean",
+                "label": "Cleaning and arranging",
+                "description": "Keep a shared space ready.",
+                "symbol": "brush"
+              },
+              {
+                "id": "solve",
+                "label": "Solving problems",
+                "description": "Try a step and check what changes.",
+                "symbol": "lightbulb"
+              }
+            ],
+            "categories": [
+              {
+                "id": "enjoy",
+                "label": "I enjoy",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "can",
+                "label": "I can with support",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "practice",
+                "label": "I am practicing",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "learn",
+                "label": "I want to learn",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ]
+          },
+          "screen_key": "c1-board",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-01",
+            "competency_code": "TP_CP-cp-NG-1",
+            "official_competency": "Identify their strengths, weaknesses, talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Watch and Discover",
+        "type": "video",
+        "configuration": {
+          "template": "instructional_video",
+          "media_url": null,
+          "video_optional": true,
+          "content_label": "Video awaiting teacher-approved selection",
+          "content_description": "Notice something a person enjoys or is learning. After watching, tell your teacher one skill you noticed, or say you are not sure.",
+          "video_reference_status": "awaiting_approval",
+          "video_search": "everyone has different strengths skills children",
+          "screen_key": "c1-video",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "lesson_metadata": {
+            "lesson_id": "CAREER-01",
+            "competency_code": "TP_CP-cp-NG-1",
+            "official_competency": "Identify their strengths, weaknesses, talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "My Discovery Celebration",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Review your own choices. They do not diagnose ability or decide a career.",
+          "experience": {
+            "mode": "showcase",
+            "collection": true
+          },
+          "screen_key": "c1-showcase",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-01",
+            "competency_code": "TP_CP-cp-NG-1",
+            "official_competency": "Identify their strengths, weaknesses, talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      }
+    ],
+    "version": "creative-journeys-v1",
+    "description": "My Future Discovery Journey"
+  },
+  {
+    "lesson_id": "CAREER-02",
+    "title": "My Skills and Possible Jobs",
+    "competency_code": "TP_CP-cp-NG-2",
+    "competency": "Match their strengths, talents and skills to possible exits or job opportunities",
+    "package": "career",
+    "slides": [
+      {
+        "title": "Welcome to Career Town",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose one place to explore. All places remain available.",
+          "experience": {
+            "mode": "map",
+            "stations": [
+              {
+                "id": "garden",
+                "label": "Garden worker",
+                "description": "Cares for plants; observation and careful watering help the community grow food and flowers.",
+                "symbol": "sprout",
+                "action": "Water the plant",
+                "before": "A plant needs water.",
+                "after": "The soil is watered. The worker checks before watering again.",
+                "tool": "Watering can",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "bakery",
+                "label": "Panadero / baker",
+                "description": "Prepares bread; follows food-preparation steps and keeps tools clean.",
+                "symbol": "wheat",
+                "action": "Prepare the bread tray",
+                "before": "Bread is ready to arrange.",
+                "after": "The tray is arranged for the next preparation step.",
+                "tool": "Clean bread tray",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "classroom",
+                "label": "Teacher",
+                "description": "Helps learners; explains ideas and organizes learning materials.",
+                "symbol": "book-open",
+                "action": "Arrange learning materials",
+                "before": "Learning materials need a place.",
+                "after": "The materials are ready for learners to find.",
+                "tool": "Learning cards",
+                "distractor": "Watering can"
+              },
+              {
+                "id": "store",
+                "label": "Store worker",
+                "description": "Arranges products and assists customers; organizing and respectful communication help.",
+                "symbol": "store",
+                "action": "Arrange products",
+                "before": "Products are scattered on the worktable.",
+                "after": "Products are arranged where they can be found.",
+                "tool": "Product basket",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "art",
+                "label": "Artist / designer",
+                "description": "Creates images and designs; drawing and planning communicate ideas.",
+                "symbol": "palette",
+                "action": "Prepare a drawing kit",
+                "before": "A greeting card needs a picture.",
+                "after": "Drawing materials are ready to make the card.",
+                "tool": "Pencil and paper",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "repair",
+                "label": "Repair worker",
+                "description": "Checks and repairs objects; follows instructions and uses tools carefully.",
+                "symbol": "wrench",
+                "action": "Prepare the work area",
+                "before": "Materials block the worktable.",
+                "after": "The clear work area is ready for supervised repair.",
+                "tool": "Storage tray",
+                "distractor": "Bread dough"
+              }
+            ]
+          },
+          "screen_key": "c2-town",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-02",
+            "competency_code": "TP_CP-cp-NG-2",
+            "official_competency": "Match their strengths, talents and skills to possible exits or job opportunities",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Job Discovery Stations",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Explore what workers do, the skills they use and how they help others.",
+          "experience": {
+            "mode": "gallery",
+            "items": [
+              {
+                "id": "garden",
+                "label": "Garden worker",
+                "description": "Cares for plants; observation and careful watering help the community grow food and flowers.",
+                "symbol": "sprout",
+                "action": "Water the plant",
+                "before": "A plant needs water.",
+                "after": "The soil is watered. The worker checks before watering again.",
+                "tool": "Watering can",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "bakery",
+                "label": "Panadero / baker",
+                "description": "Prepares bread; follows food-preparation steps and keeps tools clean.",
+                "symbol": "wheat",
+                "action": "Prepare the bread tray",
+                "before": "Bread is ready to arrange.",
+                "after": "The tray is arranged for the next preparation step.",
+                "tool": "Clean bread tray",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "classroom",
+                "label": "Teacher",
+                "description": "Helps learners; explains ideas and organizes learning materials.",
+                "symbol": "book-open",
+                "action": "Arrange learning materials",
+                "before": "Learning materials need a place.",
+                "after": "The materials are ready for learners to find.",
+                "tool": "Learning cards",
+                "distractor": "Watering can"
+              },
+              {
+                "id": "store",
+                "label": "Store worker",
+                "description": "Arranges products and assists customers; organizing and respectful communication help.",
+                "symbol": "store",
+                "action": "Arrange products",
+                "before": "Products are scattered on the worktable.",
+                "after": "Products are arranged where they can be found.",
+                "tool": "Product basket",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "art",
+                "label": "Artist / designer",
+                "description": "Creates images and designs; drawing and planning communicate ideas.",
+                "symbol": "palette",
+                "action": "Prepare a drawing kit",
+                "before": "A greeting card needs a picture.",
+                "after": "Drawing materials are ready to make the card.",
+                "tool": "Pencil and paper",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "repair",
+                "label": "Repair worker",
+                "description": "Checks and repairs objects; follows instructions and uses tools carefully.",
+                "symbol": "wrench",
+                "action": "Prepare the work area",
+                "before": "Materials block the worktable.",
+                "after": "The clear work area is ready for supervised repair.",
+                "tool": "Storage tray",
+                "distractor": "Bread dough"
+              }
+            ]
+          },
+          "screen_key": "c2-stations",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-02",
+            "competency_code": "TP_CP-cp-NG-2",
+            "official_competency": "Match their strengths, talents and skills to possible exits or job opportunities",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "One Skill, Several Places",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "A skill may be useful in several workplaces. Make all the illustrated connections.",
+          "experience": {
+            "mode": "connect",
+            "items": [
+              {
+                "id": "organize",
+                "label": "Organizing materials",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "draw",
+                "label": "Drawing and design",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "garden",
+                "label": "Caring for plants",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ],
+            "stations": [
+              {
+                "id": "garden",
+                "label": "Garden worker",
+                "description": "Cares for plants; observation and careful watering help the community grow food and flowers.",
+                "symbol": "sprout",
+                "action": "Water the plant",
+                "before": "A plant needs water.",
+                "after": "The soil is watered. The worker checks before watering again.",
+                "tool": "Watering can",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "bakery",
+                "label": "Panadero / baker",
+                "description": "Prepares bread; follows food-preparation steps and keeps tools clean.",
+                "symbol": "wheat",
+                "action": "Prepare the bread tray",
+                "before": "Bread is ready to arrange.",
+                "after": "The tray is arranged for the next preparation step.",
+                "tool": "Clean bread tray",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "classroom",
+                "label": "Teacher",
+                "description": "Helps learners; explains ideas and organizes learning materials.",
+                "symbol": "book-open",
+                "action": "Arrange learning materials",
+                "before": "Learning materials need a place.",
+                "after": "The materials are ready for learners to find.",
+                "tool": "Learning cards",
+                "distractor": "Watering can"
+              },
+              {
+                "id": "store",
+                "label": "Store worker",
+                "description": "Arranges products and assists customers; organizing and respectful communication help.",
+                "symbol": "store",
+                "action": "Arrange products",
+                "before": "Products are scattered on the worktable.",
+                "after": "Products are arranged where they can be found.",
+                "tool": "Product basket",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "art",
+                "label": "Artist / designer",
+                "description": "Creates images and designs; drawing and planning communicate ideas.",
+                "symbol": "palette",
+                "action": "Prepare a drawing kit",
+                "before": "A greeting card needs a picture.",
+                "after": "Drawing materials are ready to make the card.",
+                "tool": "Pencil and paper",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "repair",
+                "label": "Repair worker",
+                "description": "Checks and repairs objects; follows instructions and uses tools carefully.",
+                "symbol": "wrench",
+                "action": "Prepare the work area",
+                "before": "Materials block the worktable.",
+                "after": "The clear work area is ready for supervised repair.",
+                "tool": "Storage tray",
+                "distractor": "Bread dough"
+              }
+            ],
+            "links": {
+              "organize": [
+                "bakery",
+                "classroom",
+                "store"
+              ],
+              "draw": [
+                "art",
+                "classroom"
+              ],
+              "garden": [
+                "garden"
+              ]
+            }
+          },
+          "screen_key": "c2-links",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-02",
+            "competency_code": "TP_CP-cp-NG-2",
+            "official_competency": "Match their strengths, talents and skills to possible exits or job opportunities",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "A Day at Work",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose a station. Select a suitable tool, then apply it to the work area.",
+          "experience": {
+            "mode": "work",
+            "stations": [
+              {
+                "id": "garden",
+                "label": "Garden worker",
+                "description": "Cares for plants; observation and careful watering help the community grow food and flowers.",
+                "symbol": "sprout",
+                "action": "Water the plant",
+                "before": "A plant needs water.",
+                "after": "The soil is watered. The worker checks before watering again.",
+                "tool": "Watering can",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "bakery",
+                "label": "Panadero / baker",
+                "description": "Prepares bread; follows food-preparation steps and keeps tools clean.",
+                "symbol": "wheat",
+                "action": "Prepare the bread tray",
+                "before": "Bread is ready to arrange.",
+                "after": "The tray is arranged for the next preparation step.",
+                "tool": "Clean bread tray",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "classroom",
+                "label": "Teacher",
+                "description": "Helps learners; explains ideas and organizes learning materials.",
+                "symbol": "book-open",
+                "action": "Arrange learning materials",
+                "before": "Learning materials need a place.",
+                "after": "The materials are ready for learners to find.",
+                "tool": "Learning cards",
+                "distractor": "Watering can"
+              },
+              {
+                "id": "store",
+                "label": "Store worker",
+                "description": "Arranges products and assists customers; organizing and respectful communication help.",
+                "symbol": "store",
+                "action": "Arrange products",
+                "before": "Products are scattered on the worktable.",
+                "after": "Products are arranged where they can be found.",
+                "tool": "Product basket",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "art",
+                "label": "Artist / designer",
+                "description": "Creates images and designs; drawing and planning communicate ideas.",
+                "symbol": "palette",
+                "action": "Prepare a drawing kit",
+                "before": "A greeting card needs a picture.",
+                "after": "Drawing materials are ready to make the card.",
+                "tool": "Pencil and paper",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "repair",
+                "label": "Repair worker",
+                "description": "Checks and repairs objects; follows instructions and uses tools carefully.",
+                "symbol": "wrench",
+                "action": "Prepare the work area",
+                "before": "Materials block the worktable.",
+                "after": "The clear work area is ready for supervised repair.",
+                "tool": "Storage tray",
+                "distractor": "Bread dough"
+              }
+            ]
+          },
+          "screen_key": "c2-work",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-02",
+            "competency_code": "TP_CP-cp-NG-2",
+            "official_competency": "Match their strengths, talents and skills to possible exits or job opportunities",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "My Possible Jobs Explorer",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "You may explore any place. An interest does not decide a job.",
+          "experience": {
+            "mode": "collection",
+            "items": [
+              {
+                "id": "garden",
+                "label": "Garden worker",
+                "description": "Cares for plants; observation and careful watering help the community grow food and flowers.",
+                "symbol": "sprout",
+                "action": "Water the plant",
+                "before": "A plant needs water.",
+                "after": "The soil is watered. The worker checks before watering again.",
+                "tool": "Watering can",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "bakery",
+                "label": "Panadero / baker",
+                "description": "Prepares bread; follows food-preparation steps and keeps tools clean.",
+                "symbol": "wheat",
+                "action": "Prepare the bread tray",
+                "before": "Bread is ready to arrange.",
+                "after": "The tray is arranged for the next preparation step.",
+                "tool": "Clean bread tray",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "classroom",
+                "label": "Teacher",
+                "description": "Helps learners; explains ideas and organizes learning materials.",
+                "symbol": "book-open",
+                "action": "Arrange learning materials",
+                "before": "Learning materials need a place.",
+                "after": "The materials are ready for learners to find.",
+                "tool": "Learning cards",
+                "distractor": "Watering can"
+              },
+              {
+                "id": "store",
+                "label": "Store worker",
+                "description": "Arranges products and assists customers; organizing and respectful communication help.",
+                "symbol": "store",
+                "action": "Arrange products",
+                "before": "Products are scattered on the worktable.",
+                "after": "Products are arranged where they can be found.",
+                "tool": "Product basket",
+                "distractor": "Paintbrush"
+              },
+              {
+                "id": "art",
+                "label": "Artist / designer",
+                "description": "Creates images and designs; drawing and planning communicate ideas.",
+                "symbol": "palette",
+                "action": "Prepare a drawing kit",
+                "before": "A greeting card needs a picture.",
+                "after": "Drawing materials are ready to make the card.",
+                "tool": "Pencil and paper",
+                "distractor": "Garden shovel"
+              },
+              {
+                "id": "repair",
+                "label": "Repair worker",
+                "description": "Checks and repairs objects; follows instructions and uses tools carefully.",
+                "symbol": "wrench",
+                "action": "Prepare the work area",
+                "before": "Materials block the worktable.",
+                "after": "The clear work area is ready for supervised repair.",
+                "tool": "Storage tray",
+                "distractor": "Bread dough"
+              }
+            ],
+            "categories": [
+              {
+                "id": "explore",
+                "label": "I might like to explore",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ]
+          },
+          "screen_key": "c2-explore",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-02",
+            "competency_code": "TP_CP-cp-NG-2",
+            "official_competency": "Match their strengths, talents and skills to possible exits or job opportunities",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Video Exploration",
+        "type": "video",
+        "configuration": {
+          "template": "instructional_video",
+          "media_url": null,
+          "video_optional": true,
+          "content_label": "Video awaiting teacher-approved selection",
+          "content_description": "Watch what a worker does to help others. Tell your teacher an action and one useful skill. Not sure is okay.",
+          "video_reference_status": "awaiting_approval",
+          "video_search": "community helpers jobs Philippines children",
+          "screen_key": "c2-video",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "lesson_metadata": {
+            "lesson_id": "CAREER-02",
+            "competency_code": "TP_CP-cp-NG-2",
+            "official_competency": "Match their strengths, talents and skills to possible exits or job opportunities",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "My Career Discovery Map",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Your map records exploration, not employment suitability.",
+          "experience": {
+            "mode": "showcase",
+            "collection": true
+          },
+          "screen_key": "c2-showcase",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-02",
+            "competency_code": "TP_CP-cp-NG-2",
+            "official_competency": "Match their strengths, talents and skills to possible exits or job opportunities",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      }
+    ],
+    "version": "creative-journeys-v1",
+    "description": "My Future Discovery Journey"
+  },
+  {
+    "lesson_id": "CAREER-03",
+    "title": "Helpful Attitudes at Work",
+    "competency_code": "TP_CP-cv-NG-1",
+    "competency": "Identify positive and negative attitudes towards career",
+    "package": "career",
+    "slides": [
+      {
+        "title": "Welcome to Your Workday",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Help our fictional worker make choices. You can repair a mistake and try again.",
+          "experience": {
+            "mode": "intro",
+            "items": [
+              {
+                "id": "classroom",
+                "label": "Teacher",
+                "description": "Helps learners; explains ideas and organizes learning materials.",
+                "symbol": "book-open",
+                "action": "Arrange learning materials",
+                "before": "Learning materials need a place.",
+                "after": "The materials are ready for learners to find.",
+                "tool": "Learning cards",
+                "distractor": "Watering can"
+              },
+              {
+                "id": "store",
+                "label": "Store worker",
+                "description": "Arranges products and assists customers; organizing and respectful communication help.",
+                "symbol": "store",
+                "action": "Arrange products",
+                "before": "Products are scattered on the worktable.",
+                "after": "Products are arranged where they can be found.",
+                "tool": "Product basket",
+                "distractor": "Paintbrush"
+              }
+            ]
+          },
+          "screen_key": "c3-start",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-03",
+            "competency_code": "TP_CP-cv-NG-1",
+            "official_competency": "Identify positive and negative attitudes towards career",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Choose What Happens Next",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose an action and watch the scene change.",
+          "experience": {
+            "mode": "story",
+            "scenes": [
+              {
+                "id": "start",
+                "label": "A coworker drops materials. What happens next?",
+                "state": "scattered",
+                "choices": [
+                  {
+                    "id": "help",
+                    "label": "Ask, then help collect them",
+                    "next": "ready"
+                  },
+                  {
+                    "id": "leave",
+                    "label": "Walk away without checking",
+                    "next": "alone"
+                  },
+                  {
+                    "id": "laugh",
+                    "label": "Laugh at the coworker",
+                    "next": "upset"
+                  }
+                ]
+              },
+              {
+                "id": "alone",
+                "label": "Materials remain scattered. You can check whether help is needed.",
+                "state": "scattered",
+                "choices": [
+                  {
+                    "id": "repair",
+                    "label": "Check and offer help",
+                    "next": "ready"
+                  }
+                ]
+              },
+              {
+                "id": "upset",
+                "label": "The coworker looks upset. You can respond respectfully and help.",
+                "state": "upset",
+                "choices": [
+                  {
+                    "id": "repair",
+                    "label": "Apologize and offer help",
+                    "next": "ready"
+                  }
+                ]
+              },
+              {
+                "id": "ready",
+                "label": "The materials are collected. Cooperation helps the work continue.",
+                "state": "ready",
+                "choices": []
+              }
+            ],
+            "start": "start"
+          },
+          "screen_key": "c3-help",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-03",
+            "competency_code": "TP_CP-cv-NG-1",
+            "official_competency": "Identify positive and negative attitudes towards career",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Workplace Decision Theater",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Follow instructions, communicate and cooperate.",
+          "experience": {
+            "mode": "story",
+            "scenes": [
+              {
+                "id": "start",
+                "label": "The instructions are unclear. Choose a helpful next step.",
+                "state": "confused",
+                "choices": [
+                  {
+                    "id": "ask",
+                    "label": "Ask for clarification",
+                    "next": "clear"
+                  },
+                  {
+                    "id": "guess",
+                    "label": "Start without understanding",
+                    "next": "mistake"
+                  }
+                ]
+              },
+              {
+                "id": "mistake",
+                "label": "The materials are in the wrong place. A mistake can be repaired.",
+                "state": "scattered",
+                "choices": [
+                  {
+                    "id": "tell",
+                    "label": "Explain and ask how to correct it",
+                    "next": "clear"
+                  }
+                ]
+              },
+              {
+                "id": "clear",
+                "label": "The worker checks the instructions and arranges the materials. Asking for help is responsible.",
+                "state": "ready",
+                "choices": [
+                  {
+                    "id": "continue",
+                    "label": "Continue the story",
+                    "next": "shared"
+                  }
+                ]
+              },
+              {
+                "id": "shared",
+                "label": "Another worker needs the same tools.",
+                "state": "tools",
+                "choices": [
+                  {
+                    "id": "share",
+                    "label": "Agree how to share safely",
+                    "next": "done"
+                  },
+                  {
+                    "id": "take",
+                    "label": "Take every tool",
+                    "next": "waiting"
+                  }
+                ]
+              },
+              {
+                "id": "waiting",
+                "label": "The other worker cannot continue. Find a cooperative plan.",
+                "state": "waiting",
+                "choices": [
+                  {
+                    "id": "plan",
+                    "label": "Agree to share",
+                    "next": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "label": "Both workers have materials and can continue.",
+                "state": "ready",
+                "choices": []
+              }
+            ],
+            "start": "start"
+          },
+          "screen_key": "c3-theater",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-03",
+            "competency_code": "TP_CP-cv-NG-1",
+            "official_competency": "Identify positive and negative attitudes towards career",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Fix the Situation",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Clear the walking path before work continues.",
+          "experience": {
+            "mode": "story",
+            "scenes": [
+              {
+                "id": "start",
+                "label": "Tools are blocking a walking path.",
+                "state": "tools",
+                "choices": [
+                  {
+                    "id": "store",
+                    "label": "Put tools in their storage tray",
+                    "next": "done"
+                  },
+                  {
+                    "id": "ignore",
+                    "label": "Leave the tools in the path",
+                    "next": "blocked"
+                  }
+                ]
+              },
+              {
+                "id": "blocked",
+                "label": "The walking path remains blocked. Choose a way to clear it.",
+                "state": "tools",
+                "choices": [
+                  {
+                    "id": "clear",
+                    "label": "Move tools to storage",
+                    "next": "done"
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "label": "The tools are stored and the path is clear.",
+                "state": "ready",
+                "choices": []
+              }
+            ],
+            "start": "start"
+          },
+          "screen_key": "c3-fix",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-03",
+            "competency_code": "TP_CP-cv-NG-1",
+            "official_competency": "Identify positive and negative attitudes towards career",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Build a Helpful Workday",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Arrange the illustrated workday steps.",
+          "experience": {
+            "mode": "order",
+            "items": [
+              {
+                "id": "prepare",
+                "label": "Prepare materials",
+                "description": "",
+                "symbol": "boxes"
+              },
+              {
+                "id": "listen",
+                "label": "Listen to instructions",
+                "description": "",
+                "symbol": "ear"
+              },
+              {
+                "id": "work",
+                "label": "Work safely",
+                "description": "",
+                "symbol": "wrench"
+              },
+              {
+                "id": "return",
+                "label": "Return materials",
+                "description": "",
+                "symbol": "archive"
+              },
+              {
+                "id": "thank",
+                "label": "Acknowledge helpers",
+                "description": "",
+                "symbol": "heart-handshake"
+              }
+            ],
+            "order": [
+              "prepare",
+              "listen",
+              "work",
+              "return",
+              "thank"
+            ]
+          },
+          "screen_key": "c3-order",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-03",
+            "competency_code": "TP_CP-cv-NG-1",
+            "official_competency": "Identify positive and negative attitudes towards career",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Watch a Workplace Story",
+        "type": "video",
+        "configuration": {
+          "template": "instructional_video",
+          "media_url": null,
+          "video_optional": true,
+          "content_label": "Video awaiting teacher-approved selection",
+          "content_description": "Look for one helpful choice. Tell your teacher what changed because of that choice.",
+          "video_reference_status": "awaiting_approval",
+          "video_search": "teamwork asking for help responsibility workplace animation",
+          "screen_key": "c3-video",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "lesson_metadata": {
+            "lesson_id": "CAREER-03",
+            "competency_code": "TP_CP-cv-NG-1",
+            "official_competency": "Identify positive and negative attitudes towards career",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Workday Reflection",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Your story choices are knowledge practice, not a judgment about your attitude.",
+          "experience": {
+            "mode": "showcase",
+            "collection": true,
+            "items": [
+              {
+                "id": "ask",
+                "label": "Asking for help"
+              },
+              {
+                "id": "cooperate",
+                "label": "Cooperating"
+              },
+              {
+                "id": "retry",
+                "label": "Trying again"
+              },
+              {
+                "id": "prepare",
+                "label": "Preparing materials"
+              }
+            ]
+          },
+          "screen_key": "c3-showcase",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "CAREER-03",
+            "competency_code": "TP_CP-cv-NG-1",
+            "official_competency": "Identify positive and negative attitudes towards career",
+            "content_version": "creative-journeys-v1",
+            "source": null,
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      }
+    ],
+    "version": "creative-journeys-v1",
+    "description": "My Future Discovery Journey"
+  },
+  {
+    "lesson_id": "ENRICH-01",
+    "title": "Different Kinds of Talents and Skills",
+    "package": "enrichment",
+    "competency_code": "TPEP-dt-NG-2",
+    "competency": "Identify different types of human talents and skills",
+    "slides": [
+      {
+        "title": "Welcome to the Talent Festival",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose a booth. There is no best kind of talent.",
+          "experience": {
+            "mode": "map",
+            "stations": [
+              {
+                "id": "music",
+                "label": "Music",
+                "description": "Make a beat with a voice or instrument.",
+                "symbol": "music"
+              },
+              {
+                "id": "art",
+                "label": "Visual arts",
+                "description": "Use shapes and colour to make a picture.",
+                "symbol": "palette"
+              },
+              {
+                "id": "performance",
+                "label": "Performing arts",
+                "description": "Use actions and characters to tell a story.",
+                "symbol": "drama"
+              },
+              {
+                "id": "sports",
+                "label": "Sports",
+                "description": "Develop coordination and practice with support.",
+                "symbol": "volleyball"
+              },
+              {
+                "id": "craft",
+                "label": "Crafting",
+                "description": "Join materials to make something; this can be visual art.",
+                "symbol": "scissors"
+              },
+              {
+                "id": "story",
+                "label": "Storytelling",
+                "description": "Use voice, pictures or performance to tell a story.",
+                "symbol": "book-open"
+              }
+            ]
+          },
+          "screen_key": "e1-festival",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Discover the Talent",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Explore an example. You can listen to the written description.",
+          "experience": {
+            "mode": "gallery",
+            "items": [
+              {
+                "id": "music",
+                "label": "Music",
+                "description": "Make a beat with a voice or instrument.",
+                "symbol": "music"
+              },
+              {
+                "id": "art",
+                "label": "Visual arts",
+                "description": "Use shapes and colour to make a picture.",
+                "symbol": "palette"
+              },
+              {
+                "id": "performance",
+                "label": "Performing arts",
+                "description": "Use actions and characters to tell a story.",
+                "symbol": "drama"
+              },
+              {
+                "id": "sports",
+                "label": "Sports",
+                "description": "Develop coordination and practice with support.",
+                "symbol": "volleyball"
+              },
+              {
+                "id": "craft",
+                "label": "Crafting",
+                "description": "Join materials to make something; this can be visual art.",
+                "symbol": "scissors"
+              },
+              {
+                "id": "story",
+                "label": "Storytelling",
+                "description": "Use voice, pictures or performance to tell a story.",
+                "symbol": "book-open"
+              }
+            ]
+          },
+          "screen_key": "e1-discover",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Talent Detective",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Connect each example to the skill area it shows.",
+          "experience": {
+            "mode": "connect",
+            "items": [
+              {
+                "id": "beat",
+                "label": "Keeping a drum beat",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "drawing",
+                "label": "Creating a drawing",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "acting",
+                "label": "Acting in a story",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "ball",
+                "label": "Practicing a ball skill",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ],
+            "stations": [
+              {
+                "id": "music",
+                "label": "Music",
+                "description": "Make a beat with a voice or instrument.",
+                "symbol": "music"
+              },
+              {
+                "id": "art",
+                "label": "Visual arts",
+                "description": "Use shapes and colour to make a picture.",
+                "symbol": "palette"
+              },
+              {
+                "id": "performance",
+                "label": "Performing arts",
+                "description": "Use actions and characters to tell a story.",
+                "symbol": "drama"
+              },
+              {
+                "id": "sports",
+                "label": "Sports",
+                "description": "Develop coordination and practice with support.",
+                "symbol": "volleyball"
+              }
+            ],
+            "links": {
+              "beat": [
+                "music"
+              ],
+              "drawing": [
+                "art"
+              ],
+              "acting": [
+                "performance"
+              ],
+              "ball": [
+                "sports"
+              ]
+            }
+          },
+          "screen_key": "e1-detective",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "My Talent Explorer",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Enjoying something does not have to mean you can already do it.",
+          "experience": {
+            "mode": "collection",
+            "items": [
+              {
+                "id": "music",
+                "label": "Music",
+                "description": "Make a beat with a voice or instrument.",
+                "symbol": "music"
+              },
+              {
+                "id": "art",
+                "label": "Visual arts",
+                "description": "Use shapes and colour to make a picture.",
+                "symbol": "palette"
+              },
+              {
+                "id": "performance",
+                "label": "Performing arts",
+                "description": "Use actions and characters to tell a story.",
+                "symbol": "drama"
+              },
+              {
+                "id": "sports",
+                "label": "Sports",
+                "description": "Develop coordination and practice with support.",
+                "symbol": "volleyball"
+              },
+              {
+                "id": "craft",
+                "label": "Crafting",
+                "description": "Join materials to make something; this can be visual art.",
+                "symbol": "scissors"
+              },
+              {
+                "id": "story",
+                "label": "Storytelling",
+                "description": "Use voice, pictures or performance to tell a story.",
+                "symbol": "book-open"
+              }
+            ],
+            "categories": [
+              {
+                "id": "enjoy",
+                "label": "I enjoy",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "try",
+                "label": "I want to try",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ]
+          },
+          "screen_key": "e1-explorer",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Talent Creation Corner",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose a background and make a picture with editable shapes.",
+          "experience": {
+            "mode": "art",
+            "items": []
+          },
+          "screen_key": "e1-create",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Talent Video Showcase",
+        "type": "video",
+        "configuration": {
+          "template": "instructional_video",
+          "media_url": null,
+          "video_optional": true,
+          "content_label": "Video awaiting teacher-approved selection",
+          "content_description": "Notice different ways people create and participate. Choose an area you would like to explore in your gallery.",
+          "video_reference_status": "awaiting_approval",
+          "video_search": "different talents art music dance sports children",
+          "screen_key": "e1-video",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "My Talent Festival Gallery",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Review your chosen areas and actual creation. There is no creativity score.",
+          "experience": {
+            "mode": "showcase",
+            "collection": true
+          },
+          "screen_key": "e1-showcase",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      }
+    ],
+    "version": "creative-journeys-v1",
+    "description": "My Creative Playground",
+    "source": {
+      "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+      "page": 71,
+      "verified": "2026-10-25",
+      "method": "official DepEd indexed curriculum table"
+    }
+  },
+  {
+    "lesson_id": "ENRICH-02",
+    "title": "My Music Skills",
+    "package": "enrichment",
+    "competency_code": "TPEP-mu-NG-2",
+    "competency": "Identify individual skills in music",
+    "slides": [
+      {
+        "title": "Welcome to My Mini Music Studio",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Listen, notice music skills and make a beat. You decide when sound starts.",
+          "experience": {
+            "mode": "intro",
+            "items": [
+              {
+                "id": "drum",
+                "label": "Drum",
+                "description": "A percussion instrument, usually played by striking.",
+                "symbol": "drum"
+              },
+              {
+                "id": "piano",
+                "label": "Piano",
+                "description": "Press keys to make notes.",
+                "symbol": "piano"
+              },
+              {
+                "id": "guitar",
+                "label": "Guitar",
+                "description": "Pluck or strum strings to make sound.",
+                "symbol": "guitar"
+              }
+            ]
+          },
+          "screen_key": "e2-start",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Interactive Instrument Explorer",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Explore instruments. Recorded samples awaiting approval are clearly marked.",
+          "experience": {
+            "mode": "sound",
+            "items": [
+              {
+                "id": "drum",
+                "label": "Drum",
+                "description": "A percussion instrument, usually played by striking.",
+                "symbol": "drum"
+              },
+              {
+                "id": "piano",
+                "label": "Piano",
+                "description": "Press keys to make notes.",
+                "symbol": "piano"
+              },
+              {
+                "id": "guitar",
+                "label": "Guitar",
+                "description": "Pluck or strum strings to make sound.",
+                "symbol": "guitar"
+              },
+              {
+                "id": "bell",
+                "label": "Bell",
+                "description": "A struck bell can make a ringing sound.",
+                "symbol": "bell"
+              },
+              {
+                "id": "tambourine",
+                "label": "Tambourine",
+                "description": "Shake or tap the frame and jingles.",
+                "symbol": "circle"
+              }
+            ]
+          },
+          "screen_key": "e2-sound",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Music Skills Detective",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Identify the music skill in each example. This visual route is not a sound-identification test.",
+          "experience": {
+            "mode": "connect",
+            "items": [
+              {
+                "id": "voice",
+                "label": "A learner sings a tune",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "keys",
+                "label": "A learner presses piano keys",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "beat",
+                "label": "A learner taps a steady beat",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ],
+            "stations": [
+              {
+                "id": "singing",
+                "label": "Using the voice",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "instrument",
+                "label": "Playing an instrument",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "rhythm",
+                "label": "Keeping a rhythm",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ],
+            "links": {
+              "voice": [
+                "singing"
+              ],
+              "keys": [
+                "instrument"
+              ],
+              "beat": [
+                "rhythm"
+              ]
+            }
+          },
+          "screen_key": "e2-identify",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "primary_digital",
+          "scored": true,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Rhythm Echo Challenge",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "audio_sequence",
+          "question": "Listen to the electronic tones, then repeat their order. Visual prompts are available.",
+          "items": [
+            {
+              "id": "low",
+              "label": "Low tone",
+              "description": "",
+              "symbol": "\u25cf"
+            },
+            {
+              "id": "high",
+              "label": "High tone",
+              "description": "",
+              "symbol": "\u25b2"
+            },
+            {
+              "id": "tap",
+              "label": "Short click",
+              "description": "",
+              "symbol": "\u25c6"
+            }
+          ],
+          "rounds": [
+            {
+              "direction": "Low tone, high tone.",
+              "correct_order": [
+                "low",
+                "high"
+              ],
+              "audio_url": "/assets/sounds/enrichment/echo-1.wav"
+            },
+            {
+              "direction": "Click, low tone, high tone.",
+              "correct_order": [
+                "tap",
+                "low",
+                "high"
+              ],
+              "audio_url": "/assets/sounds/enrichment/echo-2.wav"
+            }
+          ],
+          "screen_key": "e2-echo",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "correct_feedback": "You copied the pattern.",
+          "retry_feedback": "Replay or reveal the visual prompt, then try again.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "My Beat Composer",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Create a four-step beat with two electronic tones. Play and stop your own pattern.",
+          "experience": {
+            "mode": "beat"
+          },
+          "screen_key": "e2-compose",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Soft or Louder, Slow or Faster",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Explore comfortable electronic-tone comparisons. Sound is optional.",
+          "experience": {
+            "mode": "compare"
+          },
+          "screen_key": "e2-compare",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Music Discovery Video",
+        "type": "video",
+        "configuration": {
+          "template": "instructional_video",
+          "media_url": null,
+          "video_optional": true,
+          "content_label": "Video awaiting teacher-approved selection",
+          "content_description": "Notice a voice, instrument or repeating pattern. Tell your teacher a music skill you noticed.",
+          "video_reference_status": "awaiting_approval",
+          "video_search": "musical instruments sounds simple rhythm beginners",
+          "screen_key": "e2-video",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "My Mini Performance",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Replay your saved rhythm. Choose music skills you enjoy or want to practice.",
+          "experience": {
+            "mode": "showcase",
+            "items": [
+              {
+                "id": "voice",
+                "label": "Using my voice",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "instrument",
+                "label": "Playing an instrument",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "rhythm",
+                "label": "Keeping a rhythm",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "unsure",
+                "label": "Not sure yet",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ],
+            "collection": true
+          },
+          "screen_key": "e2-showcase",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      }
+    ],
+    "version": "creative-journeys-v1",
+    "description": "My Creative Playground",
+    "source": {
+      "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+      "page": 72,
+      "verified": "2026-10-25",
+      "method": "official DepEd indexed curriculum table"
+    }
+  },
+  {
+    "lesson_id": "ENRICH-03",
+    "title": "Move to the Beat",
+    "package": "enrichment",
+    "competency_code": "TPEP-dc-NG-4",
+    "competency": "Perform basic dance steps /movements",
+    "slides": [
+      {
+        "title": "Welcome to the Movement Studio",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose a comfortable way to take part. Ask your teacher to approve or adapt movements.",
+          "experience": {
+            "mode": "participation",
+            "items": [
+              {
+                "id": "seated",
+                "label": "Seated",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "standing",
+                "label": "Standing with support as needed",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "point",
+                "label": "Point or imagine",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "observe",
+                "label": "Observe",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "stop",
+                "label": "Choose to stop",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ]
+          },
+          "screen_key": "e3-start",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Movement Cards",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose a cue. These are illustrated prompts, not verified physical performance.",
+          "experience": {
+            "mode": "gallery",
+            "items": [
+              {
+                "id": "tap",
+                "label": "Tap",
+                "description": "Gently tap your lap, a surface, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/tap.svg"
+              },
+              {
+                "id": "clap",
+                "label": "Clap",
+                "description": "Bring hands together comfortably, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/clap.svg"
+              },
+              {
+                "id": "pause",
+                "label": "Pause",
+                "description": "Rest for one beat; observing is welcome.",
+                "symbol": "pause",
+                "image_url": "/assets/enrichment/pause.svg"
+              },
+              {
+                "id": "sway",
+                "label": "Sway",
+                "description": "A small comfortable sway, or follow with your eyes.",
+                "symbol": "move"
+              },
+              {
+                "id": "step",
+                "label": "Step",
+                "description": "A comfortable step, seated foot tap, or pointing.",
+                "symbol": "footprints"
+              },
+              {
+                "id": "arms",
+                "label": "Move hands",
+                "description": "Move hands comfortably, or imagine the action.",
+                "symbol": "hand"
+              }
+            ]
+          },
+          "screen_key": "e3-cards",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Follow the Beat",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Play a short visual beat guide. You may move, point or observe.",
+          "experience": {
+            "mode": "movement",
+            "items": [
+              {
+                "id": "tap",
+                "label": "Tap",
+                "description": "Gently tap your lap, a surface, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/tap.svg"
+              },
+              {
+                "id": "clap",
+                "label": "Clap",
+                "description": "Bring hands together comfortably, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/clap.svg"
+              },
+              {
+                "id": "pause",
+                "label": "Pause",
+                "description": "Rest for one beat; observing is welcome.",
+                "symbol": "pause",
+                "image_url": "/assets/enrichment/pause.svg"
+              }
+            ],
+            "preset": [
+              "tap",
+              "clap",
+              "pause"
+            ]
+          },
+          "screen_key": "e3-follow",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Build a Movement Sequence",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Choose three cues, arrange them and play your sequence.",
+          "experience": {
+            "mode": "movement",
+            "items": [
+              {
+                "id": "tap",
+                "label": "Tap",
+                "description": "Gently tap your lap, a surface, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/tap.svg"
+              },
+              {
+                "id": "clap",
+                "label": "Clap",
+                "description": "Bring hands together comfortably, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/clap.svg"
+              },
+              {
+                "id": "pause",
+                "label": "Pause",
+                "description": "Rest for one beat; observing is welcome.",
+                "symbol": "pause",
+                "image_url": "/assets/enrichment/pause.svg"
+              },
+              {
+                "id": "sway",
+                "label": "Sway",
+                "description": "A small comfortable sway, or follow with your eyes.",
+                "symbol": "move"
+              },
+              {
+                "id": "step",
+                "label": "Step",
+                "description": "A comfortable step, seated foot tap, or pointing.",
+                "symbol": "footprints"
+              },
+              {
+                "id": "arms",
+                "label": "Move hands",
+                "description": "Move hands comfortably, or imagine the action.",
+                "symbol": "hand"
+              }
+            ]
+          },
+          "screen_key": "e3-sequence",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "The Movement Wheel",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Manually choose a comfortable cue. No spinning or forced movement.",
+          "experience": {
+            "mode": "wheel",
+            "items": [
+              {
+                "id": "tap",
+                "label": "Tap",
+                "description": "Gently tap your lap, a surface, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/tap.svg"
+              },
+              {
+                "id": "clap",
+                "label": "Clap",
+                "description": "Bring hands together comfortably, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/clap.svg"
+              },
+              {
+                "id": "pause",
+                "label": "Pause",
+                "description": "Rest for one beat; observing is welcome.",
+                "symbol": "pause",
+                "image_url": "/assets/enrichment/pause.svg"
+              },
+              {
+                "id": "sway",
+                "label": "Sway",
+                "description": "A small comfortable sway, or follow with your eyes.",
+                "symbol": "move"
+              },
+              {
+                "id": "step",
+                "label": "Step",
+                "description": "A comfortable step, seated foot tap, or pointing.",
+                "symbol": "footprints"
+              },
+              {
+                "id": "arms",
+                "label": "Move hands",
+                "description": "Move hands comfortably, or imagine the action.",
+                "symbol": "hand"
+              }
+            ]
+          },
+          "screen_key": "e3-wheel",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Rhythm and Movement Match",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Arrange the taught visual pattern: tap, clap, pause. This checks digital sequencing only.",
+          "experience": {
+            "mode": "order",
+            "items": [
+              {
+                "id": "tap",
+                "label": "Tap",
+                "description": "Gently tap your lap, a surface, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/tap.svg"
+              },
+              {
+                "id": "clap",
+                "label": "Clap",
+                "description": "Bring hands together comfortably, or point to this cue.",
+                "symbol": "hand",
+                "image_url": "/assets/enrichment/clap.svg"
+              },
+              {
+                "id": "pause",
+                "label": "Pause",
+                "description": "Rest for one beat; observing is welcome.",
+                "symbol": "pause",
+                "image_url": "/assets/enrichment/pause.svg"
+              }
+            ],
+            "order": [
+              "tap",
+              "clap",
+              "pause"
+            ]
+          },
+          "screen_key": "e3-match",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      },
+      {
+        "title": "Movement Video Demonstration",
+        "type": "video",
+        "configuration": {
+          "template": "instructional_video",
+          "media_url": "https://www.youtube.com/watch?v=hrbGVGcXB5Q",
+          "video_optional": true,
+          "content_label": "Move to the Beat - Music for Kiddos",
+          "content_description": "Watch first. Choose a comfortable way to participate. Pause, replay or ask for an adapted action.",
+          "video_reference_status": "verified",
+          "screen_key": "e3-video",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "supporting",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false,
+          "duration_seconds": 139
+        }
+      },
+      {
+        "title": "My Movement Performance",
+        "type": "interactive",
+        "configuration": {
+          "task_template": "creative_experience",
+          "question": "Replay your sequence, then tell us how you took part. Your teacher records observed movement separately.",
+          "experience": {
+            "mode": "showcase",
+            "items": [
+              {
+                "id": "tried",
+                "label": "I tried",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "adapted",
+                "label": "I used an adapted action",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "observed",
+                "label": "I observed",
+                "description": "",
+                "symbol": "sparkles"
+              },
+              {
+                "id": "stopped",
+                "label": "I chose to stop",
+                "description": "",
+                "symbol": "sparkles"
+              }
+            ],
+            "collection": true,
+            "performance": true
+          },
+          "screen_key": "e3-showcase",
+          "content_version": "creative-journeys-v1",
+          "evidence_role": "self_report",
+          "scored": false,
+          "correct_feedback": "You completed this learning step.",
+          "retry_feedback": "Try another approach. You can ask for support.",
+          "layout": {
+            "size": "wide"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "content_version": "creative-journeys-v1",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            },
+            "media_review": "Missing new media remains awaiting approval",
+            "assessment": {
+              "self_report_scored": false,
+              "automated_aptitude_test": false,
+              "eeg_may_label_ability": false,
+              "deterministic_job_assignment": false,
+              "movement_detection": false,
+              "teacher_observation_separate": true
+            }
+          },
+          "adaptive_delivery": {
+            "focused": {
+              "strategy": "steady_instruction",
+              "pacing": "normal",
+              "visible_scope": "full",
+              "cue": null,
+              "visual_intensity": 3,
+              "audio_intensity": 3
+            },
+            "distracted": {
+              "strategy": "attention_reengagement",
+              "pacing": "normal",
+              "visible_scope": "reduced",
+              "cue": "Look at the current item and choose the next small step.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "relaxed": {
+              "strategy": "gentle_reactivation",
+              "pacing": "slow",
+              "visible_scope": "full",
+              "cue": "Take your time. Choose when you are ready.",
+              "visual_intensity": 2,
+              "audio_intensity": 2
+            },
+            "overstimulated": {
+              "strategy": "sensory_cooldown",
+              "pacing": "slow",
+              "visible_scope": "one_step_or_two_choices",
+              "cue": "We will do one small step at a time.",
+              "visual_intensity": 1,
+              "audio_intensity": 1,
+              "remove_nonessential_media": true
+            }
+          },
+          "digital_mastery_claim": false
+        }
+      }
+    ],
+    "version": "creative-journeys-v1",
+    "description": "My Creative Playground",
+    "source": {
+      "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+      "page": 74,
+      "verified": "2026-10-25",
+      "method": "official DepEd indexed curriculum table"
+    }
+  }
+]

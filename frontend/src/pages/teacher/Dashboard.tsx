@@ -1,3 +1,4 @@
+import { measurePresentation } from '../../lib/presentationTiming'
 import CognitiveStateInfo, { cognitiveDisclaimer } from '../../components/molecules/CognitiveStateInfo'
 import StateTrend from './StateTrend'
 import { Link } from 'react-router-dom'
@@ -23,6 +24,7 @@ const states: CognitiveState[] = ['focused', 'relaxed', 'distracted', 'overstimu
 
 export default function Dashboard() {
   const user = useAuthStore((state) => state.user)!
+  const [receivedAt, setReceivedAt] = useState<number | null>(null)
   const [data, setData] = useState<TeacherDashboardData | null>(null)
   const [month, setMonth] = useState(() => { const now = new Date(); return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') })
   const [classId, setClassId] = useState('')
@@ -39,7 +41,7 @@ export default function Dashboard() {
     let disposed = false
     let timer: ReturnType<typeof setTimeout>
     const refresh = async () => {
-      try { const result = await getTeacherDashboard(month, classId, { period, date, year }); if (!disposed) { setData(result); setError(''); setReportLoading(false) } }
+      try { const result = await getTeacherDashboard(month, classId, { period, date, year }); if (!disposed) { setReceivedAt(performance.now()); setData(result); setError(''); setReportLoading(false) } }
       catch (reason) { if (!disposed) { setError(reason instanceof Error ? reason.message : 'Unable to refresh dashboard.'); setReportLoading(false) } }
       if (!disposed) timer = setTimeout(() => void refresh(), 4000)
     }
@@ -47,6 +49,7 @@ export default function Dashboard() {
     void refresh()
     return () => { disposed = true; clearTimeout(timer) }
   }, [month, classId, period, date, year])
+  useEffect(() => { if (receivedAt !== null) measurePresentation(receivedAt, 'dashboard-render') }, [receivedAt])
   const live = useMemo(() => (data?.live_sessions ?? []).filter(item => (modeFilter === 'all' || item.control_mode === modeFilter) && (item.student.name + ' ' + item.class_name + ' ' + item.lesson).toLowerCase().includes(search.toLowerCase())), [data, search, modeFilter])
   async function control(id: string, action: string, mode?: string) {
     setBusy(true)
@@ -134,7 +137,7 @@ export default function Dashboard() {
       <section className={styles.liveSection}>
         <div className={styles.filters}><label>Search live sessions<input type="search" placeholder="Student, class, or lesson" value={search} onChange={event => setSearch(event.target.value)} /></label><label>Mode<select value={modeFilter} onChange={event => setModeFilter(event.target.value)}><option value="all">All modes</option><option value="free">Free mode</option><option value="teacher">Teacher controlled</option></select></label></div>
         {live.map(item => <div className={styles.sessionControls} key={item.id}><div><strong>{item.student.name}</strong><p>{item.class_name} | {item.lesson} | {item.control_mode === 'free' ? 'Free mode' : 'Teacher controlled'} | {item.status}</p><small>Started {new Date(item.started_at).toLocaleString()} | Last seen {item.last_seen_at ? new Date(item.last_seen_at).toLocaleTimeString() : 'awaiting heartbeat'}</small></div>{item.class_session_id ? <Link to={'/teacher/class-session/' + item.class_session_id}>Open classroom controls</Link> : item.control_mode === 'free' ? <button disabled={busy} onClick={() => void control(item.id, 'claim')}>Override - take control</button> : item.control_mode === 'teacher' ? <div className={styles.filters}>{(['focus', 'refocus', 'breathing'] as const).map(mode => <button key={mode} disabled={busy} aria-pressed={item.presentation_mode === mode} onClick={() => void control(item.id, 'set_mode', mode)}>{mode === 'focus' ? 'Focus lesson' : mode === 'refocus' ? 'Refocusing' : 'Breathing'}</button>)}<button disabled={busy} onClick={() => void control(item.id, item.status === 'paused' ? 'resume' : 'pause')}>{item.status === 'paused' ? 'Resume' : 'Pause'}</button><button disabled={busy} onClick={() => void control(item.id, 'release')}>Return to free mode</button></div> : null}</div>)}
-        <div className={styles.liveSectionHeader}><div><span className={styles.analyticsEyebrow}>Live classroom</span><h2 className={styles.liveSectionTitle}>{live.length ? `${live.length} session${live.length === 1 ? '' : 's'} in progress` : 'No session in progress'}</h2></div><span className={styles.liveSectionNote}>Live updates</span></div>{liveStudents.length ? <div className={styles.monitorLayout}><LiveDashboardGrid compact students={liveStudents} selectedId={selectedStudent?.id} onSelectStudent={setSelectedId} sessionLabel="Recorded lesson sessions" /><EEGWaveDisplay state={selectedStudent?.currentState} bandPowers={selectedStudent?.bandPowers} signalQuality={selectedStudent?.signalQuality} connectionStatus={selectedStudent?.connectionStatus} /></div> : <p className={styles.emptyLive}>No live sessions match your filters.</p>}</section>
+        <div className={styles.liveSectionHeader}><div><span className={styles.analyticsEyebrow}>Live classroom</span><h2 className={styles.liveSectionTitle}>{live.length ? `${live.length} session${live.length === 1 ? '' : 's'} in progress` : 'No session in progress'}</h2></div><span className={styles.liveSectionNote}>Live updates</span></div>{liveStudents.length ? <div className={styles.monitorLayout}><LiveDashboardGrid compact students={liveStudents} selectedId={selectedStudent?.id} onSelectStudent={setSelectedId} sessionLabel="Recorded lesson sessions" /><EEGWaveDisplay sessionId={selectedStudent?.id} recordedAt={selectedStudent?.stateStartedAt} state={selectedStudent?.currentState} bandPowers={selectedStudent?.bandPowers} signalQuality={selectedStudent?.signalQuality} connectionStatus={selectedStudent?.connectionStatus} /></div> : <p className={styles.emptyLive}>No live sessions match your filters.</p>}</section>
       </>}
     </div>
   </TeacherDashboardTemplate>

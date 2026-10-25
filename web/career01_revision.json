@@ -1,0 +1,61 @@
+{
+  "revision": "career01-video-word-hunt-v1",
+  "lesson_id": "CAREER-01",
+  "competency_code": "TP_CP-cp-NG-1",
+  "replacements": {
+    "1": {
+      "title": "Strengths: In the Words of Students",
+      "type": "video",
+      "configuration": {
+        "template": "instructional_video",
+        "media_url": "https://www.youtube.com/watch?v=WN3AnXRUmuc",
+        "content_label": "Strengths: In the Words of Students",
+        "content_description": "Students talk about how they use their strengths. Notice one example of something a person does well.",
+        "video_optional": true,
+        "evidence_role": "supporting",
+        "video_guidance": [
+          {"id": "different", "title": "People have different strengths.", "image_url": "/assets/pre-vocational/prev-01/skills-and-responsibilities.png", "alt_text": "Different skills and responsibilities"},
+          {"id": "practice", "title": "Practice can help us develop skills.", "image_url": "/assets/learning-growth/sprout.png", "alt_text": "A growing sprout representing development"},
+          {"id": "support", "title": "Asking for support is okay.", "image_url": "/assets/functional-academics/func-01/ask-for-help.png", "alt_text": "Asking for help"}
+        ],
+        "source_metadata": {
+          "title": "Strengths: In the Words of Students",
+          "publisher": "Azusa Pacific’s University College",
+          "selection": "user_selected",
+          "full_video_or_transcript_independently_reviewed": false,
+          "guidance_is_video_quotation": false
+        }
+      }
+    },
+    "5": {
+      "title": "Skill Word Hunt",
+      "type": "interactive",
+      "configuration": {
+        "task_template": "word_search",
+        "question": "Find COOK, DRAW, GROW, and FIX. Tap or select the first and last letter of each word, or drag between them. Words go across or down. Then choose what each word means.",
+        "content_description": "Practice skill words. Finding a word does not show whether you can do the activity.",
+        "word_search_subject": "word",
+        "evidence_role": "supporting",
+        "requires_evidence": true,
+        "digital_mastery_claim": false,
+        "grid": [
+          ["C", "O", "O", "K", "A", "D"],
+          ["L", "P", "M", "N", "S", "R"],
+          ["G", "R", "O", "W", "T", "A"],
+          ["H", "E", "A", "B", "C", "W"],
+          ["F", "I", "X", "D", "E", "Q"],
+          ["U", "V", "J", "L", "N", "P"]
+        ],
+        "targets": [
+          {"word": "COOK", "display_label": "COOK", "cells": [[0, 0], [0, 1], [0, 2], [0, 3]], "reveal_image": "/assets/pre-vocational/common/meal-preparation.png", "follow_up_question": {"question": "What does COOK mean?", "choices": ["Prepare food", "Repair an object", "Make a picture"], "answer": "Prepare food"}},
+          {"word": "DRAW", "display_label": "DRAW", "cells": [[0, 5], [1, 5], [2, 5], [3, 5]], "reveal_image": "/assets/pre-vocational/common/drawing-interest.png", "follow_up_question": {"question": "What does DRAW mean?", "choices": ["Care for plants", "Make a picture", "Prepare food"], "answer": "Make a picture"}},
+          {"word": "GROW", "display_label": "GROW", "cells": [[2, 0], [2, 1], [2, 2], [2, 3]], "reveal_image": "/assets/pre-vocational/common/gardening.png", "follow_up_question": {"question": "Which activity goes with GROW?", "choices": ["Repair an object", "Make a picture", "Care for plants"], "answer": "Care for plants"}},
+          {"word": "FIX", "display_label": "FIX", "cells": [[4, 0], [4, 1], [4, 2]], "reveal_image": "/assets/pre-vocational/common/repair.png", "follow_up_question": {"question": "What does FIX mean?", "choices": ["Repair an object", "Prepare food", "Care for plants"], "answer": "Repair an object"}}
+        ],
+        "correct_feedback": "You found the skill words and matched their meanings.",
+        "retry_feedback": "Try another row or column, then use the picture to choose the word’s meaning.",
+        "layout": {"size": "wide"}
+      }
+    }
+  }
+}

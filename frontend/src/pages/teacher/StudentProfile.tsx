@@ -1,3 +1,4 @@
+import MovementObservation from './MovementObservation'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, CalendarDays, Clock3, Download, FileCheck2, Target, TrendingUp } from 'lucide-react'
@@ -107,6 +108,8 @@ export default function StudentProfile() {
             </table>
           </div> : <p className={styles.emptyMessage}>No completed sessions recorded yet.</p>}
         </section>
+
+        <MovementObservation key={`${classId}/${studentId}`} classId={classId} studentId={studentId} />
 
         <section className={styles.reviewSection}>
           <div><span className={styles.eyebrow}>Review context</span><h2>Expert validation and notes</h2><p>Use this area to document whether the presentation, terminology, and descriptive summaries are appropriate for educational review.</p></div>

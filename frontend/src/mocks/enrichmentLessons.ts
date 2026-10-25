@@ -1,3 +1,4 @@
+import refinements from '../../../web/restored_lesson_refinements.json'
 import type { Task } from '../types'
 
 const base = (id: string, index: number, total: number, title: string): Pick<Task, 'id' | 'index' | 'total' | 'title' | 'imageUrl' | 'package' | 'question' | 'choices' | 'answer'> => ({ id, index, total, title, imageUrl: null, package: 'enrichment', question: '', choices: [], answer: '' })
@@ -21,7 +22,7 @@ const enrich02: Task[] = [
   { ...base('enrich02-instrument', 4, 8, 'Station 2: Instrument'), contentType: 'video', template: 'instructional_video', contentLabel: 'Video needed: familiar approved instrument demonstration', contentDescription: 'Tapping an on-screen instrument does not prove instrumental proficiency.', durationSeconds: 25, actionLabel: 'Continue' },
   { ...base('enrich02-pattern', 5, 8, 'Station 3: Follow the Sound'), contentType: 'interactive', taskTemplate: 'sequence_order', question: 'Follow the short pattern: tap, tap, pause, tap.', items: [{ id: 'tap-1', label: 'Tap' }, { id: 'tap-2', label: 'Tap' }, { id: 'pause', label: 'Pause' }, { id: 'tap-3', label: 'Tap' }], correctOrder: ['tap-1', 'tap-2', 'pause', 'tap-3'], correctFeedback: 'You followed the pattern.', retryFeedback: 'Listen again and follow one sound at a time.', contentDescription: 'Audio pattern needed; one trial must not be used as a talent rating.' },
   { ...base('enrich02-check', 6, 8, 'What Music Skill Is This?'), contentType: 'interactive', taskTemplate: 'multiple_choice', question: 'A person is using their voice to make music. Which skill is shown?', choices: ['Singing', 'Painting', 'Gardening'], answer: 'Singing', correctFeedback: 'Correct. The person is using their voice to sing.', retryFeedback: 'Is the person using their voice, creating visual art, or gardening?', imageUrl: prev('music') },
-  { ...base('enrich02-board', 7, 8, 'My Music Skill Board'), contentType: 'interactive', taskTemplate: 'sort_groups', scored: false, question: 'Place the activities where they fit for you. There are no wrong personal responses.', items: [{ id: 'sing', label: 'Singing' }, { id: 'instrument', label: 'Playing an instrument' }, { id: 'pattern', label: 'Following a simple pattern' }, { id: 'group', label: 'Participating with others' }], categories: [{ id: 'can', label: 'I can do this' }, { id: 'practise', label: 'I am practising this' }, { id: 'try', label: 'I would like to try this' }], sortAnswers: {}, correctFeedback: 'Your music reflection has been saved.', retryFeedback: 'Place each activity in the category that fits you.', contentDescription: 'Teacher observation may supplement this non-scored self-reflection.', layout: { size: 'wide' } },
+  { ...base('enrich02-board', 7, 8, 'My Music Skill Board'), contentType: 'interactive', taskTemplate: 'sort_groups', scored: false, question: 'Place the activities where they fit for you. There are no wrong personal responses.', items: [{ id: 'sing', label: 'Singing' }, { id: 'instrument', label: 'Playing an instrument' }, { id: 'pattern', label: 'Following a simple pattern' }, { id: 'group', label: 'Participating with others' }], categories: [{ id: 'can', label: 'I can do this' }, { id: 'practise', label: 'I am practicing this' }, { id: 'try', label: 'I would like to try this' }], sortAnswers: {}, correctFeedback: 'Your music reflection has been saved.', retryFeedback: 'Place each activity in the category that fits you.', contentDescription: 'Teacher observation may supplement this non-scored self-reflection.', layout: { size: 'wide' } },
   { ...base('enrich02-complete', 8, 8, 'Music Studio Session Complete'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Participation and teacher observation provide better evidence than screen selection alone.', steps: [{ id: 'summary', title: 'Listen, try, notice, choose', description: 'Music skills can be explored through participation and practice.', imageUrl: prev('music'), altText: 'Music' }], actionLabel: 'Finish studio' },
 ]
 
@@ -33,7 +34,7 @@ const enrich03: Task[] = [
   { ...base('enrich03-sequence', 5, 8, 'Put the Movements Together'), contentType: 'interactive', taskTemplate: 'sequence_order', question: 'Arrange the approved movement cards in the demonstrated order.', items: [{ id: 'move-1', label: 'Movement 1' }, { id: 'move-2', label: 'Movement 2' }, { id: 'move-3', label: 'Movement 3' }], correctOrder: ['move-1', 'move-2', 'move-3'], correctFeedback: 'Correct. You arranged the demonstrated movements in order.', retryFeedback: 'Replay the demonstration and watch what comes next.', contentDescription: 'PLACEHOLDER: cards and final order depend on the approved movement sequence.' },
   { ...base('enrich03-performance', 6, 8, 'Your Turn: Perform'), contentType: 'video', template: 'instructional_video', contentLabel: 'Teacher-observed performance checkpoint', contentDescription: 'Perform the approved sequence independently or with appropriate prompts/support. Screen completion alone is not mastery.', durationSeconds: 45, actionLabel: 'Teacher records observation' },
   { ...base('enrich03-choice', 7, 8, 'A Movement I Enjoyed'), contentType: 'interactive', taskTemplate: 'picture_choice', scored: false, question: 'Choose one approved movement you enjoyed or would like to repeat.', items: [{ id: 'move-1', label: 'Movement 1' }, { id: 'move-2', label: 'Movement 2' }, { id: 'move-3', label: 'Movement 3' }, { id: 'pause', label: 'I would like to pause' }], correctItemIds: [], correctFeedback: 'Your choice has been saved.', retryFeedback: 'Choose a movement or the option to pause.', contentDescription: 'This preference is non-scored, and adapted/seated participation may be used when approved.', layout: { size: 'wide', preferredColumns: 4 } },
-  { ...base('enrich03-complete', 8, 8, 'Move Lab Complete'), contentType: 'image', template: 'visual_narrative', contentDescription: 'Movement-contaminated EEG is not reliable evidence of distraction or overstimulation; teacher override is especially important.', steps: [{ id: 'summary', title: 'Watch, practise, sequence, perform', description: 'Actual appropriately supported movement is the primary competency evidence.' }], actionLabel: 'Finish lab' },
+  { ...base('enrich03-complete', 8, 8, 'Move to the Beat: Follow Along'), contentType: 'video', template: 'instructional_video', mediaUrl: 'https://www.youtube.com/watch?v=hrbGVGcXB5Q', contentLabel: 'Move to the Beat - Music for Kiddos', contentDescription: 'Watch first. Choose a comfortable way to participate. Pause, replay or ask for an adapted action.', durationSeconds: 139, videoOptional: true, actionLabel: 'Finish lab' },
 ]
 
 // Keep the guided eight-step journey, with progressively richer practice.
@@ -53,7 +54,7 @@ enrich01[4] = challenge(enrich01[4], {
   question: 'Your class is preparing a showcase. Choose the skill needed for each job.',
   scenarios: [
     scenario('The welcome song needs a steady beat. Which team can help?', ['Music team', 'Poster team', 'Sports team'], 'Music team', 'Musicians can keep the beat together.'),
-    scenario('Visitors need a colourful poster showing where to go. Which team fits?', ['Acting team', 'Visual arts team', 'Music team'], 'Visual arts team', 'Visual artists use images and design to communicate.'),
+    scenario('Visitors need a colorful poster showing where to go. Which team fits?', ['Acting team', 'Visual arts team', 'Music team'], 'Visual arts team', 'Visual artists use images and design to communicate.'),
     scenario('A short scene will show how to welcome a new classmate. Who can bring it to life?', ['Sports team', 'Performing arts team', 'Poster team'], 'Performing arts team', 'Performers use characters and actions to tell the story.'),
   ], retryFeedback: 'Think about what the team needs to create: sound, a picture, or a performance.',
 })
@@ -99,12 +100,12 @@ enrich02[5] = challenge(enrich02[5], {
   scenarios: [
     scenario('The group starts at different times. What should they try?', ['Agree on a count-in', 'Play louder', 'Ignore the others'], 'Agree on a count-in', 'A shared count-in helps everyone start together.'),
     scenario('The singer cannot hear the beat. What could the drummer do?', ['Speed up', 'Play a steady, quieter beat', 'Change the pattern every time'], 'Play a steady, quieter beat', 'A clear, steady beat supports the singer.'),
-    scenario('A pattern is difficult to remember. What is a useful next step?', ['Break it into shorter parts', 'Skip listening', 'Guess faster'], 'Break it into shorter parts', 'Short parts make it easier to listen and practise.'),
-  ], retryFeedback: 'Choose the action that makes listening and practising together easier.',
+    scenario('A pattern is difficult to remember. What is a useful next step?', ['Break it into shorter parts', 'Skip listening', 'Guess faster'], 'Break it into shorter parts', 'Short parts make it easier to listen and practice.'),
+  ], retryFeedback: 'Choose the action that makes listening and practicing together easier.',
 })
 enrich02[6] = challenge(enrich02[6], {
   title: 'Plan Your Next Studio Visit', taskTemplate: 'discovery_board', scored: false, evidenceRole: 'self_report',
-  question: 'Choose what you enjoy and what you want to practise. You may choose the same activity in both areas.',
+  question: 'Choose what you enjoy and what you want to practice. You may choose the same activity in both areas.',
   items: [{ id: 'sing', label: 'Using my voice', imageUrl: prev('music') }, { id: 'instrument', label: 'Playing an instrument', imageUrl: prev('music') }, { id: 'pattern', label: 'Remembering sound patterns' }, { id: 'group', label: 'Making music with others' }, { id: 'unsure', label: 'Not sure yet', imageUrl: prev('not-sure-yet') }],
   categories: [{ id: 'enjoy', label: 'I enjoyed this' }, { id: 'practice', label: 'My next challenge' }], selfReportFields: { enjoy: 'music_interests', practice: 'music_practice_goal' },
   correctFeedback: 'Your studio plan is saved. Share it with your teacher.', contentDescription: 'Your choices are personal reflections, not a talent score.',
@@ -137,13 +138,13 @@ enrich03[5] = challenge(enrich03[5], {
   title: 'Make the Routine Work for You', contentType: 'interactive', template: undefined, taskTemplate: 'scenario_classifier',
   question: 'Solve these practice situations before trying your routine with your teacher.',
   scenarios: [
-    scenario('The routine feels too fast. What helps?', ['Slow down and practise one part', 'Move faster', 'Skip the pause'], 'Slow down and practise one part', 'A slower pace gives you time to learn the sequence.'),
+    scenario('The routine feels too fast. What helps?', ['Slow down and practice one part', 'Move faster', 'Skip the pause'], 'Slow down and practice one part', 'A slower pace gives you time to learn the sequence.'),
     scenario('A movement is uncomfortable. What should you do?', ['Push through it', 'Pause and ask for an adapted action', 'Copy someone faster'], 'Pause and ask for an adapted action', 'Your teacher can help choose a comfortable alternative.'),
-    scenario('You are ready to practise with a partner. How can you start together?', ['Agree on a count-in', 'Start whenever you like', 'Both use different sequences'], 'Agree on a count-in', 'Count together, then try the same routine at a comfortable pace.'),
+    scenario('You are ready to practice with a partner. How can you start together?', ['Agree on a count-in', 'Start whenever you like', 'Both use different sequences'], 'Agree on a count-in', 'Count together, then try the same routine at a comfortable pace.'),
   ], retryFeedback: 'Choose the action that supports comfortable, clear practice.', contentLabel: undefined, contentDescription: 'With teacher approval, try your routine or an adapted version. The screen records knowledge practice; your teacher observes physical participation.',
 })
 enrich03[6] = challenge(enrich03[6], {
-  title: 'Choose Your Next Practice', question: 'Which part would you like to practise or adapt next?',
+  title: 'Choose Your Next Practice', question: 'Which part would you like to practice or adapt next?',
   items: [{ id: 'tap', label: 'The tap' }, { id: 'clap', label: 'The clap' }, { id: 'pause', label: 'Keeping the pause' }, { id: 'adapt', label: 'An adapted routine with my teacher' }],
   contentDescription: 'Choose your own next step. There is no wrong preference.',
 })
@@ -164,3 +165,118 @@ export const mockEnrichmentLessons = [
   { id: 'ENRICH-02', title: 'My Music Skills', tasks: enrich02 },
   { id: 'ENRICH-03', title: 'Move to the Beat', tasks: enrich03 },
 ] as const
+
+
+// Enrichment uses the same single-illustration opening/closing as the other packages.
+// Apply after the existing content refinements so preview and published data agree.
+const supplied = (filename: string) => `/assets/enrichment/${filename}.png`
+const picture = (filename: string, altText: string) => ({ imageUrl: supplied(filename), altText })
+
+enrich01[0] = {
+  ...enrich01[0], contentDescription: undefined, layout: { size: 'standard' },
+  steps: [{ id: 'goal', title: 'Explore your talents and skills', description: 'Explore music, art, performance, and sports skills.', ...picture('singing', 'A person singing into a microphone') }],
+}
+enrich01[1].contentDescription = 'Notice what each activity asks a person to create or do.'
+enrich01[1].steps = enrich01[1].steps?.map(step => step.id === 'sing'
+  ? { ...step, ...picture('singing', 'A person singing into a microphone') }
+  : step.id === 'move' ? { ...step, ...picture('basketball', 'A basketball representing sports skills') } : step)
+enrich01[7] = { ...enrich01[7], contentDescription: undefined, layout: { size: 'standard' } }
+
+enrich02[0] = {
+  ...enrich02[0], contentDescription: undefined, layout: { size: 'standard' },
+  steps: [{ id: 'goal', title: 'Explore your music skills', description: 'Explore voice and instruments, copy sound patterns, and plan what to practice next.', ...picture('xylophone', 'A colorful xylophone with two mallets') }],
+}
+enrich02[1].steps = enrich02[1].steps?.map(step => ({
+  ...step, ...(step.id === 'voice' ? picture('singing', 'A person singing into a microphone') : picture('xylophone', 'A xylophone with two mallets')),
+}))
+enrich02[7] = {
+  ...enrich02[7], contentDescription: undefined, layout: { size: 'standard' },
+  steps: [{ id: 'summary', title: 'Keep exploring music', description: 'You explored voice and instruments, copied sound patterns, and chose a music practice goal.', ...picture('make-music-with-other-people', 'Two people singing and playing a guitar together') }],
+}
+
+const movementIntroduction: Task = {
+  ...base('enrich03-introduction', 1, 10, 'Move to the Beat'),
+  contentType: 'image', template: 'visual_narrative', layout: { size: 'standard' },
+  steps: [{ id: 'goal', title: 'Practice moving to the beat', description: 'Learn a tap, clap, and pause sequence, then follow a steady beat in a comfortable way.', ...picture('clap', 'Hands clapping') }],
+  actionLabel: 'Get started',
+}
+const movementClosing: Task = {
+  ...base('enrich03-closing', 10, 10, 'You Practiced Moving to the Beat'),
+  contentType: 'image', template: 'visual_narrative', layout: { size: 'standard' },
+  steps: [{ id: 'summary', title: 'Tap, clap, pause, and follow the beat', description: 'You practiced a movement sequence and followed a steady beat. Keep practicing in a way that feels comfortable.', ...picture('clap', 'Hands clapping') }],
+  actionLabel: 'Finish lesson',
+}
+enrich03.unshift(movementIntroduction)
+enrich03.push(movementClosing)
+
+// Replace only matching concepts; unrelated art/theater pictures stay in place.
+const replacements: Record<string, { imageUrl: string; altText: string }> = {
+  '/assets/enrichment/voice.svg': picture('voice', 'A person using their voice'),
+  '/assets/enrichment/drum.svg': picture('drum', 'A drum and drumsticks'),
+  '/assets/enrichment/shaker.svg': picture('maracas', 'A pair of maracas'),
+  '/assets/enrichment/tap.svg': picture('sticks (tap)', 'Two rhythm sticks used for tapping'),
+  '/assets/enrichment/clap.svg': picture('clap', 'Hands clapping'),
+  '/assets/enrichment/pause.svg': picture('time-out (pause)', 'Hands making a pause signal'),
+  '/assets/enrichment/sports.svg': picture('basketball', 'A basketball representing sports skills'),
+}
+function replaceSuppliedImages(value: unknown): void {
+  if (Array.isArray(value)) { value.forEach(replaceSuppliedImages); return }
+  if (!value || typeof value !== 'object') return
+  const object = value as Record<string, unknown>
+  if (typeof object.imageUrl === 'string' && replacements[object.imageUrl]) Object.assign(object, replacements[object.imageUrl])
+  Object.values(object).forEach(replaceSuppliedImages)
+}
+for (const lesson of mockEnrichmentLessons) {
+  replaceSuppliedImages(lesson.tasks)
+  lesson.tasks.forEach((task, index) => { task.index = index + 1; task.total = lesson.tasks.length })
+}
+enrich01[2].pairs = enrich01[2].pairs?.map(pair => pair.id === 'music' ? { ...pair, left: { ...pair.left, ...picture('xylophone', 'A xylophone with two mallets') } } : pair)
+for (const task of enrich01) {
+  task.items = task.items?.map(item => ['singing', 'music'].includes(item.id) ? { ...item, ...picture('singing', 'A person singing into a microphone') } : item)
+}
+const soundImages: Record<string, { imageUrl: string; altText: string }> = {
+  tap: picture('sticks (tap)', 'Two rhythm sticks used for tapping'),
+  rest: picture('time-out (pause)', 'Hands making a pause signal'),
+  hum: picture('voice', 'A person using their voice'),
+  high: picture('treble-clef (high note)', 'High note'),
+  low: picture('bass-clef (low note)', 'Low note'),
+}
+enrich02[3].items = enrich02[3].items?.map(item => ({ ...item, ...soundImages[item.id] }))
+enrich02[4].items = enrich02[4].items?.map(item => soundImages[item.id] ? { ...item, ...soundImages[item.id] } : item)
+enrich02[6].items = enrich02[6].items?.map(item => {
+  const images: Record<string, { imageUrl: string; altText: string }> = {
+    sing: picture('voice', 'A person using their voice'),
+    instrument: picture('xylophone', 'A xylophone with two mallets'),
+    pattern: picture('sound-pattern', 'A sound wave representing a sound pattern'),
+    group: picture('make-music-with-other-people', 'Two people making music together'),
+  }
+  return images[item.id] ? { ...item, ...images[item.id] } : item
+})
+for (const task of enrich03) {
+  task.items = task.items?.map(item => item.id === 'adapt' ? { ...item, ...picture('music teacher', 'A music teacher offering guidance') } : item)
+}
+
+for (const lesson of mockEnrichmentLessons) for (const task of lesson.tasks) {
+  task.pattern = task.pattern?.map(item => {
+    const cues: Record<string, { imageUrl: string; altText: string }> = {
+      Tap: picture('sticks (tap)', 'Two rhythm sticks used for tapping'),
+      Clap: picture('clap', 'Hands clapping'),
+      Pause: picture('time-out (pause)', 'Hands making a pause signal'),
+      Rest: picture('time-out (pause)', 'Hands making a pause signal'),
+    }
+    return cues[item.label] ? { ...item, ...cues[item.label] } : item
+  })
+}
+
+// Keep previews aligned with the same six modest content refinements.
+for (const refinement of refinements) {
+  const lesson = mockEnrichmentLessons.find(item => item.id === refinement.lesson_id)
+  if (!lesson) continue
+  const changes = refinement.changes
+  const task = lesson.tasks[refinement.position]
+  if (changes.question) task.question = changes.question
+  if (changes.correct_feedback) task.correctFeedback = changes.correct_feedback
+  if (changes.retry_feedback) task.retryFeedback = changes.retry_feedback
+  if (changes.content_description) task.contentDescription = changes.content_description
+  if (changes.steps) task.steps = changes.steps.map(step => ({id: step.id, title: step.title, description: step.description, imageUrl: step.image_url, altText: step.alt_text}))
+}

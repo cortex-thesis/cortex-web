@@ -1,4 +1,24 @@
+> Current status (2026-10-25): The creative redesign below is superseded. Original lesson IDs 16?21 are restored with one display-only refinement per lesson. See [CAREER_ENRICHMENT_RESTORATION.md](CAREER_ENRICHMENT_RESTORATION.md) for the active scope. Archived creative components remain only for saved historical versions.
+
 # Functional Academics, Career, and Enrichment: review plan
+
+
+## Career / Enrichment implementation update - 2026-10-25
+
+The owner approved the creative redesign. The older audit below is retained as a historical planning snapshot; its Enrichment media/competency gaps are superseded by this update where noted. Functional Academics is outside this implementation.
+
+- Canonical revised definitions: `web/creative_lessons.json`. Career has 6 / 7 / 7 screens; Enrichment has 7 / 8 / 8. The developer activity preview reads the same definitions.
+- Verified against the official DepEd Order 021, s. 2020 curriculum tables: ENRICH-01 `TPEP-dt-NG-2`, printed page 71; ENRICH-02 `TPEP-mu-NG-2`, page 72; ENRICH-03 `TPEP-dc-NG-4`, page 74. The descriptions and source URL are stored with the definitions. Official source: https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf . Verification used the official document's indexed tables; direct binary retrieval returned an access error.
+- Functional activities: skill collections with uncertainty/decline; Career Town and job stations; many-to-many skill connections; scene-changing work simulations and branching repair stories; ordered workdays; an editable SVG shape composition; real four-step electronic-tone composition/replay; sound comparisons; movement cue composition/replay; a manually selected movement wheel; saved-evidence showcases.
+- Every journey works in Practice Mode. Existing Focus/Relax decisions, EEG classification/preprocessing, and teacher session control rules are unchanged. New playback is cancelled on pause, activity hide, navigation, regulation and unmount; in-session state is retained. Browser tests exercise a creative draft through the existing development-bypass regulation/return flow without generating EEG samples.
+- A teacher records physical movement observations on the student learning profile. The authorized endpoint is `classes/<class_id>/students/<student_id>/movement-observations/`; records are append-only audit events. Learners cannot create teacher observations. Digital sequences and learner participation choices do not satisfy or overwrite a teacher observation.
+- Collections read the signed-in learner's persisted Practice/session evidence within their enrolled class. Draft recovery uses account/context-scoped tab storage and is invalidated by version/configuration changes. UI confirmation says ready to save until the existing Next action succeeds.
+- Publication: `python manage.py publish_creative_lessons --dry-run`, then `python manage.py publish_creative_lessons`. It creates fresh lesson/activity/slide IDs, archives prior lesson versions without rewriting their activities/responses, copies assignments, and stores snapshots in the audit log. Existing active sessions retain their old lesson reference. Learners with existing Practice progress can open previous versions from the package page. Other packages are untouched.
+- Published to the configured app database on 2026-10-25: audit ID `300556`. Verification retained all 48 original slides, 7 responses, 4 Practice records and 6 session references; other package definitions were unchanged.
+- Rollback: `python manage.py publish_creative_lessons --rollback PUBLICATION_AUDIT_ID`. New definitions and evidence are retained as history; prior versions are restored. Publication is serialized, transactional and idempotent. Changed definitions require an incremented content version. Positional legacy sync commands refuse to overwrite creative revisions.
+- Missing media is intentional and visible: all six instructional videos await user-selected approved references; five recorded instrument samples await approval. Electronic composition tones are labelled as synthesized tones, not drum/piano/guitar recordings. New original SVG scenes/cues are interface illustrations, not approved real-life demonstrations. Additional teacher-reviewed movement demonstrations and localized narration/captions remain content work.
+- Existing approved-on-file media must still be reviewed for its intended use. Existing echo WAVs are used only as electronic-tone patterns. No new external media URLs or movement-sensing claims were introduced.
+
 
 Status: PLAN ONLY — awaiting approval before implementation.
 
@@ -177,4 +197,4 @@ These describe the currently saved shared lessons, not proposed replacements.
 
 Replace existing generic slots rather than indefinitely adding screens. Keep compact goal/discussion/video/practice/application/wrap-up pacing; don't force one fixed slide count.
 
-Review checkpoints: [video plan](VIDEO_REFERENCE_PLAN.md), [asset checklist](CONTENT_ASSET_CHECKLIST.md). STOP HERE; no activity implementation is authorized by this document.
+Review checkpoints: [video plan](VIDEO_REFERENCE_PLAN.md), [asset checklist](CONTENT_ASSET_CHECKLIST.md). The preceding implementation-approval restriction was superseded by the owner approval recorded in the update above.

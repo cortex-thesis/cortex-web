@@ -24,6 +24,7 @@ interface TaskCardProps {
   className?: string
   showProgress?: boolean
   lessonNavigation?: boolean
+  highlightImportantWords?: boolean
   focusTemplate?: FocusTemplate
   focusHolding?: boolean
   onFocusGateChange?: (blocked: boolean) => void
@@ -41,6 +42,7 @@ function TaskCard({
   showProgress = true,
   lessonNavigation = false,
   deliveryStrategy = 'steady_instruction',
+  highlightImportantWords,
   focusTemplate = 'none',
   focusHolding = false,
   onFocusGateChange,
@@ -155,7 +157,7 @@ function TaskCard({
   )
 
   return (
-    <FocusSupportContext.Provider value={{ level: focusTemplate, holding: focusHolding, terms, masked: blocked && microKind === 0, reveal: revealCue }}>
+    <FocusSupportContext.Provider value={{ level: focusTemplate, holding: focusHolding, terms: (highlightImportantWords ?? focusTemplate !== 'none') ? terms : [], masked: blocked && microKind === 0, reveal: revealCue }}>
     <div className={`${styles.card} ${styles[deliveryStrategy]} ${focusTemplate !== 'none' ? styles.supportTypography : ''} ${focusTemplate === 'passive' ? styles.anchorPulse : ''} ${focusTemplate === 'rest' ? styles.restTheme : ''} ${lessonNavigation && template === 'visual_narrative' && !hasTaskInteraction ? styles.fitSteps : ''} ${isLessonOverview ? styles.lessonOverview : ''} ${className ?? ''}`} style={taskStyle} data-delivery-strategy={deliveryStrategy} data-focus-template={focusTemplate} data-lesson-overview={isLessonOverview || undefined}>
       <section className={`${styles.microGate} ${blocked ? styles.microGateVisible : ''} ${flipped ? styles.flippedRecall : ''}`} aria-hidden={!blocked} inert={!blocked} aria-label="A quick focus check">
         {microKind === 0 ? <><h3>Tap to reveal your next action</h3><p><AdaptiveLessonText text={cueText} /></p>{!terms.length && <button onClick={revealCue}>Reveal instruction</button>}</>
@@ -182,7 +184,6 @@ function TaskCard({
 
       {task.narrationScript && <AudioNarration script={task.narrationScript} />}
       {task.discussion ? <DiscussionCards task={task} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement' || focusTemplate === 'active'} /> : !hasTaskInteraction && (task.template || task.mediaUrl) ? <ActivityTemplate task={task} onContinueWithoutVideo={onContinueWithoutVideo} onCompleted={lessonNavigation ? () => onAnswered?.(true, 'completed') : undefined} /> : !hasTaskInteraction ? contentPreview : null}
-      {task.videoOptional && <p>Video unavailable? You can continue and reflect on the lesson examples instead.</p>}
 
       {task.imageUrl && (
         <div className={`${styles.imageWrap} ${task.priceTag ? styles.pricedItem : ''}`}>

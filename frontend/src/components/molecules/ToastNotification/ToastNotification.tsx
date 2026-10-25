@@ -43,8 +43,8 @@ function ToastNotification({
   return (
     <div
       className={clsx(styles.toast, styles[variant], className)}
-      role="alert"
-      aria-live="assertive"
+      role={variant === 'error' || variant === 'warning' ? 'alert' : 'status'}
+      aria-live={variant === 'error' || variant === 'warning' ? 'assertive' : 'polite'}
       aria-atomic="true"
     >
       <span

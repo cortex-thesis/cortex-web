@@ -26,7 +26,13 @@ class EnrichmentWorkflowTests(SimpleTestCase):
                         check_media(item)
 
         for lesson in self.lessons:
-            self.assertEqual(len(lesson['slides']), 8)
+            self.assertEqual(len(lesson['slides']), 10 if lesson['lesson_id'] == 'ENRICH-03' else 8)
+            for boundary in (lesson['slides'][0], lesson['slides'][-1]):
+                self.assertEqual(boundary['type'], 'image')
+                self.assertEqual(boundary['configuration'].get('template'), 'visual_narrative')
+                self.assertFalse(boundary['configuration'].get('task_template'))
+                self.assertEqual(len(boundary['configuration']['steps']), 1)
+                self.assertTrue(boundary['configuration']['steps'][0].get('image_url'))
             for slide in lesson['slides']:
                 with self.subTest(lesson=lesson['lesson_id'], slide=slide['title']):
                     self.assertIsNone(validate_activity_configuration(slide['type'], slide['configuration']))

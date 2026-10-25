@@ -101,6 +101,7 @@ export interface ActivityStep {
 }
 
 export type TaskTemplateId =
+  | 'creative_experience'
   | 'discovery_board'
   | 'scenario_classifier'
   | 'word_search'
@@ -167,10 +168,15 @@ export interface Task {
   imageUrl: string | null
   altText?: string
   priceTag?: string
+  experience?: import('../components/molecules/CreativeExperience/types').Experience
+  contentVersion?: string
+  classId?: string
   evidenceRole?: string
   discussion?: boolean
   narrationScript?: string
   videoOptional?: boolean
+  videoGuidance?: ActivityStep[]
+  wordSearchSubject?: 'word' | 'sign'
   selfReportField?: string
   selfReportFields?: Record<string, string>
   initialResponse?: string

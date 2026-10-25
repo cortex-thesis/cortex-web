@@ -14,7 +14,7 @@ def upgrade_func03(definitions):
     def clock(key, title, mode, examples):
         screen(key, title, 'interactive', task_template='clock_set', clock_mode=mode,
                question='Work with one clock at a time.', evidence_role='primary_digital',
-               correct_feedback='You practised hours, minutes, and the time period.',
+               correct_feedback='You practiced hours, minutes, and the time period.',
                retry_feedback='Check the hour hand, minute hand, and a.m. or p.m., then try again.',
                clock_rounds=[{'id': key + str(i), 'instruction': prompt, 'hour': h, 'minute': m, 'period': p}
                              for i, (prompt, h, m, p) in enumerate(examples)])

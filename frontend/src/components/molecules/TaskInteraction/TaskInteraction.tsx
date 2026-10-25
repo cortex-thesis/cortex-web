@@ -1,7 +1,10 @@
-import { useMemo, useRef, useState } from 'react'
+import CreativeExperience from '../CreativeExperience/CreativeExperience'
+import { useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { GripVertical, Image as ImageIcon, Puzzle, RotateCcw } from 'lucide-react'
 import type { Task, TaskItem } from '../../../types'
 import { playLessonSound } from '../../../lib/lessonSounds'
+import { matchingOrder } from '../../../lib/matchingOrder'
 import styles from './TaskInteraction.module.css'
 import CreativeTask from './CreativeTask'
 import ToothBrushingTask from './ToothBrushingTask'
@@ -40,20 +43,10 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
 
   const items = task.items ?? []
   const expected = task.correctItemIds ?? []
-  const shuffledRights = useMemo(() => {
-    const pairs = task.pairs ?? []
-    let seed = [...pairs.map(pair => pair.id).join('|')].reduce((value, letter) => (value * 31 + letter.charCodeAt(0)) >>> 0, 7919)
-    for (let attempt = 0; attempt < 40; attempt++) {
-      const mixed = [...pairs]
-      for (let index = mixed.length - 1; index > 0; index--) {
-        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
-        const other = seed % (index + 1)
-        ;[mixed[index], mixed[other]] = [mixed[other], mixed[index]]
-      }
-      if (mixed.every((pair, index) => pair.id !== pairs[index].id) || pairs.length < 2) return mixed
-    }
-    return [...pairs.slice(1), ...pairs.slice(0, 1)]
-  }, [task.pairs])
+  // The lesson player remounts this component for each slide/retry instance.
+  // State keeps both columns still during selection, matching and parent rerenders.
+  const [matchingColumns] = useState(() => matchingOrder(task.pairs ?? []))
+  if (template === 'creative_experience') return <CreativeExperience task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} narrowed={narrowed} />
   if (template === 'tooth_brushing') return <ToothBrushingTask task={task} onAnswered={onAnswered} />
   if (template === 'garden_mission') return <GardenMission task={task} onAnswered={onAnswered} onChanged={onChanged} quiet={quiet} />
   if (template === 'garden_kit') return <GardenKit task={task} onAnswered={onAnswered} onChanged={onChanged} />
@@ -174,8 +167,8 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
     }
     return (
       <div className={styles.stack}><div className={styles.matchGrid}>
-        <div>{pairs.map((pair) => <button type="button" draggable key={pair.id} disabled={matched.includes(pair.id) || result !== null} className={`${styles.matchButton} ${pair.left.imageUrl ? styles.visualMatchButton : ''} ${activePair === pair.id ? styles.selected : ''} ${resultClass(activePair === pair.id || matched.includes(pair.id))}`} onDragStart={() => setActivePair(pair.id)} onClick={() => setActivePair(pair.id)}><GripVertical size={15} />{pair.left.imageUrl && <ItemVisual item={pair.left} />}{(!task.hideImageLabels || !pair.left.imageUrl) && <strong>{pair.left.label}</strong>}{matched.includes(pair.id) && <span aria-label="Matched"></span>}</button>)}</div>
-        <div>{shuffledRights.map((pair) => <button type="button" key={pair.id} disabled={matched.includes(pair.id) || result !== null} className={`${styles.matchButton} ${pair.right.imageUrl ? styles.visualMatchButton : ''} ${resultClass(attemptedRight === pair.id || matched.includes(pair.id))}`} onDragOver={(event) => event.preventDefault()} onDrop={() => chooseRight(pair.id)} onClick={() => chooseRight(pair.id)}>{pair.right.imageUrl && <ItemVisual item={pair.right} />}<strong>{pair.right.label}</strong>{matched.includes(pair.id) && ' '}</button>)}</div>
+        <div>{matchingColumns.left.map((pair) => <button type="button" draggable key={pair.id} disabled={matched.includes(pair.id) || result !== null} className={`${styles.matchButton} ${activePair === pair.id ? styles.selected : ''} ${resultClass(activePair === pair.id || matched.includes(pair.id))}`} onDragStart={() => setActivePair(pair.id)} onClick={() => setActivePair(pair.id)}><GripVertical size={18} className={styles.dragHandle} aria-hidden="true" /><strong>{pair.left.label}</strong>{matched.includes(pair.id) && <span aria-label="Matched"></span>}</button>)}</div>
+        <div>{matchingColumns.right.map((pair) => <button type="button" key={pair.id} disabled={matched.includes(pair.id) || result !== null} className={`${styles.matchButton} ${resultClass(attemptedRight === pair.id || matched.includes(pair.id))}`} onDragOver={(event) => event.preventDefault()} onDrop={() => chooseRight(pair.id)} onClick={() => chooseRight(pair.id)}><strong>{pair.right.label}</strong>{matched.includes(pair.id) && ' '}</button>)}</div>
       </div>{feedback}</div>
     )
   }
@@ -199,8 +192,11 @@ function TaskInteraction({ task, onAnswered, onChanged, quiet = false, narrowed 
     <div className={styles.stack}>
       <p className={styles.dragHint} role="status">{sortItem ? `Selected: ${items.find(item => item.id === sortItem)?.label}. Tap or drop into a group.` : 'Drag cards into a group, or tap a card then its group.'}</p>
       <div className={styles.sortLayout}>
+        <section className={styles.sortTray} aria-label="Items to sort">
+          <h3>Drag the items into the correct bucket</h3>
         <div className={`${styles.itemRow} ${styles.sortItems}`} aria-label="Cards to sort">{items.filter((item) => !sorted[item.id]).map((item) => <button type="button" draggable key={item.id} aria-pressed={sortItem === item.id} disabled={result !== null} className={`${styles.itemButton} ${styles.sortCard} ${item.imageUrl ? styles.visualItemButton : ''} ${sortItem === item.id ? styles.selected : ''} ${resultClass(sortItem === item.id)}`} onDragStart={() => setSortItem(item.id)} onClick={() => setSortItem(item.id)}><GripVertical size={15} />{item.imageUrl && <ItemVisual item={item} />}<strong>{item.label}</strong></button>)}</div>
-        <div className={`${styles.categoryGrid} ${styles.sortGroups}`} aria-label="Drop zones">{(task.categories ?? []).map((category) => <button type="button" key={category.id} className={`${styles.category} ${sortItem ? styles.dropReady : ''} ${result === 'correct' ? styles.correct : result === 'incorrect' && attemptedCategory === category.id ? styles.incorrect : ''}`} disabled={result !== null} onDragOver={(event) => event.preventDefault()} onDrop={() => assignCategory(category.id)} onClick={() => assignCategory(category.id)}><strong>{category.label}</strong>{Object.entries(sorted).some(([, value]) => value === category.id) ? Object.entries(sorted).filter(([, value]) => value === category.id).map(([id]) => <span key={id} className={styles.sortedChip}>{items.find((item) => item.id === id)?.label}</span>) : <span>Drop here</span>}</button>)}</div>
+        </section>
+        <div className={`${styles.categoryGrid} ${styles.sortGroups}`} aria-label="Drop zones" style={{ '--bucket-count': Math.max(1, task.categories?.length ?? 0) } as CSSProperties}>{(task.categories ?? []).map((category) => <button type="button" key={category.id} className={`${styles.category} ${sortItem ? styles.dropReady : ''} ${result === 'correct' ? styles.correct : result === 'incorrect' && attemptedCategory === category.id ? styles.incorrect : ''}`} disabled={result !== null} onDragOver={(event) => event.preventDefault()} onDrop={() => assignCategory(category.id)} onClick={() => assignCategory(category.id)}><strong>{category.label}</strong>{Object.entries(sorted).some(([, value]) => value === category.id) ? Object.entries(sorted).filter(([, value]) => value === category.id).map(([id]) => <span key={id} className={styles.sortedChip}>{items.find((item) => item.id === id)?.label}</span>) : <span className={styles.emptyBucket}>Drop items here</span>}</button>)}</div>
       </div>
       {feedback}
     </div>

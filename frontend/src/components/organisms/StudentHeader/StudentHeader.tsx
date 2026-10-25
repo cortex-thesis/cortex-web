@@ -5,9 +5,13 @@ import { Logo, StudentFlowerAvatar } from '../../atoms'
 import { useAuthStore } from '../../../store/authStore'
 import StudentNotificationPopover from '../StudentNotificationPopover'
 import styles from './StudentHeader.module.css'
+import { useNotifications } from '../../../hooks/useNotifications'
+import ToastNotification from '../../molecules/ToastNotification'
 
 export default function StudentHeader() {
   const navigate = useNavigate()
+  const { notifications, markRead, busy, error } = useNotifications()
+  const award = notifications.find(item => item.kind === 'achievement' && !item.read)
   const student = useAuthStore(state => state.user)!
   const logout = useAuthStore(state => state.logout)
   const accountRef = useRef<HTMLDivElement>(null)
@@ -29,6 +33,7 @@ export default function StudentHeader() {
   }
 
   return <header className={styles.header}>
+    {award && <div className={styles.awardNotice}><ToastNotification key={award.id} message={`${award.title}: ${award.body}`} variant="success" duration={6000} onDismiss={() => { if (!busy) void markRead(award.id) }} />{error && <p role="alert">{error} Dismiss again to retry.</p>}</div>}
     <button className={styles.brand} onClick={() => navigate('/student/home')} aria-label="Cortex student home"><Logo variant="icon" height={36} /></button>
     <div className={styles.actions}>
       <StudentNotificationPopover open={notificationsOpen} onOpenChange={setNotificationsOpen} onOpen={() => setAccountOpen(false)} />

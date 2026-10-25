@@ -40,7 +40,7 @@ export default function AdvancedReports() {
     const query = new URLSearchParams({ range }); if (classId) query.set('class_id', classId)
     if (schoolYear) query.set('school_year', schoolYear)
     let cancelled = false
-    void api<AdvancedData>(`/teacher/reports/advanced/?${query}`).then((payload) => { if (cancelled) return; setData(payload); if (!schoolYear) setSchoolYear(payload.selected_school_year); if (!classId && payload.selected_class_id) setClassId(String(payload.selected_class_id)) }).catch((reason: Error) => { if (!cancelled) setError(reason.message) }).finally(() => { if (!cancelled) setLoading(false) })
+    void api<AdvancedData>(`/teacher/reports/advanced/?${query}`).then((payload) => { if (cancelled) return; setData(payload); if (!schoolYear) setSchoolYear(payload.selected_school_year, true); if (!classId && payload.selected_class_id) setClassId(String(payload.selected_class_id)) }).catch((reason: Error) => { if (!cancelled) setError(reason.message) }).finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [classId, range, schoolYear, setSchoolYear])
   const visibleLessons = data?.lessons.filter((lesson) => !lessonFilter || String(lesson.id) === lessonFilter) ?? []

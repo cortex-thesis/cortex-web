@@ -61,7 +61,7 @@ class NotificationsAndControlsTests(TestCase):
         self.client.force_login(self.student.user)
         response = self.post('/api/student/journals/', {
             'session_id': str(self.session.pk), 'prompt': 'What did you learn?',
-            'response_type': 'text', 'text_response': 'I practised a rhythm.',
+            'response_type': 'text', 'text_response': 'I practiced a rhythm.',
             'mood': 'proud', 'shared_with_teacher': True,
         })
         self.assertEqual(response.status_code, 201)

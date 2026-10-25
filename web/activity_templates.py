@@ -49,6 +49,7 @@ ACTIVITY_TEMPLATES = {
 }
 
 TASK_TEMPLATES = {
+    "creative_experience": {"label": "Creative learning experience", "required": ("question", "experience", "content_version")},
     'clock_set': {'label': 'Clock Lab', 'required': ('question', 'clock_rounds', 'clock_mode')},
     'garden_kit': {'label': 'Pack a Gardening Kit', 'required': ('question', 'items', 'correct_item_ids')},
     'garden_mission': {'label': 'Garden Mission', 'required': ('question', 'items', 'missions')},
@@ -86,6 +87,9 @@ def validate_activity_configuration(activity_type, configuration):
     """Return a user-facing error, or None for a valid/legacy configuration."""
     if not isinstance(configuration, dict):
         return "configuration must be a JSON object."
+    if configuration.get("task_template") == "creative_experience":
+        from .creative_validation import validate_experience
+        return validate_experience(configuration)
     layout = configuration.get("layout")
     if layout is not None:
         if not isinstance(layout, dict):

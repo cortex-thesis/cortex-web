@@ -85,8 +85,8 @@ export default function CreativeTask({ task, onAnswered }: CreativeTaskProps) {
   const options = task.items ?? []
   return (
     <div className={styles.patternWrap}>
-      <div className={styles.pattern} aria-label="Pattern to complete">{(task.pattern ?? []).map((item, index) => <span key={`${item.id}-${index}`}>{item.label}</span>)}<span className={styles.missing}>?</span></div>
-      <div className={styles.patternChoices}>{options.map((item) => <button type="button" draggable key={item.id} onDragStart={(event) => event.dataTransfer.setData('text/plain', item.id)} onClick={() => onAnswered?.(item.id === task.answer, item.id)}>{item.label}</button>)}</div>
+      <div className={styles.pattern} aria-label="Pattern to complete">{(task.pattern ?? []).map((item, index) => <span key={`${item.id}-${index}`}>{item.imageUrl && <img src={item.imageUrl} alt={item.altText ?? item.label} />}<span>{item.label}</span></span>)}<span className={styles.missing}>?</span></div>
+      <div className={styles.patternChoices}>{options.map((item) => <button type="button" draggable key={item.id} onDragStart={(event) => event.dataTransfer.setData('text/plain', item.id)} onClick={() => onAnswered?.(item.id === task.answer, item.id)}>{item.imageUrl && <img src={item.imageUrl} alt={item.altText ?? item.label} />}<span>{item.label}</span></button>)}</div>
       <div className={styles.patternTarget} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { const id = event.dataTransfer.getData('text/plain'); onAnswered?.(id === task.answer, id) }}>Drop the next piece here</div>
     </div>
   )

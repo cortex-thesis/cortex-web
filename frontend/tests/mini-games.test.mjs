@@ -12,8 +12,10 @@ async function load(source) {
 const logicSource = await readFile(new URL('../src/lib/miniGameLogic.ts', import.meta.url), 'utf8')
 const logic = await load(logicSource)
 const checkpoints = await load(await readFile(new URL('../src/lib/gardenCheckpoint.ts', import.meta.url), 'utf8'))
+const flipOrderSource = await readFile(new URL('../src/lib/flipMatchingOrder.ts', import.meta.url), 'utf8')
 const source = await readFile(new URL('../src/components/molecules/TaskInteraction/MiniGames.tsx', import.meta.url), 'utf8')
 const games = await load(source
+  .replace("import { shuffledMatchingDeck } from '../../../lib/flipMatchingOrder'", flipOrderSource)
   .replace("from 'react'", `from '${import.meta.resolve('react')}'`)
   .replace("import { Backpack, Clock, Eraser, Folder, NotebookPen, RotateCcw, Ruler } from 'lucide-react'", "const Backpack = () => null, Clock = Backpack, Eraser = Backpack, Folder = Backpack, NotebookPen = Backpack, RotateCcw = Backpack, Ruler = Backpack")
   .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => undefined')
@@ -36,6 +38,7 @@ globalThis.__miniGameHooks = {
   useEffect() {},
 }
 const interactive = await load(source
+  .replace("import { shuffledMatchingDeck } from '../../../lib/flipMatchingOrder'", flipOrderSource)
   .replace("import { Children, useEffect, useRef, useState } from 'react'", `import { Children } from '${import.meta.resolve('react')}'; const {useEffect, useRef, useState} = globalThis.__miniGameHooks`)
   .replace("import { Backpack, Clock, Eraser, Folder, NotebookPen, RotateCcw, Ruler } from 'lucide-react'", 'const Backpack = () => null, Clock = Backpack, Eraser = Backpack, Folder = Backpack, NotebookPen = Backpack, RotateCcw = Backpack, Ruler = Backpack')
   .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => undefined')
@@ -251,22 +254,30 @@ test('word hunt has pointer and keyboard button paths and calm responsive styles
   assert.doesNotMatch(css, /animation:/)
 })
 
-test('picture self-reflections save neutral selections while scored questions retain feedback', async () => {
+async function loadTaskInteraction() {
+  const matchingSource = (await readFile(new URL('../src/lib/matchingOrder.ts', import.meta.url), 'utf8')).replace('export function', 'function')
   const taskSource = await readFile(new URL('../src/components/molecules/TaskInteraction/TaskInteraction.tsx', import.meta.url), 'utf8')
   const module = await load(taskSource
-    .replace("import { useMemo, useRef, useState } from 'react'", 'const {useRef,useState} = globalThis.__miniGameHooks; const useMemo = factory => factory()')
+    .replace("import { matchingOrder } from '../../../lib/matchingOrder'", matchingSource)
+    .replace("import { useRef, useState } from 'react'", 'const {useRef,useState} = globalThis.__miniGameHooks; const useMemo = factory => factory()')
     .replace(/import .* from 'lucide-react'/, 'const GripVertical = () => null, ImageIcon = GripVertical, Puzzle = GripVertical, RotateCcw = GripVertical')
     .replace("import { playLessonSound } from '../../../lib/lessonSounds'", 'const playLessonSound = () => undefined')
     .replace("import styles from './TaskInteraction.module.css'", 'const styles = new Proxy({}, { get: (_, key) => String(key) })')
     .replace("import CreativeTask from './CreativeTask'", 'const CreativeTask = () => null')
+    .replace("import CreativeExperience from '../CreativeExperience/CreativeExperience'", 'const CreativeExperience = () => null')
     .replace("import ToothBrushingTask from './ToothBrushingTask'", 'const ToothBrushingTask = () => null')
     .replace("import GardenMission from './GardenMission'", 'const GardenMission = () => null')
     .replace("import GardenKit from './GardenKit'", 'const GardenKit = () => null')
     .replace("import ClockSet from './ClockSet'", 'const ClockSet = () => null')
     .replace("import { DiscoveryBoard, ScenarioClassifier } from './DiscoveryActivities'", 'const DiscoveryBoard = () => null, ScenarioClassifier = DiscoveryBoard')
     .replace(/import .* from '.\/MiniGames'/, 'const AudioSequence = () => null, FindIt = AudioSequence, FlipMatching = AudioSequence, Shopping = AudioSequence, WordSearch = AudioSequence'))
+  return module.default
+}
+
+test('picture self-reflections save neutral selections while scored questions retain feedback', async () => {
+  const component = await loadTaskInteraction()
   for (const options of [{correctItemIds:[]}, {scored:false,correctItemIds:['other']}]) {
-    const run = harness('', {taskTemplate:'picture_choice',selectionMode:'multiple',items:[{id:'crafts',label:'Make crafts'}],...options}, module.default)
+    const run = harness('', {taskTemplate:'picture_choice',selectionMode:'multiple',items:[{id:'crafts',label:'Make crafts'}],...options}, component)
     click(run, 'Make crafts'); click(run, 'Save choices')
     assert.equal(run.answers.at(-1).correct, true)
     const card = nodes(run.render()).find(node => node.type === 'button' && text(node) === 'Make crafts')
@@ -274,20 +285,20 @@ test('picture self-reflections save neutral selections while scored questions re
     assert.doesNotMatch(card.props.className, /correct|incorrect/)
     assert.doesNotMatch(text(run.render()), /↻/)
   }
-  const run = harness('', {taskTemplate:'picture_choice',selectionMode:'multiple',items:[{id:'wrong',label:'Wrong choice'}],correctItemIds:['right']}, module.default)
+  const run = harness('', {taskTemplate:'picture_choice',selectionMode:'multiple',items:[{id:'wrong',label:'Wrong choice'}],correctItemIds:['right']}, component)
   click(run, 'Wrong choice'); click(run, 'Check my choices')
   assert.equal(run.answers.at(-1).correct, false)
   assert.ok(nodes(run.render()).some(node => node.type === 'button' && node.props.className.includes('incorrect')))
-  const sort = harness('', {taskTemplate:'sort_groups',items:[{id:'tailor',label:'Alter clothes'},{id:'draw',label:'Draw for fun'}],categories:[{id:'work',label:'Work'},{id:'free',label:'Free time'}],sortAnswers:{tailor:'work',draw:'free'}}, module.default)
+  const sort = harness('', {taskTemplate:'sort_groups',items:[{id:'tailor',label:'Alter clothes'},{id:'draw',label:'Draw for fun'}],categories:[{id:'work',label:'Work'},{id:'free',label:'Free time'}],sortAnswers:{tailor:'work',draw:'free'}}, component)
   const layout = nodes(sort.render()).find(node => node.props?.className === 'sortLayout')
   assert.ok(nodes(layout).some(node => node.props?.['aria-label'] === 'Drop zones'))
   assert.match(text(sort.render()), /Drag cards into a group/)
   click(sort, 'Alter clothes')
   assert.match(text(sort.render()), /Selected: Alter clothes/)
-  click(sort, 'WorkDrop here')
+  click(sort, 'WorkDrop items here')
   assert.equal(sort.answers.length, 0)
   nodes(sort.render()).find(node => node.type === 'button' && text(node) === 'Draw for fun').props.onDragStart()
-  nodes(sort.render()).find(node => node.type === 'button' && text(node) === 'Free timeDrop here').props.onDrop()
+  nodes(sort.render()).find(node => node.type === 'button' && text(node) === 'Free timeDrop items here').props.onDrop()
   assert.equal(sort.answers.at(-1).correct, true)
   assert.deepEqual(sort.answers.at(-1).value, {tailor:'work',draw:'free'})
 })
@@ -427,8 +438,11 @@ test('flip cards hide content, retry mismatches, retain matched pairs and reset'
   const deck = nodes(run.render()).filter(node => node.type === 'button' && node.key?.includes(':'))
   const flip = key => nodes(run.render()).find(node => node.key === key).props.onClick()
   assert.equal(deck.length, 4)
+  const initialOrder = deck.map(card => card.key)
+  const currentOrder = () => nodes(run.render()).filter(node => node.type === 'button' && node.key?.includes(':')).map(card => card.key)
   flip('egg:picture'); flip('rice:meaning')
   assert.equal(run.answers.at(-1).correct, false)
+  assert.deepEqual(currentOrder(), initialOrder)
   assert.doesNotMatch(text(run.render()), /Turn cards back/)
   flip('egg:picture'); flip('rice:meaning')
   flip('egg:picture'); flip('egg:meaning')
@@ -436,7 +450,9 @@ test('flip cards hide content, retry mismatches, retain matched pairs and reset'
   flip('rice:picture'); flip('rice:meaning')
   assert.equal(run.answers.at(-1).correct, true)
   assert.deepEqual(run.answers.at(-1).value.matched, ['egg','rice'])
+  assert.deepEqual(currentOrder(), initialOrder)
   click(run, 'Reset cards')
+  assert.notDeepEqual(currentOrder(), initialOrder)
   assert.match(text(run.render()), /0 of 2 pairs matched/)
   flip('egg:picture'); flip('rice:meaning')
   flip('rice:picture')
@@ -453,4 +469,43 @@ test('reduced presentation pages objects but retains all configured choices', ()
   assert.match(markup, /Object 0/)
   assert.doesNotMatch(markup, /Object 5/)
   assert.equal(task.items.length, 6)
+})
+
+test('matching keeps shuffled positions stable and preserves click/drop validation and completion', async () => {
+  const component = await loadTaskInteraction()
+  for (const count of [1, 2, 3, 4, 6, 9]) {
+    const pairs = Array.from({length:count}, (_,index) => ({
+      id: String(index), left: {id:'l'+index,label:'Left '+index,imageUrl:'/source-topic.png'}, right:{id:'r'+index,label:'Right '+index,imageUrl:'/answer-topic.png'},
+    }))
+    const task = {taskTemplate:'matching_pairs',pairs,hideImageLabels:true}
+    const run = harness('', task, component)
+    const order = () => nodes(run.render()).filter(node => node.type === 'button').map(node => text(node).trim())
+    const initial = order()
+    assert.equal(nodes(run.render()).filter(node=>node.type==='img').length,0)
+    const left = initial.filter(label => label.startsWith('Left '))
+    const right = initial.filter(label => label.startsWith('Right '))
+    if (count > 1) left.forEach((label,index) => assert.notEqual(label.slice(5), right[index].slice(6)))
+    // Recreated props during a parent render must not move active choices.
+    task.pairs = [...pairs]
+    for (let index = 0; index < count; index++) {
+      const label = left[index], id = label.slice(5)
+      if (index % 2) nodes(run.render()).find(node => node.type === 'button' && text(node) === label).props.onDragStart()
+      else click(run, label)
+      assert.deepEqual(order(), initial)
+      const target = nodes(run.render()).find(node => node.type === 'button' && text(node) === 'Right '+id)
+      if (index % 2) target.props.onDrop()
+      else target.props.onClick()
+      assert.deepEqual(order(), initial)
+      assert.equal(run.answers.length, index === count - 1 ? 1 : 0)
+    }
+    assert.equal(run.answers[0].correct, true)
+    assert.deepEqual(new Set(String(run.answers[0].value).split(',')), new Set(pairs.map(pair => pair.id)))
+    assert.ok(nodes(run.render()).filter(node => node.type === 'button').every(node => node.props.disabled))
+    if (count > 1) {
+      const wrong = harness('', task, component)
+      click(wrong,'Left 0'); click(wrong,'Right 1')
+      assert.equal(wrong.answers[0].correct,false)
+      assert.match(text(wrong.render()), /Almost/)
+    }
+  }
 })

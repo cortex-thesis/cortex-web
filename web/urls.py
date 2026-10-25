@@ -1,3 +1,5 @@
+from .creative_collection import creative_collection
+from .movement_observations import movement_observations
 from .school_years import school_years
 from .notifications import notifications
 from .account_management import account_detail
@@ -76,6 +78,8 @@ from .views import (
 )
 
 urlpatterns = [
+    path("classes/<int:class_id>/creative-collection/", creative_collection),
+    path("classes/<int:class_id>/students/<int:student_id>/movement-observations/", movement_observations),
     path("admin/school-years/", school_years, name="school-years"),
     path('admin/accounts/<int:profile_id>/', account_detail, name='admin-account-detail'),
     path("admin/validation/", validation_runs, name="validation-runs"),

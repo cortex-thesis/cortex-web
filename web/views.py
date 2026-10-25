@@ -761,7 +761,7 @@ def _class_data(school_class, include_students=False, packages=None):
 
 
 def _lesson_data(lesson, include_slides=True):
-    data = {"id": lesson.pk, "package": lesson.package.slug, "title": lesson.title, "description": lesson.description, "archived": lesson.archived_at is not None}
+    data = {"id": lesson.pk, "package": lesson.package.slug, "title": lesson.title, "description": lesson.description, "competency_code": lesson.competency_code, "competency_description": lesson.competency_description, "archived": lesson.archived_at is not None}
     if include_slides:
         slides = lesson.slides.all() if "slides" in getattr(lesson, "_prefetched_objects_cache", {}) else lesson.slides.select_related("activity")
         slides = [slide for slide in slides if not slide.activity.configuration.get('optional_review')]
@@ -2051,11 +2051,19 @@ def student_class_package(request, class_id, package_slug):
     lessons = Lesson.objects.filter(
         package=package, status=Lesson.Status.APPROVED, archived_at__isnull=True,
     ).select_related('package').prefetch_related('slides__activity').order_by("id")
+    if package_slug == 'career':
+        lessons = lessons.order_by('competency_code', 'id')
     progress = {item.lesson_id: item for item in LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson__package=package)}
+    historical = []
+    if package_slug in ('career', 'enrichment'):
+        superseded = AuditLog.objects.filter(action='creative_lesson_superseded', object_type='Lesson').values_list('object_id', flat=True)
+        prior = LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson__package=package, lesson__archived_at__isnull=False, lesson_id__in=[int(key) for key in superseded if key.isdigit()]).select_related('lesson').prefetch_related('lesson__slides__activity')
+        historical = [_lesson_data(item.lesson, False) | {'progress': _practice_progress_data(item.lesson, item)} for item in prior]
     return JsonResponse({
         "class": _class_data(school_class),
         "package": {"id": package.pk, "slug": package.slug, "name": package.name},
         "lessons": [_lesson_data(lesson, include_slides=False) | {"progress": _practice_progress_data(lesson, progress.get(lesson.pk))} for lesson in lessons],
+        "historical_lessons": historical,
     })
 
 
@@ -2089,9 +2097,13 @@ def student_practice_lesson(request, class_id, lesson_id):
     school_class = get_object_or_404(SchoolClass, pk=class_id, status=SchoolClass.Status.ACTIVE)
     if not Enrollment.objects.filter(school_class=school_class, student=profile, removed_at__isnull=True).exists():
         return JsonResponse({"detail": "You are not enrolled in this class."}, status=403)
+    # A learner may finish their existing practice on a superseded creative lesson.
+    # Its original slides and saved evidence remain untouched.
+    historical = (LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson_id=lesson_id).exists()
+                  and AuditLog.objects.filter(action='creative_lesson_superseded', object_type='Lesson', object_id=str(lesson_id)).exists())
     lesson = get_object_or_404(Lesson.objects.select_related('package').prefetch_related('slides__activity'),
-        pk=lesson_id, status=Lesson.Status.APPROVED, archived_at__isnull=True,
-        package__is_active=True, package__class_assignments__school_class=school_class)
+        Q(status=Lesson.Status.APPROVED, archived_at__isnull=True) | Q(pk=lesson_id, status=Lesson.Status.ARCHIVED) if historical else Q(status=Lesson.Status.APPROVED, archived_at__isnull=True),
+        pk=lesson_id, package__is_active=True, package__class_assignments__school_class=school_class)
     if request.method == 'POST':
         try:
             payload = _body(request)
@@ -2108,6 +2120,11 @@ def student_practice_lesson(request, class_id, lesson_id):
             progress = LessonPracticeProgress.objects.select_for_update().get(pk=progress.pk)
             if slide_id is not None:
                 selected = payload.get('selected')
+                activity = next(slide.activity for slide in lesson.slides.all() if slide.pk == slide_id)
+                if activity.configuration.get('requires_evidence') and selected is None:
+                    return JsonResponse({'detail': 'Complete the activity before continuing.'}, status=400)
+                if activity.configuration.get('task_template') == 'creative_experience' and selected is None:
+                    return JsonResponse({'detail': 'Complete the creative activity before continuing.'}, status=400)
                 if selected is not None:
                     if not isinstance(selected, str) or len(selected) > 20000:
                         return JsonResponse({'detail': 'Invalid activity evidence.'}, status=400)
@@ -2486,6 +2503,7 @@ def session_eeg_samples(request, session_id):
                 "status": "in_progress" if session.ended_at is None else "completed",
             },
             "lesson": _lesson_data(session.lesson) if session.lesson_id else None,
+            "activity_evidence": {str(row.activity.slide.pk): {"selected": row.response.get("selected", "")} for row in session.activity_responses.select_related("activity__slide").order_by("attempt_number") if row.activity.configuration.get('task_template') == 'creative_experience' and hasattr(row.activity, "slide")},
             "latest": _eeg_sample_data(latest) if latest else None,
             "recording": {"id": str(recording.pk), "status": recording.processing_status,
                           "started_at": recording.started_at, "ended_at": recording.ended_at,

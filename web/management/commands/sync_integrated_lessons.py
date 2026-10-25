@@ -19,6 +19,8 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        if Lesson.objects.filter(package__slug='enrichment', archived_at__isnull=True, slides__activity__configuration__task_template='creative_experience').exists():
+            raise CommandError('Creative journeys are versioned. Use publish_creative_lessons instead of positional synchronization.')
         for package in (() if options['enrichment_only'] else ('care', 'life', 'prev', 'live', 'func', 'career')):
             call_command(f'sync_{package}_lessons', owner=options['owner'], stdout=self.stdout)
         owners = Profile.objects.select_related('user')
@@ -29,9 +31,10 @@ class Command(BaseCommand):
         definitions = json.loads((Path(__file__).resolve().parents[2] / 'enrichment_lessons.json').read_text(encoding='utf-8'))
         attach_definitions(definitions)
         for definition in definitions:
-            lesson, _ = Lesson.objects.get_or_create(package=package, competency_code=definition['competency_code'], defaults={'created_by': owner, 'title': definition['title']})
+            lesson, _ = Lesson.objects.get_or_create(package=package, archived_at__isnull=True, competency_code=definition['competency_code'], defaults={'created_by': owner, 'title': definition['title']})
             lesson.title = definition['title']
             lesson.description = definition['description']
+            lesson.competency_description = definition['competency']
             lesson.status, lesson.archived_at = Lesson.Status.APPROVED, None
             lesson.save()
             existing = {slide.position: slide for slide in lesson.slides.select_related('activity')}

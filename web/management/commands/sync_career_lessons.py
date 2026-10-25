@@ -15,14 +15,26 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        if Lesson.objects.filter(package__slug='career', archived_at__isnull=True, slides__activity__configuration__task_template='creative_experience').exists():
+            raise CommandError('Creative journeys are versioned. Use publish_creative_lessons instead of positional synchronization.')
         profiles = Profile.objects.select_related("user")
         owner = profiles.filter(user__username=options["owner"]).first() if options["owner"] else profiles.filter(role=Profile.Role.ADMIN).order_by("pk").first()
         if owner is None:
             raise CommandError("An owner profile is required. Create an administrator or pass --owner USERNAME.")
         package, _ = CurriculumPackage.objects.update_or_create(slug="career", defaults={"name": "Career", "domain_focus": "Career profiles, possible work pathways, and workplace attitudes", "is_active": True})
         for definition in CAREER_LESSONS:
-            matches = Lesson.objects.filter(competency_code=definition["competency_code"]).order_by("pk")
+            matches = Lesson.objects.filter(package=package, archived_at__isnull=True, competency_code=definition["competency_code"]).order_by("pk")
             lesson = matches.first() or Lesson(created_by=owner)
+            guarded_positions = {'CAREER-01': (1, 5), 'CAREER-03': (3, 4)}
+            if lesson.pk and definition['lesson_id'] in guarded_positions:
+                positions = guarded_positions[definition['lesson_id']]
+                revision = definition['slides'][positions[0]]['configuration'].get('publication_revision')
+                current = {slide.position: slide.activity.configuration for slide in lesson.slides.select_related('activity')}
+                if all(current.get(position, {}).get('publication_revision') == revision for position in positions):
+                    self.stdout.write(f"{definition['lesson_id']}: retaining the published version and its activity identities.")
+                    continue
+                publisher = 'publish_career01_revision' if definition['lesson_id'] == 'CAREER-01' else 'publish_career03_revision'
+                raise CommandError(f"Existing {definition['lesson_id']} must be versioned with {publisher}; positional replacement is not safe.")
             lesson.package, lesson.title, lesson.description = package, definition["title"], definition["description"]
             lesson.competency_code, lesson.competency_description = definition["competency_code"], definition["competency"]
             lesson.estimated_duration_seconds, lesson.status, lesson.archived_at = 15 * 60, Lesson.Status.APPROVED, None

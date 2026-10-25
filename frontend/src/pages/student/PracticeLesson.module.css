@@ -16,7 +16,7 @@
 .progressHint { font-size: 12px; color: #71677e; }
 .stage { height: auto; max-height: max(280px, calc(100dvh - 300px)); min-height: 0; flex: 0 0 auto; overflow: auto; padding: 2px 4px; container-type: inline-size; }
 .stage > div { height: auto; --activity-image-height: clamp(72px, 15dvh, 150px); --activity-match-space: clamp(220px, 48dvh, 390px); --activity-video-height: clamp(180px, 45dvh, 320px); }
-.videoStage, .videoPlayer .stage { height: auto; flex: 0 0 auto; overflow: visible; scrollbar-gutter: auto; container-type: normal; }
+.videoStage, .videoPlayer .stage { height: auto; max-height: none; flex: 0 0 auto; overflow: visible; scrollbar-gutter: auto; container-type: normal; }
 .videoStage > div, .videoStage > div > div, .videoPlayer .stage > div, .videoPlayer .stage > div > div { height: auto; }
 .task.task { max-width: 100%; width: 100%; box-sizing: border-box; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 .task.task[data-lesson-overview="true"] { width: min(100%, 960px); max-width: 960px; margin-inline: auto; }
@@ -44,3 +44,6 @@
   justify-content: flex-end;
   margin: -8px 0 12px;
 }
+
+/* Creative workspaces use the page scroll so tools are never clipped in a small internal stage. */
+.stage.creativeStage { max-height: none; overflow: visible; }

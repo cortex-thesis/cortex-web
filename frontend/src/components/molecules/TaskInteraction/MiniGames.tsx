@@ -4,6 +4,7 @@ import { Backpack, Clock, Eraser, Folder, NotebookPen, RotateCcw, Ruler } from '
 import type { Task, TaskItem } from '../../../types'
 import { playLessonSound } from '../../../lib/lessonSounds'
 import { validObjectSelection, wordAtEndpoints } from '../../../lib/miniGameLogic'
+import { shuffledMatchingDeck } from '../../../lib/flipMatchingOrder'
 import styles from './MiniGames.module.css'
 
 type Props = { task: Task; onAnswered?: (correct: boolean, response: string) => void; onChanged?: () => void; quiet?: boolean; narrowed?: boolean }
@@ -53,6 +54,7 @@ export function WordSearch({ task, onAnswered, onChanged, quiet }: Props) {
   const followUps = useRef<Record<string, string>>({})
   const followUpRef = useRef<HTMLElement | null>(null)
   const targets = task.targets ?? []
+  const subject = task.wordSearchSubject ?? 'sign'
   const target = targets.find(item => item.word === pending)
   useEffect(() => {
     if (!pending) return
@@ -92,11 +94,11 @@ export function WordSearch({ task, onAnswered, onChanged, quiet }: Props) {
     </div><div className={`${styles.wordList} ${pending ? styles.wordListExpanded : ''}`} aria-label="Words to find">
       <div className={styles.wordListHeader}><strong role="status">{found.length} of {targets.length} found</strong><button type="button" className={styles.resetIcon} aria-label="Reset word search" title="Reset word search" onClick={() => { setFound([]); setStart(null); setPending(null); setResult(null); setMessage(''); followUps.current = {}; dragStart.current = null; suppressClick.current = false; onChanged?.() }}><RotateCcw size={18} aria-hidden="true" /></button></div>
       {message && !pending && <Feedback correct={null} task={task} message={message} />}
-      {target?.followUpQuestion && <section ref={followUpRef} tabIndex={-1} className={styles.followUp} aria-label={`${target.displayLabel} found. Choose the sign's meaning.`}>
-        <span className={styles.nextStep}>Next: understand the sign</span>
-        {target.revealImage && <img src={target.revealImage} alt={`${target.displayLabel} sign`} />}
+      {target?.followUpQuestion && <section ref={followUpRef} tabIndex={-1} className={styles.followUp} aria-label={`${target.displayLabel} found. Choose the ${subject}'s meaning.`}>
+        <span className={styles.nextStep}>Next: understand the {subject}</span>
+        {target.revealImage && <img src={target.revealImage} alt={task.wordSearchSubject === 'word' ? `${target.displayLabel} activity illustration` : `${target.displayLabel} sign`} />}
         <strong>{target.followUpQuestion.question}</strong>
-        <div className={styles.followUpChoices}>{target.followUpQuestion.choices.map(choice => <button type="button" key={choice} onClick={() => { if (choice === target.followUpQuestion?.answer) finishWord(target.word, choice); else { setMessage('Look at the sign again. What is it telling you?'); if (!quiet) playLessonSound('incorrect') } }}>{choice}</button>)}</div>
+        <div className={styles.followUpChoices}>{target.followUpQuestion.choices.map(choice => <button type="button" key={choice} onClick={() => { if (choice === target.followUpQuestion?.answer) finishWord(target.word, choice); else { setMessage(subject === 'word' ? 'Look at the picture again. What does the word mean?' : 'Look at the sign again. What is it telling you?'); if (!quiet) playLessonSound('incorrect') } }}>{choice}</button>)}</div>
         {message && <Feedback correct={null} task={task} message={message} />}
       </section>}
       {targets.map(item => <span key={item.word} className={found.includes(item.word) ? styles.found : ''}>{item.displayLabel}{found.includes(item.word) && <small className={styles.foundBadge}>{pending === item.word ? 'Found · answer next' : 'Found'}</small>}{found.includes(item.word) && pending !== item.word && item.revealImage && <img src={item.revealImage} alt={item.displayLabel} />}</span>)}
@@ -150,7 +152,7 @@ export function AudioSequence({ task, onAnswered, onChanged, quiet, narrowed }: 
   return <div className={styles.game}><div className={styles.actions}><button type="button" className={styles.listen} disabled={playing || result !== null} onClick={listen}>{playing ? 'Playing…' : plays ? '↻ Listen again' : '▶ Listen'}</button><span>Round {roundIndex + 1} of {task.rounds?.length}</span><button type="button" disabled={playing || result !== null} onClick={() => { setPrompted(true); setReady(true) }}>Show a visual prompt</button></div>
     {prompted && <p className={styles.prompt}>{round?.direction}</p>}
     <p role="status">{ready ? `Your turn. ${picked.length} selected.` : 'Listen before taking your turn.'}</p>
-    <div className={styles.workspace}><span className={styles.workspaceTitle}>{task.workspaceLabel ?? 'Your choices'}</span><ObjectChoices pageSize={quiet ? 2 : narrowed ? 4 : undefined}>{(task.items ?? []).map(item => <button type="button" key={item.id} disabled={!ready || playing || result !== null} className={`${styles.object} ${picked.includes(item.id) ? styles.selected : ''} ${result !== null && picked.includes(item.id) ? result ? styles.correct : styles.incorrect : ''}`} onClick={() => pick(item.id)}><Visual item={item} /><span>{item.label}</span>{picked.includes(item.id) && <small>Picked {picked.indexOf(item.id) + 1}</small>}</button>)}</ObjectChoices></div>
+    <div className={styles.workspace}><span className={styles.workspaceTitle}>{task.workspaceLabel ?? 'Your choices'}</span><ObjectChoices pageSize={quiet ? 2 : narrowed ? 4 : undefined}>{(task.items ?? []).map(item => <button type="button" key={item.id} aria-label={task.contentVersion ? item.label : undefined} disabled={!ready || playing || result !== null} className={`${styles.object} ${picked.includes(item.id) ? styles.selected : ''} ${result !== null && picked.includes(item.id) ? result ? styles.correct : styles.incorrect : ''}`} onClick={() => pick(item.id)}><Visual item={item} /><span>{item.label}</span>{picked.includes(item.id) && <small>Picked {picked.indexOf(item.id) + 1}</small>}</button>)}</ObjectChoices></div>
     <div className={styles.actions}>{result === false && <button type="button" className={styles.primary} onClick={() => { setPicked([]); setResult(null); setMessage('Try another order. Listening again is optional.'); onChanged?.() }}>Try this round again</button>}<button type="button" disabled={playing} onClick={() => { history.current = []; setRoundIndex(0); setPicked([]); setResult(null); setReady(false); setPlays(0); setReplays(0); setPrompted(false); setMessage(''); onChanged?.() }}>Reset activity</button><Feedback correct={result} task={task} message={result === null ? message : undefined} /></div>
   </div>
 }
@@ -159,17 +161,7 @@ export function FlipMatching({ task, onAnswered, onChanged, quiet }: Props) {
   const [open, setOpen] = useState<string[]>([])
   const [matched, setMatched] = useState<string[]>([])
   const [wrong, setWrong] = useState(false)
-  const cards = (task.pairs ?? []).flatMap(pair => [
-    { key: `${pair.id}:picture`, pairId: pair.id, item: pair.left },
-    { key: `${pair.id}:meaning`, pairId: pair.id, item: pair.right },
-  ])
-  // Stable mixed deck; cards do not move when revealed or during retries.
-  let seed = cards.reduce((value, card) => [...card.key].reduce((n, letter) => (n * 31 + letter.charCodeAt(0)) >>> 0, value), 613)
-  for (let index = cards.length - 1; index > 0; index--) {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
-    const other = seed % (index + 1)
-    ;[cards[index], cards[other]] = [cards[other], cards[index]]
-  }
+  const [cards, setCards] = useState(() => shuffledMatchingDeck(task.pairs ?? []))
   function flip(key: string) {
     const card = cards.find(value => value.key === key)!
     if (matched.includes(card.pairId)) return
@@ -206,7 +198,7 @@ export function FlipMatching({ task, onAnswered, onChanged, quiet }: Props) {
       </button>
     })}</div>
     {wrong && <p role="status">These cards don't match. Tap a card to turn it over, or choose another card.</p>}
-    <button type="button" onClick={() => { setOpen([]); setMatched([]); setWrong(false); onChanged?.() }}>Reset cards</button>
+    <button type="button" onClick={() => { setOpen([]); setMatched([]); setWrong(false); setCards(current => shuffledMatchingDeck(task.pairs ?? [], Math.random, current.map(card => card.key))); onChanged?.() }}>Reset cards</button>
   </div>
 }
 

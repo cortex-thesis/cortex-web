@@ -2,7 +2,7 @@
   {
     "lesson_id": "ENRICH-01",
     "title": "Different Kinds of Talents and Skills",
-    "competency_code": "ENRICH-01",
+    "competency_code": "TPEP-dt-NG-2",
     "description": "Integrated enrichment lesson for student practice and teacher review.",
     "slides": [
       {
@@ -14,41 +14,29 @@
           "choices": [],
           "answer": "",
           "template": "visual_narrative",
-          "content_description": "People can create, perform, participate, and develop abilities in different ways.",
           "steps": [
             {
-              "id": "music",
-              "title": "Music Studio",
-              "description": "Singing and playing instruments.",
-              "image_url": "/assets/pre-vocational/common/music.png",
-              "alt_text": "Music symbol"
-            },
-            {
-              "id": "visual",
-              "title": "Creative Space",
-              "description": "Drawing, painting, and creating visual work.",
-              "image_url": "/assets/pre-vocational/common/drawing-interest.png",
-              "alt_text": "Person drawing"
-            },
-            {
-              "id": "performance",
-              "title": "Performance Space",
-              "description": "Performing arts and expressive participation.",
-              "image_url": "/assets/pre-vocational/common/movie-recreation.png",
-              "alt_text": "Performance reel"
-            },
-            {
-              "id": "sports",
-              "title": "Sports Area",
-              "description": "Coordination, teamwork, and physical skills.",
-              "alt_text": "Sports ball",
-              "image_url": "/assets/enrichment/sports.svg"
+              "id": "goal",
+              "title": "Explore your talents and skills",
+              "description": "Explore music, art, performance, and sports skills.",
+              "image_url": "/assets/enrichment/singing.png",
+              "alt_text": "A person singing into a microphone"
             }
           ],
           "action_label": "Enter the gallery",
           "layout": {
-            "size": "wide",
-            "preferred_columns": 4
+            "size": "standard"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
           }
         }
       },
@@ -67,8 +55,8 @@
               "id": "sing",
               "title": "Make music",
               "description": "Use the voice or an instrument.",
-              "image_url": "/assets/pre-vocational/common/music.png",
-              "alt_text": "Music"
+              "image_url": "/assets/enrichment/singing.png",
+              "alt_text": "A person singing into a microphone"
             },
             {
               "id": "create",
@@ -88,14 +76,25 @@
               "id": "move",
               "title": "Participate in sport",
               "description": "Develop approved physical or sport skills.",
-              "image_url": "/assets/enrichment/sports.svg",
-              "alt_text": "Sports ball"
+              "image_url": "/assets/enrichment/basketball.png",
+              "alt_text": "A basketball representing sports skills"
             }
           ],
           "action_label": "Continue",
           "layout": {
             "size": "wide",
             "preferred_columns": 4
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
           }
         }
       },
@@ -129,7 +128,8 @@
               "left": {
                 "id": "instrument",
                 "label": "Playing an instrument",
-                "image_url": "/assets/pre-vocational/common/music.png"
+                "image_url": "/assets/enrichment/xylophone.png",
+                "alt_text": "A xylophone with two mallets"
               },
               "right": {
                 "id": "sound",
@@ -162,7 +162,18 @@
             }
           ],
           "correct_feedback": "You connected each activity with its skill.",
-          "retry_feedback": "Look for the skill that goes with the activity."
+          "retry_feedback": "Look for the skill that goes with the activity.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -178,7 +189,8 @@
             {
               "id": "singing",
               "label": "Singing",
-              "image_url": "/assets/pre-vocational/common/music.png"
+              "image_url": "/assets/enrichment/singing.png",
+              "alt_text": "A person singing into a microphone"
             },
             {
               "id": "painting",
@@ -193,8 +205,8 @@
             {
               "id": "sport",
               "label": "Participating in a sport",
-              "image_url": "/assets/enrichment/sports.svg",
-              "alt_text": "Sports ball"
+              "image_url": "/assets/enrichment/basketball.png",
+              "alt_text": "A basketball representing sports skills"
             }
           ],
           "categories": [
@@ -226,6 +238,17 @@
           "layout": {
             "size": "wide",
             "preferred_columns": 4
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
           }
         }
       },
@@ -234,7 +257,7 @@
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Your class is preparing a showcase. Choose the skill needed for each job.",
+          "question": "Your class is preparing a school talent showcase for families. Read one job at a time and choose the skill it needs.",
           "choices": [
             "Yes",
             "No"
@@ -242,7 +265,7 @@
           "answer": "Yes",
           "task_template": "scenario_classifier",
           "correct_feedback": "Correct. Activities may combine several abilities.",
-          "retry_feedback": "Think about what the team needs to create: sound, a picture, or a performance.",
+          "retry_feedback": "Think about what this job needs: a steady beat, a poster, or a scene. Each uses a different skill.",
           "scenarios": [
             {
               "clue": "The welcome song needs a steady beat. Which team can help?",
@@ -255,7 +278,7 @@
               "feedback": "Musicians can keep the beat together."
             },
             {
-              "clue": "Visitors need a colourful poster showing where to go. Which team fits?",
+              "clue": "Visitors need a colorful poster showing where to go. Which team fits?",
               "choices": [
                 "Acting team",
                 "Visual arts team",
@@ -274,7 +297,18 @@
               "answer": "Performing arts team",
               "feedback": "Performers use characters and actions to tell the story."
             }
-          ]
+          ],
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -297,7 +331,8 @@
             {
               "id": "music",
               "label": "Music",
-              "image_url": "/assets/pre-vocational/common/music.png"
+              "image_url": "/assets/enrichment/singing.png",
+              "alt_text": "A person singing into a microphone"
             },
             {
               "id": "art",
@@ -312,14 +347,25 @@
             {
               "id": "sport",
               "label": "Sports",
-              "image_url": "/assets/enrichment/sports.svg",
-              "alt_text": "Sports ball"
+              "image_url": "/assets/enrichment/basketball.png",
+              "alt_text": "A basketball representing sports skills"
             }
           ],
           "correct_item_ids": [
             "music",
             "perform"
-          ]
+          ],
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -337,7 +383,8 @@
             {
               "id": "music",
               "label": "Music",
-              "image_url": "/assets/pre-vocational/common/music.png"
+              "image_url": "/assets/enrichment/singing.png",
+              "alt_text": "A person singing into a microphone"
             },
             {
               "id": "arts",
@@ -347,8 +394,8 @@
             {
               "id": "sports",
               "label": "Sports",
-              "image_url": "/assets/enrichment/sports.svg",
-              "alt_text": "Sports ball"
+              "image_url": "/assets/enrichment/basketball.png",
+              "alt_text": "A basketball representing sports skills"
             },
             {
               "id": "other",
@@ -362,6 +409,17 @@
           "layout": {
             "size": "wide",
             "preferred_columns": 4
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
           }
         }
       },
@@ -374,7 +432,6 @@
           "choices": [],
           "answer": "",
           "template": "visual_narrative",
-          "content_description": "No type of talent is presented as better than another.",
           "steps": [
             {
               "id": "summary",
@@ -384,15 +441,36 @@
               "alt_text": "Different skills"
             }
           ],
-          "action_label": "Finish gallery"
+          "action_label": "Finish gallery",
+          "layout": {
+            "size": "standard"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-01",
+            "competency_code": "TPEP-dt-NG-2",
+            "official_competency": "Identify different types of human talents and skills",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 71,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       }
-    ]
+    ],
+    "competency": "Identify different types of human talents and skills",
+    "source": {
+      "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+      "page": 71,
+      "verified": "2026-10-25",
+      "method": "official DepEd indexed curriculum table"
+    }
   },
   {
     "lesson_id": "ENRICH-02",
     "title": "My Music Skills",
-    "competency_code": "ENRICH-02",
+    "competency_code": "TPEP-mu-NG-2",
     "description": "Integrated enrichment lesson for student practice and teacher review.",
     "slides": [
       {
@@ -403,19 +481,32 @@
           "question": "",
           "choices": [],
           "answer": "",
-          "content_description": "Replay as often as you need. A visual prompt is available for every listening round.",
           "duration_seconds": 12,
           "action_label": "Enter the studio",
           "template": "visual_narrative",
           "steps": [
             {
-              "id": "mission",
-              "title": "Listen, copy, then solve",
-              "description": "Explore voice and instruments, copy three sound patterns, then solve a music-team challenge.",
-              "image_url": "/assets/pre-vocational/common/music.png",
-              "alt_text": "Music studio"
+              "id": "goal",
+              "title": "Explore your music skills",
+              "description": "Explore voice and instruments, copy sound patterns, and plan what to practice next.",
+              "image_url": "/assets/enrichment/xylophone.png",
+              "alt_text": "A colorful xylophone with two mallets"
             }
-          ]
+          ],
+          "layout": {
+            "size": "standard"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -433,18 +524,29 @@
               "id": "voice",
               "title": "Singing",
               "description": "Use the voice to make music.",
-              "image_url": "/assets/pre-vocational/common/music.png",
-              "alt_text": "Music and singing"
+              "image_url": "/assets/enrichment/singing.png",
+              "alt_text": "A person singing into a microphone"
             },
             {
               "id": "instrument",
               "title": "Playing an instrument",
               "description": "Use an approved instrument to make music.",
-              "image_url": "/assets/pre-vocational/common/music.png",
-              "alt_text": "Musical instrument"
+              "image_url": "/assets/enrichment/xylophone.png",
+              "alt_text": "A xylophone with two mallets"
             }
           ],
-          "action_label": "Visit the stations"
+          "action_label": "Visit the stations",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -464,8 +566,8 @@
               "left": {
                 "id": "singer",
                 "label": "Voice",
-                "image_url": "/assets/enrichment/voice.svg",
-                "alt_text": "Voice"
+                "image_url": "/assets/enrichment/voice.png",
+                "alt_text": "A person using their voice"
               },
               "right": {
                 "id": "singing",
@@ -477,8 +579,8 @@
               "left": {
                 "id": "drum",
                 "label": "Drum",
-                "image_url": "/assets/enrichment/drum.svg",
-                "alt_text": "Drum"
+                "image_url": "/assets/enrichment/drum.png",
+                "alt_text": "A drum and drumsticks"
               },
               "right": {
                 "id": "tapping",
@@ -490,8 +592,8 @@
               "left": {
                 "id": "shaker",
                 "label": "Shaker",
-                "image_url": "/assets/enrichment/shaker.svg",
-                "alt_text": "Shaker"
+                "image_url": "/assets/enrichment/maracas.png",
+                "alt_text": "A pair of maracas"
               },
               "right": {
                 "id": "shaking",
@@ -500,7 +602,18 @@
             }
           ],
           "correct_feedback": "You matched three different ways to make sound.",
-          "retry_feedback": "Think about the action that makes each sound."
+          "retry_feedback": "Think about the action that makes each sound.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -517,41 +630,68 @@
           "pattern": [
             {
               "id": "a",
-              "label": "Tap"
+              "label": "Tap",
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "b",
-              "label": "Tap"
+              "label": "Tap",
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "c",
-              "label": "Rest"
+              "label": "Rest",
+              "image_url": "/assets/enrichment/time-out (pause).png",
+              "alt_text": "Hands making a pause signal"
             },
             {
               "id": "d",
-              "label": "Tap"
+              "label": "Tap",
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "e",
-              "label": "Tap"
+              "label": "Tap",
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             }
           ],
           "items": [
             {
               "id": "tap",
-              "label": "Tap"
+              "label": "Tap",
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "rest",
-              "label": "Rest"
+              "label": "Rest",
+              "image_url": "/assets/enrichment/time-out (pause).png",
+              "alt_text": "Hands making a pause signal"
             },
             {
               "id": "hum",
-              "label": "Hum"
+              "label": "Hum",
+              "image_url": "/assets/enrichment/voice.png",
+              "alt_text": "A person using their voice"
             }
           ],
           "correct_feedback": "The silent beat completes tap, tap, rest.",
-          "retry_feedback": "Compare the first three beats with the next three."
+          "retry_feedback": "Compare the first three beats with the next three.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -559,7 +699,7 @@
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Listen, then copy the order. Low note: a deep tone. High note: a bright tone. Tap: a short click.",
+          "question": "Play the pattern, then choose the sounds in the same order. You can replay it or use the visual prompt.",
           "choices": [],
           "answer": "",
           "task_template": "audio_sequence",
@@ -567,22 +707,28 @@
             {
               "id": "low",
               "label": "Low note",
-              "symbol": "●"
+              "symbol": "●",
+              "image_url": "/assets/enrichment/bass-clef (low note).png",
+              "alt_text": "Low note"
             },
             {
               "id": "high",
               "label": "High note",
-              "symbol": "▲"
+              "symbol": "▲",
+              "image_url": "/assets/enrichment/treble-clef (high note).png",
+              "alt_text": "High note"
             },
             {
               "id": "tap",
               "label": "Tap",
-              "symbol": "◆"
+              "symbol": "◆",
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             }
           ],
           "correct_feedback": "You copied all three patterns.",
           "retry_feedback": "Replay the pattern or reveal the visual prompt, then try again.",
-          "content_description": "Low note: a deep tone. High note: a bright tone. Tap: a short click.",
+          "content_description": "These practice sounds are electronic tones: low note = deep tone; high note = bright tone; tap = short click. They are not instrument recordings. Use the visual prompt if you prefer.",
           "rounds": [
             {
               "direction": "Low note, high note.",
@@ -610,7 +756,18 @@
               ],
               "audio_url": "/assets/sounds/enrichment/echo-3.wav"
             }
-          ]
+          ],
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -627,7 +784,7 @@
           "answer": "Singing",
           "task_template": "scenario_classifier",
           "correct_feedback": "Correct. The person is using their voice to sing.",
-          "retry_feedback": "Choose the action that makes listening and practising together easier.",
+          "retry_feedback": "Choose the action that makes listening and practicing together easier.",
           "scenarios": [
             {
               "clue": "The group starts at different times. What should they try?",
@@ -657,9 +814,20 @@
                 "Guess faster"
               ],
               "answer": "Break it into shorter parts",
-              "feedback": "Short parts make it easier to listen and practise."
+              "feedback": "Short parts make it easier to listen and practice."
             }
-          ]
+          ],
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -667,7 +835,7 @@
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Choose what you enjoy and what you want to practise. You may choose the same activity in both areas.",
+          "question": "Choose what you enjoy and what you want to practice. You may choose the same activity in both areas.",
           "choices": [],
           "answer": "",
           "task_template": "discovery_board",
@@ -676,20 +844,26 @@
             {
               "id": "sing",
               "label": "Using my voice",
-              "image_url": "/assets/pre-vocational/common/music.png"
+              "image_url": "/assets/enrichment/voice.png",
+              "alt_text": "A person using their voice"
             },
             {
               "id": "instrument",
               "label": "Playing an instrument",
-              "image_url": "/assets/pre-vocational/common/music.png"
+              "image_url": "/assets/enrichment/xylophone.png",
+              "alt_text": "A xylophone with two mallets"
             },
             {
               "id": "pattern",
-              "label": "Remembering sound patterns"
+              "label": "Remembering sound patterns",
+              "image_url": "/assets/enrichment/sound-pattern.png",
+              "alt_text": "A sound wave representing a sound pattern"
             },
             {
               "id": "group",
-              "label": "Making music with others"
+              "label": "Making music with others",
+              "image_url": "/assets/enrichment/make-music-with-other-people.png",
+              "alt_text": "Two people making music together"
             },
             {
               "id": "unsure",
@@ -718,6 +892,17 @@
           "self_report_fields": {
             "enjoy": "music_interests",
             "practice": "music_practice_goal"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
           }
         }
       },
@@ -730,27 +915,82 @@
           "choices": [],
           "answer": "",
           "template": "visual_narrative",
-          "content_description": "Participation and teacher observation provide better evidence than screen selection alone.",
           "steps": [
             {
               "id": "summary",
-              "title": "Listen, try, notice, choose",
-              "description": "Music skills can be explored through participation and practice.",
-              "image_url": "/assets/pre-vocational/common/music.png",
-              "alt_text": "Music"
+              "title": "Keep exploring music",
+              "description": "You explored voice and instruments, copied sound patterns, and chose a music practice goal.",
+              "image_url": "/assets/enrichment/make-music-with-other-people.png",
+              "alt_text": "Two people singing and playing a guitar together"
             }
           ],
-          "action_label": "Finish studio"
+          "action_label": "Finish studio",
+          "layout": {
+            "size": "standard"
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-02",
+            "competency_code": "TPEP-mu-NG-2",
+            "official_competency": "Identify individual skills in music",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 72,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       }
-    ]
+    ],
+    "competency": "Identify individual skills in music",
+    "source": {
+      "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+      "page": 72,
+      "verified": "2026-10-25",
+      "method": "official DepEd indexed curriculum table"
+    }
   },
   {
     "lesson_id": "ENRICH-03",
     "title": "Move to the Beat",
-    "competency_code": "ENRICH-03",
+    "competency_code": "TPEP-dc-NG-4",
     "description": "Integrated enrichment lesson for student practice and teacher review.",
     "slides": [
+      {
+        "title": "Move to the Beat",
+        "type": "image",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "visual_narrative",
+          "layout": {
+            "size": "standard"
+          },
+          "steps": [
+            {
+              "id": "goal",
+              "title": "Practice moving to the beat",
+              "description": "Learn a tap, clap, and pause sequence, then follow a steady beat in a comfortable way.",
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
+            }
+          ],
+          "action_label": "Get started",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
+        }
+      },
       {
         "title": "Move Lab: Check Before Moving",
         "type": "interactive",
@@ -765,7 +1005,18 @@
           "task_template": "yes_no",
           "correct_feedback": "Ready. Use the approved movement or an appropriate adapted version.",
           "retry_feedback": "Pause and ask the teacher to confirm movement readiness and safe space.",
-          "content_description": "Teacher confirmation is required before physical participation."
+          "content_description": "Teacher confirmation is required before physical participation.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -785,24 +1036,35 @@
               "id": "tap",
               "title": "1. Tap",
               "description": "Gently tap your lap or desk once.",
-              "image_url": "/assets/enrichment/tap.svg",
-              "alt_text": "1. Tap"
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "clap",
               "title": "2. Clap",
               "description": "Clap once, or bring your hands together comfortably.",
-              "image_url": "/assets/enrichment/clap.svg",
-              "alt_text": "2. Clap"
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
             },
             {
               "id": "pause",
               "title": "3. Pause",
               "description": "Rest for one beat. Start again only when ready.",
-              "image_url": "/assets/enrichment/pause.svg",
-              "alt_text": "3. Pause"
+              "image_url": "/assets/enrichment/time-out (pause).png",
+              "alt_text": "Hands making a pause signal"
             }
-          ]
+          ],
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -839,47 +1101,68 @@
           "pattern": [
             {
               "id": "a",
-              "label": "Tap"
+              "label": "Tap",
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "b",
-              "label": "Clap"
+              "label": "Clap",
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
             },
             {
               "id": "c",
-              "label": "Pause"
+              "label": "Pause",
+              "image_url": "/assets/enrichment/time-out (pause).png",
+              "alt_text": "Hands making a pause signal"
             },
             {
               "id": "d",
-              "label": "Tap"
+              "label": "Tap",
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "e",
-              "label": "Clap"
+              "label": "Clap",
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
             }
           ],
           "items": [
             {
               "id": "tap",
               "label": "Tap",
-              "image_url": "/assets/enrichment/tap.svg",
-              "alt_text": "Tap"
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "clap",
               "label": "Clap",
-              "image_url": "/assets/enrichment/clap.svg",
-              "alt_text": "Clap"
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
             },
             {
               "id": "pause",
               "label": "Pause",
-              "image_url": "/assets/enrichment/pause.svg",
-              "alt_text": "Pause"
+              "image_url": "/assets/enrichment/time-out (pause).png",
+              "alt_text": "Hands making a pause signal"
             }
           ],
           "correct_feedback": "Pause completes the repeating three-beat sequence.",
-          "retry_feedback": "Look at the first three beats, then complete the same sequence."
+          "retry_feedback": "Look at the first three beats, then complete the same sequence.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -918,22 +1201,22 @@
               "id": "tap",
               "label": "Tap",
               "symbol": "◆",
-              "image_url": "/assets/enrichment/tap.svg",
-              "alt_text": "Tap"
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "clap",
               "label": "Clap",
               "symbol": "●",
-              "image_url": "/assets/enrichment/clap.svg",
-              "alt_text": "Clap"
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
             },
             {
               "id": "pause",
               "label": "Pause",
               "symbol": "■",
-              "image_url": "/assets/enrichment/pause.svg",
-              "alt_text": "Pause"
+              "image_url": "/assets/enrichment/time-out (pause).png",
+              "alt_text": "Hands making a pause signal"
             }
           ],
           "rounds": [
@@ -962,7 +1245,18 @@
             }
           ],
           "correct_feedback": "You remembered each cue sequence.",
-          "retry_feedback": "Listen again or reveal the visual prompt."
+          "retry_feedback": "Listen again or reveal the visual prompt.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -978,20 +1272,20 @@
             {
               "id": "tap",
               "label": "Tap once",
-              "image_url": "/assets/enrichment/tap.svg",
-              "alt_text": "Tap once"
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "clap",
               "label": "Clap once",
-              "image_url": "/assets/enrichment/clap.svg",
-              "alt_text": "Clap once"
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
             },
             {
               "id": "pause",
               "label": "Pause for one beat",
-              "image_url": "/assets/enrichment/pause.svg",
-              "alt_text": "Pause for one beat"
+              "image_url": "/assets/enrichment/time-out (pause).png",
+              "alt_text": "Hands making a pause signal"
             }
           ],
           "correct_order": [
@@ -1000,7 +1294,18 @@
             "pause"
           ],
           "correct_feedback": "Your routine is ready: tap, clap, pause.",
-          "retry_feedback": "Start with the tap and end with the pause."
+          "retry_feedback": "Start with the tap and end with the pause.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -1008,10 +1313,10 @@
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Solve these practice situations before trying your routine with your teacher.",
+          "question": "Choose what helps in each practice situation. Then ask your teacher about trying a comfortable version of tap, clap, pause.",
           "choices": [],
           "answer": "",
-          "content_description": "With teacher approval, try your routine or an adapted version. The screen records knowledge practice; your teacher observes physical participation.",
+          "content_description": "With teacher approval, try the pattern seated (tap a hand on your lap, clap gently, pause) or standing (tap a foot, clap gently, pause). Your teacher can adapt or stop any action. You may point to the cues or observe instead. Screen answers show sequencing knowledge, not physical performance. Your teacher records any directly observed performance separately in your learning profile.",
           "duration_seconds": 45,
           "action_label": "Teacher records observation",
           "task_template": "scenario_classifier",
@@ -1019,11 +1324,11 @@
             {
               "clue": "The routine feels too fast. What helps?",
               "choices": [
-                "Slow down and practise one part",
+                "Slow down and practice one part",
                 "Move faster",
                 "Skip the pause"
               ],
-              "answer": "Slow down and practise one part",
+              "answer": "Slow down and practice one part",
               "feedback": "A slower pace gives you time to learn the sequence."
             },
             {
@@ -1037,7 +1342,7 @@
               "feedback": "Your teacher can help choose a comfortable alternative."
             },
             {
-              "clue": "You are ready to practise with a partner. How can you start together?",
+              "clue": "You are ready to practice with a partner. How can you start together?",
               "choices": [
                 "Agree on a count-in",
                 "Start whenever you like",
@@ -1047,7 +1352,18 @@
               "feedback": "Count together, then try the same routine at a comfortable pace."
             }
           ],
-          "retry_feedback": "Choose the action that supports comfortable, clear practice."
+          "retry_feedback": "Choose the action that supports comfortable, clear practice.",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       },
       {
@@ -1055,7 +1371,7 @@
         "type": "interactive",
         "configuration": {
           "image_url": null,
-          "question": "Which part would you like to practise or adapt next?",
+          "question": "Which part would you like to practice or adapt next?",
           "choices": [],
           "answer": "",
           "task_template": "picture_choice",
@@ -1064,24 +1380,26 @@
             {
               "id": "tap",
               "label": "The tap",
-              "image_url": "/assets/enrichment/tap.svg",
-              "alt_text": "The tap"
+              "image_url": "/assets/enrichment/sticks (tap).png",
+              "alt_text": "Two rhythm sticks used for tapping"
             },
             {
               "id": "clap",
               "label": "The clap",
-              "image_url": "/assets/enrichment/clap.svg",
-              "alt_text": "The clap"
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
             },
             {
               "id": "pause",
               "label": "Keeping the pause",
-              "image_url": "/assets/enrichment/pause.svg",
-              "alt_text": "Keeping the pause"
+              "image_url": "/assets/enrichment/time-out (pause).png",
+              "alt_text": "Hands making a pause signal"
             },
             {
               "id": "adapt",
-              "label": "An adapted routine with my teacher"
+              "label": "An adapted routine with my teacher",
+              "image_url": "/assets/enrichment/music teacher.png",
+              "alt_text": "A music teacher offering guidance"
             }
           ],
           "correct_item_ids": [],
@@ -1091,11 +1409,50 @@
           "layout": {
             "size": "wide",
             "preferred_columns": 4
+          },
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
           }
         }
       },
       {
-        "title": "Move Lab Complete",
+        "title": "Move to the Beat: Follow Along",
+        "type": "video",
+        "configuration": {
+          "image_url": null,
+          "question": "",
+          "choices": [],
+          "answer": "",
+          "template": "instructional_video",
+          "media_url": "https://www.youtube.com/watch?v=hrbGVGcXB5Q",
+          "content_label": "Move to the Beat - Music for Kiddos",
+          "content_description": "Watch first. Choose a comfortable way to participate. Pause, replay or ask for an adapted action.",
+          "duration_seconds": 139,
+          "video_optional": true,
+          "action_label": "Finish lab",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
+        }
+      },
+      {
+        "title": "You Practiced Moving to the Beat",
         "type": "image",
         "configuration": {
           "image_url": null,
@@ -1103,17 +1460,39 @@
           "choices": [],
           "answer": "",
           "template": "visual_narrative",
-          "content_description": "Movement-contaminated EEG is not reliable evidence of distraction or overstimulation; teacher override is especially important.",
+          "layout": {
+            "size": "standard"
+          },
           "steps": [
             {
               "id": "summary",
-              "title": "Watch, practise, sequence, perform",
-              "description": "Actual appropriately supported movement is the primary competency evidence."
+              "title": "Tap, clap, pause, and follow the beat",
+              "description": "You practiced a movement sequence and followed a steady beat. Keep practicing in a way that feels comfortable.",
+              "image_url": "/assets/enrichment/clap.png",
+              "alt_text": "Hands clapping"
             }
           ],
-          "action_label": "Finish lab"
+          "action_label": "Finish lesson",
+          "lesson_metadata": {
+            "lesson_id": "ENRICH-03",
+            "competency_code": "TPEP-dc-NG-4",
+            "official_competency": "Perform basic dance steps /movements",
+            "source": {
+              "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+              "page": 74,
+              "verified": "2026-10-25",
+              "method": "official DepEd indexed curriculum table"
+            }
+          }
         }
       }
-    ]
+    ],
+    "competency": "Perform basic dance steps /movements",
+    "source": {
+      "url": "https://www.deped.gov.ph/wp-content/uploads/2020/08/DO_s2020_021.pdf",
+      "page": 74,
+      "verified": "2026-10-25",
+      "method": "official DepEd indexed curriculum table"
+    }
   }
 ]

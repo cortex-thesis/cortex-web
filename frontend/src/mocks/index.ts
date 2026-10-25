@@ -7,6 +7,7 @@ import { mockFuncLessons } from './funcLessons'
 import { mockCareerLessons } from './careerLessons'
 import { mockEnrichmentLessons } from './enrichmentLessons'
 
+
 export const mockTeacher: User = {
   id: 'teacher-001',
   name: 'Ms. Santos',

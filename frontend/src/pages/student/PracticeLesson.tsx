@@ -21,7 +21,7 @@ interface Lesson {
 }
 
 const fieldNames: Record<string, string> = Object.fromEntries([
-  'narrationScript', 'videoOptional', 'selfReportField', 'selfReportFields', 'clockRounds', 'clockMode',
+  'contentVersion', 'screenKey', 'narrationScript', 'videoOptional', 'videoGuidance', 'wordSearchSubject', 'selfReportField', 'selfReportFields', 'clockRounds', 'clockMode',
   'imageUrl', 'altText', 'priceTag', 'audioUrl', 'contentLabel', 'contentDescription', 'durationSeconds', 'mediaUrl',
   'evidenceRole', 'displayLabel', 'revealImage', 'followUpQuestion', 'workspaceLabel', 'allowSubset', 'minimumSelections', 'hideImageLabels', 'immediateFeedback', 'targetItemId', 'paymentOptions', 'moneyItems', 'givenChange', 'changeOptions',
   'actionLabel', 'taskTemplate', 'correctItemIds', 'correctOrder', 'sortAnswers', 'selectionMode', 'availableItemIds',
@@ -107,7 +107,8 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     question: '', choices: [], answer: '', ...configuration,
     imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
-    checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set') && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
+    classId,
+    checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set' || configuration.taskTemplate === 'creative_experience') && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
     initialResponse: retry[index] ? undefined : lesson.progress.activity_evidence?.[String(slide.id)]?.selected,
     index: index + 1, total: lesson.slides.length, contentType: slide.activity.type,
     }
@@ -124,7 +125,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       <button className={styles.backBtn} onClick={back} aria-label="Back to lessons"><ArrowLeft size={18} /></button>
       <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>
     </header>
-    {lesson && !complete && <div className={playerStyles.musicToolbar}><ModeBgm mode="focus" suspended={Boolean(task?.taskTemplate === 'audio_sequence' || (task?.mediaUrl && (videoSlide || task.contentType === 'audio' || task.template === 'calming_soundscape')))} /></div>}
+    {lesson && !complete && <div className={playerStyles.musicToolbar}><ModeBgm mode="focus" suspended={Boolean(task?.taskTemplate === 'audio_sequence' || task?.taskTemplate === 'creative_experience' || (task?.mediaUrl && (videoSlide || task.contentType === 'audio' || task.template === 'calming_soundscape')))} /></div>}
     <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}>
@@ -136,7 +137,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         <div className={eegStyles.progressRow}><span className={playerStyles.progressHint} title="Filled: completed · Ring: current">{complete ? 'All activities complete' : `Activity ${position + 1} of ${lesson.slides.length}`}</span></div>
       </div>}
       <div className={eegStyles.modeStage}>
-      <div className={`${playerStyles.stage} ${videoSlide ? playerStyles.videoStage : ''}`}>
+      <div className={`${playerStyles.stage} ${videoSlide ? playerStyles.videoStage : ''} ${task?.taskTemplate === 'creative_experience' ? playerStyles.creativeStage : ''}`}>
         {tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}>
             <TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onContinueWithoutVideo={() => void advance('continued_without_video')} onChanged={() => {
               setAnswered(previous => { const next = { ...previous }; delete next[index]; return next })

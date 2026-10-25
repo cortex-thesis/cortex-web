@@ -11,6 +11,13 @@ interface ActivityTemplateProps {
   onContinueWithoutVideo?: () => void
 }
 
+function LessonImage({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  return failed ? <span role="status">Image unavailable. <button type="button" onClick={() => { setFailed(false); setAttempt(value => value + 1) }}>Retry image</button></span>
+    : <img key={attempt} src={src} alt={alt} onError={() => setFailed(true)} />
+}
+
 function MediaButton({ playing, label, onClick }: { playing: boolean; label: string; onClick: () => void }) {
   return (
     <button type="button" className={styles.mediaButton} onClick={onClick} aria-label={`${playing ? 'Pause' : 'Play'} ${label}`}>
@@ -190,7 +197,15 @@ function ActivityTemplate({ task, onCompleted, onContinueWithoutVideo }: Activit
 
   if (youtubeUrl) {
     return <section className={`${styles.panel} ${styles.youtubePanel}`}>
+      {task.videoGuidance?.length && task.contentDescription ? <p className={styles.videoIntroduction}>{task.contentDescription}</p> : null}
       <YouTubeVideo key={youtubeUrl} src={youtubeUrl} title={task.contentLabel ?? task.title} onHalfWatched={onCompleted} onContinueWithoutVideo={onContinueWithoutVideo} />
+      {!!task.videoGuidance?.length && <aside className={styles.videoGuidance} aria-label="Lesson guidance">
+        <strong>Lesson guidance</strong>
+        <ul>{task.videoGuidance.map(item => <li key={item.id}>
+          {item.imageUrl && <img src={item.imageUrl} alt={item.altText ?? ''} />}
+          <span>{item.title}</span>
+        </li>)}</ul>
+      </aside>}
     </section>
   }
 
@@ -200,14 +215,16 @@ function ActivityTemplate({ task, onCompleted, onContinueWithoutVideo }: Activit
     if (task.contentType === 'audio' || template === 'calming_soundscape') {
       return <section className={`${styles.panel} ${styles.audioPanel}`}>
         <audio ref={(node) => { mediaRef.current = node }} className={styles.hiddenAudio} src={task.mediaUrl} preload="metadata"
+          onError={() => { setPlaying(false); setMediaUnavailable(true) }}
           onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
           onEnded={() => { setPlaying(false); onCompleted?.() }} />
         <MediaButton playing={playing} label={task.contentLabel ?? task.title} onClick={() => {
           const media = mediaRef.current
           if (!media) return
-          if (media.paused) void media.play().catch(() => setPlaying(false))
+          if (media.paused) void media.play().catch(() => { setPlaying(false); setMediaUnavailable(true) })
           else media.pause()
         }} />
+        {mediaUnavailable && <p role="alert">This audio could not be played. <button type="button" onClick={() => { setMediaUnavailable(false); mediaRef.current?.load() }}>Retry audio</button></p>}
         <div className={styles.mediaCopy}><strong>{task.contentLabel ?? task.title}</strong><span>{task.contentDescription}</span></div>
         <div className={`${styles.waveform} ${playing ? '' : styles.waveformPaused}`} aria-hidden="true">
           {[8, 15, 22, 12, 26, 18, 10, 20, 14, 8].map((height, index) => <span key={index} style={{ height, animationDelay: `${index * 80}ms` }} />)}
@@ -223,6 +240,10 @@ function ActivityTemplate({ task, onCompleted, onContinueWithoutVideo }: Activit
 
   if (template === 'multiple_choice') return null
 
+  if (template === 'instructional_video' && task.contentVersion && !task.mediaUrl) {
+    return <section className={styles.panel} aria-label="Pending instructional video"><h3>{task.contentLabel ?? 'Video awaiting teacher-approved selection'}</h3><p>{task.contentDescription}</p><p>No video is configured. Continue with the lesson activities; this does not record a watched video.</p><button type="button" onClick={onContinueWithoutVideo}>Continue without video</button></section>
+  }
+
   if (template === 'instructional_video') {
     return (
       <section className={`${styles.panel} ${styles.videoPanel}`} aria-label="Instructional video">
@@ -235,11 +256,11 @@ function ActivityTemplate({ task, onCompleted, onContinueWithoutVideo }: Activit
     return (
       <>
         {task.mediaUrl && <audio className={styles.readingAudio} src={task.mediaUrl} controls preload="metadata" aria-label={task.contentLabel ?? `${task.title} narration`} />}
-        <ol className={`${styles.steps} ${onCompleted ? styles.lessonSteps : ''}`} aria-label="Step-by-step visual narrative">
+        <ol className={`${styles.steps} ${onCompleted ? styles.lessonSteps : ''} ${task.package === 'enrichment' && task.steps?.length === 1 && (task.index === 1 || task.index === task.total) ? styles.enrichmentBoundary : ''}`} aria-label="Step-by-step visual narrative">
           {(task.steps ?? []).map((step, index) => (
             <li className={`${styles.step} ${step.audioUrl ? styles.stepWithAudio : ''}`} key={step.id}>
               <div className={styles.stepVisual}>
-                {step.imageUrl ? <img src={step.imageUrl} alt={step.altText ?? ''} /> : <ImageIcon size={28} aria-hidden="true" />}
+                {step.imageUrl ? <LessonImage src={step.imageUrl} alt={step.altText ?? ''} /> : <ImageIcon size={28} aria-hidden="true" />}
               </div>
               <span className={styles.stepNumber}>{index + 1}</span>
               <div className={styles.stepCopy}>
@@ -283,7 +304,8 @@ function ActivityTemplate({ task, onCompleted, onContinueWithoutVideo }: Activit
   return (
     <section className={`${styles.panel} ${styles.soundscape}`} aria-label="Calming soundscape">
       <MediaButton playing={playing} label="calming soundscape" onClick={() => setPlaying((value) => !value)} />
-      <div className={styles.mediaCopy}><strong>{task.contentLabel ?? 'Calming soundscape'}</strong><span>{task.contentDescription}</span></div>
+      {mediaUnavailable && <p role="alert">This audio could not be played. <button type="button" onClick={() => { setMediaUnavailable(false); mediaRef.current?.load() }}>Retry audio</button></p>}
+        <div className={styles.mediaCopy}><strong>{task.contentLabel ?? 'Calming soundscape'}</strong><span>{task.contentDescription}</span></div>
       <div className={styles.waveform} aria-hidden="true">{[8, 15, 22, 12, 26, 18, 10].map((height, index) => <span key={index} style={{ height }} />)}</div>
       {playing && <span aria-hidden="true" />}
     </section>

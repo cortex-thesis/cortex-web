@@ -22,7 +22,7 @@ def upgrade_live01(definitions):
         'id': 'goal', 'title': "Today's goal", 'description': 'Discover how gardens provide food, useful plants, and skills.',
         'image_url': root + 'gardening-goal.png'}])
     screen('discuss', 'What Can a Garden Give Us?', columns=3, template='visual_narrative', discussion=True,
-           narration_script='Gardens can provide food and flowers. Caring for plants helps us practise useful skills. Some plants may be sold, but income depends on costs, demand, and care. Ask for support and use tools safely.',
+           narration_script='Gardens can provide food and flowers. Caring for plants helps us practice useful skills. Some plants may be sold, but income depends on costs, demand, and care. Ask for support and use tools safely.',
            steps=[{'id': 'food', 'title': 'Food', 'description': 'Vegetables can be used for meals.', 'image_url': '/assets/care/care-02/vegetables.png'},
                   {'id': 'plants', 'title': 'Useful plants', 'description': 'Flowers can brighten a space or become products.', 'image_url': root + 'flowers.png'},
                   {'id': 'skills', 'title': 'Practice', 'description': 'Learn to care for plants with support.', 'image_url': root + 'gardening.png'}])
@@ -42,15 +42,15 @@ def upgrade_live01(definitions):
                 'answer': 'flowers', 'action_label': 'Put flowers in the vase', 'scene': 'display',
                 'hint': 'Flowers can brighten a space.', 'feedback': 'Flowers brighten this space. They may also become products to sell.'},
                {'id': 'practice', 'label': 'Skills', 'instruction': 'Bring supported plant care to the practice corner.',
-                'answer': 'care', 'action_label': 'Practise with support', 'scene': 'practice',
-                'hint': 'Practising plant care with support builds useful skills.', 'feedback': 'Practice helps build skills. This screen does not verify real tool use.'}],
-           correct_feedback='Gardens can provide food, useful plants, and opportunities to practise skills.',
+                'answer': 'care', 'action_label': 'Practice with support', 'scene': 'practice',
+                'hint': 'Practicing plant care with support builds useful skills.', 'feedback': 'Practice helps build skills. This screen does not verify real tool use.'}],
+           correct_feedback='Gardens can provide food, useful plants, and opportunities to practice skills.',
            assessment_metadata={'harvest_readiness_verified': False, 'physical_operation_verified': False})
     screen('sort', 'Garden Benefit or Not?', 'interactive', task_template='sort_groups',
            question='Drag each example into a group, or tap it then tap a group.',
            items=[{'id': 'food', 'label': 'Provides vegetables', 'image_url': '/assets/care/care-02/vegetables.png'},
                   {'id': 'flowers', 'label': 'Grows flowers', 'image_url': root + 'flowers.png'},
-                  {'id': 'practice', 'label': 'Practises plant care', 'image_url': root + 'gardening.png'},
+                  {'id': 'practice', 'label': 'Practices plant care', 'image_url': root + 'gardening.png'},
                   {'id': 'guarantee', 'label': 'Guarantees money without effort'}],
            categories=[{'id': 'benefit', 'label': 'Realistic benefit'}, {'id': 'not', 'label': 'Not a realistic benefit'}],
            sort_answers={'food': 'benefit', 'flowers': 'benefit', 'practice': 'benefit', 'guarantee': 'not'})
