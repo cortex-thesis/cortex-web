@@ -2,8 +2,7 @@
 
 For the Mac double-click launcher, see [Cortex desktop app setup](docs/mac-desktop-app.md).
 
-For the selected Augmented EEG Classifier, its evaluation scope, and reproduction
-steps, see [EEG model documentation](model-artifacts/README.md).
+For the EEG classifier and its evaluation, see [EEG model documentation](model-artifacts/README.md).
 
 ## Hybrid Supabase and local EEG storage
 

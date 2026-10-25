@@ -215,7 +215,6 @@ EEG_DATA_ROOT = Path(os.environ.get("EEG_DATA_ROOT", BASE_DIR / "local-data"))
 EEG_RAW_SUBDIR = os.environ.get("EEG_RAW_SUBDIR", "raw")
 EEG_PROCESSED_SUBDIR = os.environ.get("EEG_PROCESSED_SUBDIR", "processed")
 EEG_MODEL_SUBDIR = os.environ.get("EEG_MODEL_SUBDIR", "models")
-EEG_ACTIVE_MODEL_SUBDIR = os.environ.get("EEG_ACTIVE_MODEL_SUBDIR", "augmented-eeg")
 EEG_TEMP_SUBDIR = os.environ.get("EEG_TEMP_SUBDIR", "temp")
 
 SUPABASE_STORAGE_ENDPOINT = os.environ.get("SUPABASE_STORAGE_ENDPOINT")
