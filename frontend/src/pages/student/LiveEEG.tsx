@@ -89,6 +89,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const [triviaIndex, setTriviaIndex] = useState(() => Math.floor(Math.random() * 100))
   const [completed, setCompleted] = useState<Set<number>>(() => new Set())
   const [error, setError] = useState('')
+  const [eegError, setEEGError] = useState('')
   const [deviceState, setDeviceState] = useState<CognitiveState | null>(null)
   const [deviceFocusScore, setDeviceFocusScore] = useState<number | null>(null)
   const [forcedFocusScore, setForcedFocusScore] = useState(90)
@@ -207,7 +208,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
       method: 'POST', body: JSON.stringify({ slide_id: mode === 'focus' ? slide?.id ?? null : null, bands, absolute_bands: absoluteBands, relative_bands: relativeBands, signal_quality: quality, accepted_channels: acceptedChannels, battery_level: battery,
         device_name: deviceName || 'Muse 2', sequence_number: eegSequence.current, captured_at_ms: Date.now(),
         raw_channels: Object.fromEntries(MUSE_CHANNELS.map((channel, index) => [channel, samples[index].slice(-512)])) }),
-    }).then(sample => { if (!recordingStopped.current) { setDeviceState(acceptedChannels > 0 ? sample.state : null); setDeviceFocusScore(sample.focus_score) } }).catch((reason: Error) => { if (!recordingStopped.current) { setDeviceState(null); setDeviceFocusScore(null); setError(reason.message) } })
+    }).then(sample => { if (!recordingStopped.current) { setDeviceState(acceptedChannels > 0 ? sample.state : null); setDeviceFocusScore(sample.focus_score); setEEGError('') } }).catch((reason: Error) => { if (!recordingStopped.current) { setDeviceState(null); setDeviceFocusScore(null); setEEGError(reason.message) } })
   }, [sessionId, complete, ending, teacherControl?.paused, status, baselineProgress, mode, slide?.id, bands, absoluteBands, relativeBands, quality, acceptedChannels, battery, deviceName, samples])
 
   const tasks = useMemo<Task[]>(() => lesson ? lesson.slides.map((item, index) => {
@@ -336,7 +337,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
     <progress aria-label="Headset calibration" max={100} value={baselineProgress} />
     <p role="status">{baselineProgress < 100 ? `Calibration ${baselineProgress}%` : 'Checking for a clear signal...'}</p>
     <aside className={styles.trivia}><span>Did you know?</span><p key={triviaIndex}>{trivia[triviaIndex % trivia.length]}</p></aside>
-    {error && <p role="alert">{error}</p>}
+    {(error || eegError) && <p role="alert">{error || eegError}</p>}
     {status !== 'streaming' && status !== 'connecting' && <button onClick={() => navigate('/student/eeg-pairing', { replace: true, state: context })}>Connect Muse 2</button>}
     {saveFailed && <button onClick={() => Object.entries(unsavedAnswers.current).forEach(([index, answer]) => saveAnswer(Number(index), answer.correct, answer.selected))}>Retry saving answers</button>}
     <button onClick={() => void finish()}>End session</button>
@@ -352,7 +353,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
       <div className={styles.monitorBands}>{BANDS.map(({ key, label }) => <span key={key}><small>{label}</small><strong>{bands[key].toFixed(3)}</strong></span>)}</div>
       <div className={styles.monitorQuality}><span>{acceptedChannels}/4 clean channels</span><span>Baseline {baselineProgress}%</span>{MUSE_CHANNELS.map((channel, index) => <i key={channel} title={`${channel} contact`} className={quality[index] === 2 ? styles.contactGood : quality[index] === 1 ? styles.contactFair : styles.contactPoor} />)}</div>
     </section></details>}
-    {error && <p className={styles.error}>{error}</p>}
+    {(error || eegError) && <p className={styles.error}>{error || eegError}</p>}
     <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''} ${coolSupport ? styles.coolPlayer : focusTemplate === 'rest' ? styles.restPlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && displayMode === 'focus' && !modeLeaving && <div className={`${playerStyles.progress} ${backgroundSupport ? styles.backgroundProgress : ''}`}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}><span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length - 1) * 100)}%` }} /></div>

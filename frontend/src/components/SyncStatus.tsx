@@ -12,6 +12,7 @@ type SyncState = {
 
 const labels: Record<string, string> = {
   online: 'Up to date',
+  local_only: 'Local mode — changes saved on this laptop',
   syncing: 'Syncing…',
   offline: 'Offline mode — changes saved on this laptop',
   conflict: 'Sync needs review — conflicting edits',
@@ -60,7 +61,7 @@ export default function SyncStatus() {
   if (!state?.enabled) return null
   const alertKey = `${state.status ?? ''}:${state.message ?? ''}`
   if (dismissedAlert === alertKey) return null
-  const healthy = state.status === 'online'
+  const healthy = state.status === 'online' || state.status === 'local_only'
   return <aside role="status" aria-live="polite" title={state.message || undefined} style={{
     position: 'fixed', bottom: 12, left: 12, zIndex: 10000,
     boxSizing: 'border-box', width: 'max-content', maxWidth: 'min(550px, calc(100vw - 24px))', padding: '8px 44px 8px 16px',
