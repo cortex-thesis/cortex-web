@@ -18,58 +18,6 @@ from .ids import allocate, install_allocators
 from .models import IdAllocation, ReplicaState
 
 
-class LessonSyncPriorityTests(SimpleTestCase):
-    @override_settings(OFFLINE_SYNC_PAUSED=True)
-    def test_local_mode_does_not_start_background_cloud_worker(self):
-        from django.apps import apps
-        with patch('sys.argv', ['manage.py', 'runserver', '--noreload']), \
-                patch('offline_sync.ids.install_allocators'), \
-                patch('offline_sync.apps.threading.Thread') as thread:
-            apps.get_app_config('offline_sync').ready()
-            thread.assert_not_called()
-
-    @override_settings(OFFLINE_SYNC_PAUSED=True)
-    def test_initialized_local_mode_is_not_reported_as_a_stopped_worker(self):
-        import json
-        from types import SimpleNamespace
-        from django.test import RequestFactory
-        from .views import sync_status
-        request = RequestFactory().get('/api/sync/status/')
-        request.user = SimpleNamespace(is_authenticated=False)
-        state = SimpleNamespace(initialized=True, heartbeat=None, status='syncing',
-                                last_success=None, message='', pending=0)
-        with patch('offline_sync.views.ReplicaState') as model:
-            model.objects.only.return_value.first.return_value = state
-            payload = json.loads(sync_status(request).content)
-        self.assertEqual(payload['status'], 'local_only')
-        self.assertTrue(payload['initialized'])
-
-    def test_live_lesson_defers_cloud_work_without_an_error(self):
-        from .engine import SyncDeferred
-        from .worker import run_cycle
-        with patch('offline_sync.worker.defer_for_live_lesson', side_effect=SyncDeferred('Waiting for lesson')), \
-                patch('offline_sync.worker.ReplicaState') as state, \
-                patch('offline_sync.worker.sync_once') as sync:
-            run_cycle()
-            sync.assert_not_called()
-            state.objects.filter.return_value.update.assert_called_once()
-            self.assertEqual(state.objects.filter.return_value.update.call_args.kwargs['status'], 'online')
-
-    def test_lesson_starting_during_snapshot_rolls_back_both_transactions(self):
-        from .engine import SyncDeferred, sync_transaction
-        for checks in ([SyncDeferred('Waiting')], [None, SyncDeferred('Waiting')]):
-            with self.subTest(checks=len(checks)), \
-                    patch('offline_sync.engine.transaction.atomic') as atomic, \
-                    patch('offline_sync.engine.lock_cloud'), \
-                    patch('offline_sync.engine.cloud_snapshot'), \
-                    patch('offline_sync.engine.ReplicaState'), \
-                    patch('offline_sync.engine.defer_for_live_lesson', side_effect=checks):
-                atomic.return_value.__exit__.return_value = False
-                with self.assertRaises(SyncDeferred), sync_transaction([]):
-                    self.fail('Sync must not write while a lesson is live')
-                self.assertIn(SyncDeferred, atomic.return_value.__exit__.call_args.args)
-
-
 class MergeTests(SimpleTestCase):
     def test_large_cloud_snapshot_is_complete_across_small_batches(self):
         from .engine import cloud_snapshot, _cloud_snapshots, CLOUD_FETCH_BATCH_SIZE

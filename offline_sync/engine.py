@@ -9,7 +9,7 @@ import re
 import sys
 from copy import deepcopy
 from contextlib import ExitStack, contextmanager
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time
 
 from django.apps import apps
 from django.core.serializers.json import DjangoJSONEncoder
@@ -27,19 +27,6 @@ _cloud_snapshots = {}
 
 class SyncError(Exception):
     pass
-
-
-class SyncDeferred(SyncError):
-    """A live lesson has priority over a background cloud transaction."""
-
-
-def defer_for_live_lesson():
-    from web.models import LearningSession
-    cutoff = timezone.now() - timedelta(seconds=60)
-    if LearningSession.objects.filter(ended_at__isnull=True).filter(
-        models.Q(last_seen_at__gte=cutoff) | models.Q(started_at__gte=cutoff)
-    ).exists():
-        raise SyncDeferred("Cloud sync is waiting for the active lesson to finish. Changes are saved on this laptop.")
 
 
 class SnapshotEncoder(DjangoJSONEncoder):
@@ -233,7 +220,6 @@ def sync_transaction(model_list):
         lock_cloud(model_list)
         checkpoint = ReplicaState.objects.filter(pk=1).only("baseline").first()
         remote = cloud_snapshot(model_list, checkpoint.baseline if checkpoint else None)
-        defer_for_live_lesson()
         local_transaction = transaction.atomic(using="default")
         local_transaction.__enter__()
     except BaseException:
@@ -242,9 +228,6 @@ def sync_transaction(model_list):
     with ExitStack() as stack:
         stack.push(local_transaction)
         stack.push(remote_transaction)
-        # Recheck under SQLite's write lock: a lesson may have started while
-        # the cloud snapshot was downloading. Roll back before any cloud writes.
-        defer_for_live_lesson()
         yield remote
 
 
@@ -351,7 +334,6 @@ def install_guards(ranges, model_list):
 
 
 def sync_once(initialize=False):
-    defer_for_live_lesson()
     model_list = replicated_models()
     identity = cloud_identity()
     existing = ReplicaState.objects.only("initialized", "cloud_identity").filter(pk=1).first()

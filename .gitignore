@@ -41,6 +41,7 @@ local-data/
 *.fif
 *.parquet
 *.joblib
+!model-artifacts/mixed-1395/classifier.joblib
 *.pkl
 *.onnx
 *.tmp
@@ -57,34 +58,3 @@ local-data/
 *.njsproj
 *.sln
 *.sw?
-
-# Repository hygiene: local outputs and private/runtime data stay off GitHub.
-/output/
-/outputs/
-/tmp/
-/notebooks/
-/local-data.json
-/media/
-/docs/reviews/
-/docs/database/
-/docs/THOROUGH_SYSTEM_REVIEW_*.md
-*.doc
-*.docx
-*.pdf
-*.ppt
-*.pptx
-*.xls
-*.xlsx
-*.zip
-*.ipynb
-
-# Keep only the selected runtime model; training data stays local.
-/model-artifacts/*
-!/model-artifacts/README.md
-!/model-artifacts/runtime-versions.txt
-!/model-artifacts/augmented-eeg/
-/model-artifacts/augmented-eeg/*
-!/model-artifacts/augmented-eeg/classifier.joblib
-!/model-artifacts/augmented-eeg/metrics.json
-!/model-artifacts/augmented-eeg/analysis.html
-!/model-artifacts/augmented-eeg/generation_protocol.json

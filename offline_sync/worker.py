@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import IntegrityError, InterfaceError, OperationalError, connections
 from django.utils import timezone
 
-from .engine import SyncDeferred, SyncError, changed_count, defer_for_live_lesson, snapshot, sync_once
+from .engine import SyncError, changed_count, snapshot, sync_once
 from .models import ReplicaState
 
 logger = logging.getLogger(__name__)
@@ -17,14 +17,8 @@ def run_cycle(initialize=False):
     if not settings.OFFLINE_SYNC_ENABLED or "cloud" not in connections:
         raise SyncError("Set CORTEX_OFFLINE_SYNC=true and configure Supabase first.")
     try:
-        defer_for_live_lesson()
         ReplicaState.objects.filter(pk=1).update(status="syncing", heartbeat=timezone.now())
         return sync_once(initialize=initialize)
-    except SyncDeferred as error:
-        ReplicaState.objects.filter(pk=1).update(
-            status="online", message=str(error), heartbeat=timezone.now(),
-        )
-        return ReplicaState.objects.filter(pk=1).first()
     except Exception as error:
         # Never expose credentials, connection strings or data values in status.
         offline = isinstance(error, (OperationalError, InterfaceError, ConnectionClosedError,

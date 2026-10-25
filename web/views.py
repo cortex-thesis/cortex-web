@@ -175,12 +175,11 @@ def model_analysis_report(request):
         return error
     if not profile.is_super_admin:
         return JsonResponse({"detail": "Only super administrators can view the cross-participant model report."}, status=403)
-    from web.services.augmented_eeg import artifact_directory
-    report_path = artifact_directory() / 'analysis.html'
+    report_path = Path(getattr(settings, "MODEL_ARTIFACT_ROOT", settings.BASE_DIR / "model-artifacts")) / "mixed-1395" / "analysis.html"
     try:
         stream = report_path.open("rb")
     except FileNotFoundError:
-        return JsonResponse({"detail": "The model report has not been generated. Run python manage.py train_augmented_eeg_model on this server."}, status=404)
+        return JsonResponse({"detail": "The model report has not been generated. Run python manage.py analyze_mixed_epoch_data on this server."}, status=404)
     response = FileResponse(stream, content_type="text/html; charset=utf-8")
     response["Cache-Control"] = "no-store, private"
     response["X-Content-Type-Options"] = "nosniff"

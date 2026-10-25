@@ -145,7 +145,6 @@ else:
 # Keep cloud credentials server-side. Requests never fall back to the cloud in
 # offline mode: only the worker uses this alias.
 OFFLINE_SYNC_ENABLED = os.environ.get("CORTEX_OFFLINE_SYNC", "false").lower() == "true" and "test" not in sys.argv
-OFFLINE_SYNC_PAUSED = os.environ.get("CORTEX_SYNC_PAUSED", "false").lower() == "true"
 OFFLINE_SYNC_INTERVAL = max(5, int(os.environ.get("CORTEX_SYNC_INTERVAL", "300")))
 if OFFLINE_SYNC_ENABLED and "test" not in sys.argv:
     if TEMPLATE_ONLY or DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
@@ -215,7 +214,6 @@ EEG_DATA_ROOT = Path(os.environ.get("EEG_DATA_ROOT", BASE_DIR / "local-data"))
 EEG_RAW_SUBDIR = os.environ.get("EEG_RAW_SUBDIR", "raw")
 EEG_PROCESSED_SUBDIR = os.environ.get("EEG_PROCESSED_SUBDIR", "processed")
 EEG_MODEL_SUBDIR = os.environ.get("EEG_MODEL_SUBDIR", "models")
-EEG_ACTIVE_MODEL_SUBDIR = os.environ.get("EEG_ACTIVE_MODEL_SUBDIR", "augmented-eeg")
 EEG_TEMP_SUBDIR = os.environ.get("EEG_TEMP_SUBDIR", "temp")
 
 SUPABASE_STORAGE_ENDPOINT = os.environ.get("SUPABASE_STORAGE_ENDPOINT")

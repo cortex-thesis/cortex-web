@@ -24,8 +24,6 @@ def sync_status(request):
                 initialized=state.initialized, last_success=state.last_success,
                 message="Sync worker is not responding. Local changes remain saved." if stale else state.message,
             )
-            if settings.OFFLINE_SYNC_PAUSED and state.initialized:
-                payload.update(status="local_only", message="Cloud sync is paused. Changes are saved on this laptop.")
             # The login page gets connectivity only, never account data/conflicts.
             if request.user.is_authenticated:
                 payload["pending"] = state.pending
