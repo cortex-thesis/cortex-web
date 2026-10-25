@@ -14,6 +14,30 @@ async function fixture(page, role, handler) {
   })
 }
 
+test('student home reuses dashboard and session data when returning from another page', async ({ page }) => {
+  let dashboardReads = 0
+  let sessionReads = 0
+  await fixture(page, 'student', async path => {
+    if (path === '/api/student/dashboard/') {
+      dashboardReads++
+      return { body: { student: { student_number: 'TEST' }, classes: [], unread_notifications: 0, active_session: null } }
+    }
+    if (path === '/api/student/sessions/') {
+      sessionReads++
+      return { body: { sessions: [], summary: { completed_sessions: 2, total_duration_seconds: 120, average_focus_score: 75 } } }
+    }
+  })
+  await page.goto('/student/home')
+  await expect(page.getByText('Completed sessions', { exact: true })).toBeVisible()
+  await expect.poll(() => sessionReads).toBe(1)
+  await page.getByRole('button', { name: /Get started.*Join a class/ }).click()
+  await expect(page).toHaveURL(/join-class/)
+  await page.getByRole('button', { name: 'Go back', exact: true }).click()
+  await expect(page.getByText('Completed sessions', { exact: true })).toBeVisible()
+  expect(dashboardReads).toBe(1)
+  expect(sessionReads).toBe(1)
+})
+
 test('invalid class code can be cleared and entered again without a QR placeholder', async ({ page }) => {
   const attempts = []
   await fixture(page, 'student', async (path, request) => {
@@ -48,6 +72,63 @@ test('continue without video saves the skip and advances with one click', async 
   await page.getByRole('button', { name: 'Continue without video' }).first().click()
   await expect(page.getByRole('heading', { name: 'Next step', exact: true })).toBeVisible()
   expect(saved).toEqual([{ slide_id: 10, selected: 'continued_without_video' }])
+})
+
+test('practice saves an answer before Next and restores the unfinished step after reload', async ({ page }) => {
+  const progress = { completed_slide_ids: [10], activity_evidence: {} }
+  const drafts = []
+  await fixture(page, 'student', async (path, request) => {
+    if (path !== '/api/student/classes/1/lessons/2/') return
+    if (request.method() === 'POST') {
+      const data = request.postDataJSON()
+      if (data.action === 'answer') {
+        drafts.push(data)
+        progress.activity_evidence[String(data.slide_id)] = { selected: data.selected, practice_correct: data.correct }
+      } else if (data.slide_id) progress.completed_slide_ids.push(data.slide_id)
+    }
+    return { body: { id: 2, title: 'Resume practice', package: 'enrichment', progress, slides: [
+      { id: 10, title: 'Already complete', activity: { type: 'text', configuration: {} } },
+      { id: 11, title: 'Saved question', activity: { type: 'interactive', configuration: { template: 'multiple_choice', question: 'Pick Yes', choices: ['Yes', 'No'], answer: 'Yes' } } },
+    ] } }
+  })
+  await page.goto('/student/class/1/lesson/2/practice')
+  await expect(page.getByRole('heading', { name: 'Saved question', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Answer: Yes', exact: true }).click()
+  await expect.poll(() => drafts.length).toBe(1)
+  expect(progress.completed_slide_ids).toEqual([10])
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Saved question', exact: true })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Correct.' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Finish lesson', exact: false })).toBeEnabled()
+  await page.getByRole('button', { name: 'Finish lesson', exact: false }).click()
+  await expect(page.getByRole('heading', { name: 'Practice complete' })).toBeVisible()
+  expect(progress.completed_slide_ids).toEqual([10, 11])
+})
+
+test('EEG resume restores the first unfinished step and its saved answer', async ({ page }) => {
+  const completions = []
+  await fixture(page, 'student', async (path, request) => {
+    if (path === '/api/sessions/resume-session/eeg/') return { body: {
+      lesson: { id: 2, title: 'Resume EEG', package: 'enrichment', slides: [
+        { id: 10, title: 'Already complete', activity: { type: 'text', configuration: {} } },
+        { id: 11, title: 'Saved EEG question', activity: { type: 'interactive', configuration: { template: 'multiple_choice', question: 'Pick Yes', choices: ['Yes', 'No'], answer: 'Yes' } } },
+      ] }, progress: { completed_slide_ids: [10], responses: { 11: { selected: 'Yes', correct: true, attempt: 2 } }, last_sequence_number: 17 },
+    } }
+    if (path === '/api/sessions/resume-session/control/') return { body: { control_mode: 'free', status: 'active', ended_at: null } }
+    if (path === '/api/sessions/resume-session/slides/11/' && request.postDataJSON().action === 'complete') completions.push(11)
+  })
+  await page.addInitScript(() => {
+    if (location.pathname === '/student/eeg-live') history.replaceState({ usr: { sessionId: 'resume-session', devBypass: true }, key: 'resume', idx: 0 }, '')
+  })
+  await page.goto('/student/eeg-live')
+  await expect(page.getByRole('heading', { name: 'Saved EEG question', exact: true })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Correct.' })).toBeVisible()
+  await expect(page.getByRole('progressbar', { name: 'Lesson steps completed' })).toHaveAttribute('aria-valuenow', '1')
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Saved EEG question', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Finish lesson', exact: false }).click()
+  await expect(page.getByRole('heading', { name: 'Lesson complete', exact: true })).toBeVisible()
+  expect(completions).toEqual([11])
 })
 
 test('journal without a completed session shows a useful empty state', async ({ page }) => {
@@ -136,9 +217,11 @@ for (const [lessonIndex, position] of [[0, 4], [1, 4], [2, 2]]) {
     await expect(next).toBeEnabled()
     await next.click()
     await expect(page.getByRole('heading', { name: definition.slides[position + 1].title, exact: true })).toBeVisible()
-    expect(saved).toHaveLength(1)
-    expect(saved[0].slide_id).toBe(position + 100)
-    expect(saved[0].selected).toBeTruthy()
-    if (config.task_template === 'audio_sequence') expect(JSON.parse(saved[0].selected).rounds[0].audio_played).toBe(true)
+    expect(saved.some(item => item.action === 'answer')).toBe(true)
+    const completions = saved.filter(item => item.action !== 'answer')
+    expect(completions).toHaveLength(1)
+    expect(completions[0].slide_id).toBe(position + 100)
+    expect(completions[0].selected).toBeTruthy()
+    if (config.task_template === 'audio_sequence') expect(JSON.parse(completions[0].selected).rounds[0].audio_played).toBe(true)
   })
 }

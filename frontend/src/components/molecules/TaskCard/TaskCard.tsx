@@ -45,8 +45,8 @@ function TaskCard({
   focusHolding = false,
   onFocusGateChange,
 }: TaskCardProps) {
-  const [selected, setSelected] = useState<string | null>(null)
-  const [revealed, setRevealed] = useState(false)
+  const [selected, setSelected] = useState<string | null>(task.initialResponse ?? null)
+  const [revealed, setRevealed] = useState(Boolean(task.initialResponse && task.choices.includes(task.initialResponse)))
   const [isPlaying, setIsPlaying] = useState(false)
   const [microDone, setMicroDone] = useState(false)
   const [flipped, setFlipped] = useState(false)

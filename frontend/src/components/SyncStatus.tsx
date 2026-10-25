@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
-import { clearApiCache } from '../lib/api'
+import { updateApiSyncRevision } from '../lib/api'
 
 type SyncState = {
   enabled: boolean
@@ -29,7 +29,6 @@ export default function SyncStatus() {
     let disposed = false
     let timer: ReturnType<typeof setTimeout>
     let controller: AbortController | undefined
-    let lastSuccess: string | null | undefined
     const poll = async () => {
       controller = new AbortController()
       const timeout = setTimeout(() => controller?.abort(), 5000)
@@ -43,8 +42,7 @@ export default function SyncStatus() {
         if (!response.ok) throw new Error('Status unavailable')
         const next = await response.json() as SyncState
         if (!disposed) {
-          if (lastSuccess && next.last_success && lastSuccess !== next.last_success) clearApiCache()
-          lastSuccess = next.last_success
+          updateApiSyncRevision(next.last_success)
           setState(next)
         }
       } catch {

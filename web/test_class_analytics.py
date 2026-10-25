@@ -88,6 +88,26 @@ class ClassAnalyticsTests(TestCase):
         self.assertEqual(data['timeline'], [])
         self.assertEqual(self.client.get(self.url + '?lesson_id=999999').status_code, 404)
 
+    def test_student_and_teacher_summaries_count_delivered_steps_instead_of_answers_or_reviews(self):
+        # Reproduce a complete 10-step lesson with five hidden reviews.
+        slides = list(self.slides)
+        for index in range(2, 15):
+            slides.append(Slide.objects.create(lesson=self.lesson, title=f'Step {index}', position=index,
+                activity=Activity.objects.create(type='text', title=f'Step {index}',
+                    configuration={'optional_review': True} if index >= 10 else {})))
+        for slide in slides:
+            now = timezone.now()
+            SessionSlideExposure.objects.create(session=self.session, slide=slide, entered_at=now, completed_at=now, exited_at=now)
+        self.client.force_login(self.student.user)
+        self.assertEqual(self.client.post(f'/api/sessions/{self.session.pk}/end/').status_code, 200)
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.completion_percentage, 100)
+        summary = self.client.get('/api/student/sessions/').json()['sessions'][0]
+        self.assertEqual((summary['tasks_completed'], summary['tasks_total']), (10, 10))
+        self.client.force_login(self.teacher.user)
+        summary = self.client.get(f'/api/teacher/students/{self.student.pk}/?class_id={self.school_class.pk}').json()['sessions'][0]
+        self.assertEqual((summary['tasks_completed'], summary['tasks_total']), (10, 10))
+
     def test_live_focus_score_uses_only_latest_thirty_valid_windows(self):
         for state in ['focused'] * 10 + ['relaxed'] * 30:
             SessionEEGSample.objects.create(session=self.session, state=state, accepted_channels=4)

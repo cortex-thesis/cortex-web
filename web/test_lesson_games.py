@@ -142,6 +142,18 @@ class LessonGameContractTests(SimpleTestCase):
 
 
 class LessonGamePersistenceTests(TestCase):
+    def test_practice_saves_unfinished_answer_without_marking_step_complete(self):
+        self.client.force_login(self.student.user)
+        lesson = Lesson.objects.get(competency_code='TPLS_CS-li-NG-4')
+        slide = lesson.slides.get(position=4)
+        url = f'/api/student/classes/{self.school_class.pk}/lessons/{lesson.pk}/'
+        saved = self.client.post(url, data={'action': 'answer', 'slide_id': slide.pk, 'correct': False, 'selected': '{}'}, content_type='application/json')
+        self.assertEqual(saved.status_code, 200)
+        reloaded = self.client.get(url).json()['progress']
+        self.assertNotIn(slide.pk, reloaded['completed_slide_ids'])
+        self.assertEqual(reloaded['activity_evidence'][str(slide.pk)]['selected'], '{}')
+        self.assertFalse(reloaded['activity_evidence'][str(slide.pk)]['practice_correct'])
+
     @classmethod
     def setUpTestData(cls):
         cls.owner = Profile.objects.create(user=User.objects.create_user('games-owner'), role=Profile.Role.ADMIN)

@@ -1632,8 +1632,8 @@ def teacher_student_detail(request, student_id):
     sessions = LearningSession.objects.filter(
         student=student, school_class_id__in=class_ids, ended_at__isnull=False,
     ).select_related("school_class", "lesson", "analytics").annotate(
-        tasks_completed=session_count("activity_responses__activity"),
-        tasks_total=session_count("lesson__slides__activity", count_filter=_current_garden_rows('lesson__slides__activity')),
+        tasks_completed=session_count("slide_exposures__slide", count_filter=_required_lesson_rows('slide_exposures__slide__activity'), slide_exposures__completed_at__isnull=False),
+        tasks_total=session_count("lesson__slides", count_filter=_required_lesson_rows('lesson__slides__activity')),
         adaptation_total=session_count("adaptation_events", adaptation_events__previous_mode='focus', adaptation_events__new_mode='relax'),
         override_total=session_count("manual_overrides", manual_overrides__previous_presentation_mode='focus', manual_overrides__new_presentation_mode='relax'),
         **{f"{state}_count": session_count("state_predictions", state_predictions__state=state)
@@ -2050,7 +2050,7 @@ def student_class_package(request, class_id, package_slug):
     )
     lessons = Lesson.objects.filter(
         package=package, status=Lesson.Status.APPROVED, archived_at__isnull=True,
-    ).select_related('package').prefetch_related('slides').order_by("id")
+    ).select_related('package').prefetch_related('slides__activity').order_by("id")
     progress = {item.lesson_id: item for item in LessonPracticeProgress.objects.filter(student=profile, school_class=school_class, lesson__package=package)}
     return JsonResponse({
         "class": _class_data(school_class),
@@ -2064,6 +2064,12 @@ def _current_garden_rows(activity_path):
     key = activity_path + '__configuration__digital_garden_history'
     other = activity_path + '__configuration__digital_activity_history'
     return (Q(**{key + '__isnull': True}) | Q(**{key: False})) & (Q(**{other + '__isnull': True}) | Q(**{other: False}))
+
+
+def _required_lesson_rows(activity_path):
+    # Match the steps delivered by _lesson_data, including instruction and media.
+    key = activity_path + '__configuration__optional_review'
+    return Q(**{key + '__isnull': True}) | Q(**{key: False})
 
 
 def _practice_progress_data(lesson, progress):
@@ -2089,6 +2095,9 @@ def student_practice_lesson(request, class_id, lesson_id):
     if request.method == 'POST':
         try:
             payload = _body(request)
+            action = payload.get('action', 'complete')
+            if action not in ('answer', 'complete'):
+                raise ValueError
             slide_id = payload.get('slide_id')
             if slide_id is not None and (type(slide_id) is not int or slide_id not in {slide.pk for slide in lesson.slides.all()}):
                 raise ValueError
@@ -2106,13 +2115,15 @@ def student_practice_lesson(request, class_id, lesson_id):
                     config = activity.configuration
                     from .game_validation import evaluate_game
                     evaluated = evaluate_game(config, selected)
-                    if evaluated is False:
+                    if evaluated is False and action == 'complete':
                         return JsonResponse({'detail': 'Complete the activity before continuing.'}, status=400)
                     progress.activity_evidence = progress.activity_evidence | {str(slide_id): {
                         'selected': selected, 'evidence_role': config.get('evidence_role', 'supporting'),
                         'digital_mastery_claim': False,
+                        'practice_correct': evaluated if evaluated is not None else payload.get('correct'),
                     }}
-                progress.completed_slide_ids = sorted(set(progress.completed_slide_ids) | {slide_id})
+                if action == 'complete':
+                    progress.completed_slide_ids = sorted(set(progress.completed_slide_ids) | {slide_id})
                 progress.save(update_fields=['completed_slide_ids', 'activity_evidence', 'updated_at'])
                 # Package totals and badge awards are refreshed by the summary
                 # endpoint; do not scan every package on each slide save.
@@ -2264,7 +2275,7 @@ def _student_session_data(session, now):
         "is_live": _session_is_live(session) if session.ended_at is None else False,
         "last_opened_at": session.last_seen_at or session.ended_at or session.started_at,
         "tasks_completed": session.tasks_completed,
-        "tasks_total": Slide.objects.filter(lesson_id__in=[item['id'] for item in session.class_session.lesson_history]).filter(_current_garden_rows('activity')).count() if session.class_session_id else session.tasks_total,
+        "tasks_total": Slide.objects.filter(lesson_id__in=[item['id'] for item in session.class_session.lesson_history]).filter(_required_lesson_rows('activity')).count() if session.class_session_id else session.tasks_total,
         "state_distribution": state_distribution,
     }
 
@@ -2382,16 +2393,16 @@ def student_sessions(request):
         return error
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
+    def session_count(relation, count_filter):
+        return Subquery(LearningSession.objects.filter(pk=OuterRef('pk')).order_by().annotate(
+            total=Count(relation, filter=count_filter, distinct=True)).values('total')[:1])
     sessions = list(
         LearningSession.objects.filter(student=profile)
-        .select_related("school_class", "lesson", "analytics")
+        .select_related("school_class", "lesson", "analytics", "class_session")
         .annotate(
-            tasks_completed=Count("slide_exposures__slide", filter=Q(slide_exposures__completed_at__isnull=False), distinct=True),
-            tasks_total=Count("lesson__slides", filter=_current_garden_rows('lesson__slides__activity'), distinct=True),
-            focused_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.FOCUSED), distinct=True),
-            relaxed_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.RELAXED), distinct=True),
-            distracted_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.DISTRACTED), distinct=True),
-            overstimulated_count=Count("state_predictions", filter=Q(state_predictions__state=StatePrediction.State.OVERSTIMULATED), distinct=True),
+            tasks_completed=session_count("slide_exposures__slide", Q(slide_exposures__completed_at__isnull=False) & _required_lesson_rows('slide_exposures__slide__activity')),
+            tasks_total=session_count("lesson__slides", _required_lesson_rows('lesson__slides__activity')),
+            **{f'{state}_count': session_count('state_predictions', Q(state_predictions__state=state)) for state in StatePrediction.State.values},
         )
         .order_by("-started_at")
     )
@@ -2459,7 +2470,16 @@ def session_eeg_samples(request, session_id):
     if request.method == "GET":
         latest = session.eeg_samples.select_related("slide").order_by("-recorded_at").first()
         recording = session.eeg_recordings.order_by('-created_at').first()
+        responses = {}
+        if session.lesson_id:
+            for response in session.activity_responses.filter(activity__slide__lesson_id=session.lesson_id).select_related('activity__slide').order_by('attempt_number', 'answered_at'):
+                responses[str(response.activity.slide.pk)] = {'selected': response.response.get('selected', ''),
+                    'correct': response.is_correct if response.is_correct is not None else response.response.get('practice_correct', True),
+                    'attempt': response.attempt_number}
         return JsonResponse({
+            "progress": {"completed_slide_ids": list(session.slide_exposures.filter(completed_at__isnull=False, slide__lesson_id=session.lesson_id).values_list('slide_id', flat=True).distinct()),
+                         "responses": responses,
+                         "last_sequence_number": recording.raw_chunks.aggregate(value=Max('sequence_number'))['value'] or 0 if recording else 0},
             "session": _student_session_data(session, timezone.now()) if hasattr(session, "focused_count") else {
                 "id": str(session.pk), "class_id": session.school_class_id, "lesson_id": session.lesson_id,
                 "title": session.lesson.title if session.lesson_id else session.school_class.name,
@@ -2481,7 +2501,9 @@ def session_eeg_samples(request, session_id):
         bands = {key: float(data["bands"][key]) for key in required}
         absolute = {key: float(data.get("absolute_bands", {}).get(key, 0)) for key in required}
         relative = {key: float(data.get("relative_bands", {}).get(key, 0)) for key in required}
-        if not all(math.isfinite(value) and 0 <= value <= 1_000_000 for group in (bands, absolute, relative) for value in group.values()):
+        # Browser absolute powers are log10 values and may legitimately be negative.
+        if (not all(math.isfinite(value) and 0 <= value <= 1_000_000 for group in (bands, relative) for value in group.values())
+                or not all(math.isfinite(value) and abs(value) <= 1_000_000 for value in absolute.values())):
             raise ValueError
         quality = [int(value) for value in data.get("signal_quality", [])]
         if len(quality) != 4 or any(value not in (0, 1, 2) for value in quality):
@@ -2998,8 +3020,8 @@ def session_slide_exposure(request, session_id, slide_id):
             if not locked.slide_exposures.filter(slide=slide, completed_at__isnull=False).exists():
                 exposure.completed_at = now
                 exposure.save(update_fields=['completed_at'])
-            total = Slide.objects.filter(lesson_id__in=allowed_lesson_ids).filter(_current_garden_rows('activity')).count()
-            done = locked.slide_exposures.filter(completed_at__isnull=False).filter(_current_garden_rows('slide__activity')).values('slide_id').distinct().count()
+            total = Slide.objects.filter(lesson_id__in=allowed_lesson_ids).filter(_required_lesson_rows('activity')).count()
+            done = locked.slide_exposures.filter(completed_at__isnull=False, slide__lesson_id__in=allowed_lesson_ids).filter(_required_lesson_rows('slide__activity')).values('slide_id').distinct().count()
             locked.completion_percentage = round(done * 100 / total, 2) if total else 0
             locked.save(update_fields=['completion_percentage'])
         # Refresh awards only at a completion boundary. This makes achievements

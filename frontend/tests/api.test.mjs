@@ -6,7 +6,7 @@ import ts from 'typescript'
 const source = (await readFile(new URL('../src/lib/api.ts', import.meta.url), 'utf8'))
   .replace("import.meta.env.VITE_API_URL ?? '/api'", "'/api'")
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
-const { api, primeApiCache, cachedApiValue, clearApiCache, setApiCacheOwner } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
+const { api, primeApiCache, cachedApiValue, clearApiCache, setApiCacheOwner, updateApiSyncRevision } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
 const storage = new Map()
 globalThis.localStorage = {
   get length() { return storage.size },
@@ -17,6 +17,33 @@ globalThis.localStorage = {
 }
 globalThis.document = { cookie: 'csrftoken=test-token' }
 const response = (value) => new Response(JSON.stringify(value), { headers: { 'content-type': 'application/json' } })
+
+test('home data survives navigation, time and telemetry but refreshes after local progress and a new sync', async () => {
+  clearApiCache()
+  const originalNow = Date.now
+  let now = originalNow()
+  Date.now = () => now
+  let reads = 0
+  globalThis.fetch = async (_url, options) => response((options.method ?? 'GET') === 'GET' ? { version: ++reads } : { saved: true })
+  try {
+    updateApiSyncRevision('sync-1')
+    await api('/student/dashboard/')
+    await api('/student/sessions/?home=1')
+    now += 60 * 60 * 1000
+    await api('/sessions/test/eeg/', { method: 'POST', body: '{}' })
+    await api('/sessions/test/control/', { method: 'POST', body: '{"action":"heartbeat"}' })
+    updateApiSyncRevision('sync-1')
+    await api('/student/dashboard/')
+    await api('/student/sessions/?home=1')
+    assert.equal(reads, 2)
+    await api('/sessions/test/slides/1/', { method: 'POST', body: '{"action":"complete"}' })
+    await api('/student/sessions/?home=1')
+    assert.equal(reads, 3)
+    updateApiSyncRevision('sync-2')
+    await api('/student/sessions/?home=1')
+    assert.equal(reads, 4)
+  } finally { Date.now = originalNow; storage.delete('cortex-last-sync-revision') }
+})
 
 test('profile reads preserve other page data and authentication always reaches the server', async () => {
   clearApiCache()

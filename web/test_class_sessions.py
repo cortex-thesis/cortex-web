@@ -13,6 +13,25 @@ from .models import Activity, ActivityResponse, ClassSession, ConsentRecord, Cur
 
 
 class TeacherLedSessionTests(TestCase):
+    def test_eeg_api_preserves_each_model_state_and_cluster_in_storage_and_response(self):
+        from .models import StatePrediction
+        group = self.open()
+        session = self.join(group)
+        self.control('start')
+        self.client.force_login(self.student.user)
+        self.assertEqual(self.post('/api/sessions/start/', {'class_id': self.school_class.pk, 'class_session_id': str(group.pk), 'control_mode': 'teacher'}).status_code, 200)
+        for sequence, state in enumerate(('focused', 'relaxed', 'distracted', 'overstimulated'), start=1):
+            with patch('web.services.live_eeg.classify_and_update', return_value=(state, .875, sequence - 1, 'model output')):
+                result = self.post(f'/api/sessions/{session.pk}/eeg/', self.eeg_payload(sequence_number=sequence, absolute_bands={name: -1.0 for name in ('delta', 'theta', 'alpha', 'beta', 'gamma')}))
+            self.assertEqual(result.status_code, 201, result.content)
+            self.assertEqual(result.json()['state'], state)
+            self.assertEqual(result.json()['cluster_number'], sequence - 1)
+            prediction = StatePrediction.objects.filter(session=session).latest('pk')
+            sample = session.eeg_samples.latest('pk')
+            self.assertEqual(prediction.state, state)
+            self.assertEqual(sample.state, state)
+            self.assertEqual(float(prediction.confidence_score), .875)
+
     def eeg_payload(self, **extra):
         return {'slide_id': self.slide.pk,
                 'bands': {name: 1.0 for name in ('delta', 'theta', 'alpha', 'beta', 'gamma')},
@@ -388,6 +407,8 @@ class TeacherLedSessionTests(TestCase):
     def test_progress_includes_instruction_and_media_without_answers(self):
         instruction = Slide.objects.create(lesson=self.lesson, activity=Activity.objects.create(type='text', title='Read'), title='Read', position=2)
         media = Slide.objects.create(lesson=self.lesson, activity=Activity.objects.create(type='video', title='Watch'), title='Watch', position=3)
+        for index in range(5):
+            Slide.objects.create(lesson=self.lesson, activity=Activity.objects.create(type='text', title='Optional review', configuration={'optional_review': True}), title='Optional review', position=4 + index)
         group = self.open()
         session = self.join(group)
         self.control('start')
@@ -410,6 +431,21 @@ class TeacherLedSessionTests(TestCase):
         summary = self.client.get('/api/student/sessions/').json()['sessions'][0]
         self.assertEqual(summary['tasks_completed'], 3)
         self.assertEqual(summary['tasks_total'], 3)
+
+    def test_teacher_finalization_excludes_hidden_optional_review_steps(self):
+        Slide.objects.create(lesson=self.lesson, activity=Activity.objects.create(type='text', title='Optional', configuration={'optional_review': True}), title='Optional', position=2)
+        group = self.open()
+        session = self.join(group)
+        self.control('start')
+        self.client.force_login(self.student.user)
+        url = f'/api/sessions/{session.pk}/slides/{self.slide.pk}/'
+        self.post(url, {'action': 'enter'})
+        saved = self.post(url, {'action': 'complete'}).json()
+        self.assertEqual((saved['completed_steps'], saved['step_total']), (1, 1))
+        report = self.control('end').json()['report']['participants'][0]
+        self.assertEqual((report['completed_steps'], report['task_total']), (1, 1))
+        session.refresh_from_db()
+        self.assertEqual(session.completion_percentage, 100)
 
     def test_opening_and_pausing_do_not_complete_a_step(self):
         group = self.open()

@@ -25,7 +25,7 @@ interface LessonData {
   package: Task['package']
   slides: Array<{ id: number; title: string; activity: { type: Task['contentType']; configuration: Record<string, unknown>; asset_url?: string | null } }>
 }
-interface SessionPayload { lesson: LessonData | null }
+interface SessionPayload { lesson: LessonData | null; progress?: { completed_slide_ids: number[]; responses: Record<string, { selected: string; correct: boolean; attempt: number }>; last_sequence_number: number } }
 
 const BANDS: Array<{ key: keyof BandPowers; label: string }> = [
   { key: 'delta', label: 'Delta' }, { key: 'theta', label: 'Theta' },
@@ -47,7 +47,7 @@ function taskConfiguration(value: unknown): unknown {
 
 interface TeacherControl { paused: boolean; presentation_mode: 'focus' | 'breathing' | 'refocus' | 'returning' | 'adaptive'; lesson: LessonData }
 
-export default function LiveEEG({ teacherControl: classroomControl }: { teacherControl?: TeacherControl }) {
+export default function LiveEEG({ teacherControl: classroomControl, recordingSessionId }: { teacherControl?: TeacherControl; recordingSessionId?: string }) {
   const navigate = useNavigate()
   const location = useLocation()
   const context = (location.state as { sessionId?: string; classId?: number; lessonId?: number; mode?: string; devBypass?: boolean } | null) ?? {}
@@ -80,12 +80,14 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   }, [remotelyPaused])
   const [position, setPosition] = useState(0)
   const [answered, setAnswered] = useState<Record<number, boolean>>({})
+  const [savedResponses, setSavedResponses] = useState<NonNullable<SessionPayload['progress']>['responses']>({})
+  const [loadedProgressKey, setLoadedProgressKey] = useState('')
   const [focusGates, setFocusGates] = useState<Record<string, boolean>>({})
   const [activitySupport, setActivitySupport] = useState<Record<string, FocusTemplate>>({})
   const [coolActivities, setCoolActivities] = useState<Record<string, boolean>>({})
   const [lessonStarted, setLessonStarted] = useState(false)
   const [retry, setRetry] = useState<Record<number, number>>({})
-  const [visited, setVisited] = useState<Set<number>>(() => new Set([0]))
+  const [visited, setVisited] = useState<Set<number>>(() => new Set())
   const [triviaIndex, setTriviaIndex] = useState(() => Math.floor(Math.random() * 100))
   const [completed, setCompleted] = useState<Set<number>>(() => new Set())
   const [error, setError] = useState('')
@@ -126,7 +128,9 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   }
   const lastStoredAt = useRef(0)
   const eegSequence = useRef(0)
-  const sessionId = context.sessionId
+  const sessionId = recordingSessionId ?? context.sessionId
+  const progressKey = `${sessionId}/${classroomControl?.lesson.id ?? ''}`
+  const progressReady = loadedProgressKey === progressKey
   const reportMode = mode === 'breathing' || mode === 'refocus' ? 'relax' : 'focus'
   useEffect(() => {
     if (!sessionId || ending || complete || teacherControl?.paused) return
@@ -135,9 +139,27 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   }, [sessionId, reportMode, ending, complete, teacherControl?.paused])
 
   useEffect(() => {
-    if (!sessionId || classroomControl) return
-    void api<SessionPayload>(`/sessions/${sessionId}/eeg/`, { cache: 'no-store' }).then((payload) => setLesson(payload.lesson)).catch((reason: Error) => setError(reason.message))
-  }, [sessionId, classroomControl])
+    if (!sessionId) return
+    let disposed = false
+    void api<SessionPayload>(`/sessions/${sessionId}/eeg/`, { cache: 'no-store' }).then((payload) => {
+      if (disposed) return
+      const loaded = payload.lesson
+      if (!loaded) return
+      setLesson(loaded)
+      const progress = payload.progress
+      const done = new Set(loaded.slides.flatMap((item, index) => progress?.completed_slide_ids.includes(item.id) ? [index] : []))
+      const next = loaded.slides.findIndex((_, index) => !done.has(index))
+      setCompleted(done)
+      setPosition(next < 0 ? loaded.slides.length : next)
+      setVisited(new Set([next < 0 ? loaded.slides.length : next]))
+      setSavedResponses(progress?.responses ?? {})
+      setAnswered(Object.fromEntries(loaded.slides.flatMap((item, index) => progress?.responses[String(item.id)] ? [[index, progress.responses[String(item.id)].correct]] : [])))
+      setRetry(Object.fromEntries(loaded.slides.flatMap((item, index) => progress?.responses[String(item.id)] ? [[index, progress.responses[String(item.id)].attempt - 1]] : [])))
+      eegSequence.current = progress?.last_sequence_number ?? 0
+      setLoadedProgressKey(progressKey)
+    }).catch((reason: Error) => { if (!disposed) setError(reason.message) })
+    return () => { disposed = true }
+  }, [sessionId, progressKey])
 
   // Signal checks and baseline refinement continue in the background. They do
   // not block the lesson during testing; storage still requires valid samples.
@@ -193,14 +215,14 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
   const slide = lesson?.slides[position]
   const slideEntry = useRef<{ sessionId: string; slideId: number; request: Promise<unknown> } | null>(null)
   useEffect(() => {
-    if (!sessionId || !slide || mode !== 'focus' || !calibrated || complete || ending || teacherControl?.paused) return
+    if (!sessionId || !progressReady || !slide || mode !== 'focus' || !calibrated || complete || ending || teacherControl?.paused) return
     const request = trackStudentSlide(sessionId, slide.id, 'enter')
     slideEntry.current = { sessionId, slideId: slide.id, request }
     void request.catch((reason: Error) => setError(reason.message))
-  }, [sessionId, slide, mode, calibrated, complete, ending, teacherControl?.paused])
+  }, [sessionId, progressReady, slide, mode, calibrated, complete, ending, teacherControl?.paused])
 
   useEffect(() => {
-    if (!sessionId || complete || ending || teacherControl?.paused || status !== 'streaming' || baselineProgress < 100 || acceptedChannels < 1) return
+    if (!sessionId || !progressReady || complete || ending || teacherControl?.paused || status !== 'streaming' || baselineProgress < 100 || acceptedChannels < 1) return
     if (Date.now() - lastStoredAt.current < 2000) return
     lastStoredAt.current = Date.now()
     eegSequence.current += 1
@@ -209,7 +231,7 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
         device_name: deviceName || 'Muse 2', sequence_number: eegSequence.current, captured_at_ms: Date.now(),
         raw_channels: Object.fromEntries(MUSE_CHANNELS.map((channel, index) => [channel, samples[index].slice(-512)])) }),
     }).then(sample => { if (!recordingStopped.current) { setDeviceState(acceptedChannels > 0 ? sample.state : null); setDeviceFocusScore(sample.focus_score); setEEGError('') } }).catch((reason: Error) => { if (!recordingStopped.current) { setDeviceState(null); setDeviceFocusScore(null); setEEGError(reason.message) } })
-  }, [sessionId, complete, ending, teacherControl?.paused, status, baselineProgress, mode, slide?.id, bands, absoluteBands, relativeBands, quality, acceptedChannels, battery, deviceName, samples])
+  }, [sessionId, progressReady, complete, ending, teacherControl?.paused, status, baselineProgress, mode, slide?.id, bands, absoluteBands, relativeBands, quality, acceptedChannels, battery, deviceName, samples])
 
   const tasks = useMemo<Task[]>(() => lesson ? lesson.slides.map((item, index) => {
     const configuration = taskConfiguration(item.activity.configuration) as Partial<Task>
@@ -217,21 +239,23 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
       question: '', choices: [], answer: '', ...configuration,
       imageUrl: configuration.imageUrl ?? item.activity.asset_url ?? null,
       id: String(item.id), title: item.title, package: lesson.package,
+      initialResponse: (retry[index] ?? 0) === (savedResponses[String(item.id)]?.attempt ?? 1) - 1 ? savedResponses[String(item.id)]?.selected : undefined,
       checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set') && sessionId && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/eeg/${sessionId}/${item.id}` : undefined,
       index: index + 1, total: lesson.slides.length, contentType: item.activity.type,
     }
-  }) : [], [lesson, sessionId])
+  }) : [], [lesson, sessionId, retry, savedResponses])
   const task = tasks[position]
   const pendingAnswers = useRef(new Set<Promise<unknown>>())
+  const answerSaveQueue = useRef<Promise<unknown>>(Promise.resolve())
   const unsavedAnswers = useRef<Record<number, { correct: boolean; selected: string }>>({})
   const [saveFailed, setSaveFailed] = useState(false)
   function saveAnswer(index: number, correct: boolean, selected: string) {
     if (!sessionId || !lesson) return
     const answer = { correct, selected }
     unsavedAnswers.current[index] = answer
-    const request = api(`/sessions/${sessionId}/slides/${lesson.slides[index].id}/`, {
-      method: 'POST', body: JSON.stringify({ action: 'answer', correct, selected, attempt: (retry[index] ?? 0) + 1 }),
-    }).then(() => {
+    const request = answerSaveQueue.current.then(() => api(`/sessions/${sessionId}/slides/${lesson.slides[index].id}/`, {
+      method: 'POST', keepalive: true, body: JSON.stringify({ action: 'answer', correct, selected, attempt: (retry[index] ?? 0) + 1 }),
+    })).then(() => {
       if (unsavedAnswers.current[index] === answer) delete unsavedAnswers.current[index]
       const remaining = Object.keys(unsavedAnswers.current).length > 0
       setSaveFailed(remaining)
@@ -240,11 +264,12 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
       .catch(() => { setSaveFailed(true); setError('An answer could not be saved. Retry saving before finishing.') })
       .finally(() => pendingAnswers.current.delete(request))
     pendingAnswers.current.add(request)
+    answerSaveQueue.current = request
   }
 
   const isActivity = Boolean(task && (task.taskTemplate || (task.template ?? 'multiple_choice') === 'multiple_choice'))
   const requiresMedia = Boolean(!task?.videoOptional && task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
-  const canAdvance = !focusGates[task?.id ?? ''] && (answered[position] || (!isActivity && !requiresMedia))
+  const canAdvance = progressReady && !focusGates[task?.id ?? ''] && (answered[position] || (!isActivity && !requiresMedia))
   const advancing = useRef(false)
   const videoSlide = Boolean(task && (task.contentType === 'video' || task.template === 'instructional_video')) && displayMode === 'focus'
   const wideSlide = task?.layout?.size === 'wide' || task?.layout?.size === 'immersive'
@@ -255,6 +280,8 @@ export default function LiveEEG({ teacherControl: classroomControl }: { teacherC
     if (sessionId) {
       setSavingStep(true)
       try {
+        await Promise.all([...pendingAnswers.current])
+        if (Object.keys(unsavedAnswers.current).length) throw new Error('Answers are not saved')
         const entry = slideEntry.current
         if (entry?.sessionId === sessionId && entry.slideId === lesson.slides[position].id) {
           try { await entry.request } catch { await trackStudentSlide(sessionId, entry.slideId, 'enter') }

@@ -7,6 +7,19 @@ const getCache = new Map<string, { expiresAt: number; value: unknown }>()
 const pendingGets = new Map<string, Promise<unknown>>()
 let cacheGeneration = 0
 let cacheOwner = 'anonymous'
+const isHomeData = (path: string) => path === '/student/dashboard/' || path === '/student/sessions/?home=1'
+const notifyHomeChanged = () => { if (typeof window !== 'undefined') window.dispatchEvent(new Event('cortex:home-invalidated')) }
+
+export function updateApiSyncRevision(revision: string | null | undefined) {
+  if (revision === undefined) return
+  try {
+    const key = 'cortex-last-sync-revision'
+    const previous = localStorage.getItem(key)
+    const next = revision ?? ''
+    localStorage.setItem(key, next)
+    if (previous !== null && previous !== next) { clearApiCache(); notifyHomeChanged() }
+  } catch { /* Storage may be unavailable. */ }
+}
 
 function cacheKey(path: string) {
   return `${cacheOwner}:${path}`
@@ -52,26 +65,30 @@ export function cachedApiValue<T>(path: string): T | undefined {
   }
 }
 
-export function clearApiCache() {
+export function clearApiCache(preserveHome = false) {
   cacheGeneration += 1
-  getCache.clear()
+  for (const key of getCache.keys()) if (!preserveHome || !isHomeData(key.slice(cacheOwner.length + 1))) getCache.delete(key)
   pendingGets.clear()
   try {
     for (let index = localStorage.length - 1; index >= 0; index -= 1) {
       const key = localStorage.key(index)
-      if (key?.startsWith('cortex-api-')) localStorage.removeItem(key)
+      if (key?.startsWith('cortex-api-') && (!preserveHome || !['/student/dashboard/', '/student/sessions/?home=1'].some(path => key.endsWith(`:${path}`)))) localStorage.removeItem(key)
     }
   } catch { /* Storage may be unavailable. */ }
 }
 
 export function primeApiCache(path: string, value: unknown) {
-  const expiresAt = Date.now() + GET_CACHE_TTL_MS
+  const expiresAt = isHomeData(path) ? Number.MAX_SAFE_INTEGER : Date.now() + GET_CACHE_TTL_MS
   const key = cacheKey(path)
   getCache.set(key, { expiresAt, value })
   try { localStorage.setItem(`${SESSION_CACHE_PREFIX}${key}`, JSON.stringify({ expiresAt, value })) } catch { /* Storage may be unavailable. */ }
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const backgroundWrite = /\/sessions\/[^/]+\/(eeg|mode)\/$/.test(path) || (
+    /\/(?:class-sessions|sessions)\/[^/]+\/(?:control\/)?$/.test(path) &&
+    typeof options.body === 'string' && (() => { try { return JSON.parse(options.body).action === 'heartbeat' } catch { return false } })()
+  )
   const headers = new Headers(options.headers)
   const method = (options.method ?? 'GET').toUpperCase()
   const isProfileRequest = path === '/student/profile/' || path === '/teacher/profile/'
@@ -90,12 +107,12 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     if (pending) return pending as Promise<T>
   } else if (method !== 'GET') {
     // Mutations can affect dashboard counts, rosters, notifications, and profiles.
-    clearApiCache()
+    clearApiCache(backgroundWrite)
   }
   const generation = cacheGeneration
   const request = performRequest<T>(path, options, headers, method)
   if (method !== 'GET') {
-    try { return await request } finally { clearApiCache() }
+    try { return await request } finally { clearApiCache(backgroundWrite); if (!backgroundWrite) notifyHomeChanged() }
   }
   if (!options.signal) pendingGets.set(key, request)
   try {

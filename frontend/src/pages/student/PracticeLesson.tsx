@@ -13,7 +13,7 @@ import playerStyles from './PracticeLesson.module.css'
 import eegStyles from './LiveEEG.module.css'
 
 interface Lesson {
-  progress: { completed_slide_ids: number[]; activity_evidence?: Record<string, {selected: string}> }
+  progress: { completed_slide_ids: number[]; activity_evidence?: Record<string, {selected: string; practice_correct?: boolean}> }
   id: number
   title: string
   package: Task['package']
@@ -51,6 +51,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
   const [visited, setVisited] = useState<Set<number>>(() => new Set())
   const [saving, setSaving] = useState(false)
   const advancing = useRef(false)
+  const answerSaves = useRef<Promise<unknown>>(Promise.resolve())
   const [saveError, setSaveError] = useState('')
   const [completed, setCompleted] = useState<Set<number>>(() => new Set())
   useEffect(() => {
@@ -61,6 +62,14 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         setLesson(data)
         const done = new Set(data.slides.flatMap((item, index) => data.progress.completed_slide_ids.includes(item.id) ? [index] : []))
         setCompleted(done)
+        setAnswered(Object.fromEntries(data.slides.flatMap((item, index) => {
+          const evidence = data.progress.activity_evidence?.[String(item.id)]
+          return evidence ? [[index, evidence.practice_correct ?? done.has(index)]] : []
+        })))
+        setResponses(Object.fromEntries(data.slides.flatMap((item, index) => {
+          const evidence = data.progress.activity_evidence?.[String(item.id)]
+          return evidence ? [[index, evidence.selected]] : []
+        })))
         const firstPending = data.slides.findIndex((_, index) => !done.has(index))
         setPosition(firstPending < 0 ? 0 : firstPending)
         setVisited(new Set([firstPending < 0 ? 0 : firstPending]))
@@ -75,6 +84,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     setSaving(true)
     setSaveError('')
     try {
+      await answerSaves.current.catch(() => undefined)
       await api(`/student/classes/${classId}/lessons/${lessonId}/`, { method: 'POST', body: JSON.stringify({ slide_id: slide.id, selected }) })
       setPosition((value) => value + 1)
       setVisited((previous) => new Set(previous).add(position + 1))
@@ -83,6 +93,14 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       setSaveError(reason instanceof Error ? reason.message : 'Progress could not be saved. Please try again.')
     } finally { advancing.current = false; setSaving(false) }
   }
+  function saveAnswer(index: number, correct: boolean, selected: string) {
+    if (!lesson) return
+    const request = answerSaves.current.catch(() => undefined).then(() => api(`/student/classes/${classId}/lessons/${lessonId}/`, {
+      method: 'POST', keepalive: true, body: JSON.stringify({ action: 'answer', slide_id: lesson.slides[index].id, correct, selected }),
+    }))
+    answerSaves.current = request
+    void request.catch(() => setSaveError('Your answer could not be saved. Please answer again before leaving.'))
+  }
   const tasks: Task[] = lesson ? lesson.slides.map((slide, index) => {
     const configuration = taskConfiguration(slide.activity.configuration) as Partial<Task>
     return {
@@ -90,7 +108,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
     checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set') && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
-    initialResponse: lesson.progress.activity_evidence?.[String(slide.id)]?.selected,
+    initialResponse: retry[index] ? undefined : lesson.progress.activity_evidence?.[String(slide.id)]?.selected,
     index: index + 1, total: lesson.slides.length, contentType: slide.activity.type,
     }
   }) : []
@@ -127,7 +145,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
             }} onAnswered={(correct, selected) => {
               setResponses(previous => ({ ...previous, [index]: selected }))
               setAnswered((previous) => ({ ...previous, [index]: correct }))
-              if (correct) setCompleted((previous) => new Set(previous).add(index))
+              saveAnswer(index, correct, selected)
             }} />
         </Activity>)}
         {error ? <p role="alert">{error}</p> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : complete ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>Practice complete</h2><p>You reached the end of this lesson.</p><button className={playerStyles.button + ' ' + playerStyles.next} onClick={back}>Back to lessons</button></div> : null}

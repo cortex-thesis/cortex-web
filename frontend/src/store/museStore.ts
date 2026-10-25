@@ -21,6 +21,7 @@ interface MuseState {
   relativeBands: BandPowers
   bandHistory: BandPowers[]
   baselineProgress: number
+  baselineSamples: BandPowers[]
   acceptedChannels: number
   connectedAt: number | null
   lastSignalAt: number | null
@@ -67,21 +68,26 @@ function contactQuality(values: number[]) {
 export const useMuseStore = create<MuseState>((set, get) => ({
   client: null, subscriptions: [], status: 'idle', deviceName: '', error: '', battery: null,
   samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands,
-  relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, acceptedChannels: 0, connectedAt: null, lastSignalAt: null,
+  relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, baselineSamples: [], acceptedChannels: 0, connectedAt: null, lastSignalAt: null,
   connect: async (automatic = false) => {
     if (!window.isSecureContext || !('bluetooth' in navigator)) {
       set({ status: 'error', error: 'Web Bluetooth is unavailable. Use Chrome or Edge on HTTPS/localhost, or Chrome on Android. iPhone and iPad browsers cannot connect directly.' })
       return
     }
-    if (!automatic) { get().disconnect(); reconnectAttempts = 0 }
+    const reuseSavedDevice = automatic || (get().status === 'error' && savedGatt !== null)
+    connectionGeneration++
+    if (!automatic) reconnectAttempts = 0
+    if (!reuseSavedDevice) get().disconnect()
     else {
       get().subscriptions.forEach(subscription => subscription.unsubscribe())
       get().client?.disconnect()
       set({ subscriptions: [] })
     }
-    const generation = ++connectionGeneration
+    // disconnect() invalidates outstanding callbacks as well.
+    const activeGeneration = connectionGeneration
     const retry = () => {
-      if (generation !== connectionGeneration) return
+      if (activeGeneration !== connectionGeneration || reconnectTimer) return
+      get().subscriptions.forEach(subscription => subscription.unsubscribe())
       if (signalWatchdog) clearInterval(signalWatchdog)
       signalWatchdog = null
       if (savedGatt && reconnectAttempts < 3) {
@@ -91,21 +97,22 @@ export const useMuseStore = create<MuseState>((set, get) => ({
       } else set({ status: 'error', error: 'Automatic reconnection failed. Check the battery and Bluetooth range, then choose Muse 2 again.', acceptedChannels: 0, lastSignalAt: null })
     }
     const client = new MuseClient()
-    set({ client, status: automatic ? 'connecting' : 'requesting', error: automatic ? 'Reconnecting to Muse 2…' : '', samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands, relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, acceptedChannels: 0, lastSignalAt: null })
+    set({ client, status: automatic ? 'connecting' : 'requesting', error: automatic ? 'Reconnecting to Muse 2…' : '', samples: emptySamples(), quality: [0, 0, 0, 0], absoluteBands: emptyBands, relativeBands: emptyBands, acceptedChannels: 0, lastSignalAt: null })
     try {
-      const gatt = automatic && savedGatt ? await savedGatt.connect() : await requestMuseGatt()
-      if (generation !== connectionGeneration) { gatt.disconnect(); return }
+      const gatt = reuseSavedDevice && savedGatt ? await savedGatt.connect() : await requestMuseGatt()
+      if (activeGeneration !== connectionGeneration) { gatt.disconnect(); return }
       await client.connect(gatt)
-      if (generation !== connectionGeneration) { client.disconnect(); return }
+      if (activeGeneration !== connectionGeneration) { client.disconnect(); return }
       set({ status: 'connecting', deviceName: client.deviceName || 'Muse 2' })
       await client.start()
-      if (generation !== connectionGeneration) { client.disconnect(); return }
+      if (activeGeneration !== connectionGeneration) { client.disconnect(); return }
       let liveSamples = emptySamples()
       let lastPublish = 0
       let lastAnalysis = 0
-      const baselineSamples: BandPowers[] = []
-      const smoothedScores = { delta: 1, theta: 1, alpha: 1, beta: 1, gamma: 1 }
+      const baselineSamples = [...get().baselineSamples]
+      const smoothedScores = baselineSamples.length ? { ...get().bands } : { delta: 1, theta: 1, alpha: 1, beta: 1, gamma: 1 }
       const eeg = client.eegReadings.subscribe((reading: EEGReading) => {
+        if (activeGeneration !== connectionGeneration || get().status !== 'streaming') return
         if (reading.electrode < 0 || reading.electrode >= MUSE_CHANNELS.length) return
         // Retain 30 seconds so the baseline recorder can produce every epoch
         // length offered by the protocol (Muse 2 streams at 256 Hz).
@@ -136,7 +143,7 @@ export const useMuseStore = create<MuseState>((set, get) => ({
           acceptedChannels = analysis.acceptedChannels
         } else if (shouldAnalyze) acceptedChannels = 0
         lastPublish = now
-        set({ samples: liveSamples, quality, bands, absoluteBands, relativeBands, bandHistory, baselineProgress, acceptedChannels })
+        set({ samples: liveSamples, quality, bands, absoluteBands, relativeBands, bandHistory, baselineProgress, baselineSamples: [...baselineSamples], acceptedChannels })
       })
       const telemetry = client.telemetryData.subscribe((value: TelemetryData) => set({ battery: Math.round(value.batteryLevel) }))
       const connection = client.connectionStatus.subscribe((connected) => {
@@ -148,11 +155,11 @@ export const useMuseStore = create<MuseState>((set, get) => ({
       if (signalWatchdog) clearInterval(signalWatchdog)
       signalWatchdog = setInterval(() => {
         const state = get()
-        if (generation === connectionGeneration && state.status === 'streaming' && state.lastSignalAt && Date.now() - state.lastSignalAt > 5000) retry()
+        if (activeGeneration === connectionGeneration && state.status === 'streaming' && state.lastSignalAt && Date.now() - state.lastSignalAt > 5000) retry()
       }, 1000)
     } catch (reason) {
       client.disconnect()
-      if (generation !== connectionGeneration) return
+      if (activeGeneration !== connectionGeneration) return
       if (automatic) { retry(); return }
       const message = reason instanceof Error && reason.name === 'NotFoundError' ? 'Bluetooth selection was cancelled.' : reason instanceof Error ? reason.message : 'Unable to connect to Muse 2.'
       set({ status: 'error', error: message, client: null })
@@ -169,6 +176,6 @@ export const useMuseStore = create<MuseState>((set, get) => ({
     const { client, subscriptions } = get()
     subscriptions.forEach((subscription) => subscription.unsubscribe())
     client?.disconnect()
-    set({ client: null, subscriptions: [], status: 'idle', deviceName: '', error: '', battery: null, connectedAt: null, lastSignalAt: null, samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands, relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, acceptedChannels: 0 })
+    set({ client: null, subscriptions: [], status: 'idle', deviceName: '', error: '', battery: null, connectedAt: null, lastSignalAt: null, samples: emptySamples(), quality: [0, 0, 0, 0], bands: emptyBands, absoluteBands: emptyBands, relativeBands: emptyBands, bandHistory: [], baselineProgress: 0, baselineSamples: [], acceptedChannels: 0 })
   },
 }))

@@ -5,8 +5,8 @@ import { PlayfulZoneTemplate } from '../../components/templates'
 import { CardGridSkeleton, SessionCard, ClassTile, QuickActionCard } from '../../components/molecules'
 import { FlowerAvatar } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
-import { classPresentation, getStudentDashboard, getStudentSessions, resumeStudentSession } from '../../lib/studentApi'
-import { cachedApiValue } from '../../lib/api'
+import { classPresentation, getStudentDashboard, resumeStudentSession } from '../../lib/studentApi'
+import { api, cachedApiValue } from '../../lib/api'
 import type { DashboardData, StudentSessionsData } from '../../lib/studentApi'
 import styles from './Home.module.css'
 
@@ -24,21 +24,29 @@ export default function Home() {
   const navigate = useNavigate()
   const student = useAuthStore((state) => state.user)!
   const cachedDashboard = cachedApiValue<DashboardData>('/student/dashboard/')
+  const cachedSessions = cachedApiValue<StudentSessionsData>('/student/sessions/?home=1')
   const [dashboard, setDashboard] = useState<DashboardData | null>(cachedDashboard ?? null)
-  const [sessions, setSessions] = useState<StudentSessionsData | null>(null)
-  const [sessionsLoading, setSessionsLoading] = useState(true)
+  const [sessions, setSessions] = useState<StudentSessionsData | null>(cachedSessions ?? null)
+  const [sessionsLoading, setSessionsLoading] = useState(!cachedSessions)
   const [classes, setClasses] = useState<ReturnType<typeof classPresentation>[]>(() => (cachedDashboard?.classes ?? []).map(classPresentation))
   const [classesLoading, setClassesLoading] = useState(!cachedDashboard)
   useEffect(() => {
-    setClassesLoading(true)
-    setSessionsLoading(true)
-    void Promise.allSettled([getStudentDashboard(), getStudentSessions()]).then(([dashboardResult, sessionsResult]) => {
-      if (dashboardResult.status === 'fulfilled') {
-        setDashboard(dashboardResult.value)
-        setClasses(dashboardResult.value.classes.map(classPresentation))
-      }
-      if (sessionsResult.status === 'fulfilled') setSessions(sessionsResult.value)
-    }).finally(() => { setClassesLoading(false); setSessionsLoading(false) })
+    let disposed = false
+    let generation = 0
+    const refresh = () => {
+      const current = ++generation
+      void Promise.allSettled([getStudentDashboard(), api<StudentSessionsData>('/student/sessions/?home=1')]).then(([dashboardResult, sessionsResult]) => {
+        if (disposed || current !== generation) return
+        if (dashboardResult.status === 'fulfilled') {
+          setDashboard(dashboardResult.value)
+          setClasses(dashboardResult.value.classes.map(classPresentation))
+        }
+        if (sessionsResult.status === 'fulfilled') setSessions(sessionsResult.value)
+      }).finally(() => { if (!disposed && current === generation) { setClassesLoading(false); setSessionsLoading(false) } })
+    }
+    refresh()
+    window.addEventListener('cortex:home-invalidated', refresh)
+    return () => { disposed = true; window.removeEventListener('cortex:home-invalidated', refresh) }
   }, [student.id])
   const activeSession = sessions?.sessions.find((session) => session.status === 'in_progress') ?? null
   const completedSessions = sessions?.summary.completed_sessions ?? 0

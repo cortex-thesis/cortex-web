@@ -36,6 +36,18 @@ class EEGAnswerTests(TestCase):
         self.assertEqual(ActivityResponse.objects.filter(session=self.session).count(), 2)
         self.assertTrue(ActivityResponse.objects.get(session=self.session, attempt_number=2).is_correct)
 
+    def test_reload_returns_completed_steps_and_latest_saved_answer_attempt(self):
+        from .models import SessionSlideExposure
+        self.answer(correct=False, selected='No')
+        self.answer(correct=True, selected='Yes', attempt=2)
+        SessionSlideExposure.objects.create(session=self.session, slide=self.slide, completed_at=timezone.now())
+        result = self.client.get(f'/api/sessions/{self.session.pk}/eeg/')
+        self.assertEqual(result.status_code, 200)
+        progress = result.json()['progress']
+        self.assertEqual(progress['completed_slide_ids'], [self.slide.pk])
+        self.assertEqual(progress['responses'][str(self.slide.pk)], {'selected': 'Yes', 'correct': True, 'attempt': 2})
+        self.assertEqual(progress['last_sequence_number'], 0)
+
     def test_rejects_answers_from_other_students(self):
         self.client.force_login(self.other.user)
         self.assertEqual(self.answer().status_code, 404)

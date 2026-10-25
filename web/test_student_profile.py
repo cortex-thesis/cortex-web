@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from .models import (
     Activity, ActivityResponse, AdaptationEvent, CurriculumPackage, Enrollment, JournalEntry,
-    LearningSession, Lesson, Profile, SchoolClass, SessionAnalytics, Slide,
+    LearningSession, Lesson, Profile, SchoolClass, SessionAnalytics, SessionSlideExposure, Slide,
 )
 from .views import _teacher_dashboard_data
 
@@ -38,9 +38,11 @@ class StudentProfileTests(TestCase):
         package = CurriculumPackage.objects.first()
         lesson = Lesson.objects.create(package=package, title='Actual Lesson', status=Lesson.Status.APPROVED, created_by=self.teacher)
         activity = Activity.objects.create(type=Activity.ActivityType.INTERACTIVE, title='Question')
-        Slide.objects.create(lesson=lesson, activity=activity, position=1, title='Question')
+        slide = Slide.objects.create(lesson=lesson, activity=activity, position=1, title='Question')
         session = self.session(lesson=lesson)
-        # Repeated attempts must not inflate the answered activity count.
+        now = timezone.now()
+        SessionSlideExposure.objects.create(session=session, slide=slide, entered_at=now, completed_at=now, exited_at=now)
+        # Repeated attempts must not inflate the completed lesson-step count.
         ActivityResponse.objects.create(session=session, activity=activity, attempt_number=1)
         ActivityResponse.objects.create(session=session, activity=activity, attempt_number=2)
         SessionAnalytics.objects.create(session=session, focused_percentage=75, relaxed_percentage=25, adaptation_count=3, manual_override_count=1)

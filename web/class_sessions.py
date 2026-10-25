@@ -15,7 +15,7 @@ from .models import (
     SchoolClass, SessionAnalytics, SessionSlideExposure, Slide,
 )
 from .statistics import percentages
-from .views import _audit, _body, _lesson_data, _require_profile, _session_is_live
+from .views import _audit, _body, _lesson_data, _require_profile, _session_is_live, _required_lesson_rows
 
 OPEN_STATUSES = (ClassSession.Status.SCHEDULED, ClassSession.Status.ACTIVE, ClassSession.Status.PAUSED)
 STATES = ('focused', 'relaxed', 'distracted', 'overstimulated')
@@ -91,10 +91,10 @@ def participant_data(session, group):
     online = bool(session.last_seen_at and (timezone.now() - session.last_seen_at).total_seconds() <= 12 and not session.ended_at)
     status = 'completed' if session.ended_at else 'lobby' if session.status == LearningSession.Status.JOINED else 'paused' if group.status == ClassSession.Status.PAUSED else 'active'
     lesson_ids = {entry['id'] for entry in group.lesson_history}
-    task_total = Slide.objects.filter(lesson_id__in=lesson_ids).count()
-    completed_steps = session.slide_exposures.filter(completed_at__isnull=False, slide__lesson_id__in=lesson_ids).values('slide_id').distinct().count()
-    lesson_total = Slide.objects.filter(lesson_id=group.lesson_id).count() if group.lesson_id else 0
-    lesson_completed = session.slide_exposures.filter(completed_at__isnull=False, slide__lesson_id=group.lesson_id).values('slide_id').distinct().count() if group.lesson_id else 0
+    task_total = Slide.objects.filter(lesson_id__in=lesson_ids).filter(_required_lesson_rows('activity')).count()
+    completed_steps = session.slide_exposures.filter(completed_at__isnull=False, slide__lesson_id__in=lesson_ids).filter(_required_lesson_rows('slide__activity')).values('slide_id').distinct().count()
+    lesson_total = Slide.objects.filter(lesson_id=group.lesson_id).filter(_required_lesson_rows('activity')).count() if group.lesson_id else 0
+    lesson_completed = session.slide_exposures.filter(completed_at__isnull=False, slide__lesson_id=group.lesson_id).filter(_required_lesson_rows('slide__activity')).values('slide_id').distinct().count() if group.lesson_id else 0
     answers = session.activity_responses
     start = max(session.started_at, group.started_at) if group.started_at else None
     end = session.ended_at or now
@@ -175,8 +175,8 @@ def finalize_student(session, now):
     session.ended_at = now
     session.status = LearningSession.Status.COMPLETED
     lesson_ids = [item['id'] for item in session.class_session.lesson_history] if session.class_session_id else [session.lesson_id]
-    task_total = Slide.objects.filter(lesson_id__in=lesson_ids).count()
-    viewed = session.slide_exposures.filter(completed_at__isnull=False).values('slide_id').distinct().count()
+    task_total = Slide.objects.filter(lesson_id__in=lesson_ids).filter(_required_lesson_rows('activity')).count()
+    viewed = session.slide_exposures.filter(completed_at__isnull=False, slide__lesson_id__in=lesson_ids).filter(_required_lesson_rows('slide__activity')).values('slide_id').distinct().count()
     session.completion_percentage = min(100, round(viewed * 100 / task_total, 2)) if task_total else 0
     session.slide_exposures.filter(exited_at__isnull=True).update(exited_at=now)
     session.save(update_fields=['ended_at', 'status', 'completion_percentage'])
