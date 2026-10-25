@@ -1,6 +1,7 @@
+import { Link } from 'react-router-dom'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Bell, Volume2, Vibrate, LogOut, LockKeyhole, Mail, Pencil, Save, ShieldCheck, X } from 'lucide-react'
+import { ChevronLeft, Bell, Volume2, Vibrate, CircleHelp, LogOut, LockKeyhole, Mail, Pencil, Save, ShieldCheck, X } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { Button, FLOWER_COLORS, StudentFlowerAvatar, type FlowerColor } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
@@ -298,6 +299,10 @@ export default function Settings() {
             onChange={(value) => { setHapticsEnabled(value); updatePreference('haptics_enabled', value) }}
           />
         </div>
+
+        <section className={styles.card} aria-label="Help and guidance">
+          <Link className={styles.helpLink} data-guide="/student/help" to="/student/help"><CircleHelp size={24} aria-hidden="true" /><span><strong>Help &amp; Guides</strong><small>Explore Cortex, browse guides, or restart your demo.</small></span><span aria-hidden="true">&rarr;</span></Link>
+        </section>
 
         <span className={styles.sectionLabel}>Security &amp; account</span>
         <section className={`${styles.card} ${styles.securityCard}`} aria-labelledby="security-heading">

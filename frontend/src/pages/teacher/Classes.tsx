@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Plus, ChevronRight } from 'lucide-react'
@@ -24,7 +25,7 @@ export default function Classes() {
   const filtered = classes.filter((item) => item.status === 'active' && item.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <TeacherDashboardTemplate user={user}>
+    <TeacherDashboardTemplate user={user}><p style={{ padding: '8px 24px' }}><Link to="/teacher/help#content">Learn about this workspace</Link></p>
       <div className={styles.content}>
         <div className={styles.header}>
           <h1 className={styles.title}>Classes</h1>

@@ -95,7 +95,7 @@ export default function Home() {
           <div className={styles.classesHeader}><span className={styles.classesLabel}>My Classes</span>{hasMoreClasses && <button className={styles.seeAllBtn} onClick={() => navigate('/student/classes')}>See all</button>}</div>
           {classesLoading ? <CardGridSkeleton count={2} /> : <div className={`${styles.learningGrid} ${previewClasses.length === 1 ? styles.singleClassGrid : ''} ${previewClasses.length === 0 ? styles.noClassGrid : ''}`}>
             {previewClasses.map(item => <ClassTile key={item.id} name={item.name} illustrationSrc={`${LEARNING_ASSET_PATH}/growing-plant.png`} layout="horizontal" onClick={() => navigate(`/student/class/${item.id}`)} />)}
-            <button className={styles.startLearningCard} onClick={() => navigate(classes.length === 1 ? `/student/class/${classes[0].id}` : classes.length ? '/student/classes' : '/student/join-class')}>
+            <button data-tour="student-learn" className={styles.startLearningCard} onClick={() => navigate(classes.length === 1 ? `/student/class/${classes[0].id}` : classes.length ? '/student/classes' : '/student/join-class')}>
               <span className={styles.startLearningIcon} aria-hidden="true"><img src={`${LEARNING_ASSET_PATH}/sprout.png`} alt="" /></span>
               <span className={styles.startLearningCopy}><small>{classes.length ? 'Start learning' : 'Get started'}</small><strong>{classes.length ? 'Start a lesson' : 'Join a class'}</strong><span>{classes.length === 1 ? `Choose something new to learn in ${classes[0].name}.` : classes.length > 1 ? 'Choose a class and find your next lesson.' : 'Join a class to see lessons you can start.'}</span></span>
               <span className={styles.startLearningAction}>{classes.length ? 'Choose' : 'Join'} <ArrowRight size={15} /></span>
@@ -110,10 +110,10 @@ export default function Home() {
           </button>
           <div className={styles.qaGrid}>
             <QuickActionCard icon={<UserPlus size={14} strokeWidth={1.75} color="#534AB7" />} iconBg="#EEEDFE" label="Join a class" sub="Enter code" onClick={() => navigate('/student/join-class')} />
-            <QuickActionCard icon={<CirclePlay size={14} strokeWidth={1.75} color="#1D9E75" />} iconBg="#E1F5EE" label="Start a lesson" sub="Choose a class" onClick={() => navigate('/student/classes')} />
+            <QuickActionCard tourId="student-lessons" icon={<CirclePlay size={14} strokeWidth={1.75} color="#1D9E75" />} iconBg="#E1F5EE" label="Start a lesson" sub="Choose a class" onClick={() => navigate('/student/classes')} />
             <QuickActionCard icon={<ChartNoAxesColumn size={14} strokeWidth={1.75} color="#D4537E" />} iconBg="#FBEAF0" label="My progress" sub="Profile overview" onClick={() => navigate('/student/profile')} />
-            <QuickActionCard icon={<img className={styles.gardenIllustration} src={`${LEARNING_ASSET_PATH}/flower-pot.png`} alt="" />} iconBg="var(--color-surface-1)" label="Achievement garden" sub="See what has bloomed" onClick={() => navigate('/student/achievements')} />
-            <QuickActionCard className={styles.journalShortcut} icon={<NotebookPen size={14} strokeWidth={1.75} color="#534AB7" />} iconBg="#EEEDFE" label="Learning journal" sub="Reflect on a session" onClick={() => navigate('/student/journal')} />
+            <QuickActionCard tourId="student-garden" icon={<img className={styles.gardenIllustration} src={`${LEARNING_ASSET_PATH}/flower-pot.png`} alt="" />} iconBg="var(--color-surface-1)" label="Achievement garden" sub="See what has bloomed" onClick={() => navigate('/student/achievements')} />
+            <QuickActionCard icon={<NotebookPen size={14} strokeWidth={1.75} color="#534AB7" />} iconBg="#EEEDFE" label="Learning journal" sub="Reflect on a session" onClick={() => navigate('/student/journal')} />
           </div>
           </div>
         </div>

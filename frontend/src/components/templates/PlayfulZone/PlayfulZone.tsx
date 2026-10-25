@@ -27,7 +27,7 @@ export function PlayfulZoneTemplate({
       <div className={styles.blob1} aria-hidden="true" />
       <div className={styles.blob2} aria-hidden="true" />
       {showHeader && <StudentHeader />}
-      <main className={styles.content}>{children}</main>
+      <main data-tour-screen="student" className={styles.content}>{children}</main>
       {showNav && <NavBarStudent />}
     </div>
   )

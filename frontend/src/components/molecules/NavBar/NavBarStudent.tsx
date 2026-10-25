@@ -49,6 +49,7 @@ function NavBarStudent() {
         return (
           <button
             key={item.path}
+            data-tour={item.path === '/student/sessions' ? 'student-sessions' : undefined}
             className={styles.item}
             onClick={() => navigate(item.path)}
             aria-label={item.label}

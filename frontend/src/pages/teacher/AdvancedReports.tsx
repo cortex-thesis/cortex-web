@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { SchoolYearOptions } from './SchoolYearOptions'
 import CognitiveStateInfo, { cognitiveDisclaimer } from '../../components/molecules/CognitiveStateInfo'
 import { useReportYear, type ReportYearData } from './reportingYears'
@@ -47,7 +48,7 @@ export default function AdvancedReports() {
   const visibleStudents = data?.students.filter((student) => !studentFilter || String(student.student.id) === studentFilter) ?? []
   const visibleStates = stateFilter === 'all' ? STATE_NAMES : [stateFilter]
   const stamp = (value: string | null) => value ? new Date(value).toLocaleString() : 'No EEG samples'
-  return <TeacherDashboardTemplate user={user}><div className={styles.page}>
+  return <TeacherDashboardTemplate user={user}><p style={{ padding: '8px 24px' }}><Link to="/teacher/help#reports">Learn about this workspace</Link></p><div className={styles.page}>
     <div className={styles.header}><div><button className={styles.ghost} onClick={() => navigate(`/teacher/reports${yearQuery}`)}><ArrowLeft size={13} /> General report</button><span className={styles.eyebrow}>EEG analytics</span><h1 className={styles.title}>Advanced reports</h1><p className={styles.subtitle}>Drill down from class and lesson statistics to each student, session, slide, and content item.</p></div><div className={styles.actions}><select aria-label="School year" className={styles.select} value={schoolYear || data?.selected_school_year || 'all'} onChange={event => { setLoading(true); setClassId(''); setStudentFilter(''); setLessonFilter(''); setError(''); setSchoolYear(event.target.value) }}><SchoolYearOptions years={data?.school_years} /></select><select aria-label="Class" className={styles.select} value={classId} onChange={(event) => { setLoading(true); setError(''); setClassId(event.target.value); setStudentFilter(''); setLessonFilter('') }}>{data?.classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select aria-label="Period" className={styles.select} value={range} onChange={(event) => { setLoading(true); setError(''); setRange(event.target.value) }}><option value="week">This week</option><option value="month">This month</option><option value="term">Current term</option></select></div></div>
     {error && <div className={`${styles.alert} ${styles.alertDanger}`}>{error}</div>}
     {loading && !error && <><CardGridSkeleton count={4} /><section className={styles.section}><TableSkeleton rows={7} columns={5} /></section></>}

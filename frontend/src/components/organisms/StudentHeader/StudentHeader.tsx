@@ -34,10 +34,10 @@ export default function StudentHeader() {
 
   return <header className={styles.header}>
     {award && <div className={styles.awardNotice}><ToastNotification key={award.id} message={`${award.title}: ${award.body}`} variant="success" duration={6000} onDismiss={() => { if (!busy) void markRead(award.id) }} />{error && <p role="alert">{error} Dismiss again to retry.</p>}</div>}
-    <button className={styles.brand} onClick={() => navigate('/student/home')} aria-label="Cortex student home"><Logo variant="icon" height={36} /></button>
+    <button data-tour="student-home" className={styles.brand} onClick={() => navigate('/student/home')} aria-label="Cortex student home"><Logo variant="icon" height={36} /></button>
     <div className={styles.actions}>
       <StudentNotificationPopover open={notificationsOpen} onOpenChange={setNotificationsOpen} onOpen={() => setAccountOpen(false)} />
-      <button className={styles.iconButton} aria-label="Settings" onClick={() => navigate('/student/settings')}><Settings size={18} strokeWidth={1.75} /></button>
+      <button data-tour="student-settings" className={styles.iconButton} aria-label="Settings" onClick={() => navigate('/student/settings')}><Settings size={18} strokeWidth={1.75} /></button>
       <div className={styles.account} ref={accountRef}>
         <button className={styles.avatarButton} title="Profile" onClick={() => { setNotificationsOpen(false); setAccountOpen(open => !open) }} aria-label="Open profile menu" aria-expanded={accountOpen} aria-haspopup="menu"><StudentFlowerAvatar className={styles.headerAvatar} name={student.name} color={student.avatar_color} size="sm" /></button>
         {accountOpen && <div className={styles.accountPopover} role="menu">

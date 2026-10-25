@@ -33,7 +33,7 @@ export default function Achievements() {
   const [achievements, setAchievements] = useState<GardenAchievement[] | null>(null)
   const [error, setError] = useState('')
   useEffect(() => { void api<ProgressResponse>('/student/package-progress/', { cache: 'no-store' }).then((data) => setAchievements(achievementList(data.badge_unlocks))).catch((reason: Error) => setError(reason.message)) }, [])
-  return <PlayfulZoneTemplate><div className={styles.page}>
+  return <PlayfulZoneTemplate><div data-tour="student-garden-view" className={styles.page}>
     <button className={styles.back} onClick={() => navigate('/student/profile')}><ArrowLeft size={16} /> Profile</button>
     {error && <p className={styles.error} role="alert">The garden could not be loaded. {error}</p>}
     {!achievements && !error && <div className={styles.loading} role="status">Growing your garden…</div>}

@@ -120,13 +120,13 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
   const requiresMedia = Boolean(!task?.videoOptional && task?.mediaUrl && (task.contentType === 'audio' || task.contentType === 'video' || task.template === 'instructional_video' || task.template === 'calming_soundscape'))
   const canAdvance = answered[position] || (!isActivity && !requiresMedia)
   const complete = Boolean(lesson?.slides.length && position >= lesson.slides.length)
-  return <PlayfulZoneTemplate showNav={false}><div className={`${styles.page} ${playerStyles.page}`}>
+  return <PlayfulZoneTemplate showNav={false}><div data-tour="practice-page" className={`${styles.page} ${playerStyles.page}`}>
     <header className={styles.header}>
-      <button className={styles.backBtn} onClick={back} aria-label="Back to lessons"><ArrowLeft size={18} /></button>
+      <button data-tour="practice-back" className={styles.backBtn} onClick={back} aria-label="Back to lessons"><ArrowLeft size={18} /></button>
       <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>
     </header>
     {lesson && !complete && <div className={playerStyles.musicToolbar}><ModeBgm mode="focus" suspended={Boolean(task?.taskTemplate === 'audio_sequence' || task?.taskTemplate === 'creative_experience' || (task?.mediaUrl && (videoSlide || task.contentType === 'audio' || task.template === 'calming_soundscape')))} /></div>}
-    <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''}`} aria-label="Lesson activities">
+    <section data-tour="practice-player" data-practice-template={task?.taskTemplate ?? task?.template ?? task?.contentType} data-practice-complete={complete} className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}>
           <span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length - 1) * 100)}%` }} />
@@ -152,9 +152,9 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         {error ? <p role="alert">{error}</p> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : complete ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>Practice complete</h2><p>You reached the end of this lesson.</p><button className={playerStyles.button + ' ' + playerStyles.next} onClick={back}>Back to lessons</button></div> : null}
       </div>
       {saveError && <p role="alert">{saveError}</p>}
-      {task && <nav className={playerStyles.actions} aria-label="Activity navigation">
+      {task && <nav data-tour="practice-navigation" className={playerStyles.actions} aria-label="Activity navigation">
         <button className={`${playerStyles.button} ${playerStyles.previous}`} disabled={position === 0 || saving} onClick={() => { playLessonSound('transition'); setVisited((previous) => new Set(previous).add(position - 1)); setPosition(position - 1) }}><ArrowLeft size={18} />Previous</button>
-        {isActivity && !['audio_sequence', 'memory_flip', 'scenario_classifier'].includes(task.taskTemplate ?? '') && answered[position] === false && <button className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry((previous) => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered((previous) => { const next = { ...previous }; delete next[position]; return next }); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
+        {isActivity && !['audio_sequence', 'memory_flip', 'scenario_classifier'].includes(task.taskTemplate ?? '') && answered[position] === false && <button data-tour="practice-retry" className={`${playerStyles.button} ${playerStyles.retry}`} disabled={saving} onClick={() => { setRetry((previous) => ({ ...previous, [position]: (previous[position] ?? 0) + 1 })); setAnswered((previous) => { const next = { ...previous }; delete next[position]; return next }); setCompleted((previous) => { const next = new Set(previous); next.delete(position); return next }) }}><RotateCcw size={18} />Try again</button>}
         {videoSlide && !answered[position] && <button type="button" className={`${playerStyles.button} ${playerStyles.skipVideo}`} disabled={saving} onClick={() => {
           void advance('continued_without_video')
         }}>Continue without video</button>}

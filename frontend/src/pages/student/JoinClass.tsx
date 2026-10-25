@@ -32,7 +32,7 @@ export default function JoinClass() {
 
   return (
     <PlayfulZoneTemplate showNav={false}>
-      <div className={styles.topBar}><button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Go back"><ArrowLeft size={16} strokeWidth={1.75} /></button><h1 className={styles.title}>Join a class</h1></div>
+      <div className={styles.topBar}><button data-tour="student-home" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Go back"><ArrowLeft size={16} strokeWidth={1.75} /></button><h1 data-tour="learning-heading" className={styles.title}>Join a class</h1></div>
       <div className={styles.content}>
         <span className={styles.heroIcon} aria-hidden="true"><GraduationCap size={30} strokeWidth={1.75} /></span>
         <div className={styles.textBlock}><h2 className={styles.heading}>Enter your class code</h2><p className={styles.sub}>Type the code your teacher gave you</p></div>

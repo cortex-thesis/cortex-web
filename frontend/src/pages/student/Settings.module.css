@@ -78,3 +78,9 @@
   .modal { padding:var(--space-4); }
 }
 @media (prefers-reduced-motion:reduce) { .toggleKnob,.toggle::before { transition:none; } }
+
+.helpLink { display:flex; align-items:center; gap:16px; min-height:80px; padding:20px; color:var(--color-deep-purple); text-decoration:none; }
+.helpLink > span:first-of-type { display:grid; gap:4px; flex:1; }
+.helpLink small { color:var(--color-text-secondary); font-size:14px; line-height:1.5; }
+.helpLink:hover { background:var(--flower-purple-fill); }
+.helpLink:focus-visible { outline:3px solid var(--color-interface-blue); outline-offset:-3px; }

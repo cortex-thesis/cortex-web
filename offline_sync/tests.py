@@ -190,6 +190,38 @@ class MergeTests(SimpleTestCase):
         self.assertEqual(len(merge({}, base, {"t": {"1": {"name": "new"}}})[1]), 1)
 
 
+class SlideReorderSyncTests(TransactionTestCase):
+    def setUp(self):
+        from web.models import Activity, Lesson, Profile, Slide
+        owner = Profile.objects.create(user=get_user_model().objects.create_user('slide-sync'), role='admin')
+        package, _ = CurriculumPackage.objects.get_or_create(slug='career', defaults={'name': 'Career'})
+        lesson = Lesson.objects.create(package=package, title='Original lesson', created_by=owner)
+        for position in range(3):
+            activity = Activity.objects.create(type='image', title=str(position))
+            Slide.objects.create(lesson=lesson, activity=activity, position=position)
+        self.model = Slide
+
+    def test_slide_swap_preserves_identities_without_transient_position_collision(self):
+        from copy import deepcopy
+        current = snapshot('default', [self.model])
+        desired = deepcopy(current)
+        rows = list(desired['web_slide'].values())
+        rows[0]['position'], rows[1]['position'] = rows[1]['position'], rows[0]['position']
+        with transaction.atomic():
+            write_changes('default', current, desired, [self.model])
+        self.assertEqual(snapshot('default', [self.model]), desired)
+
+    def test_invalid_duplicate_final_positions_still_fail_and_roll_back(self):
+        from copy import deepcopy
+        current = snapshot('default', [self.model])
+        desired = deepcopy(current)
+        rows = list(desired['web_slide'].values())
+        rows[1]['position'] = rows[0]['position']
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            write_changes('default', current, desired, [self.model])
+        self.assertEqual(snapshot('default', [self.model]), current)
+
+
 class LocalStorageTests(TransactionTestCase):
     def tearDown(self):
         from .engine import drop_guards

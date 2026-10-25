@@ -1,6 +1,7 @@
+import { Link } from 'react-router-dom'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Users, ShieldAlert, LogOut } from 'lucide-react'
+import { Bell, Users, ShieldAlert, CircleHelp, LogOut } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { Button } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
@@ -144,7 +145,11 @@ export default function Settings() {
               {message && <p className={`${styles.message} ${message.kind === 'error' ? styles.error : styles.success}`} role={message.kind === 'error' ? 'alert' : 'status'}>{message.text}</p>}
             </div>
 
-            <Button
+            <section className={styles.card} aria-label="Help and guidance">
+          <Link className={styles.helpLink} data-guide="/teacher/help" to="/teacher/help"><CircleHelp size={24} aria-hidden="true" /><span><strong>Help &amp; Guides</strong><small>Explore Cortex, browse guides, or restart your workspace tour.</small></span><span aria-hidden="true">&rarr;</span></Link>
+        </section>
+
+        <Button
               variant="danger"
               onClick={handleLogout}
               className={styles.logoutBtn}

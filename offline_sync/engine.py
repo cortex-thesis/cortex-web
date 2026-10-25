@@ -266,6 +266,21 @@ def write_changes(alias, current, desired, model_list):
         for model in model_list:
             table = model._meta.db_table
             fields = list(model._meta.concrete_fields)
+            if table == 'web_slide':
+                # Position uniqueness is immediate in both SQLite and PostgreSQL.
+                # Vacate moving rows before inserting/updating their final slots;
+                # this also handles swaps and lessons that gained an opening slide.
+                # The caller's transaction hides and rolls back temporary positions.
+                existing = current.get(table, {})
+                target = desired.get(table, {})
+                moving = [key for key in existing.keys() & target.keys()
+                          if (existing[key]['lesson_id'], existing[key]['position']) !=
+                          (target[key]['lesson_id'], target[key]['position'])]
+                spare = max((row['position'] for rows in (existing, target)
+                             for row in rows.values()), default=-1) + 1
+                for offset, key in enumerate(sorted(moving)):
+                    cursor.execute(f'UPDATE {quote(table)} SET {quote("position")} = %s '
+                                   f'WHERE {quote(model._meta.pk.column)} = %s', [spare + offset, model._meta.pk.to_python(key)])
             names = ", ".join(quote(f.column) for f in fields)
             updates = ", ".join(f"{quote(f.column)} = EXCLUDED.{quote(f.column)}" for f in fields if not f.primary_key)
             action = f"DO UPDATE SET {updates}" if updates else "DO NOTHING"

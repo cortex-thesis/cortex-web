@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import InterventionHistory from './InterventionHistory'
 import { SchoolYearOptions } from './SchoolYearOptions'
 import CognitiveStateInfo, { cognitiveDisclaimer } from '../../components/molecules/CognitiveStateInfo'
@@ -70,7 +71,7 @@ export default function Reports() {
     ['Overstimulated', data.state_distribution.overstimulated, 'var(--state-overstimulated)'],
   ] as const : []
 
-  return <TeacherDashboardTemplate user={user}>
+  return <TeacherDashboardTemplate user={user}><p style={{ padding: '8px 24px' }}><Link to="/teacher/help#reports">Learn about this workspace</Link></p>
     <div className={styles.page}>
       <div className={styles.header}><div><span className={styles.eyebrow}>Reporting</span><h1 className={styles.title}>Class engagement report</h1><p className={styles.subtitle}>A print-ready summary calculated from completed learning sessions.</p></div><div className={styles.actions}>
         <select aria-label="School year" className={styles.select} value={schoolYear || data?.selected_school_year || 'all'} onChange={event => { setClassId(''); setStudentId(''); setLoading(true); setError(''); setSchoolYear(event.target.value) }}><SchoolYearOptions years={data?.school_years} /></select><select aria-label="Class" className={styles.select} value={classId} onChange={(event) => { setLoading(true); setError(''); setStudentId(''); setClassId(event.target.value) }} disabled={!data?.classes.length}>{data?.classes.length ? data.classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>) : <option>No classes</option>}</select>

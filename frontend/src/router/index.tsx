@@ -1,3 +1,5 @@
+import { TourLaunch } from '../features/help/GuidedTour'
+import HelpCenter from '../features/help/HelpCenter'
 import NotificationCenter from '../pages/NotificationCenter'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
@@ -84,6 +86,8 @@ export default function AppRouter() {
       />
       <Route element={<ProtectedRoute roles={['student']} />}>
       <Route path="/student/class-session/:groupId" element={<ClassSessionLobby />} />
+      <Route path="/student/help" element={<HelpCenter />} />
+      <Route path="/student/help/tour" element={<TourLaunch />} />
       <Route path="/student/home" element={<Home />} />
       <Route path="/student/join-class" element={<JoinClass />} />
       <Route path="/student/eeg-pairing" element={<EEGPairing />} />
@@ -117,6 +121,8 @@ export default function AppRouter() {
       <Route element={<ProtectedRoute roles={['teacher']} />}>
       <Route path="/teacher/sessions" element={<TeacherClassSession />} />
       <Route path="/teacher/class-session/:groupId" element={<TeacherClassSession />} />
+      <Route path="/teacher/help" element={<HelpCenter />} />
+      <Route path="/teacher/help/tour" element={<TourLaunch />} />
       <Route path="/teacher/dashboard" element={<Dashboard />} />
       <Route path="/teacher/classes" element={<TeacherClasses />} />
       <Route

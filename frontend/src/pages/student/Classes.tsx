@@ -29,7 +29,7 @@ export default function Classes() {
         >
           <ChevronLeft size={18} strokeWidth={1.75} />
         </button>
-        <h1 className={styles.title}>My Classes</h1>
+        <h1 data-tour="learning-heading" className={styles.title}>My Classes</h1>
         <button
           className={styles.joinBtn}
           onClick={() => navigate('/student/join-class')}
@@ -54,7 +54,7 @@ export default function Classes() {
         {loading ? <CardGridSkeleton count={4} /> : filtered.length > 0 ? (
           <div className={styles.grid}>
             {filtered.map((cls) => (
-              <button key={cls.id} className={styles.classCard} onClick={() => navigate(`/student/class/${cls.id}`)}>
+              <button data-tour="class-choice" key={cls.id} className={styles.classCard} onClick={() => navigate(`/student/class/${cls.id}`)}>
                 <span className={styles.classIcon} aria-hidden="true"><School size={26} strokeWidth={1.75} /></span>
                 <strong className={styles.className}>{cls.name}</strong>
                 <span className={styles.viewClass}>View class <ArrowRight size={15} /></span>

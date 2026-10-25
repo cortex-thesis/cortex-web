@@ -85,7 +85,7 @@ export default function Dashboard() {
   let angle = 0
   const segments = states.map((state) => { const start = angle; angle += distribution[state] * 3.6; return `${COGNITIVE_STATES[state].color} ${start}deg ${angle}deg` })
 
-  return <TeacherDashboardTemplate user={data?.teacher ?? user} hasNotification={Boolean(data?.unread_notifications)}>
+  return <TeacherDashboardTemplate user={data?.teacher ?? user} hasNotification={Boolean(data?.unread_notifications)}><p style={{ padding: '8px 24px' }}><Link to="/teacher/help#dashboard">Learn about this workspace</Link></p>
     <div className={analyticsStyles.content}>
       <h1 className={analyticsStyles.title}>Teacher dashboard</h1>
       <nav className={styles.shortcuts} aria-label="Teacher shortcuts">

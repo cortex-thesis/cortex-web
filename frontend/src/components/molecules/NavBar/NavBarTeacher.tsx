@@ -73,6 +73,7 @@ function NavBarTeacher({ user }: NavBarTeacherProps) {
             return (
               <button
                 key={link.path}
+                data-guide={link.path}
                 className={clsx(styles.link, isActive && styles.linkActive)}
                 onClick={() => navigate(link.path)}
                 aria-current={isActive ? 'page' : undefined}
@@ -89,7 +90,7 @@ function NavBarTeacher({ user }: NavBarTeacherProps) {
 
         <div className={styles.accountMenu} ref={menuRef}>
         <button
-          className={styles.avatarBtn}
+          data-tour="teacher-account" className={styles.avatarBtn}
           onClick={() => { setNotificationsOpen(false); setIsMenuOpen((open) => !open) }}
           aria-label={`Open account menu for ${user.name}`}
           aria-expanded={isMenuOpen}
@@ -111,7 +112,7 @@ function NavBarTeacher({ user }: NavBarTeacherProps) {
           <div className={styles.accountSummary}><strong>{user.name}</strong><span>Teacher account</span></div>
           <div className={styles.menuDivider} />
           <button className={styles.accountMenuItem} role="menuitem" onClick={() => { setIsMenuOpen(false); navigate('/teacher/profile') }}><UserRound size={16} /> Profile</button>
-          <button className={styles.accountMenuItem} role="menuitem" onClick={() => { setIsMenuOpen(false); navigate('/teacher/settings') }}><Settings size={16} /> Settings</button>
+          <button data-tour="teacher-settings" className={styles.accountMenuItem} role="menuitem" onClick={() => { setIsMenuOpen(false); navigate('/teacher/settings') }}><Settings size={16} /> Settings</button>
           <button className={styles.accountMenuItem} role="menuitem" onClick={() => void handleLogout()}><LogOut size={16} /> Log out</button>
         </div>}
         </div>

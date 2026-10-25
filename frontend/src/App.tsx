@@ -1,3 +1,4 @@
+import { HelpGuidance } from './features/help/GuidedTour'
 import { useEffect } from 'react'
 import AppRouter from './router'
 import ClassSessionInvitation from './components/organisms/student/ClassSessionInvitation'
@@ -9,5 +10,5 @@ export default function App() {
   const initialized = useAuthStore((state) => state.isInitialized)
   useEffect(() => { void initialize() }, [initialize])
   if (!initialized) return <><main role="status" style={{ padding: '2rem', textAlign: 'center' }}>Loading Cortex…</main><SyncStatus /></>
-  return <><AppRouter /><ClassSessionInvitation /><SyncStatus /></>
+  return <><AppRouter /><HelpGuidance /><ClassSessionInvitation /><SyncStatus /></>
 }

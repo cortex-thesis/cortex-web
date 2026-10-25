@@ -263,26 +263,14 @@
 /* ── Quick Actions ───────────────────────────── */
 
 .qaGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
 }
 
-.journalShortcut {
-  grid-column: 1 / -1;
-  min-height: 84px;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.journalShortcut .label,
-.journalShortcut .sub {
-  margin: 0;
-}
-
-.journalShortcut .sub {
-  margin-left: auto;
+.qaGrid > button {
+  flex: 1 1 calc((100% - var(--space-3)) / 2);
+  min-width: 0;
 }
 
 @media (max-width: 1000px) {
@@ -369,10 +357,10 @@
   .learningGrid, .singleClassGrid, .noClassGrid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); min-width: 0; }
   .startLearningCard { grid-column: auto; max-width: none; grid-template-columns: 64px minmax(0, 1fr); gap: 12px 16px; }
   .startLearningAction { grid-column: 2; }
-  .qaGrid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); min-width: 0; }
+  .qaGrid { min-width: 0; }
+  .qaGrid > button { flex-basis: min(100%, 200px); }
   .progressCard span { min-width: 0; overflow-wrap: anywhere; }
   .progressCard > svg { flex-shrink: 0; }
-  .journalShortcut { flex-wrap: wrap; }
 }
 @media (max-width: 760px) {
   .body { padding-inline: 16px; overflow: visible; }

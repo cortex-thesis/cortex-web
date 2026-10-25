@@ -76,7 +76,7 @@ export default function TeacherClassSession() {
   }
   const ended = session?.status === 'completed' || session?.status === 'cancelled'
   const report = session?.report
-  return <TeacherDashboardTemplate user={user}><div className={styles.page}>
+  return <TeacherDashboardTemplate user={user}><p style={{ padding: '8px 24px' }}><Link to="/teacher/help#sessions">Learn about this workspace</Link></p><div className={styles.page}>
     <header className={styles.header}><div><span className={styles.eyebrow}>Live classroom</span><h1>Teacher-led session</h1><p>{session ? `${session.class_name} · ${session.status === 'scheduled' ? 'Lobby open' : session.status}` : 'Choose a class and prepare a lesson. Students are invited when you start.'}</p></div><Link to="/teacher/sessions">All class sessions</Link></header>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {connectionError && <p className={styles.connection} role="status">{connectionError}</p>}

@@ -71,7 +71,7 @@ export default function Sessions() {
         <div className={styles.toolbar}>
           <div className={styles.searchWrap}>
             <Search size={15} className={styles.searchIcon}/>
-            <input className={styles.searchInput} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search sessions..."/>
+            <input className={styles.searchInput} value={search} onChange={(event) => setSearch(event.target.value)} data-tour="student-session-search" placeholder="Search sessions..."/>
           </div>
           <div className={styles.filters}>
             {([['all','All'],['in_progress','In progress'],['completed','Completed']] as const).map(([value,label]) => <button key={value} className={`${styles.filterBtn} ${filter === value ? styles.filterActive : ''}`} onClick={() => setFilter(value)}>{label}</button>)}

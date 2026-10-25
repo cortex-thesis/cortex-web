@@ -47,3 +47,11 @@
 
 /* Creative workspaces use the page scroll so tools are never clipped in a small internal stage. */
 .stage.creativeStage { max-height: none; overflow: visible; }
+
+/* Keep contextual guidance beside real Practice, without changing its controls or persistence. */
+@media (min-width:801px) {
+  :global(html[data-practice-guidance="true"]) :global([data-tour="practice-page"]) { padding-right:320px; }
+}
+@media (max-width:800px) {
+  :global(html[data-practice-guidance="true"]) :global([data-tour-screen="student"]) { margin-bottom:var(--practice-guidance-height, 240px); }
+}
