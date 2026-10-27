@@ -1,4 +1,5 @@
 import SchoolYears from './SchoolYears'
+import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { BookOpen, Brain, CheckCircle2, Clock, GraduationCap, Users } from 'lucide-react'
 import SchoolAdminDashboard from '../../components/templates/SchoolAdminDashboard'
@@ -12,13 +13,25 @@ export default function Dashboard() {
   const user = useAuthStore((state) => state.user)!
   const [data, setData] = useState<SchoolDashboardData | null>(null)
   const [error, setError] = useState('')
-  useEffect(() => { api<SchoolDashboardData>(`/admin/dashboard/?refresh=${Date.now()}`).then(setData).catch((reason: Error) => setError(reason.message)) }, [])
+  useEffect(() => {
+    let controller: AbortController | null = null
+    const refresh = () => {
+      controller?.abort(); controller = new AbortController()
+      const signal = controller.signal
+      void api<SchoolDashboardData>('/admin/dashboard/', { cache: 'no-store', signal }).then(payload => { if (!signal.aborted) { setData(payload); setError('') } }).catch((reason: Error) => { if (!signal.aborted) setError(reason.message) })
+    }
+    refresh()
+    window.addEventListener('focus', refresh)
+    const timer = window.setInterval(refresh, 15000)
+    return () => { controller?.abort(); clearInterval(timer); window.removeEventListener('focus', refresh) }
+  }, [])
   const stats = [[data?.class_count ?? 0, 'Active classes', BookOpen], [data?.teacher_count ?? 0, 'Teachers', GraduationCap], [data?.student_count ?? 0, 'Students', Users], [data?.total_sessions ?? 0, 'Total sessions', Clock]] as const
   return <SchoolAdminDashboard user={user}><div className={styles.page}>
     <header className={styles.header}><div><span className={styles.eyebrow}>School overview</span><h1 className={styles.title}>{data?.administrator.school ?? 'Your school'}</h1><p className={styles.subtitle}>Overall learning activity, staffing, and enrollment at a glance.</p></div></header>
-    {error && <p className={styles.error}>{error}</p>}
+    {error && <p className={styles.error} role="alert">{error}</p>}
     {!data && !error && <><CardGridSkeleton count={4} /><ListSkeleton rows={5} /></>}
     {data && <>
+    {data.pending_teachers > 0 && <Link className={styles.pendingLink} to="/school-admin/teachers?status=pending">{data.pending_teachers} teacher account{data.pending_teachers === 1 ? '' : 's'} awaiting approval. Review registrations</Link>}
     <SchoolYears onChange={() => { void api<SchoolDashboardData>('/admin/dashboard/', { cache: 'no-store' }).then(setData).catch((reason: Error) => setError(reason.message)) }} />
     <div className={styles.stats}>{stats.map(([value, label, Icon]) => <div className={`${styles.card} ${styles.stat}`} key={label}><span className={styles.icon}><Icon size={19} /></span><span><strong className={styles.value}>{value}</strong><span className={styles.label}>{label}</span></span></div>)}</div>
     <section className={styles.performanceGrid} aria-label="School performance summary">

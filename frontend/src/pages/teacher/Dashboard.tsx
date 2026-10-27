@@ -85,7 +85,7 @@ export default function Dashboard() {
   let angle = 0
   const segments = states.map((state) => { const start = angle; angle += distribution[state] * 3.6; return `${COGNITIVE_STATES[state].color} ${start}deg ${angle}deg` })
 
-  return <TeacherDashboardTemplate user={data?.teacher ?? user} hasNotification={Boolean(data?.unread_notifications)}><p style={{ padding: '8px 24px' }}><Link to="/teacher/help#dashboard">Learn about this workspace</Link></p>
+  return <TeacherDashboardTemplate user={data?.teacher ?? user} hasNotification={Boolean(data?.unread_notifications)}>
     <div className={analyticsStyles.content}>
       <h1 className={analyticsStyles.title}>Teacher dashboard</h1>
       <nav className={styles.shortcuts} aria-label="Teacher shortcuts">
@@ -118,8 +118,8 @@ export default function Dashboard() {
         {reportLoading && <p role="status" className={styles.statsNote}>Updating statistics for the selected filters…</p>}
         {data?.reporting && <p className={styles.statsNote}>Updated {new Date(data.reporting.generated_at).toLocaleString()} · {data.reporting.start ? `${new Date(data.reporting.start).toLocaleDateString()}–${new Date(data.reporting.end_exclusive!).toLocaleDateString()} (end exclusive)` : 'All recorded dates'} · {data.reporting.sample_count.toLocaleString()} valid EEG samples across {data.reporting.measured_sessions} measured sessions.</p>}
       <div className={analyticsStyles.statsRow}>
-        <StatSummaryCard value={data?.class_count ?? 0} label="Active classes" icon={<BookOpen size={18} color="#534AB7" />} iconBg="var(--color-cool-surface)" />
-        <StatSummaryCard value={data?.student_count ?? 0} label="Enrolled students" icon={<Users size={18} color="#1D9E75" />} iconBg="var(--color-cool-surface)" />
+        <StatSummaryCard value={data?.class_count ?? 0} label="Active classes" icon={<BookOpen size={18} color="var(--color-interface-purple)" />} iconBg="var(--color-cool-surface)" />
+        <StatSummaryCard value={data?.student_count ?? 0} label="Enrolled students" icon={<Users size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" />
         <StatSummaryCard value={data?.average_focus == null ? '—' : `${data.average_focus}%`} label="Focused EEG samples" icon={<TrendingUp size={18} color="var(--color-teal)" />} iconBg="var(--color-cool-surface)" />
         <StatSummaryCard value={data?.total_sessions ?? 0} label="Completed sessions" icon={<Clock size={18} color="var(--color-coral)" />} iconBg="var(--color-cream)" sub={`${data?.active_sessions ?? 0} active now`} />
       </div>

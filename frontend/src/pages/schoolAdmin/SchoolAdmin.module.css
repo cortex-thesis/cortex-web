@@ -50,3 +50,49 @@
 .yearForm { margin-top: 16px; }
 .yearForm label { display: grid; gap: 6px; }
 .yearForm .search { min-width: 0; max-width: 100%; }
+/* School-scoped layout constraints: the shared shell already supplies page gutters. */
+.page { padding:0 0 var(--space-8); width:100%; min-width:0; }
+.page, .card, .header > *, .formGrid > *, .stat > *, .performanceCard > *, .classRow > *, .performanceRow > * { min-width:0; overflow-wrap:anywhere; }
+.eyebrow { color:var(--color-interface-purple); }
+.title { color:var(--color-deep-purple); font-weight:var(--font-weight-semibold); }
+.subtitle, .label, .meta, .table th, .metricLabel { color:var(--color-text-secondary); }
+.card { background:var(--color-white); border-color:var(--color-border); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); }
+.name, .value { font-weight:var(--font-weight-semibold); }
+.icon { flex-shrink:0; background:var(--flower-purple-fill); color:var(--color-interface-purple); }
+.search { min-width:0; max-width:100%; width:100%; color:var(--color-text-primary); background:var(--color-white); border-color:var(--color-border); border-radius:var(--radius-sm); min-height:44px; }
+.toolbar { flex-wrap:wrap; align-items:end; }
+.toolbar > .search { flex:1 1 220px; }
+.filter { display:grid; gap:var(--space-1); flex:1 1 180px; font-size:var(--text-label); color:var(--color-text-secondary); }
+.header { flex-wrap:wrap; }
+.formGrid label { min-width:0; }
+.actions { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-2); }
+.primary, .danger, .secondary { min-height:44px; white-space:normal; text-align:center; }
+.primary { background:var(--color-interface-purple); }
+.secondary { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-2); border:1px solid var(--color-border); border-radius:var(--radius-sm); padding:10px 14px; background:var(--color-white); color:var(--color-interface-purple); font:inherit; text-decoration:none; cursor:pointer; }
+.secondary:hover { background:var(--color-surface-1); }
+.danger { background:var(--state-overstimulated-text); }
+.pending { background:var(--state-distracted-fill); color:var(--state-distracted-text); }
+.error { color:var(--state-overstimulated-text); }
+.success { color:var(--state-focused-text); }
+.secondary:disabled, .danger:disabled { opacity:.55; cursor:wait; }
+.tableScroll { max-width:100%; overflow:auto; }
+.table { table-layout:fixed; }
+.table td, .table th { overflow-wrap:anywhere; vertical-align:top; }
+.table td .search { width:100%; }
+.pendingLink, .readOnlyNotice { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); padding:var(--space-4); margin-bottom:var(--space-4); border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--flower-purple-fill); color:var(--color-deep-purple); }
+.readOnlyNotice { flex-direction:column; align-items:flex-start; }
+.reportPage { padding:0; min-width:0; }
+.reportPage select { min-width:0; max-width:100%; }
+.page :focus-visible, .tableScroll:focus-visible { outline:2px solid var(--color-interface-purple); outline-offset:3px; }
+@media (max-width:600px) {
+  .table, .table tbody { display:block; width:100%; }
+  .table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .table tr { display:block; padding:var(--space-2) 0; border-bottom:1px solid var(--color-border); }
+  .table td { display:grid; grid-template-columns:76px minmax(0,1fr); gap:var(--space-2); padding:var(--space-2) 0; border:0; }
+  .table td::before { content:attr(data-label); color:var(--color-text-secondary); font-weight:var(--font-weight-medium); font-size:var(--text-caption); }
+  .classRow { grid-template-columns:minmax(0,1fr); gap:var(--space-2); }
+  .yearForm { align-items:stretch; }
+  .yearForm label { width:100%; }
+}
+.stats { margin-top:var(--space-4); }
+.toolbar { margin-top:var(--space-4); }

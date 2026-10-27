@@ -1,16 +1,14 @@
 .root {
   width: 100%;
   min-height: 100dvh;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(250, 199, 117, 0.24), transparent 32%),
-    radial-gradient(circle at 100% 100%, rgba(29, 158, 117, 0.12), transparent 30%),
-    var(--color-cream);
+  background: var(--shell-corner-background);
   display: flex;
   flex-direction: column;
 }
 
 .content {
   flex: 1;
+  min-width: 0;
   width: 100%;
   max-width: var(--content-max-width, 1300px);
   margin: 0 auto;

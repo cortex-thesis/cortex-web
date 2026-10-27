@@ -6,18 +6,7 @@
   width: 100%;
   height: 100dvh;
   min-height: 100dvh;
-  background:
-    radial-gradient(
-      circle 266px at -72px -72px,
-      rgba(250, 199, 117, 0.2) 0%,
-      rgba(250, 199, 117, 0) 72%
-    ),
-    radial-gradient(
-      circle 252px at calc(100% + 64px) calc(100% + 64px),
-      rgba(29, 158, 117, 0.16) 0%,
-      rgba(29, 158, 117, 0) 72%
-    ),
-    var(--color-surface-warm, #fbf7ee);
+  background: var(--shell-corner-background);
   display: flex;
   flex-direction: column;
   overflow: hidden;

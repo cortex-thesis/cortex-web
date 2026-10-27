@@ -31,7 +31,7 @@ export interface School { id: string; name: string; is_active: boolean }
 export interface CreateAccountInput { username: string; name: string; email: string; temporary_password: string; role: 'admin' | 'teacher' | 'student'; school_id: string }
 
 export const getSchoolDashboard = () => api<SchoolDashboardData>('/admin/dashboard/')
-export const getSchoolAccounts = () => api<{ accounts: SchoolAccount[] }>('/admin/accounts/')
+export const getSchoolAccounts = (signal?: AbortSignal) => api<{ accounts: SchoolAccount[] }>('/admin/accounts/', { cache: 'no-store', signal })
 export const getSchools = () => api<{ schools: School[] }>('/admin/schools/')
 export const createAccount = (input: CreateAccountInput) => api<SchoolAccount & { temporary_password?: string }>('/admin/accounts/', { method: 'POST', body: JSON.stringify(input) })
 export const updateAccountStatus = (id: number, status: SchoolAccount['account_status']) => api<SchoolAccount>(`/admin/accounts/${id}/status/`, { method: 'PATCH', body: JSON.stringify({ status }) })

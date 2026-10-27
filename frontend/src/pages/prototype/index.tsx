@@ -9,7 +9,9 @@ import {
 import { TeacherDashboardTemplate, CalmZoneTemplate, PlayfulZoneTemplate } from '../../components/templates'
 import { Logo, StateBadge } from '../../components/atoms'
 import { mockStudentsLive, mockTeacher } from '../../mocks'
-import { api } from '../../lib/api'
+import { api, ApiError } from '../../lib/api'
+import { validateRegistration, registrationFieldNames } from '../../lib/authValidation'
+import authStyles from '../Auth.module.css'
 import { useAuthStore } from '../../store/authStore'
 import styles from './Prototype.module.css'
 
@@ -71,10 +73,12 @@ export function Registration({ role }: { role:'student'|'teacher' }) {
   const navigate=useNavigate(); const [done,setDone]=useState(false)
   return <PlayfulZoneTemplate showNav={false}><div className={styles.pageNarrow}><button className={styles.ghost} onClick={()=>navigate(`/${role}/login`)}><ArrowLeft size={14}/> Back to login</button><div className={styles.card} style={{marginTop:12}}>{done?<div className={styles.center}><div className={styles.heroIcon}><Check size={32}/></div><h1 className={styles.title}>Account ready</h1><p className={styles.subtitle} style={{margin:'8px auto 20px'}}>Your {role} account template has been created. You can now continue to sign in.</p><button className={styles.primary} onClick={()=>navigate(`/${role}/login`)}>Continue to login</button></div>:<><span className={styles.eyebrow}>{role} access</span><h1 className={styles.title}>Create your {role} account</h1><p className={styles.subtitle}>Set up a secure Cortex profile. All values are prototype-only for now.</p><div className={styles.divider}/><div className={styles.formGrid}><label className={styles.field}><span className={styles.label}>First name</span><input className={styles.input} placeholder="First name"/></label><label className={styles.field}><span className={styles.label}>Last name</span><input className={styles.input} placeholder="Last name"/></label><label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>School email</span><input className={styles.input} type="email" placeholder="you@school.edu"/></label>{role==='student'&&<label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>Class invitation code</span><input className={styles.input} placeholder="6-character code" maxLength={6}/></label>}{role==='teacher'&&<label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>School / SPED center</span><input className={styles.input} placeholder="Institution name"/></label>}<label className={styles.field}><span className={styles.label}>Password</span><input className={styles.input} type="password" placeholder="At least 8 characters"/></label><label className={styles.field}><span className={styles.label}>Confirm password</span><input className={styles.input} type="password" placeholder="Repeat password"/></label><label className={`${styles.checkRow} ${styles.span2}`}><input type="checkbox"/> I agree to the acceptable-use and data-privacy terms for this educational prototype.</label></div><button className={styles.primary} style={{width:'100%',marginTop:18}} onClick={()=>setDone(true)}>Create account</button></>}</div></div></PlayfulZoneTemplate>
 }
-function AccountRegistration() {
+function AccountRegistration({ initialRole = 'student' }: { initialRole?: 'student' | 'teacher' }) {
   const navigate = useNavigate()
-  const [role, setRole] = useState<'student' | 'teacher'>('student')
-  const [form, setForm] = useState({ username: '', firstName: '', middleName: '', lastName: '', schoolId: '', password: '', confirmPassword: '', studentNumber: '', birthdate: '', gender: '', guardianName: '', guardianContact: '', guardianEmail: '' })
+  const [role, setRole] = useState<'student' | 'teacher'>(initialRole)
+  const [form, setForm] = useState({ username: '', email: '', firstName: '', middleName: '', lastName: '', schoolId: '', password: '', confirmPassword: '', studentNumber: '', birthdate: '', guardianName: '', guardianContact: '', guardianEmail: '' })
+  const pending = useRef(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -91,9 +95,31 @@ function AccountRegistration() {
   }, [])
   const update = (field: keyof typeof form, value: string) => setForm((current) => ({ ...current, [field]: value }))
 
+  function field(key: keyof typeof form, label: string, type = 'text', required = false, maxLength?: number) {
+    const id = `registration-${key}`
+    return <div className={styles.field}><label className={styles.label} htmlFor={id}>{label}{required && <span aria-hidden="true"> *</span>}</label>
+      <input id={id} required={required} type={type} disabled={saving} aria-description={maxLength ? `Maximum ${maxLength} characters.` : undefined} className={styles.input}
+        autoComplete={key === 'password' || key === 'confirmPassword' ? 'new-password' : key === 'email' ? 'email' : key === 'username' ? 'username' : undefined}
+        inputMode={key === 'studentNumber' ? 'numeric' : undefined}
+        aria-invalid={!!fieldErrors[key]} aria-describedby={fieldErrors[key] ? `${id}-error` : undefined}
+        value={form[key]} onChange={(event) => update(key, event.target.value)} />
+      {fieldErrors[key] && <span id={`${id}-error`} className={authStyles.fieldError}>{fieldErrors[key]}</span>}
+    </div>
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (pending.current) return
+    const errors = validateRegistration(form, role)
+    setFieldErrors(errors)
     setError('')
+    if (Object.keys(errors).length) {
+      setError('Please correct the highlighted fields.')
+      const element = event.currentTarget
+      requestAnimationFrame(() => element.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus())
+      return
+    }
+    pending.current = true
     setSaving(true)
     try {
       const name = `${form.firstName} ${form.lastName}`.trim()
@@ -101,63 +127,67 @@ function AccountRegistration() {
       await api('/auth/register/', {
         method: 'POST',
         body: JSON.stringify({
-          username: form.username,
+          username: form.username.trim(),
+          email: form.email.trim(),
           school_id: form.schoolId,
           password: form.password,
           confirm_password: form.confirmPassword,
           name,
-          first_name: form.firstName,
-          middle_name: form.middleName,
-          last_name: form.lastName,
+          first_name: form.firstName.trim(),
+          middle_name: form.middleName.trim(),
+          last_name: form.lastName.trim(),
           role,
-          student_number: form.studentNumber,
+          ...(role === 'student' ? {
+          student_number: form.studentNumber.trim(),
           birthdate: form.birthdate,
-          gender: form.gender,
-          guardian_name: form.guardianName,
-          guardian_contact: form.guardianContact,
-          guardian_email: form.guardianEmail,
+          guardian_name: form.guardianName.trim(),
+          guardian_contact: form.guardianContact.trim(),
+          guardian_email: form.guardianEmail.trim(),
+          } : {}),
         }),
       })
       setSaved(true)
     } catch (registrationError) {
+      if (registrationError instanceof ApiError) setFieldErrors(Object.fromEntries(Object.entries(registrationError.errors).map(([key, value]) => [registrationFieldNames[key] ?? key, value])))
       setError(registrationError instanceof Error ? registrationError.message : 'Unable to create the account.')
     } finally {
+      pending.current = false
       setSaving(false)
     }
   }
 
-  return <PlayfulZoneTemplate showNav={false}><div className={styles.pageNarrow}>
+  return <PlayfulZoneTemplate showNav={false}><div className={`${styles.pageNarrow} ${authStyles.registration}`}>
     <button className={styles.ghost} onClick={() => navigate('/')}><ArrowLeft size={14}/> Back to login</button>
     <div className={styles.card} style={{ marginTop: 12 }}>
-      {saved ? <div className={styles.center}><div className={styles.heroIcon}><Check size={32}/></div><h1 className={styles.title}>Account saved</h1><p className={styles.subtitle} style={{ margin: '8px auto 20px' }}>{role === 'teacher' ? 'Your account is awaiting school administrator approval.' : 'Your account is ready.'} Sign in with your username once your account is active.</p><button className={styles.primary} onClick={() => navigate('/', { replace: true })}>Continue to login</button></div> : <form onSubmit={submit}>
-        <span className={styles.eyebrow}>{role} access</span><h1 className={styles.title}>Create your {role} account</h1><p className={styles.subtitle}>Enter your details to save a secure Cortex profile.</p><div className={styles.divider}/>
+      {saved ? <div className={styles.center}><div className={styles.heroIcon}><Check size={32}/></div><h1 className={styles.title}>Account saved</h1><p className={styles.subtitle} style={{ margin: '8px auto 20px' }}>{role === 'teacher' ? 'Your account is awaiting school administrator approval.' : 'Your account is ready.'} Sign in with your username once your account is active.</p><button className={styles.primary} onClick={() => navigate('/', { replace: true })}>Continue to login</button></div> : <form onSubmit={submit} noValidate aria-busy={saving}>
+        <span className={styles.eyebrow}>{role} access</span><h1 className={styles.title}>Create your {role} account</h1><p className={styles.subtitle}>Enter your details to save a secure Cortex profile. Fields marked * are required.</p><div className={styles.divider}/>
         <div className={styles.formGrid}>
-          <label className={styles.field}><span className={styles.label}>Username</span><input required className={styles.input} value={form.username} onChange={(event) => update('username', event.target.value)} /></label>
-          <label className={styles.field}><span className={styles.label}>Role</span><select className={styles.select} value={role} onChange={(event) => setRole(event.target.value as 'student' | 'teacher')}><option value="student">Student</option><option value="teacher">Teacher</option></select></label>
-          <label className={styles.field}><span className={styles.label}>First name</span><input required className={styles.input} value={form.firstName} onChange={(event) => update('firstName', event.target.value)} /></label>
-          <label className={styles.field}><span className={styles.label}>Middle name</span><input className={styles.input} value={form.middleName} onChange={(event) => update('middleName', event.target.value)} /></label>
-          <label className={styles.field}><span className={styles.label}>Last name</span><input required className={styles.input} value={form.lastName} onChange={(event) => update('lastName', event.target.value)} /></label>
-          <label className={`${styles.field} ${styles.span2}`}><span className={styles.label}>Choose school</span><select required className={styles.select} value={form.schoolId} onChange={(event) => update('schoolId', event.target.value)} disabled={schoolsLoading || !!schoolsError || schools.length === 0}><option value="">{schoolsLoading ? 'Loading schools?' : 'Choose a school'}</option>{schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}</select>{schoolsError && <span role="alert">{schoolsError}</span>}{!schoolsLoading && !schoolsError && schools.length === 0 && <span>No schools are registered yet.</span>}</label>
+          {field('username', 'Username', 'text', true, 150)}
+          {field('email', 'Email address', 'email', true, 254)}
+          <label className={styles.field}><span className={styles.label}>Role *</span><select disabled={saving} required className={styles.select} value={role} onChange={(event) => setRole(event.target.value as 'student' | 'teacher')}><option value="student">Student</option><option value="teacher">Teacher</option></select></label>
+          {field('firstName', 'First name', 'text', true, 150)}
+          {field('middleName', 'Middle name', 'text', false, 150)}
+          {field('lastName', 'Last name', 'text', true, 150)}
+          <div className={`${styles.field} ${styles.span2}`}><label htmlFor="registration-school" className={styles.label}>Choose school <span aria-hidden="true">*</span></label><select id="registration-school" aria-invalid={!!fieldErrors.schoolId} aria-describedby={fieldErrors.schoolId ? "school-error" : undefined} required className={styles.select} value={form.schoolId} onChange={(event) => update('schoolId', event.target.value)} disabled={saving || schoolsLoading || !!schoolsError || schools.length === 0}><option value="">{schoolsLoading ? 'Loading schools...' : 'Choose a school'}</option>{schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}</select>{fieldErrors.schoolId && <span id="school-error" className={authStyles.fieldError}>{fieldErrors.schoolId}</span>}{schoolsError && <span role="alert">{schoolsError}</span>}{!schoolsLoading && !schoolsError && schools.length === 0 && <span>No schools are registered yet.</span>}</div>
           {role === 'student' && <>
-            <label className={styles.field}><span className={styles.label}>Student number</span><input className={styles.input} value={form.studentNumber} onChange={(event) => update('studentNumber', event.target.value)} /></label>
-            <label className={styles.field}><span className={styles.label}>Birthdate</span><input className={styles.input} type="date" value={form.birthdate} onChange={(event) => update('birthdate', event.target.value)} /></label>
-            <label className={styles.field}><span className={styles.label}>Gender</span><input className={styles.input} value={form.gender} onChange={(event) => update('gender', event.target.value)} /></label>
-            <label className={styles.field}><span className={styles.label}>Guardian name</span><input className={styles.input} value={form.guardianName} onChange={(event) => update('guardianName', event.target.value)} /></label>
-            <label className={styles.field}><span className={styles.label}>Guardian contact</span><input className={styles.input} value={form.guardianContact} onChange={(event) => update('guardianContact', event.target.value)} /></label>
-            <label className={styles.field}><span className={styles.label}>Guardian email</span><input className={styles.input} type="email" value={form.guardianEmail} onChange={(event) => update('guardianEmail', event.target.value)} /></label>
+            {field('studentNumber', 'Student number', 'text', true, 50)}
+            {field('birthdate', 'Birthdate', 'date', true)}
+            {field('guardianName', 'Guardian name', 'text', true, 200)}
+            {field('guardianContact', 'Guardian contact', 'tel', true, 30)}
+            {field('guardianEmail', 'Guardian email', 'email', true, 254)}
           </>}
-          <label className={styles.field}><span className={styles.label}>Password</span><input required minLength={12} className={styles.input} type="password" value={form.password} onChange={(event) => update('password', event.target.value)} /></label>
-          <label className={styles.field}><span className={styles.label}>Confirm password</span><input required minLength={12} className={styles.input} type="password" value={form.confirmPassword} onChange={(event) => update('confirmPassword', event.target.value)} /></label>
+          {field('password', 'Password', 'password', true)}
+          {field('confirmPassword', 'Confirm password', 'password', true)}
         </div>
         {error && <p className={styles.subtitle} role="alert" style={{ color: 'var(--color-danger)', marginTop: 12 }}>{error}</p>}
-        <button className={styles.primary} style={{ width: '100%', marginTop: 18 }} disabled={saving || schoolsLoading || !!schoolsError || !form.schoolId}>{saving ? 'Saving account…' : 'Create account'}</button>
+        <button type="submit" className={styles.primary} style={{ width: '100%', marginTop: 18 }} disabled={saving || schoolsLoading || !!schoolsError || schools.length === 0}>{saving ? 'Saving account...' : 'Create account'}</button>
       </form>}
     </div>
   </div></PlayfulZoneTemplate>
 }
 
 export const StudentRegistration=()=> <AccountRegistration/>
-export const TeacherRegistration=()=> <AccountRegistration/>
+export const TeacherRegistration=()=> <AccountRegistration initialRole="teacher"/>
 
 export function ForgotPassword() {
   const navigate=useNavigate(); const [sent,setSent]=useState(false)

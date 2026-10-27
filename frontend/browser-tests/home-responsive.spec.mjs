@@ -19,7 +19,10 @@ for(const width of [320,390,768,980,1120,1440]) {
   const cards=page.locator('[class*="homeGrid"] button')
   if(width>1000){
    expect(await page.locator('div[class*="right"]').evaluate(el=>getComputedStyle(el).width)).toBe('320px')
-   expect(await page.locator('[class*="qaGrid"]').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(2)
+   const quickActions=await page.locator('[class*="qaGrid"] > button').evaluateAll(items=>items.map(item=>{const r=item.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom}}))
+   expect(Math.abs(quickActions[0].y-quickActions[1].y)).toBeLessThan(1)
+   expect(quickActions[0].right).toBeLessThanOrEqual(quickActions[1].x)
+   expect(quickActions[2].y).toBeGreaterThanOrEqual(quickActions[0].bottom)
    expect(await page.locator('[class*="startLearningCard"]').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(3)
    await page.screenshot({path:`../.runtime/home-desktop-restored-${width}.png`,fullPage:true})
    return

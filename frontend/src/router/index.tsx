@@ -1,3 +1,4 @@
+import OnboardingPracticeBoundary from '../features/help/OnboardingPracticeBoundary'
 import { TourLaunch } from '../features/help/GuidedTour'
 import HelpCenter from '../features/help/HelpCenter'
 import NotificationCenter from '../pages/NotificationCenter'
@@ -50,6 +51,7 @@ import AdvancedReports from '../pages/teacher/AdvancedReports'
 import ResearchAnalysis from '../pages/admin/ResearchAnalysis'
 import AdminSchools from '../pages/admin/Schools'
 import SchoolAdminDashboard from '../pages/schoolAdmin/Dashboard'
+import SchoolTeacherReports from '../pages/schoolAdmin/TeacherReports'
 import SchoolAdminClasses from '../pages/schoolAdmin/Classes'
 import SchoolAdminDirectory from '../pages/schoolAdmin/Directory'
 import SuperAdminAccounts from '../pages/superAdmin/Accounts'
@@ -80,6 +82,7 @@ export default function AppRouter() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/register" element={<StudentRegistration />} />
+      <Route path="/teacher/register" element={<TeacherRegistration />} />
       <Route
         path="/preview/activities"
         element={import.meta.env.DEV ? <FocusMode preview /> : <Navigate to="/" replace />}
@@ -108,7 +111,7 @@ export default function AppRouter() {
       <Route path="/student/sessions" element={<StudentSessions />} />
       <Route path="/student/class/:classId" element={<ClassDetail />} />
       <Route path="/student/class/:classId/package/:packageSlug" element={<ClassPackageLessons />} />
-      <Route path="/student/class/:classId/lesson/:lessonId/practice" element={<PracticeLesson />} />
+      <Route path="/student/class/:classId/lesson/:lessonId/practice" element={<OnboardingPracticeBoundary><PracticeLesson /></OnboardingPracticeBoundary>} />
       <Route path="/student/class/:classId/lesson/:lessonId" element={<LessonModeSelect />} />
       <Route path="/student/calibration" element={<StudentCalibration />} />
       <Route path="/student/eeg-diagnostics" element={<EEGDiagnostics />} />
@@ -143,7 +146,6 @@ export default function AppRouter() {
       />
 
       <Route path="/teacher/login" element={<Navigate to="/" replace />} />
-      <Route path="/teacher/register" element={<TeacherRegistration />} />
       <Route path="/teacher/forgot-password" element={<ForgotPassword />} />
       <Route path="/teacher/notifications" element={<TeacherNotifications />} />
       <Route path="/teacher/settings" element={<TeacherSettings />} />
@@ -162,6 +164,8 @@ export default function AppRouter() {
         <Route path="/school-admin/notifications" element={<NotificationCenter />} />
         <Route path="/school-admin/dashboard" element={<SchoolAdminDashboard />} />
         <Route path="/school-admin/classes" element={<SchoolAdminClasses />} />
+        <Route path="/school-admin/teachers/:teacherId/reports" element={<SchoolTeacherReports />} />
+        <Route path="/school-admin/teachers/:teacherId/reports/advanced" element={<SchoolTeacherReports advanced />} />
         <Route path="/school-admin/teachers" element={<SchoolAdminDirectory />} />
         <Route path="/school-admin/students" element={<SchoolAdminDirectory />} />
       </Route>

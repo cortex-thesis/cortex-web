@@ -142,6 +142,31 @@ class LessonGameContractTests(SimpleTestCase):
 
 
 class LessonGamePersistenceTests(TestCase):
+    def test_onboarding_context_is_read_only_and_leaves_all_learning_records_unchanged(self):
+        from web.models import (SessionSlideExposure, StatePrediction, SessionAnalytics,
+                                StudentBadge, Notification, AdaptationEvent)
+        self.client.force_login(self.student.user)
+        lesson = Lesson.objects.get(competency_code='TPLS_CS-li-NG-4')
+        slide = lesson.slides.first()
+        saved = LessonPracticeProgress.objects.create(student=self.student, school_class=self.school_class,
+            lesson=lesson, completed_slide_ids=[slide.pk], activity_evidence={str(slide.pk): {'selected': 'existing'}})
+        models = (LessonPracticeProgress, LearningSession, SessionSlideExposure, ActivityResponse,
+                  StatePrediction, SessionAnalytics, StudentBadge, Notification, AdaptationEvent)
+        before = {model.__name__: model.objects.count() for model in models}
+        url = f'/api/student/classes/{self.school_class.pk}/lessons/{lesson.pk}/?context=onboarding'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['context'], 'onboarding')
+        self.assertEqual(response.json()['progress']['completed_slide_ids'], [])
+        self.assertEqual(len(response.json()['slides']), lesson.slides.count())
+        for payload in ({}, {'action': 'answer', 'slide_id': slide.pk, 'selected': 'test'}, {'slide_id': slide.pk}):
+            self.assertEqual(self.client.post(url, data=payload, content_type='application/json').status_code, 405)
+        self.assertEqual(self.client.post(url.split('?')[0], data={'context': 'onboarding', 'slide_id': slide.pk}, content_type='application/json').status_code, 405)
+        self.assertEqual({model.__name__: model.objects.count() for model in models}, before)
+        saved.refresh_from_db()
+        self.assertEqual(saved.completed_slide_ids, [slide.pk])
+        self.assertEqual(saved.activity_evidence, {str(slide.pk): {'selected': 'existing'}})
+
     def test_practice_saves_unfinished_answer_without_marking_step_complete(self):
         self.client.force_login(self.student.user)
         lesson = Lesson.objects.get(competency_code='TPLS_CS-li-NG-4')

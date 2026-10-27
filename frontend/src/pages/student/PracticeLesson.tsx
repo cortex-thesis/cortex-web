@@ -1,5 +1,5 @@
 import { Activity, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, RotateCcw} from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { DetailSkeleton, InlineSkeleton, TaskCard } from '../../components/molecules'
@@ -13,6 +13,7 @@ import playerStyles from './PracticeLesson.module.css'
 import eegStyles from './LiveEEG.module.css'
 
 interface Lesson {
+  context?: string
   progress: { completed_slide_ids: number[]; activity_evidence?: Record<string, {selected: string; practice_correct?: boolean}> }
   id: number
   title: string
@@ -37,10 +38,13 @@ function taskConfiguration(value: unknown): unknown {
 
 export default function PracticeLesson() {
   const { classId = '', lessonId = '' } = useParams()
-  return <LessonPlayer key={`${classId}/${lessonId}`} classId={classId} lessonId={lessonId} />
+  const [search] = useSearchParams()
+  const onboarding = search.get('context') === 'onboarding'
+  const finishStage = onboarding && search.get('stage') === 'finish'
+  return <LessonPlayer key={`${classId}/${lessonId}/${onboarding}/${finishStage}`} finishStage={finishStage} classId={classId} lessonId={lessonId} onboarding={onboarding} />
 }
 
-function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string }) {
+function LessonPlayer({ classId, lessonId, onboarding, finishStage }: { classId: string; lessonId: string; onboarding: boolean; finishStage: boolean }) {
   const navigate = useNavigate()
   const [lesson, setLesson] = useState<Lesson | null>(null)
   const [error, setError] = useState('')
@@ -56,12 +60,17 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
   const [completed, setCompleted] = useState<Set<number>>(() => new Set())
   useEffect(() => {
     const controller = new AbortController()
-    api<Lesson>(`/student/classes/${classId}/lessons/${lessonId}/`, { method: 'POST', body: '{}', signal: controller.signal })
+    api<Lesson>(`/student/classes/${classId}/lessons/${lessonId}/${onboarding ? '?context=onboarding' : ''}`, { method: onboarding ? 'GET' : 'POST', ...(onboarding ? {} : { body: '{}' }), cache: 'no-store', signal: controller.signal })
       .then((data) => {
         if (controller.signal.aborted) return
+        if (onboarding) {
+          if (data.context !== 'onboarding') throw new Error('The backend did not confirm read-only onboarding practice. Please reload and try again.')
+          const representative = data.slides.find(slide => slide.activity.type === 'interactive') ?? data.slides[0]
+          data = { ...data, slides: representative ? [representative] : [], progress: { completed_slide_ids: [] } }
+        }
         setLesson(data)
         const done = new Set(data.slides.flatMap((item, index) => data.progress.completed_slide_ids.includes(item.id) ? [index] : []))
-        setCompleted(done)
+        setCompleted(finishStage ? new Set(data.slides.map((_slide, index) => index)) : done)
         setAnswered(Object.fromEntries(data.slides.flatMap((item, index) => {
           const evidence = data.progress.activity_evidence?.[String(item.id)]
           return evidence ? [[index, evidence.practice_correct ?? done.has(index)]] : []
@@ -71,11 +80,11 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
           return evidence ? [[index, evidence.selected]] : []
         })))
         const firstPending = data.slides.findIndex((_, index) => !done.has(index))
-        setPosition(firstPending < 0 ? 0 : firstPending)
+        setPosition(finishStage ? data.slides.length : firstPending < 0 ? 0 : firstPending)
         setVisited(new Set([firstPending < 0 ? 0 : firstPending]))
       }).catch((reason: unknown) => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Unable to load lesson.') })
     return () => controller.abort()
-  }, [classId, lessonId])
+  }, [classId, lessonId, onboarding, finishStage])
   const back = () => navigate(lesson ? `/student/class/${classId}/package/${lesson.package}` : `/student/class/${classId}`, { replace: true })
   const slide = lesson?.slides[position]
   async function advance(selected = responses[position]) {
@@ -85,7 +94,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     setSaveError('')
     try {
       await answerSaves.current.catch(() => undefined)
-      await api(`/student/classes/${classId}/lessons/${lessonId}/`, { method: 'POST', body: JSON.stringify({ slide_id: slide.id, selected }) })
+      if (!onboarding) await api(`/student/classes/${classId}/lessons/${lessonId}/`, { method: 'POST', body: JSON.stringify({ slide_id: slide.id, selected }) })
       setPosition((value) => value + 1)
       setVisited((previous) => new Set(previous).add(position + 1))
       setCompleted((previous) => new Set(previous).add(position))
@@ -94,7 +103,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     } finally { advancing.current = false; setSaving(false) }
   }
   function saveAnswer(index: number, correct: boolean, selected: string) {
-    if (!lesson) return
+    if (!lesson || onboarding) return
     const request = answerSaves.current.catch(() => undefined).then(() => api(`/student/classes/${classId}/lessons/${lessonId}/`, {
       method: 'POST', keepalive: true, body: JSON.stringify({ action: 'answer', slide_id: lesson.slides[index].id, correct, selected }),
     }))
@@ -108,7 +117,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
     imageUrl: configuration.imageUrl ?? slide.activity.asset_url ?? null,
     id: String(slide.id), title: slide.title, package: lesson.package,
     classId,
-    checkpointKey: (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set' || configuration.taskTemplate === 'creative_experience') && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
+    checkpointKey: !onboarding && (lesson.package === 'livelihood' || configuration.taskTemplate === 'clock_set' || configuration.taskTemplate === 'creative_experience') && useAuthStore.getState().user ? `${useAuthStore.getState().user!.id}/practice/${classId}/${lessonId}/${slide.id}` : undefined,
     initialResponse: retry[index] ? undefined : lesson.progress.activity_evidence?.[String(slide.id)]?.selected,
     index: index + 1, total: lesson.slides.length, contentType: slide.activity.type,
     }
@@ -126,7 +135,8 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
       <div><h1>{lesson?.title ?? <InlineSkeleton width={260} height={30} />}</h1></div>
     </header>
     {lesson && !complete && <div className={playerStyles.musicToolbar}><ModeBgm mode="focus" suspended={Boolean(task?.taskTemplate === 'audio_sequence' || task?.taskTemplate === 'creative_experience' || (task?.mediaUrl && (videoSlide || task.contentType === 'audio' || task.template === 'calming_soundscape')))} /></div>}
-    <section data-tour="practice-player" data-practice-template={task?.taskTemplate ?? task?.template ?? task?.contentType} data-practice-complete={complete} className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''}`} aria-label="Lesson activities">
+    {onboarding && <p role="status">Onboarding practice only. Your answers, scores and lesson progress are not recorded.</p>}
+    <section data-tour="practice-player" data-practice-context={onboarding ? 'onboarding' : 'learning'} data-practice-template={task?.taskTemplate ?? task?.template ?? task?.contentType} data-practice-complete={complete} className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && <div className={playerStyles.progress}>
         <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}>
           <span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length - 1) * 100)}%` }} />
@@ -149,7 +159,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
               saveAnswer(index, correct, selected)
             }} />
         </Activity>)}
-        {error ? <p role="alert">{error}</p> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : complete ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>Practice complete</h2><p>You reached the end of this lesson.</p><button className={playerStyles.button + ' ' + playerStyles.next} onClick={back}>Back to lessons</button></div> : null}
+        {error ? <p role="alert">{error}</p> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : complete ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>Practice complete</h2><p>{onboarding ? 'You finished this onboarding activity. No curriculum progress or achievement was recorded.' : 'You reached the end of this lesson.'}</p><button className={playerStyles.button + ' ' + playerStyles.next} onClick={back}>Back to lessons</button></div> : null}
       </div>
       {saveError && <p role="alert">{saveError}</p>}
       {task && <nav data-tour="practice-navigation" className={playerStyles.actions} aria-label="Activity navigation">
@@ -158,7 +168,7 @@ function LessonPlayer({ classId, lessonId }: { classId: string; lessonId: string
         {videoSlide && !answered[position] && <button type="button" className={`${playerStyles.button} ${playerStyles.skipVideo}`} disabled={saving} onClick={() => {
           void advance('continued_without_video')
         }}>Continue without video</button>}
-        <button className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || saving} onClick={() => { playLessonSound(position === lesson!.slides.length - 1 ? 'finished' : 'transition'); void advance() }}>{saving ? 'Saving progress…' : position === lesson!.slides.length - 1 ? 'Finish lesson' : 'Next activity'}<ArrowRight size={18} /></button>
+        <button data-tour={onboarding ? "onboarding-activity-finish" : undefined} className={`${playerStyles.button} ${playerStyles.next}`} disabled={!canAdvance || saving} onClick={() => { playLessonSound(position === lesson!.slides.length - 1 ? 'finished' : 'transition'); void advance() }}>{saving ? 'Saving progress…' : position === lesson!.slides.length - 1 ? onboarding ? 'Finish practice' : 'Finish lesson' : 'Next activity'}<ArrowRight size={18} /></button>
       </nav>}
       </div>
     </section>

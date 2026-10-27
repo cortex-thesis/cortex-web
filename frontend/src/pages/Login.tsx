@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Lock, Mail, ShieldCheck } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../components/templates'
@@ -16,6 +16,8 @@ const TEST_ACCOUNTS = [
 
 export default function UnifiedLogin() {
   const navigate = useNavigate()
+  const pending = useRef(false)
+  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' })
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -24,18 +26,22 @@ export default function UnifiedLogin() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (pending.current) return
+    const errors = { email: email.trim() ? '' : 'Enter your username or email address.', password: password.trim() ? '' : 'Enter your password.' }
+    setFieldErrors(errors)
     setError('')
-
+    if (errors.email || errors.password) return
+    pending.current = true
     setIsLoading(true)
     try {
       const user = await login({ email: email.trim(), password })
       if (user.role === 'super_admin') navigate('/admin/dashboard', { replace: true })
       else if (user.role === 'school_admin') navigate('/school-admin/dashboard', { replace: true })
-      else if (user.role === 'student') navigate('/student/home', { replace: true })
       else navigate('/welcome', { replace: true, state: { role: user.role } })
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : 'Unable to sign in.')
     } finally {
+      pending.current = false
       setIsLoading(false)
     }
   }
@@ -49,7 +55,7 @@ export default function UnifiedLogin() {
           <div className={styles.heading}>
             <h1 className={styles.title}>Welcome to Cortex</h1>
             <p className={styles.subtitle}>
-              Sign in and we’ll take you to the right workspace.
+              Sign in to continue to your workspace.
             </p>
           </div>
 
@@ -64,7 +70,9 @@ export default function UnifiedLogin() {
                 setError('')
               }}
               leftIcon={<Mail size={16} strokeWidth={1.75} />}
-              fieldState={error ? 'error' : 'default'}
+              fieldState={fieldErrors.email ? 'error' : 'default'}
+              errorText={fieldErrors.email || undefined}
+              disabled={isLoading}
               required
               autoComplete="username"
             />
@@ -78,8 +86,9 @@ export default function UnifiedLogin() {
                 setError('')
               }}
               leftIcon={<Lock size={16} strokeWidth={1.75} />}
-              fieldState={error ? 'error' : 'default'}
-              errorText={error || undefined}
+              fieldState={fieldErrors.password ? 'error' : 'default'}
+              errorText={fieldErrors.password || undefined}
+              disabled={isLoading}
               required
               autoComplete="current-password"
             />
@@ -92,6 +101,7 @@ export default function UnifiedLogin() {
               Forgot password?
             </button>
 
+            {error && <p role="alert">{error}</p>}
             <Button type="submit" fullWidth loading={isLoading}>
               Continue
             </Button>

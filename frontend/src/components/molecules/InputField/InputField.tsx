@@ -82,6 +82,7 @@ function InputField({
           id={id}
           type={resolvedType}
           disabled={disabled}
+          required={required}
           aria-invalid={resolvedState === 'error'}
           aria-describedby={bottomText ? `${id}-hint` : undefined}
           className={clsx(
@@ -102,7 +103,6 @@ function InputField({
             className={styles.iconRight}
             onClick={() => setShowPassword((p) => !p)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
-            tabIndex={-1}
           >
             {showPassword ? (
               <EyeOff size={16} strokeWidth={1.75} />

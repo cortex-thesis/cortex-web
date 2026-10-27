@@ -636,6 +636,9 @@ class WorkflowTests(TestCase):
             "/api/auth/register/",
             data=json.dumps({
                 "username": "newstudent",
+                "student_number": "001234", "birthdate": "2005-02-01",
+                "guardian_name": "Guardian Name", "guardian_contact": "09171234567",
+                "guardian_email": "guardian@example.test",
                 "school_id": str(school.pk),
                 "email": "newstudent@example.test",
                 "password": "a-very-long-test-password",
@@ -648,7 +651,7 @@ class WorkflowTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
-        self.assertTrue(User.objects.filter(username="newstudent", email="office@example.test").exists())
+        self.assertTrue(User.objects.filter(username="newstudent", email="newstudent@example.test").exists())
         self.assertTrue(Profile.objects.filter(user__username="newstudent", role=Profile.Role.STUDENT, school=school).exists())
         login = self.client.post("/api/auth/login/", data=json.dumps({"username": "newstudent", "password": "a-very-long-test-password"}), content_type="application/json")
         self.assertEqual(login.status_code, 200)
@@ -794,6 +797,7 @@ class WorkflowTests(TestCase):
                 "username": "pending-teacher", "school_id": str(school.pk),
                 "password": "a-very-long-test-password", "confirm_password": "a-very-long-test-password",
                 "name": "Pending Teacher", "role": Profile.Role.TEACHER,
+                "first_name": "Pending", "last_name": "Teacher", "email": "pending@example.test",
             }),
             content_type="application/json",
         )

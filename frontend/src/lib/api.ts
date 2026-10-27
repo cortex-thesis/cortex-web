@@ -34,9 +34,11 @@ export function setApiCacheOwner(owner: string | number | null) {
 
 export class ApiError extends Error {
   status: number
+  errors: Record<string, string>
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, errors: Record<string, string> = {}) {
     super(message)
+    this.errors = errors
     this.status = status
   }
 }
@@ -137,7 +139,7 @@ async function performRequest<T>(path: string, options: RequestInit, headers: He
       : response.status >= 500
         ? 'The backend encountered an error. Check the Django terminal for details.'
         : `Request failed (${response.status} ${response.statusText}).`
-    throw new ApiError(payload?.detail ?? fallback, response.status)
+    throw new ApiError(response.status >= 500 ? "Unable to complete the request. Please try again." : payload?.detail ?? fallback, response.status, payload?.errors)
   }
   return payload as T
 }

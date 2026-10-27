@@ -130,7 +130,7 @@
   width: 100%;
   padding: var(--space-3) var(--space-4);
   border-radius: 14px;
-  background: var(--color-coral);
+  background: var(--color-interface-purple);
   color: var(--color-white);
   border: none;
   font-family: var(--font-family);
@@ -161,3 +161,7 @@
 .skipBtn:hover {
   color: var(--color-text-primary);
 }
+.closeBtn { position: absolute; right: var(--space-4); top: var(--space-4); display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 0; border-radius: var(--radius-full); color: var(--color-deep-purple); background: transparent; cursor: pointer; }
+.content button:focus-visible { outline: 3px solid var(--color-interface-purple); outline-offset: 4px; }
+.content { min-width: 0; padding-top: 76px; }
+@media (prefers-reduced-motion: reduce) { .stepEmoji { animation: none; } }

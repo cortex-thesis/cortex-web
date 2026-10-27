@@ -16,9 +16,9 @@ function StatSummaryCard({
   value,
   label,
   icon,
-  iconBg = '#EEEDFE',
+  iconBg = 'var(--flower-purple-fill)',
   sub,
-  subColor = '#1D9E75',
+  subColor = 'var(--color-teal)',
   className,
 }: StatSummaryCardProps) {
   return (

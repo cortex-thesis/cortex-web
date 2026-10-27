@@ -8,6 +8,7 @@ import { useAuthStore } from '../../store/authStore'
 import { Logo } from '../atoms'
 import navStyles from '../molecules/NavBar/NavBarTeacher.module.css'
 import shellStyles from './TeacherDashboard/TeacherDashboard.module.css'
+import styles from './SchoolAdminDashboard.module.css'
 
 const links = [
   { label: 'Dashboard', path: '/school-admin/dashboard' },
@@ -26,8 +27,10 @@ export default function SchoolAdminDashboard({ user, children }: { user: Pick<Us
 
   useEffect(() => {
     const close = (event: MouseEvent) => { if (!menuRef.current?.contains(event.target as Node)) setOpen(false) }
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
     document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
+    document.addEventListener('keydown', escape)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape) }
   }, [])
 
   return <div className={shellStyles.root}>
@@ -40,9 +43,9 @@ export default function SchoolAdminDashboard({ user, children }: { user: Pick<Us
         })}</div>
       </div>
       <div className={navStyles.right}>
-        <button className={navStyles.notifBtn} aria-label={`Notifications, ${unread_count} unread`} onClick={() => navigate('/school-admin/notifications')}><Bell size={18} />{unread_count > 0 && <span className={navStyles.notifDot} />}</button>
+        <button className={`${navStyles.notifBtn} ${styles.notificationButton}`} aria-label={`Notifications, ${unread_count} unread`} onClick={() => navigate('/school-admin/notifications')}><Bell size={18} />{unread_count > 0 && <span className={navStyles.notifDot} />}</button>
         <div className={navStyles.accountMenu} ref={menuRef}>
-          <button className={navStyles.avatarBtn} onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-haspopup="menu">
+          <button className={navStyles.avatarBtn} aria-label={`Open account menu for ${user.name}`} onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-haspopup="menu">
             {user.avatar ? <img src={user.avatar} alt={user.name} className={navStyles.avatarImg} /> : <span className={navStyles.avatarInitials}>{user.name.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>}
           </button>
           {open && <div className={navStyles.accountPopover} role="menu">

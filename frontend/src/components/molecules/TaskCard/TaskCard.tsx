@@ -193,12 +193,12 @@ function TaskCard({
       )}
 
       {hasTaskInteraction ? (
-        <>
+        <div data-tour="activity-answer-area">
           <TaskInteraction task={task} onAnswered={handleInteraction} onChanged={onChanged} quiet={deliveryStrategy === 'sensory_cooldown'} narrowed={deliveryStrategy === 'attention_reengagement' || focusTemplate === 'active'} />
-        </>
+        </div>
       ) : isKnowledgeCheck ? (
         <>
-          <div className={styles.choices}>
+          <div className={styles.choices} data-tour="activity-answer-area">
             {task.choices.map((choice) => (
               <AnswerChoice key={choice} label={choice} answerState={getAnswerState(choice)} disabled={revealed && choice !== task.answer && choice !== selected} onClick={() => handleSelect(choice)} />
             ))}

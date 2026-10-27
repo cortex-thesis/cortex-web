@@ -23,6 +23,7 @@
 }
 
 .link {
+  min-height: 44px;
   padding: 6px var(--space-3);
   border-radius: var(--radius-sm, 8px);
   font-family: var(--font-family);
@@ -68,12 +69,12 @@
   top: calc(100% + var(--space-2));
   right: 0;
   z-index: var(--z-modal);
-  width: 220px;
+  width: min(220px, calc(100vw - 32px));
   padding: var(--space-2);
   background: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 12px);
-  box-shadow: 0 12px 28px rgba(42, 39, 66, 0.14);
+  box-shadow: var(--shadow-lg);
 }
 
 .accountSummary {
@@ -136,8 +137,8 @@
 }
 
 .avatarBtn {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
   background: var(--color-surface-1);
   border: none;
@@ -173,3 +174,6 @@
   .right { margin-left: auto; }
 }
 .link { display: inline-flex; align-items: center; gap: 5px; }
+
+.accountSummary { overflow-wrap: anywhere; }
+.link:focus-visible, .avatarBtn:focus-visible, .accountMenuItem:focus-visible { outline: 2px solid var(--color-interface-purple); outline-offset: 2px; }

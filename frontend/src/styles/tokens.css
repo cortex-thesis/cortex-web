@@ -30,6 +30,13 @@
   --color-cool-surface: #f8f8fc;
   --color-white: #ffffff;
 
+  /* Shared decorative shell corners; painted behind content, never as overlays. */
+  --shell-corner-background:
+    radial-gradient(circle 266px at -72px -72px, color-mix(in srgb, var(--color-sunflower) 20%, transparent) 0%, transparent 72%),
+    radial-gradient(circle 252px at calc(100% + 64px) calc(100% + 64px), color-mix(in srgb, var(--color-teal) 16%, transparent) 0%, transparent 72%),
+    var(--color-cream);
+
+
   /* Student flower avatar palette */
   --flower-pink: #d4537e;
   --flower-pink-fill: #fbeaf0;

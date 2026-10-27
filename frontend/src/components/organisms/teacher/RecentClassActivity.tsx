@@ -1,7 +1,8 @@
-import IllustrationIcon from '../../atoms/IllustrationIcon'
+import { Award, BookOpen, Sprout, Star, Trophy } from 'lucide-react'
+import Avatar from '../../atoms/Avatar'
+import recentStyles from './RecentClassActivity.module.css'
 import { Link } from 'react-router-dom'
 import { PACKAGE_META } from '../../../constants/packages'
-import PackageIcon from '../../atoms/PackageIcon'
 import type { ClassAnalyticsData } from '../../../lib/teacherApi'
 import styles from '../../../pages/teacher/ClassOverview.module.css'
 
@@ -20,10 +21,10 @@ export function RecentClassActivity({ sessions, badges, classId }: Props) {
       <h2>Recent student sessions</h2>
       <div className={styles.recentList} tabIndex={0} role="region" aria-label="Recent student sessions">
         {sessions?.map(item => <article key={item.id} className={styles.recentItem}>
-          <span className={styles.itemIcon} style={{ background: item.package ? PACKAGE_META[item.package].bg : undefined }} aria-hidden="true">{item.package ? <PackageIcon packageId={item.package} /> : '📖'}</span>
+          <span className={styles.itemIcon} aria-hidden="true"><Avatar name={item.student.name} imageUrl={item.student.avatar} color="purple" size="md" /></span>
           <div className={styles.itemDetails}>
             <Link to={`/teacher/class/${item.class_id ?? classId}/student/${item.student.id}?session=${encodeURIComponent(item.id)}`}><strong>{item.student.name}</strong></Link>
-            <span>{item.lesson}{item.class_name && <> · <Link to={`/teacher/class/${item.class_id}/overview`}>{item.class_name}</Link></>}</span>
+            <span className={recentStyles.lesson}><BookOpen size={14} strokeWidth={1.75} aria-hidden="true" /><span>{item.lesson}{item.class_name && <> · <Link to={`/teacher/class/${item.class_id}/overview`}>{item.class_name}</Link></>}</span></span>
             <small>{new Date(item.started_at).toLocaleString()} · {item.ended_at ? 'Completed' : 'In progress'} · {item.completion_percentage}%</small>
           </div>
         </article>)}
@@ -35,7 +36,7 @@ export function RecentClassActivity({ sessions, badges, classId }: Props) {
       <h2>Recently earned badges</h2>
       <div className={styles.recentList} tabIndex={0} role="region" aria-label="Recently earned badges">
         {badges?.map(item => <article key={`${item.student.id}-${item.key}`} className={styles.recentItem}>
-          <span className={styles.itemIcon} aria-hidden="true">{item.key === 'lessons-1' ? <IllustrationIcon name="sprout" size={30} /> : item.key === 'lessons-3' ? <IllustrationIcon name="star" size={30} /> : item.key === 'lessons-12' ? <IllustrationIcon name="trophy" size={30} /> : (Object.hasOwn(PACKAGE_META, item.key) ? <PackageIcon packageId={item.key as keyof typeof PACKAGE_META} /> : null) ?? <IllustrationIcon name="medal" size={30} />}</span>
+          <span className={`${styles.itemIcon} ${recentStyles.badgeIcon}`} aria-hidden="true">{item.key === 'lessons-1' ? <Sprout size={22} strokeWidth={1.75} /> : item.key === 'lessons-3' ? <Star size={22} strokeWidth={1.75} /> : item.key === 'lessons-12' ? <Trophy size={22} strokeWidth={1.75} /> : <Award size={22} strokeWidth={1.75} />}</span>
           <div className={styles.itemDetails}>
             <strong>{item.student.name}</strong>
             <span>{item.key.startsWith('lessons-') ? `Completed ${item.key.slice(8)} lesson${item.key === 'lessons-1' ? '' : 's'}` : `Completed ${PACKAGE_META[item.key as keyof typeof PACKAGE_META]?.label ?? item.key} Package`}</span>

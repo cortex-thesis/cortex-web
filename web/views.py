@@ -476,6 +476,8 @@ def admin_accounts(request):
     admin, error = _require_profile(request, {Profile.Role.ADMIN})
     if error:
         return error
+    if not admin.is_super_admin and (not admin.is_school_admin or not admin.school_id):
+        return JsonResponse({"detail": "School-administrator scope is required."}, status=403)
     if request.method == "GET":
         queryset = Profile.objects.select_related("user", "school").order_by("display_name")
         if not admin.is_super_admin:
@@ -485,11 +487,13 @@ def admin_accounts(request):
         school_id = request.GET.get("school_id")
         if school_id and admin.is_super_admin:
             queryset = queryset.filter(school_id=school_id)
-        return JsonResponse({"accounts": [_profile_data(item) | {
+        response = JsonResponse({"accounts": [_profile_data(item) | {
             "email": item.user.email, "username": item.user.username,
             "school_id": str(item.school_id) if item.school_id else None,
             "school_name": item.school.name if item.school_id else None,
         } for item in queryset]})
+        response["Cache-Control"] = "private, no-store"
+        return response
 
     try:
         data = _body(request)
@@ -976,32 +980,36 @@ def registration_schools(request):
 def register(request):
     try:
         data = _body(request)
-        username = str(data["username"]).strip()
+        from .auth_validation import registration_values
+        if not isinstance(data, dict):
+            raise ValueError
+        values, errors = registration_values(data)
+        if errors:
+            return JsonResponse({"detail": "Please correct the highlighted fields.", "errors": errors}, status=400)
+        candidate = User(username=values["username"], email=values["email"], first_name=values["first_name"], last_name=values["last_name"])
         try:
-            school = School.objects.get(pk=data.get("school_id"))
-        except (School.DoesNotExist, ValidationError, ValueError, TypeError):
-            return JsonResponse({"detail": "Choose a registered school."}, status=400)
-        email = school.contact_email
-        password = str(data["password"])
-        confirm_password = str(data.get("confirm_password") or "")
-        name = str(data["name"]).strip()
-        role = str(data.get("role", Profile.Role.STUDENT))
-        if role not in (Profile.Role.STUDENT, Profile.Role.TEACHER):
-            return JsonResponse({"detail": "Only student and teacher accounts can self-register."}, status=400)
-        if password != confirm_password:
-            return JsonResponse({"detail": "Passwords do not match."}, status=400)
-        if len(password) < 12:
-            return JsonResponse({"detail": "Password must be at least 12 characters."}, status=400)
+            validate_password(values["password"], user=candidate)
+        except ValidationError as exc:
+            return JsonResponse({"detail": "Please review your password.", "errors": {"password": " ".join(exc.messages)}}, status=400)
         with transaction.atomic():
-            user = User.objects.create_user(username=username, email=email or None, password=password)
+            user = User.objects.create_user(
+                username=values["username"], email=values["email"], password=values["password"],
+                first_name=values["first_name"], last_name=values["last_name"],
+            )
+            role = values["role"]
             status = Profile.AccountStatus.PENDING if role == Profile.Role.TEACHER else Profile.AccountStatus.ACTIVE
-            profile = Profile.objects.create(user=user, role=role, display_name=name, account_status=status, school=school)
+            profile = Profile.objects.create(
+                user=user, role=role, display_name=values["name"], account_status=status, school=values["school"],
+                **{field: values[field] for field in (
+                    "student_number", "birthdate", "guardian_name", "guardian_contact", "guardian_email"
+                ) if role == Profile.Role.STUDENT},
+            )
         _audit(profile, "account_created", profile, {"role": role})
         return JsonResponse(_profile_data(profile), status=201)
     except (KeyError, ValueError):
-        return JsonResponse({"detail": "username, password, and name are required."}, status=400)
+        return JsonResponse({"detail": "Enter valid registration details."}, status=400)
     except IntegrityError:
-        return JsonResponse({"detail": "That username is already in use."}, status=409)
+        return JsonResponse({"detail": "The username or student number is already in use. Please review these fields.", "errors": {"username": "Check that this username is available.", "student_number": "Check that this student number is available at your school."}}, status=409)
 
 
 @require_POST
@@ -1016,6 +1024,8 @@ def login_view(request):
         data = _body(request)
         identifier = str(data.get("username") or data.get("email") or "").strip()
         password = str(data.get("password", ""))
+        if not identifier or not password.strip():
+            return JsonResponse({"detail": "Enter your username or email and password."}, status=400)
         username = identifier
         if "@" in identifier:
             matched = User.objects.filter(email__iexact=identifier).only("username").first()
@@ -1819,6 +1829,10 @@ def teacher_advanced_reports(request):
         return error
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
+    return _teacher_advanced_reports_response(request, profile)
+
+
+def _teacher_advanced_reports_response(request, profile):
     year_classes, year_data, error = report_year_scope(request, profile)
     if error is not None:
         return error
@@ -2104,9 +2118,17 @@ def student_practice_lesson(request, class_id, lesson_id):
     lesson = get_object_or_404(Lesson.objects.select_related('package').prefetch_related('slides__activity'),
         Q(status=Lesson.Status.APPROVED, archived_at__isnull=True) | Q(pk=lesson_id, status=Lesson.Status.ARCHIVED) if historical else Q(status=Lesson.Status.APPROVED, archived_at__isnull=True),
         pk=lesson_id, package__is_active=True, package__class_assignments__school_class=school_class)
+    if request.GET.get('context') == 'onboarding':
+        if request.method != 'GET':
+            response = JsonResponse({'detail': 'Onboarding practice is read-only and cannot save learning progress.'}, status=405)
+            response['Allow'] = 'GET'
+            return response
+        return JsonResponse(_lesson_data(lesson) | {'context': 'onboarding', 'progress': _practice_progress_data(lesson, None)})
     if request.method == 'POST':
         try:
             payload = _body(request)
+            if payload.get('context') == 'onboarding':
+                return JsonResponse({'detail': 'Onboarding practice is read-only and cannot save learning progress.'}, status=405)
             action = payload.get('action', 'complete')
             if action not in ('answer', 'complete'):
                 raise ValueError
@@ -2682,6 +2704,24 @@ def teacher_reports(request):
         return error
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed."}, status=405)
+    return _teacher_reports_response(request, profile)
+
+
+@require_http_methods(["GET"])
+def school_teacher_reports(request, teacher_id, advanced=False):
+    admin, error = _require_profile(request, {Profile.Role.ADMIN})
+    if error:
+        return error
+    if not admin.is_school_admin or not admin.school_id:
+        return JsonResponse({"detail": "School-administrator scope is required."}, status=403)
+    teacher = get_object_or_404(Profile.objects.select_related("user", "school"),
+                                pk=teacher_id, role=Profile.Role.TEACHER, school_id=admin.school_id)
+    response = (_teacher_advanced_reports_response if advanced else _teacher_reports_response)(request, teacher)
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+def _teacher_reports_response(request, profile):
     year_classes, year_data, error = report_year_scope(request, profile)
     if error is not None:
         return error

@@ -3,7 +3,7 @@ export const onboardingKey = (id: string, role: HelpRole) => `cortex:onboarding:
 const memory = new Set<string>()
 export function hasSeenOnboarding(id: string, role: HelpRole) {
   const key = onboardingKey(id, role)
-  try { return memory.has(key) || localStorage.getItem(key) !== null } catch { return memory.has(key) }
+  try { return memory.has(key) || ['completed', 'dismissed'].includes(localStorage.getItem(key) ?? '') } catch { return memory.has(key) }
 }
 export function rememberOnboarding(id: string, role: HelpRole, status: 'completed' | 'dismissed') {
   const key = onboardingKey(id, role)
