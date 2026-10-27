@@ -51,11 +51,6 @@ export interface StudentJournalHistoryEntry {
 
 export const getStudentJournalHistory = () => api<{ entries: StudentJournalHistoryEntry[] }>('/student/journals/?history=1', { cache: 'no-store' })
 
-export const PACKAGE_EMOJI: Record<CurriculumPackage, string> = {
-  care: '🤲', life: '🍳', pre_vocational: '🛠️', livelihood: '🌱',
-  functional_academics: '📖', career: '💼', enrichment: '🎨',
-}
-
 export function classPresentation(item: StudentClass) {
   return item
 }

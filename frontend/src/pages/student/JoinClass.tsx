@@ -5,7 +5,6 @@ import { PlayfulZoneTemplate } from '../../components/templates'
 import { CodeInput, AlertBanner, InlineSkeleton } from '../../components/molecules'
 import { api } from '../../lib/api'
 import type { StudentClass } from '../../lib/studentApi'
-import { PACKAGE_EMOJI } from '../../lib/studentApi'
 import styles from './JoinClass.module.css'
 
 type JoinStatus = 'idle' | 'loading' | 'error' | 'success'
@@ -37,7 +36,7 @@ export default function JoinClass() {
         <span className={styles.heroIcon} aria-hidden="true"><GraduationCap size={30} strokeWidth={1.75} /></span>
         <div className={styles.textBlock}><h2 className={styles.heading}>Enter your class code</h2><p className={styles.sub}>Type the code your teacher gave you</p></div>
         {status === 'error' && <AlertBanner variant="error" message={errorMsg} className={styles.alert} />}
-        {status === 'success' && foundClass && <AlertBanner variant="success" title={`Joined ${PACKAGE_EMOJI[foundClass.packages?.[0]?.slug ?? 'life']} ${foundClass.name}`} message="Opening your class..." className={styles.alert} />}
+        {status === 'success' && foundClass && <AlertBanner variant="success" title={`Joined ${foundClass.name}`} message="Opening your class..." className={styles.alert} />}
         <CodeInput key={inputAttempt} value={code} onChange={(value) => { setCode(value); if (status === 'error') setStatus('idle') }} onComplete={handleComplete} fieldState={status === 'error' ? 'error' : status === 'success' ? 'success' : 'default'} errorText={errorMsg} successText={foundClass ? `Joined ${foundClass.name}` : undefined} hint="Enter the code your teacher gave you" disabled={status === 'loading' || status === 'success'} />
         {status === 'loading' && <div className={styles.loadingText}><InlineSkeleton width={180} height={13} /></div>}
         {status === 'error' && <button className={styles.retryBtn} onClick={() => {

@@ -1,6 +1,7 @@
+import IllustrationIcon from '../../components/atoms/IllustrationIcon'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ChevronLeft, Search, School } from 'lucide-react'
+import { ArrowRight, ChevronLeft, Search } from 'lucide-react'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { CardGridSkeleton } from '../../components/molecules'
 import { classPresentation, getStudentClasses } from '../../lib/studentApi'
@@ -55,7 +56,7 @@ export default function Classes() {
           <div className={styles.grid}>
             {filtered.map((cls) => (
               <button data-tour="class-choice" key={cls.id} className={styles.classCard} onClick={() => navigate(`/student/class/${cls.id}`)}>
-                <span className={styles.classIcon} aria-hidden="true"><School size={26} strokeWidth={1.75} /></span>
+                <span className={styles.classIcon} aria-hidden="true"><IllustrationIcon name="school-building" size={26} /></span>
                 <strong className={styles.className}>{cls.name}</strong>
                 <span className={styles.viewClass}>View class <ArrowRight size={15} /></span>
               </button>

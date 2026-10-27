@@ -29,7 +29,7 @@ export default function ClassStudents() {
   const students = useMemo(() => (classData?.students ?? []).filter((student) => student.name.toLowerCase().includes(search.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name)), [classData, search])
 
   return (
-    <TeacherTabTemplate user={user} tabs={CLASS_TABS(classId)} title={`🏫 ${classData?.name ?? 'Class'}`}>
+    <TeacherTabTemplate user={user} tabs={CLASS_TABS(classId)} title={`${classData?.name ?? 'Class'}`}>
       <button onClick={() => navigate(`/teacher/class/${classId}/enroll`)}>Manage enrollment</button>
       <div className={styles.content}>
         <div className={styles.toolbar}>

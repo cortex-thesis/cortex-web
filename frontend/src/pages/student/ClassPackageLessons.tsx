@@ -1,10 +1,11 @@
+import PackageIcon from '../../components/atoms/PackageIcon'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, ChevronRight, Circle } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PlayfulZoneTemplate } from '../../components/templates'
 import { DetailSkeleton } from '../../components/molecules'
 import { PACKAGE_META } from '../../constants/packages'
-import { getStudentClassPackage, PACKAGE_EMOJI, type StudentClass, type StudentLesson, type StudentPackage } from '../../lib/studentApi'
+import { getStudentClassPackage, type StudentClass, type StudentLesson, type StudentPackage } from '../../lib/studentApi'
 import { cachedApiValue } from '../../lib/api'
 import styles from './FreeLessonSelect.module.css'
 
@@ -21,7 +22,7 @@ export default function ClassPackageLessons() {
   const pkg = data.package.slug
   return <PlayfulZoneTemplate>
     <div className={styles.page}>
-      <header className={styles.header}><button className={styles.backBtn} onClick={() => navigate(`/student/class/${classId}`, { replace: true })} aria-label="Back to class"><ArrowLeft size={18} /></button><span className={styles.packageIcon} style={{ background: PACKAGE_META[pkg].bg }}>{PACKAGE_EMOJI[pkg]}</span><div><span className={styles.eyebrow}>{data.class.name}</span><h1 data-tour="learning-heading">{data.package.name}</h1><p>Choose one of the lessons below to begin.</p></div></header>
+      <header className={styles.header}><button className={styles.backBtn} onClick={() => navigate(`/student/class/${classId}`, { replace: true })} aria-label="Back to class"><ArrowLeft size={18} /></button><span className={styles.packageIcon} style={{ background: PACKAGE_META[pkg].bg }}><PackageIcon packageId={pkg} /></span><div><span className={styles.eyebrow}>{data.class.name}</span><h1 data-tour="learning-heading">{data.package.name}</h1><p>Choose one of the lessons below to begin.</p></div></header>
       <section className={styles.lessonSection}><h2>{data.package.name} lessons</h2>{data.lessons.length === 0 ? <p>No approved lessons have been added to this package yet.</p> : <div className={styles.lessonList}>{data.lessons.map((lesson, index) => <div key={lesson.id} className={styles.lessonRow}>
         <button data-tour="lesson-choice" className={styles.lessonCard} onClick={() => navigate(`/student/class/${classId}/lesson/${lesson.id}`)}><span className={styles.lessonNumber}>{index + 1}</span><span className={styles.lessonName}>{lesson.title}</span>
           <span className={styles.lessonProgress}>

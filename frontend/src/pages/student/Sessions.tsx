@@ -1,3 +1,4 @@
+import IllustrationIcon from '../../components/atoms/IllustrationIcon'
 import { getFocusPerformance } from '../../lib/focusPerformance'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -88,7 +89,7 @@ export default function Sessions() {
                 <div className={styles.sessionTop}>
                   <div><span className={styles.className}>{session.class_name}</span><h2>{session.title}</h2></div>
                 </div>
-                <div className={styles.meta}><span>{session.status === 'in_progress' ? 'Last opened' : 'Started'} {new Date(session.last_opened_at ?? session.ended_at ?? session.started_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span><span>{Math.max(1, Math.round(session.duration_seconds / 60))} min</span><span>{session.tasks_completed} of {session.tasks_total} tasks</span><span>{getFocusPerformance(session.focus_score, session.state_distribution).emoji} {getFocusPerformance(session.focus_score, session.state_distribution).phrase}</span></div>
+                <div className={styles.meta}><span>{session.status === 'in_progress' ? 'Last opened' : 'Started'} {new Date(session.last_opened_at ?? session.ended_at ?? session.started_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span><span>{Math.max(1, Math.round(session.duration_seconds / 60))} min</span><span>{session.tasks_completed} of {session.tasks_total} tasks</span><span><IllustrationIcon name={getFocusPerformance(session.focus_score, session.state_distribution).icon} size={18} /> {getFocusPerformance(session.focus_score, session.state_distribution).phrase}</span></div>
               </div>
               {session.status === 'in_progress' ? <span className={`${styles.inProgress} ${styles.sessionStatus}`}>{session.is_live ? 'Live now' : 'In progress'}</span> : session.state ? <StateBadge state={session.state} size="sm" className={styles.sessionStatus}/> : <span className={styles.sessionStatus}>No EEG data</span>}
               <button className={styles.openBtn} onClick={() => void openSession(session)} aria-label={session.status === 'in_progress' ? `Continue ${session.title}` : `Open ${session.title}`}>{session.status === 'in_progress' ? <><span>Continue</span><ChevronRight size={17}/></> : <ChevronRight size={18}/>}</button>

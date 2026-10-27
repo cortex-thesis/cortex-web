@@ -1,3 +1,4 @@
+import PackageIcon from '../../components/atoms/PackageIcon'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { StatSummaryCard } from '../../components/molecules'
 import { StateBadge } from '../../components/atoms'
@@ -30,7 +31,7 @@ function avgFocusForClass(studentIds: string[]): number {
 const CLASS_COMPARISON = classes.map((c) => ({
   id: c.id,
   name: c.name,
-  emoji: c.iconEmoji,
+  package: c.package,
   avgFocus: avgFocusForClass(c.studentIds),
 }))
 
@@ -97,7 +98,7 @@ export default function Analytics() {
               {CLASS_COMPARISON.map((c) => (
                 <div key={c.id} className={styles.barRow}>
                   <span className={styles.barLabel}>
-                    <span aria-hidden="true">{c.emoji}</span> {c.name}
+                    <PackageIcon packageId={c.package} size={22} /> {c.name}
                   </span>
                   <div
                     className={styles.barTrack}

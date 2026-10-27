@@ -1,3 +1,4 @@
+import PackageIcon from '../../components/atoms/PackageIcon'
 import { useState } from 'react'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -14,16 +15,6 @@ const LESSONS: Record<CurriculumPackage, string[]> = {
   functional_academics: ['Reading a bus schedule', 'Using money at a shop', 'Following a daily timetable'],
   career: ['Exploring jobs I enjoy', 'Preparing for a workplace', 'Practicing introductions'],
   enrichment: ['Drawing what I learned', 'Music and movement', 'Creative problem solving'],
-}
-
-const PACKAGE_EMOJI: Record<CurriculumPackage, string> = {
-  care: '🤲',
-  life: '🍳',
-  pre_vocational: '🛠️',
-  livelihood: '🌱',
-  functional_academics: '📖',
-  career: '💼',
-  enrichment: '🎨',
 }
 
 export default function FreeLessonSelect() {
@@ -78,7 +69,7 @@ export default function FreeLessonSelect() {
                   onClick={() => setSelectedPackage(pkg)}
                 >
                   <span className={styles.packageIcon} style={{ background: PACKAGE_META[pkg].bg }}>
-                    {PACKAGE_EMOJI[pkg]}
+                    <PackageIcon packageId={pkg} />
                   </span>
                   <span className={styles.packageName}>{PACKAGE_META[pkg].label}</span>
                   <span className={styles.lessonCount}>{LESSONS[pkg].length} lessons</span>

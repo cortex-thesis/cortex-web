@@ -94,7 +94,7 @@ export default function Home() {
           </div>
           <div className={styles.classesHeader}><span className={styles.classesLabel}>My Classes</span>{hasMoreClasses && <button className={styles.seeAllBtn} onClick={() => navigate('/student/classes')}>See all</button>}</div>
           {classesLoading ? <CardGridSkeleton count={2} /> : <div className={`${styles.learningGrid} ${previewClasses.length === 1 ? styles.singleClassGrid : ''} ${previewClasses.length === 0 ? styles.noClassGrid : ''}`}>
-            {previewClasses.map(item => <ClassTile key={item.id} name={item.name} illustrationSrc={`${LEARNING_ASSET_PATH}/growing-plant.png`} layout="horizontal" onClick={() => navigate(`/student/class/${item.id}`)} />)}
+            {previewClasses.map(item => <ClassTile key={item.id} name={item.name} illustrationSrc="/assets/interface/school-building.png" layout="horizontal" onClick={() => navigate(`/student/class/${item.id}`)} />)}
             <button data-tour="student-learn" className={styles.startLearningCard} onClick={() => navigate(classes.length === 1 ? `/student/class/${classes[0].id}` : classes.length ? '/student/classes' : '/student/join-class')}>
               <span className={styles.startLearningIcon} aria-hidden="true"><img src={`${LEARNING_ASSET_PATH}/sprout.png`} alt="" /></span>
               <span className={styles.startLearningCopy}><small>{classes.length ? 'Start learning' : 'Get started'}</small><strong>{classes.length ? 'Start a lesson' : 'Join a class'}</strong><span>{classes.length === 1 ? `Choose something new to learn in ${classes[0].name}.` : classes.length > 1 ? 'Choose a class and find your next lesson.' : 'Join a class to see lessons you can start.'}</span></span>

@@ -1,3 +1,4 @@
+import PackageIcon from '../../components/atoms/PackageIcon'
 import { useNavigate } from 'react-router-dom'
 import { Users, BookOpen } from 'lucide-react'
 import { TeacherDashboardTemplate } from '../../components/templates'
@@ -66,7 +67,7 @@ export default function Profile() {
                     className={styles.classIcon}
                     style={{ background: c.iconBg }}
                   >
-                    {c.iconEmoji}
+                    <PackageIcon packageId={c.package} />
                   </span>
                   <span className={styles.classText}>
                     <span className={styles.className}>{c.name}</span>

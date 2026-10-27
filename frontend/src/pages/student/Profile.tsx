@@ -1,3 +1,4 @@
+import PackageIcon from '../../components/atoms/PackageIcon'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Clock3, History, LogOut, Pencil, PlayCircle, Sprout, TrendingUp } from 'lucide-react'
@@ -5,7 +6,7 @@ import { PlayfulZoneTemplate } from '../../components/templates'
 import { ListSkeleton } from '../../components/molecules'
 import { StudentFlowerAvatar } from '../../components/atoms'
 import { useAuthStore } from '../../store/authStore'
-import { PACKAGE_EMOJI, getStudentSessions, type StudentSessionsData } from '../../lib/studentApi'
+import { getStudentSessions, type StudentSessionsData } from '../../lib/studentApi'
 import { api } from '../../lib/api'
 import { PACKAGE_META } from '../../constants/packages'
 import type { CurriculumPackage } from '../../constants/states'
@@ -122,7 +123,7 @@ export default function Profile() {
           {!packageProgress && !progressError && <ListSkeleton rows={4} />}
           {progressError && <p role="alert">{progressError}</p>}
           {(packageProgress ?? []).map(item => <div className={styles.progressItem} key={item.slug}>
-            <span className={styles.packageIcon} style={{ background: PACKAGE_META[item.slug]?.bg }} aria-hidden="true">{PACKAGE_EMOJI[item.slug]}</span>
+            <span className={styles.packageIcon} style={{ background: PACKAGE_META[item.slug]?.bg }} aria-hidden="true"><PackageIcon packageId={item.slug} /></span>
             <span className={styles.packageName}>{item.name}</span>
             <div className={styles.progressTrack} role="progressbar" aria-label={item.name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.percentage}><div className={styles.progressFill} style={{ width: `${item.percentage}%` }}/></div>
             <strong className={styles.progressPercent}>{item.percentage}%</strong>

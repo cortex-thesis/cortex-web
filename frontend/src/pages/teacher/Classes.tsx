@@ -1,3 +1,4 @@
+import IllustrationIcon from '../../components/atoms/IllustrationIcon'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -42,7 +43,7 @@ export default function Classes() {
           <div className={styles.grid}>
             {filtered.map((item) => (
               <button key={item.id} className={styles.card} onClick={() => navigate(`/teacher/class/${item.id}/overview`)}>
-                <span className={styles.cardIcon} style={{ background: '#EEEDFE' }} aria-hidden="true">{'🏫'}</span>
+                <span className={styles.cardIcon} style={{ background: '#EEEDFE' }} aria-hidden="true"><IllustrationIcon name="school-building" size={30} /></span>
                 <span className={styles.cardBody}>
                   <span className={styles.cardName}>{item.name}</span>
                   <span className={styles.cardMeta}>{item.student_count} students &middot; Code {item.code}</span>

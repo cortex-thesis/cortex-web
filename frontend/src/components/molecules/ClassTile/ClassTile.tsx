@@ -1,6 +1,6 @@
+import IllustrationIcon from '../../atoms/IllustrationIcon'
 import styles from './ClassTile.module.css'
 import clsx from 'clsx'
-import { School } from 'lucide-react'
 
 interface ClassTileProps {
   name: string
@@ -29,7 +29,7 @@ function ClassTile({
         aria-label={`${name}${unreadCount ? `, ${unreadCount} new notifications` : ''}`}
       >
         <div className={styles.iconWrap} aria-hidden="true">
-          {illustrationSrc ? <img className={styles.illustration} src={illustrationSrc} alt="" /> : <School size={22} strokeWidth={1.75} />}
+          {illustrationSrc ? <img className={styles.illustration} src={illustrationSrc} alt="" /> : <IllustrationIcon name="school-building" size={28} />}
         </div>
         <span className={styles.name}>{name}</span>
         {studentCount !== undefined && (

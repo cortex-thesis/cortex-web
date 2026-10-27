@@ -1,3 +1,4 @@
+import IllustrationIcon from '../../../atoms/IllustrationIcon'
 import { getFocusPerformance } from '../../../../lib/focusPerformance'
 import type { SessionSummary } from '../../../../types'
 import type { CognitiveState } from '../../../../constants/states'
@@ -47,7 +48,7 @@ function SessionSummaryModal({
     >
       <div className={styles.header}>
         <span className={styles.trophy} aria-hidden="true">
-          🎉
+          <IllustrationIcon name="trophy" size={48} />
         </span>
         <h2 className={styles.title}>Session Complete!</h2>
         <p className={styles.sub}>Great work today</p>
@@ -55,7 +56,7 @@ function SessionSummaryModal({
 
       <div className={styles.focusStat}>
         <span className={styles.focusEmoji} aria-hidden="true">
-          {performance.emoji}
+          <IllustrationIcon name={performance.icon} size={40} />
         </span>
         <span
           className={styles.statVal}

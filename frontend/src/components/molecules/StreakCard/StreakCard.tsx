@@ -1,3 +1,5 @@
+import IllustrationIcon from '../../atoms/IllustrationIcon'
+import { getFocusPerformance } from '../../../lib/focusPerformance'
 import styles from './StreakCard.module.css'
 import clsx from 'clsx'
 
@@ -7,15 +9,8 @@ interface StreakCardProps {
   className?: string
 }
 
-function getPerformance(score: number): { emoji: string; phrase: string } {
-  if (score >= 80) return { emoji: '🌟', phrase: 'Excellent focus' }
-  if (score >= 70) return { emoji: '💪', phrase: 'Steady focus' }
-  if (score >= 60) return { emoji: '🌱', phrase: 'Growing focus' }
-  return { emoji: '✨', phrase: 'Finding your rhythm' }
-}
-
 function StreakCard({ score, className, label = "Today's performance" }: StreakCardProps) {
-  const { emoji, phrase } = getPerformance(score)
+  const { icon, phrase } = getFocusPerformance(score)
 
   return (
     <div
@@ -23,7 +18,7 @@ function StreakCard({ score, className, label = "Today's performance" }: StreakC
       aria-label={`${label}: ${phrase}`}
     >
       <div className={styles.icon} aria-hidden="true">
-        {emoji}
+        <IllustrationIcon name={icon} size={32} />
       </div>
       <div className={styles.info}>
         <span className={styles.label}>{label}</span>
