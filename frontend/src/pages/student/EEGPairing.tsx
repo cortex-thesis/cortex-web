@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { museSignalReady } from '../../lib/museReadiness'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, Bluetooth, Check, HelpCircle, Radio, Sparkles, Wifi, X } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PlayfulZoneTemplate } from '../../components/templates'
@@ -16,10 +17,12 @@ const STEPS = [
 export default function EEGPairing() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { status, error, deviceName, battery, quality, baselineProgress, connect, disconnect } = useMuseStore()
+  const { status, error, deviceName, battery, quality, baselineProgress, acceptedChannels, bandsUpdatedAt, connect, disconnect } = useMuseStore()
   const cleanContacts = quality.filter((value) => value > 0).length
-  const ready = status === 'streaming'
-  const currentStep = ready ? 4 : status === 'connecting' ? 2 : 1
+  const [signalTime, setSignalTime] = useState(Date.now)
+  useEffect(() => { const timer = window.setInterval(() => setSignalTime(Date.now()), 1000); return () => clearInterval(timer) }, [])
+  const ready = cleanContacts === 4 && museSignalReady(status, acceptedChannels, bandsUpdatedAt, Math.max(signalTime, bandsUpdatedAt ?? 0))
+  const currentStep = ready ? 4 : status === 'streaming' ? 3 : status === 'connecting' ? 2 : 1
   const progress = ((currentStep - 1) / (STEPS.length - 1)) * 100
   const busy = status === 'requesting' || status === 'connecting'
   const [showGuide, setShowGuide] = useState(false)
@@ -35,7 +38,7 @@ export default function EEGPairing() {
           </div>
           <div className={styles.centerStatus}>{ready ? <span aria-hidden="true" /> : <Bluetooth size={42} />}</div>
         </div>
-        <div className={styles.textBlock}><h1 className={styles.title}>{ready ? 'Muse 2 connected' : busy ? 'Connecting to Muse 2' : 'Connect your Muse 2'}</h1><p className={styles.sub}>{ready ? `${deviceName} is connected. You can continue while Cortex checks the signal quietly in the background.` : 'Charge and turn on the headband, enable Bluetooth, stay within 1 metre, then choose it from the browser window.'}</p><button className={styles.guideButton} onClick={() => setShowGuide(true)}><HelpCircle size={15} /> How to wear and prepare Muse 2</button></div>
+        <div className={styles.textBlock}><h1 className={styles.title}>{ready ? 'Muse 2 connected' : status === 'streaming' ? 'Check your headset signal' : busy ? 'Connecting to Muse 2' : 'Connect your Muse 2'}</h1><p className={styles.sub}>{ready ? `${deviceName} is connected. Your sensor signal is usable. Continue to finish calibration before starting the lesson.` : 'Charge and turn on the headband, enable Bluetooth, stay within 1 metre, then choose it from the browser window.'}</p><button className={styles.guideButton} onClick={() => setShowGuide(true)}><HelpCircle size={15} /> How to wear and prepare Muse 2</button></div>
         {status === 'streaming' && <div className={styles.calibration} role="status"><span><b>{cleanContacts}/4</b> sensor contacts ready</span><span><b>{baselineProgress}%</b> background refinement</span></div>}
         <div className={styles.waveProgress} role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={4}><svg className={styles.waveLine} viewBox="4 0 292 44" preserveAspectRatio="none"><path className={styles.waveTrack} pathLength="100" d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" /><path className={`${styles.waveFill} ${ready ? styles.waveSuccess : ''}`} pathLength="100" strokeDasharray={`${progress} 100`} d="M4 22 C22 22 22 8 40 8 S58 36 76 36 S94 14 112 14 S130 30 148 30 S166 8 184 8 S202 36 220 36 S238 14 256 14 S274 22 296 22" /></svg><div className={styles.stepNodes}>{STEPS.map((step, index) => { const Icon = step.icon; const number = index + 1; return <span key={step.label} className={`${styles.stepNode} ${number < currentStep ? styles.stepComplete : ''} ${number === currentStep ? styles.stepActive : ''}`}><Icon size={14} /></span> })}</div></div>
       </div>
@@ -56,7 +59,7 @@ export default function EEGPairing() {
           <article><span>2</span><div><b>Position</b><p>Center the Muse logo. Keep AF7 and AF8 flat on bare forehead, with TP9 and TP10 behind the ears.</p></div></article>
           <article><span>3</span><div><b>Adjust</b><p>Move hair away and gently press any sensor marked Adjust until all four contacts are usable.</p></div></article>
         </div>
-        <aside><Check size={16} /><span>You can continue as soon as all four contacts are usable. Baseline refinement continues quietly during the lesson.</span></aside>
+        <aside><Check size={16} /><span>Continue when all four contacts are usable and fresh signal readings arrive. Calibration finishes before the lesson begins.</span></aside>
         <button className={styles.guideDone} onClick={() => setShowGuide(false)}>Got it</button>
       </section>
     </div>}

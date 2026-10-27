@@ -1,0 +1,8 @@
+﻿.page { min-width:0; }
+@media print {
+  .page, .page * { visibility:visible; }
+  .page { position:absolute; inset:0; max-width:none; padding:0; color:var(--color-text-primary); background:white; }
+  .page button, .page select { display:none; }
+  .page table { width:100%; }
+  .page th, .page td { white-space:normal; overflow-wrap:anywhere; }
+}

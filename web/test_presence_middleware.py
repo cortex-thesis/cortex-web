@@ -26,11 +26,11 @@ class PresenceProbeTests(SimpleTestCase):
                     self.assertIs(self.middleware(request), self.response)
             expire.assert_not_called()
 
-    def test_authenticated_application_requests_still_expire_abandoned_classrooms(self):
+    def test_authenticated_application_requests_do_not_expire_classrooms(self):
         request = SimpleNamespace(path='/api/class-sessions/', user=SimpleNamespace(is_authenticated=True))
         with patch('web.class_sessions.expire_offline_sessions') as expire:
             self.assertIs(self.middleware(request), self.response)
-            expire.assert_called_once_with()
+            expire.assert_not_called()
 
     def test_anonymous_application_requests_do_not_expire_classrooms(self):
         request = SimpleNamespace(path='/api/class-sessions/', user=SimpleNamespace(is_authenticated=False))

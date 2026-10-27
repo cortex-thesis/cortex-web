@@ -1,5 +1,5 @@
 import CognitiveStateInfo, { cognitiveDisclaimer } from '../../components/molecules/CognitiveStateInfo'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { TeacherDashboardTemplate } from '../../components/templates'
 import { useAuthStore } from '../../store/authStore'
@@ -25,6 +25,8 @@ export default function TeacherClassSession() {
   const [history, setHistory] = useState<ClassroomSession[]>([])
   const [storedSession, setSession] = useState<ClassroomSession | null>(null)
   const session = storedSession?.id === groupId ? storedSession : null
+  const mutationPending = useRef(false)
+  const revision = useRef(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [connectionError, setConnectionError] = useState('')
@@ -47,7 +49,8 @@ export default function TeacherClassSession() {
     let timer: ReturnType<typeof setTimeout>
     let delay = 3000
     const refresh = async () => {
-      try { const data = await heartbeatClassSession(groupId); if (!cancelled) { setSession(previous => newerSession(previous, data)); setConnectionError(''); delay = 3000 } }
+      const requestedRevision = revision.current
+      try { const data = await heartbeatClassSession(groupId); if (!cancelled && !mutationPending.current && requestedRevision === revision.current) { setSession(previous => newerSession(previous, data)); setConnectionError(''); delay = 3000 } }
       catch { if (!cancelled) { setConnectionError('Connection interrupted. Reconnecting automatically…'); delay = Math.min(delay * 2, 15000) } }
       if (!cancelled) timer = setTimeout(() => void refresh(), delay)
     }
@@ -56,19 +59,23 @@ export default function TeacherClassSession() {
   }, [groupId])
 
   async function openLobby() {
+    if (mutationPending.current) return
+    mutationPending.current = true; revision.current += 1
     setBusy(true); setError('')
     try {
       const data = await openClassSession(Number(selectedClass))
       setSession(data); navigate(`/teacher/class-session/${data.id}`)
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to open the lobby.') }
-    finally { setBusy(false) }
+    finally { mutationPending.current = false; revision.current += 1; setBusy(false) }
   }
   async function control(action: string, extra: { mode?: ClassMode; lesson_id?: number } = {}) {
     if (!session) return
+    if (mutationPending.current) return
+    mutationPending.current = true; revision.current += 1
     setBusy(true); setError('')
     try { const data = await controlClassSession(session.id, action, extra); setSession(previous => newerSession(previous, data)); setConfirmEnd(false) }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'The control could not be applied.') }
-    finally { setBusy(false) }
+    finally { mutationPending.current = false; revision.current += 1; setBusy(false) }
   }
   async function download() {
     if (!session) return
@@ -83,7 +90,7 @@ export default function TeacherClassSession() {
     {!groupId ? <>
       <section className={styles.panel}><h2>Prepare your classroom</h2><div className={styles.fields}>
         <label>Class<select value={selectedClass} onChange={event => setSelectedClass(event.target.value)}><option value="" disabled>Choose a class</option>{classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-      </div><button className={styles.primary} disabled={!selectedClass || busy} onClick={() => void openLobby()}>{busy ? 'Opening…' : 'Prepare lobby'}</button><p>Select a lesson, then start it to invite students. Sessions close after 60 seconds without teacher presence.</p></section>
+      </div><button className={styles.primary} disabled={!selectedClass || busy} onClick={() => void openLobby()}>{busy ? 'Opening…' : 'Prepare lobby'}</button><p>Select a lesson, then start it to invite students. Leaving this page or signing out keeps the classroom open. Use End session to finish for everyone.</p></section>
       <section className={styles.panel}><h2>Recent sessions and reports</h2>{history.length ? history.map(item => <Link className={styles.history} key={item.id} to={`/teacher/class-session/${item.id}`}><strong>{item.class_name}</strong><span>{item.lesson_title ?? 'Lesson not selected'}</span><span>{item.status === 'completed' ? 'View overview report' : item.status === 'scheduled' ? 'Reopen lobby' : item.status}</span></Link>) : <p>No teacher-led sessions yet.</p>}</section>
     </> : !session ? <p role="status">Loading classroom…</p> : ended ? <section className={styles.panel}>
       <h2>Session overview</h2>{report ? <><p>{report.participant_count} students joined · {report.answered} activities answered · {report.correct} answered correctly</p><p>Lessons: {report.lessons.map(item => item.title).join(', ') || 'Lobby only'}</p><p>{report.started_at ? new Date(report.started_at).toLocaleString() : 'Lesson was not started'} — {new Date(report.ended_at).toLocaleString()}</p><div className={styles.controls}><button className={styles.primary} onClick={() => void download()}>Download CSV report</button><button onClick={() => window.print()}>Print / Save PDF</button></div>

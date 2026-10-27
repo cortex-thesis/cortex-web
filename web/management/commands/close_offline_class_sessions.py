@@ -3,7 +3,8 @@ from web.class_sessions import expire_offline_sessions
 
 
 class Command(BaseCommand):
-    help = 'Close teacher-led sessions with expired teacher presence and save reports.'
+    help = 'Legacy compatibility command; teacher-led sessions require explicit ending.'
 
     def handle(self, *args, **options):
-        self.stdout.write(f'Closed {expire_offline_sessions()} offline class sessions.')
+        expire_offline_sessions()
+        self.stdout.write('No sessions closed. Offline presence does not end teacher-led classrooms; use the explicit End session action.')

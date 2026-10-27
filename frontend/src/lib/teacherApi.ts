@@ -128,7 +128,8 @@ export interface ClassAnalyticsData {
 }
 export const getClassAnalytics = (id: string, lessonId = '', signal?: AbortSignal, month = 'all') =>
   api<ClassAnalyticsData>(`/teacher/classes/${id}/analytics/?${new URLSearchParams({ ...(lessonId ? { lesson_id: lessonId } : {}), month })}`, { cache: 'no-store', signal })
-export const createTeacherClass = (data: { name: string; description?: string; school_year?: string }) =>
+export const getTeacherClassYear = (signal?: AbortSignal) => api<{ school_year: string }>('/teacher/class-year/', { cache: 'no-store', signal })
+export const createTeacherClass = (data: { name: string; description?: string }) =>
   api<TeacherClass>('/classes/', { method: 'POST', body: JSON.stringify(data) })
 export const updateTeacherClass = (id: string, data: Partial<Pick<TeacherClass, 'name' | 'description' | 'school_year'>>) =>
   api<TeacherClass>(`/classes/${id}/`, { method: 'PATCH', body: JSON.stringify(data) })

@@ -1,3 +1,4 @@
+import { museSignalReady } from '../../lib/museReadiness'
 import { measurePresentation } from '../../lib/presentationTiming'
 import { Activity, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, BatteryMedium, Radio, RotateCcw } from 'lucide-react'
@@ -53,7 +54,11 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
   const location = useLocation()
   const context = (location.state as { sessionId?: string; classId?: number; lessonId?: number; mode?: string; devBypass?: boolean } | null) ?? {}
   const isDevBypass = import.meta.env.DEV && context.devBypass === true
-  const { status, deviceName, battery, quality, samples, bands, bandsUpdatedAt, absoluteBands, relativeBands, baselineProgress, acceptedChannels, disconnect } = useMuseStore()
+  const { status, deviceName, battery, quality, samples, bands, bandsUpdatedAt, absoluteBands, relativeBands, baselineProgress, acceptedChannels, disconnect, connect, error: deviceError } = useMuseStore()
+  const [signalTime, setSignalTime] = useState(Date.now)
+  useEffect(() => { const timer = window.setInterval(() => setSignalTime(Date.now()), 1000); return () => clearInterval(timer) }, [])
+  const signalReady = museSignalReady(status, acceptedChannels, bandsUpdatedAt, Math.max(signalTime, bandsUpdatedAt ?? 0))
+  const [progressLoadAttempt, setProgressLoadAttempt] = useState(0)
   const [creativeEvidence, setCreativeEvidence] = useState<Record<string,{selected:string}>>({})
   const [lesson, setLesson] = useState<LessonData | null>(classroomControl?.lesson ?? null)
   const [remote, setRemote] = useState<{ control_mode: string; presentation_mode: 'focus' | 'refocus' | 'breathing'; status: string; ended_at: string | null } | null>(null)
@@ -113,6 +118,7 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
     return () => window.clearTimeout(timer)
   }, [mode, displayMode])
   const [ending, setEnding] = useState(false)
+  const [savedSession, setSavedSession] = useState(false)
   const [savingSession, setSavingSession] = useState(false)
   const [savingStep, setSavingStep] = useState(false)
   const finishing = useRef(false)
@@ -124,7 +130,7 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
     const timer = window.setTimeout(() => { setMode('focus'); playLessonSound('transition') }, 3000)
     return () => window.clearTimeout(timer)
   }, [mode, adaptive])
-  const currentState = forcedState ?? (status === 'streaming' && baselineProgress >= 100 && acceptedChannels > 0 ? deviceState : null)
+  const currentState = forcedState ?? (signalReady && baselineProgress >= 100 ? deviceState : null)
   function transitionState() {
     if (holdRef.current.committed === 'breathing') return 'overstimulated'
     return currentState === 'focused' || currentState === 'relaxed' ? currentState : 'distracted'
@@ -163,12 +169,11 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
       setLoadedProgressKey(progressKey)
     }).catch((reason: Error) => { if (!disposed) setError(reason.message) })
     return () => { disposed = true }
-  }, [sessionId, progressKey])
+  }, [sessionId, progressKey, progressLoadAttempt])
 
-  // Signal checks and baseline refinement continue in the background. They do
-  // not block the lesson during testing; storage still requires valid samples.
-  const calibrated = Boolean(forcedState || status === 'streaming')
-  useEffect(() => { if (calibrated) setLessonStarted(true) }, [calibrated])
+  // Initial calibration requires measured data; reconnecting retains lesson work.
+  const calibrated = Boolean(forcedState || (signalReady && baselineProgress >= 100))
+  useEffect(() => { let disposed = false; queueMicrotask(() => { if (!disposed && calibrated) setLessonStarted(true) }); return () => { disposed = true } }, [calibrated])
   const phase = eegSessionPhase(complete, ending, calibrated, lessonStarted)
   const focusScore = forcedState ? forcedFocusScore : calibrated ? deviceFocusScore : null
   const supportKey = `${lesson?.id ?? ''}/${position}`
@@ -189,7 +194,9 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
   const coolingTriggered = adaptive && mode === 'focus' && currentState === 'overstimulated' && hold.overstimulated >= 5000
   const coolSupport = adaptive && mode === 'focus' && Boolean(coolActivities[supportKey] || coolingTriggered)
   useEffect(() => {
-    if (coolingTriggered) setCoolActivities(previous => previous[supportKey] ? previous : { ...previous, [supportKey]: true })
+    let disposed = false
+    queueMicrotask(() => { if (!disposed && coolingTriggered) setCoolActivities(previous => previous[supportKey] ? previous : { ...previous, [supportKey]: true }) })
+    return () => { disposed = true }
   }, [supportKey, coolingTriggered])
   const candidateSupport = adaptive && mode === 'focus' && phase === 'active' ? heldFocusTemplate(hold, currentState, focusScore) : 'none'
   const queuedSupport = queuedFocusTemplate(activitySupport[supportKey] ?? 'none', candidateSupport)
@@ -202,11 +209,14 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
     if (stateReceipt && (highlightImportantWords || focusTemplate !== 'none' || mode !== 'focus')) measurePresentation(stateReceipt.at, 'adaptation', stateReceipt.sequence)
   }, [stateReceipt, highlightImportantWords, focusTemplate, mode])
   useEffect(() => {
-    if (candidateSupport === 'none') return
-    setActivitySupport(previous => {
-      const next = queuedFocusTemplate(previous[supportKey] ?? 'none', candidateSupport)
-      return previous[supportKey] === next ? previous : { ...previous, [supportKey]: next }
+    let disposed = false
+    queueMicrotask(() => {
+      if (!disposed && candidateSupport !== 'none') setActivitySupport(previous => {
+        const next = queuedFocusTemplate(previous[supportKey] ?? 'none', candidateSupport)
+        return previous[supportKey] === next ? previous : { ...previous, [supportKey]: next }
+      })
     })
+    return () => { disposed = true }
   }, [supportKey, candidateSupport])
   const updateHold = useEffectEvent((elapsedMs: number) => {
     const next = mode === 'refocus'
@@ -302,7 +312,6 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
   async function advance(selected?: string) {
     if (advancing.current || !lesson || teacherControl?.paused || mode !== 'focus' || focusGates[task?.id ?? '']) return
     advancing.current = true
-    playLessonSound(position === lesson.slides.length - 1 ? 'finished' : 'transition')
     if (sessionId) {
       setSavingStep(true)
       try {
@@ -321,11 +330,13 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
           setAnswered(previous => ({ ...previous, [position]: true }))
         }
         await trackStudentSlide(sessionId, lesson.slides[position].id, 'complete')
+        setError('')
       } catch {
         setError('Your lesson progress could not be saved. Please try Next again.')
         return
       } finally { advancing.current = false; setSavingStep(false) }
     }
+    playLessonSound(position === lesson.slides.length - 1 ? 'finished' : 'transition')
     setCompleted(previous => new Set(previous).add(position))
     advancing.current = false
     setPosition(position + 1)
@@ -365,7 +376,7 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
     disconnect()
     if (!sessionId) return navigate('/student/sessions', { replace: true })
     try {
-      if (!sessionSaved.current) { await endStudentSession(sessionId); sessionSaved.current = true }
+      if (!sessionSaved.current) { await endStudentSession(sessionId); sessionSaved.current = true; setSavedSession(true) }
       if (goToJournal) {
         navigate('/student/journal', { replace: true, state: { sessionId } })
         return
@@ -382,6 +393,7 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
   return <>
   {!classroomControl && remote?.control_mode === 'teacher' && <p role="status">Your teacher is guiding this session.</p>}
   {remotelyPaused && <section className={styles.calibration}><h1>{remote?.ended_at ? 'Session ended' : 'Your teacher paused this session'}</h1><p role="status">Your progress is saved. Wait for your teacher to resume.</p><button onClick={() => void finish()}>Leave and save my session</button></section>}
+  {phase === 'active' && !signalReady && !forcedState && <aside className={styles.calibration} role="status"><h2>{status === 'connecting' || status === 'requesting' ? 'Reconnecting to your headset' : 'Waiting for a clear headset signal'}</h2><p>{deviceError || 'Your lesson progress is retained. Adjust the sensors or reconnect Muse 2. EEG estimates resume after fresh usable readings arrive.'}</p>{status !== 'connecting' && status !== 'requesting' && status !== 'streaming' && <button onClick={() => void connect()}>Reconnect Muse 2</button>}</aside>}
   <div ref={playerRoot} inert={remotelyPaused} style={{ display: remotelyPaused ? 'none' : undefined }}>
   {phase === 'calibrating' && <div className={styles.calibration}>
     <Radio size={42} aria-hidden="true" />
@@ -390,8 +402,8 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
     <progress aria-label="Headset calibration" max={100} value={baselineProgress} />
     <p role="status">{baselineProgress < 100 ? `Calibration ${baselineProgress}%` : 'Checking for a clear signal...'}</p>
     <aside className={styles.trivia}><span>Did you know?</span><p key={triviaIndex}>{trivia[triviaIndex % trivia.length]}</p></aside>
-    {(error || eegError) && <p role="alert">{error || eegError}</p>}
-    {status !== 'streaming' && status !== 'connecting' && <button onClick={() => navigate('/student/eeg-pairing', { replace: true, state: context })}>Connect Muse 2</button>}
+    {(error || eegError || deviceError) && <p role="alert">{error || eegError || deviceError}</p>}
+    {status !== 'streaming' && status !== 'connecting' && status !== 'requesting' && <button onClick={() => void connect()}>Connect Muse 2</button>}
     {saveFailed && <button onClick={() => Object.entries(unsavedAnswers.current).forEach(([index, answer]) => saveAnswer(Number(index), answer.correct, answer.selected))}>Retry saving answers</button>}
     <button onClick={() => void finish()}>End session</button>
   </div>}
@@ -407,10 +419,11 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
       <div className={styles.monitorBands}>{BANDS.map(({ key, label }) => <span key={key}><small>{label}</small><strong>{bandsUpdatedAt ? bands[key].toFixed(3) : 'Unavailable'}</strong></span>)}</div>
       <div className={styles.monitorQuality}><span>{acceptedChannels}/4 clean channels</span><span>Baseline {baselineProgress}%</span>{MUSE_CHANNELS.map((channel, index) => <i key={channel} title={`${channel} contact`} className={quality[index] === 2 ? styles.contactGood : quality[index] === 1 ? styles.contactFair : styles.contactPoor} />)}</div>
     </section></details>}
-    {(error || eegError) && <p className={styles.error}>{error || eegError}</p>}
+    {(error || eegError) && <p className={styles.error} role="alert">{error || eegError}</p>}
+    {!progressReady && error && <button onClick={() => { setError(''); setProgressLoadAttempt(value => value + 1) }}>Retry loading lesson</button>}
     <section className={`${playerStyles.player} ${videoSlide ? playerStyles.videoPlayer : wideSlide ? playerStyles.widePlayer : ''} ${coolSupport ? styles.coolPlayer : focusTemplate === 'rest' ? styles.restPlayer : ''}`} aria-label="Lesson activities">
       {!!lesson?.slides.length && displayMode === 'focus' && !modeLeaving && <div className={`${playerStyles.progress} ${backgroundSupport ? styles.backgroundProgress : ''}`}>
-        <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}><span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length - 1) * 100)}%` }} /></div>
+        <div className={playerStyles.progressTrack} role="progressbar" aria-label="Lesson steps completed" aria-valuemin={0} aria-valuemax={lesson.slides.length} aria-valuenow={completed.size}><span style={{ width: `${Math.min(100, completed.size / Math.max(1, lesson.slides.length) * 100)}%` }} /></div>
         <ol className={playerStyles.dots}>{lesson.slides.map((item, index) => <li key={item.id} aria-current={!complete && index === position ? 'step' : undefined} className={`${playerStyles.dot} ${completed.has(index) ? playerStyles.done : ''} ${!complete && index === position ? playerStyles.current : ''}`}>{completed.has(index) ? <span aria-hidden="true" /> : <span />}</li>)}</ol>
         <div className={styles.progressRow}><span className={playerStyles.progressHint} title="Filled: completed · Ring: current">{complete ? 'All activities complete' : `Activity ${position + 1} of ${lesson.slides.length}`}</span>
       <div className={styles.supportTools}>
@@ -427,7 +440,7 @@ export default function LiveEEG({ teacherControl: classroomControl, recordingSes
       {phase !== 'complete' && (displayMode === 'breathing' || displayMode === 'refocus') && <EEGRegulation key={displayMode} mode={displayMode} nextCalmActivity={() => nextCalmActivity(calmDeck.current)} paused={teacherControl?.paused} allowResume={adaptive && !modeLeaving} state={currentState} transitionState={adaptive ? transitionState : () => 'distracted'} onResume={resumeLesson} onBreathing={() => setMode('breathing')} />}
       {phase !== 'complete' && displayMode === 'returning' && <div className={styles.returnTransition} role="status"><span aria-hidden="true" /><h2>Let's ease back into your lesson</h2><p>One activity at a time. You can go at your own pace.</p></div>}
       <Activity mode={displayMode === 'focus' || phase === 'complete' ? 'visible' : 'hidden'}>
-      <div className={playerStyles.stage}>{phase === 'complete' ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>{ending ? 'Session complete' : 'Lesson complete'}</h2><p role="status">{savingSession ? 'Saving your recorded session...' : teacherControl && !ending ? 'Wait here for your teacher to choose the next lesson or end the session.' : 'Your recorded session is ready to save.'}</p>{(!teacherControl || ending) && <button disabled={savingSession} className={`${playerStyles.button} ${playerStyles.next}`} onClick={() => void finish()}>{savingSession ? 'Saving...' : 'Save and finish session'}</button>}</div> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}><TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onContinueWithoutVideo={() => void advance('continued_without_video')} highlightImportantWords={index === position && highlightImportantWords} focusTemplate={index === position ? focusTemplate : 'none'} focusHolding={currentState === 'focused' || currentState === 'relaxed'} onFocusGateChange={blocked => setFocusGates(previous => previous[item.id] === blocked ? previous : { ...previous, [item.id]: blocked })} deliveryStrategy={focusTemplate === 'rest' ? 'sensory_cooldown' : 'steady_instruction'} onChanged={() => setAnswered(previous => { const next = { ...previous }; delete next[index]; return next })} onAnswered={(correct, selected) => {
+      <div className={playerStyles.stage}>{phase === 'complete' ? <div className={playerStyles.complete}><span aria-hidden="true" /><h2>{ending ? savedSession ? 'Session complete' : 'Finish session' : 'Lesson complete'}</h2><p role="status">{savingSession ? 'Saving your recorded session...' : teacherControl && !ending ? 'Wait here for your teacher to choose the next lesson or end the session.' : 'Your recorded session is ready to save.'}</p>{(!teacherControl || ending) && <button disabled={savingSession} className={`${playerStyles.button} ${playerStyles.next}`} onClick={() => void finish()}>{savingSession ? 'Saving...' : 'Save and finish session'}</button>}</div> : !lesson ? <DetailSkeleton /> : !lesson.slides.length ? <p>No activities have been added to this lesson yet.</p> : task ? tasks.map((item, index) => visited.has(index) && <Activity key={item.id + '/' + (retry[index] ?? 0)} mode={index === position ? 'visible' : 'hidden'}><TaskCard className={playerStyles.task} showProgress={false} lessonNavigation task={item} onContinueWithoutVideo={() => void advance('continued_without_video')} highlightImportantWords={index === position && highlightImportantWords} focusTemplate={index === position ? focusTemplate : 'none'} focusHolding={currentState === 'focused' || currentState === 'relaxed'} onFocusGateChange={blocked => setFocusGates(previous => previous[item.id] === blocked ? previous : { ...previous, [item.id]: blocked })} deliveryStrategy={focusTemplate === 'rest' ? 'sensory_cooldown' : 'steady_instruction'} onChanged={() => setAnswered(previous => { const next = { ...previous }; delete next[index]; return next })} onAnswered={(correct, selected) => {
         setAnswered(previous => ({ ...previous, [index]: correct }))
         saveAnswer(index, correct, selected)
       }} /></Activity>) : null}</div>

@@ -1,6 +1,6 @@
 from .creative_collection import creative_collection
 from .movement_observations import movement_observations
-from .school_years import school_years
+from .school_years import school_years, teacher_class_year
 from .notifications import notifications
 from .account_management import account_detail
 from .validation import validation_runs, validation_manual
@@ -82,6 +82,7 @@ urlpatterns = [
     path("classes/<int:class_id>/creative-collection/", creative_collection),
     path("classes/<int:class_id>/students/<int:student_id>/movement-observations/", movement_observations),
     path("admin/school-years/", school_years, name="school-years"),
+    path("teacher/class-year/", teacher_class_year, name="teacher-class-year"),
     path('admin/accounts/<int:profile_id>/', account_detail, name='admin-account-detail'),
     path("admin/validation/", validation_runs, name="validation-runs"),
     path("admin/validation/<str:run_id>/manual/", validation_manual, name="validation-manual"),

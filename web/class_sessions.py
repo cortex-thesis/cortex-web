@@ -1,10 +1,9 @@
 """Durable teacher-led classrooms, student lobby membership, and overview reports."""
 import csv
 import io
-from datetime import timedelta
 
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -19,27 +18,12 @@ from .views import _audit, _body, _lesson_data, _require_profile, _session_is_li
 
 OPEN_STATUSES = (ClassSession.Status.SCHEDULED, ClassSession.Status.ACTIVE, ClassSession.Status.PAUSED)
 STATES = ('focused', 'relaxed', 'distracted', 'overstimulated')
-TEACHER_TIMEOUT = timedelta(seconds=60)
-
-
 def expire_offline_sessions():
-    """Recheck presence under the same lock used by teacher controls."""
-    cutoff = timezone.now() - TEACHER_TIMEOUT
-    candidates = ClassSession.objects.filter(status__in=OPEN_STATUSES).filter(
-        Q(teacher_last_seen_at__lt=cutoff) | Q(teacher_last_seen_at__isnull=True))
-    closed = 0
-    for group_id in candidates.values_list('pk', flat=True):
-        with transaction.atomic():
-            group = ClassSession.objects.select_for_update(of=('self',)).select_related(
-                'school_class', 'lesson', 'started_by').get(pk=group_id)
-            if group.status in OPEN_STATUSES and (
-                    group.teacher_last_seen_at is None or group.teacher_last_seen_at < cutoff):
-                ended_at = (group.teacher_last_seen_at + TEACHER_TIMEOUT
-                            if group.teacher_last_seen_at else timezone.now())
-                finish_group(group, ended_at, 'teacher_offline')
-                group.save()
-                closed += 1
-    return closed
+    """Compatibility for existing jobs: presence loss never ends a classroom.
+
+    Only the teacher's explicit end action finalizes the group and its report.
+    """
+    return 0
 
 
 def finish_group(group, now, action='end'):
@@ -339,7 +323,7 @@ def class_session_join(request, group_id):
             return JsonResponse(group_data(group, profile, include_lesson=True))
         if existing:
             latest = existing.eeg_samples.order_by('-recorded_at').first()
-            if _session_is_live(existing, latest):
+            if (existing.class_session_id and existing.class_session.status in OPEN_STATUSES) or _session_is_live(existing, latest):
                 return JsonResponse({'detail': 'Finish your current session before joining this class.'}, status=409)
             finalize_student(existing, timezone.now())
         try:

@@ -45,8 +45,7 @@ export default function Dashboard() {
       catch (reason) { if (!disposed) { setError(reason instanceof Error ? reason.message : 'Unable to refresh dashboard.'); setReportLoading(false) } }
       if (!disposed) timer = setTimeout(() => void refresh(), 4000)
     }
-    setReportLoading(true)
-    void refresh()
+    queueMicrotask(() => { if (!disposed) { setReportLoading(true); void refresh() } })
     return () => { disposed = true; clearTimeout(timer) }
   }, [month, classId, period, date, year])
   useEffect(() => { if (receivedAt !== null) measurePresentation(receivedAt, 'dashboard-render') }, [receivedAt])
@@ -95,14 +94,14 @@ export default function Dashboard() {
         <Link className={styles.shortcut} to="/teacher/classes"><Users size={17} aria-hidden="true" /><strong>My classes</strong></Link>
       </nav>
       {error && <p role="alert">{error}</p>}
-      {!data ? (!error ? <DetailSkeleton /> : <p className={styles.emptyLive}>Dashboard data could not be loaded. Retrying automatically.</p>) : <>
+      {!data ? <><RecentClassActivity homepage error={error} />{!error && <DetailSkeleton />}</> : <>
       {data && <>
         <section className={styles.activityCard} aria-labelledby="dashboard-classes">
           <h2 id="dashboard-classes">My classes</h2>
           <div className={styles.classLinks}>{data.classes.map(item => <Link className={styles.classLink} key={item.id} to={`/teacher/class/${item.id}/overview`}><strong>{item.name}</strong><span>{item.student_count} students</span><small>{item.latest_session_at ? `Latest session ${new Date(item.latest_session_at).toLocaleString()}` : 'No sessions yet'}</small></Link>)}</div>
           {!data.classes.length && <p className={styles.activityNote}>No active classes assigned yet.</p>}
         </section>
-        <RecentClassActivity sessions={data.recent_sessions} badges={data.recent_badges} />
+        <RecentClassActivity homepage sessions={data.recent_sessions} badges={data.recent_badges} />
       </>}
       <section className={styles.statsPanel} aria-label="Class statistics">
         <div className={styles.statsHeader}>

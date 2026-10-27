@@ -13,6 +13,33 @@ def year_key(value):
     return f'{match[1]}–{match[2]}' if match else value
 
 
+def current_class_year(profile):
+    """Resolve class intake from administrator metadata, never from client input."""
+    if not profile.school_id or not profile.school.is_active:
+        raise ValueError('Your teacher account needs an active school assignment. Contact your School Admin.')
+    item = SchoolYear.objects.filter(school_id=profile.school_id, is_active=True, is_archived=False).first()
+    if item is None:
+        raise ValueError('No current school year is configured. Ask your School Admin to activate a school year, then refresh this form.')
+    name = year_key(item.name)
+    if not re.fullmatch(r'\d{4}–\d{4}', name) or int(name[-4:]) != int(name[:4]) + 1:
+        raise ValueError('The configured school year is invalid. Ask your School Admin to activate a valid school year, then refresh this form.')
+    return item.name
+
+
+@require_http_methods(['GET'])
+def teacher_class_year(request):
+    from .views import _require_profile
+    profile, error = _require_profile(request, {Profile.Role.TEACHER})
+    if error:
+        return error
+    try:
+        response = JsonResponse({'school_year': current_class_year(profile)})
+    except ValueError as exc:
+        response = JsonResponse({'detail': str(exc)}, status=400)
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
 def year_catalog(profile):
     classes = SchoolClass.objects.filter(school_id=profile.school_id)
     if profile.role == Profile.Role.TEACHER:

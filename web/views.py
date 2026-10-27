@@ -35,7 +35,7 @@ from .models import (
     ModelVersion, SchoolClass, SessionAnalytics, SessionEEGSample, SessionSlideExposure, Slide, StatePrediction,
     UserPreference,
 )
-from .school_years import report_year_scope, visible_classes, year_key
+from .school_years import current_class_year, report_year_scope, visible_classes, year_key
 from .statistics import percentages, sample_distribution
 from .activity_templates import ACTIVITY_TEMPLATES, LAYOUT_OPTIONS, TASK_TEMPLATES, validate_activity_configuration
 
@@ -1064,7 +1064,7 @@ def logout_view(request):
     profile = _profile(request)
     if profile:
         active_session = LearningSession.objects.filter(student=profile, ended_at__isnull=True).order_by("-started_at").first()
-        if active_session is not None:
+        if active_session is not None and not active_session.class_session_id:
             active_session.ended_at = timezone.now()
             active_session.status = LearningSession.Status.COMPLETED
             active_session.save(update_fields=["ended_at", "status"])
@@ -1720,7 +1720,7 @@ def teacher_class_analytics(request, class_id):
         'average_focus': round(float(item.average_focus), 1) if item.average_focus is not None else None }
         for item in school_class.enrollments.filter(removed_at__isnull=True).select_related('student').annotate(
             average_focus=Avg('student__learning_sessions__analytics__focused_percentage',
-                filter=Q(student__learning_sessions__in=completed)))]
+                filter=Q(student__learning_sessions__analytics__in=analytics)))]
     lessons = list(Lesson.objects.filter(Q(learning_sessions__school_class=school_class) | Q(slides__eeg_samples__session__school_class=school_class)).distinct().order_by('id').values('id', 'title'))
     selected_lesson = request.GET.get('lesson_id')
     if selected_lesson and not any(str(item['id']) == selected_lesson for item in lessons):
@@ -1848,19 +1848,19 @@ def _teacher_advanced_reports_response(request, profile):
     start_date = today - timedelta(days=today.weekday()) if range_key == "week" else (today.replace(day=1) if range_key == "month" else None)
     sessions_qs = LearningSession.objects.none()
     if school_class:
-        sessions_qs = LearningSession.objects.filter(school_class=school_class, ended_at__isnull=False).select_related("student", "lesson")
+        sessions_qs = LearningSession.objects.filter(school_class=school_class, ended_at__isnull=False, started_at__date__lte=today).select_related("student", "lesson")
         if start_date:
             sessions_qs = sessions_qs.filter(started_at__date__gte=start_date)
     sessions = list(sessions_qs.order_by("started_at"))
     session_map = {item.pk: item for item in sessions}
-    exposures = list(SessionSlideExposure.objects.filter(session_id__in=session_map).select_related("slide", "slide__lesson", "slide__activity").order_by("entered_at"))
+    exposures = list(SessionSlideExposure.objects.filter(session_id__in=session_map).select_related("slide", "slide__lesson", "slide__activity").order_by("entered_at", "pk"))
     predictions_by_session = {}
     for prediction in StatePrediction.objects.filter(session_id__in=session_map).order_by("classified_at"):
         predictions_by_session.setdefault(prediction.session_id, []).append(prediction)
     # Legacy sessions have browser-rule samples but no versioned predictions.
     # Current sessions use StatePrediction and must not be counted twice.
     predicted_session_ids = set(predictions_by_session)
-    for sample in SessionEEGSample.objects.filter(session_id__in=session_map).exclude(session_id__in=predicted_session_ids).order_by("recorded_at"):
+    for sample in SessionEEGSample.objects.filter(session_id__in=session_map, accepted_channels__gt=0).exclude(session_id__in=predicted_session_ids).order_by("recorded_at"):
         predictions_by_session.setdefault(sample.session_id, []).append(SimpleNamespace(
             state=sample.state, confidence_score=1.0, classified_at=sample.recorded_at,
         ))
@@ -1878,9 +1878,22 @@ def _teacher_advanced_reports_response(request, profile):
         "started_at": item.started_at, "ended_at": item.ended_at, "slides": [],
         "_counts": empty_totals()[0], "_confidence": empty_totals()[1],
     } for item in sessions}
+    # Half-open intervals avoid adjacent-step duplicates. For legacy overlaps,
+    # attribute a prediction to the most recently entered matching exposure.
+    matched_by_exposure = {}
+    attributed = []
+    for session in sessions:
+        candidates = [item for item in reversed(exposures) if item.session_id == session.pk]
+        for prediction in predictions_by_session.get(session.pk, []):
+            if not session.started_at <= prediction.classified_at < session.ended_at:
+                continue
+            target = next((item for item in candidates if item.entered_at <= prediction.classified_at < (item.exited_at or session.ended_at)), None)
+            if target is not None:
+                matched_by_exposure.setdefault(target.pk, []).append(prediction)
+                attributed.append(prediction)
     for exposure in exposures:
-        end = exposure.exited_at or session_map[exposure.session_id].ended_at
-        matched = [item for item in predictions_by_session.get(exposure.session_id, []) if exposure.entered_at <= item.classified_at <= end]
+        end = min(exposure.exited_at or session_map[exposure.session_id].ended_at, session_map[exposure.session_id].ended_at)
+        matched = matched_by_exposure.get(exposure.pk, [])
         counts, confidence = empty_totals()
         for prediction in matched:
             counts[prediction.state] += 1
@@ -1943,7 +1956,7 @@ def _teacher_advanced_reports_response(request, profile):
         node["states"] = _state_metrics(node.pop("_counts"), node.pop("_confidence"))
         node["slides"] = sorted(slides, key=lambda item: item["position"])
         lesson_results.append(node)
-    return JsonResponse({
+    response = JsonResponse({
         **year_data,
         "generated_at": timezone.now(),
         "classes": [{"id": item.pk, "name": item.name} for item in classes],
@@ -1951,12 +1964,14 @@ def _teacher_advanced_reports_response(request, profile):
         "class_name": school_class.name if school_class else None,
         "range": range_key, "start_date": start_date, "end_date": today,
         "overall": {"session_count": len(sessions), "sample_count": sum(overall_counts.values()),
-                    "first_sample_at": min((item.classified_at for values in predictions_by_session.values() for item in values), default=None),
-                    "last_sample_at": max((item.classified_at for values in predictions_by_session.values() for item in values), default=None),
+                    "first_sample_at": min((item.classified_at for item in attributed), default=None),
+                    "last_sample_at": max((item.classified_at for item in attributed), default=None),
                     "states": _state_metrics(overall_counts, overall_confidence)},
         "lessons": sorted(lesson_results, key=lambda item: item["title"]),
         "students": sorted(student_results, key=lambda item: item["student"]["name"]),
     })
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @require_http_methods(["GET", "POST"])
@@ -1973,11 +1988,19 @@ def classes(request):
             if not name:
                 raise ValueError
             code = str(data.get("code", "")).strip().upper() or _new_class_code()
-            school_class = SchoolClass.objects.create(
-                name=name, code=code, teacher=profile, school=profile.school,
-                description=str(data.get("description", "")).strip(),
-                school_year=str(data.get("school_year", "")).strip(),
-            )
+            with transaction.atomic():
+                # Use the same school lock as administrator year activation.
+                if profile.school_id:
+                    School.objects.select_for_update().get(pk=profile.school_id)
+                try:
+                    school_year = current_class_year(profile)
+                except ValueError as exc:
+                    return JsonResponse({"detail": str(exc)}, status=400)
+                school_class = SchoolClass.objects.create(
+                    name=name, code=code, teacher=profile, school=profile.school,
+                    description=str(data.get("description", "")).strip(),
+                    school_year=school_year,
+                )
         except (KeyError, ValueError):
             return JsonResponse({"detail": "A class name is required."}, status=400)
         except IntegrityError:
@@ -2258,6 +2281,8 @@ def start_session(request):
     existing = LearningSession.objects.filter(student=profile, ended_at__isnull=True).first()
     if existing is not None:
         latest = existing.eeg_samples.order_by("-recorded_at").first()
+        if existing.class_session_id and existing.class_session.status in ('scheduled', 'active', 'paused'):
+            return JsonResponse({'detail': 'Return to your open teacher-led session or explicitly leave it before starting another lesson.'}, status=409)
         if not _session_is_live(existing, latest):
             existing.ended_at = timezone.now()
             existing.status = LearningSession.Status.INTERRUPTED
@@ -2338,7 +2363,7 @@ def resume_session(request, session_id):
         current = LearningSession.objects.select_for_update().filter(student=profile, ended_at__isnull=True).exclude(pk=target.pk).first()
         if current is not None:
             latest = current.eeg_samples.order_by("-recorded_at").first()
-            if _session_is_live(current, latest):
+            if (current.class_session_id and current.class_session.status in ('scheduled', 'active', 'paused')) or _session_is_live(current, latest):
                 return JsonResponse({"detail": "Finish or leave your current live session before continuing another lesson."}, status=409)
             current.ended_at = timezone.now()
             current.status = LearningSession.Status.INTERRUPTED
@@ -2750,7 +2775,7 @@ def _teacher_reports_response(request, profile):
     sessions = LearningSession.objects.none()
     if selected_class:
         sessions = LearningSession.objects.filter(
-            school_class=selected_class, ended_at__isnull=False,
+            school_class=selected_class, ended_at__isnull=False, started_at__date__lte=today,
         ).select_related("student", "analytics").prefetch_related("state_predictions")
         if start_date:
             sessions = sessions.filter(started_at__date__gte=start_date)
@@ -2768,11 +2793,13 @@ def _teacher_reports_response(request, profile):
         duration = max(0, int(((session.ended_at or session.started_at) - session.started_at).total_seconds()))
         total_duration_seconds += duration
         predictions = list(session.state_predictions.all())
+        if not predictions:
+            predictions = list(session.eeg_samples.filter(accepted_channels__gt=0))
         counts = {state: 0 for state in state_percentage_totals}
         for prediction in predictions:
             counts[prediction.state] += 1
         analytics = getattr(session, "analytics", None)
-        if analytics is not None:
+        if analytics is not None and any(getattr(analytics, f"{state}_percentage") for state in state_percentage_totals):
             focus = round(float(analytics.focused_percentage))
             session_focused_seconds = analytics.focused_seconds
             state_percentage_totals[StatePrediction.State.FOCUSED] += float(analytics.focused_percentage)
@@ -2781,22 +2808,25 @@ def _teacher_reports_response(request, profile):
             state_percentage_totals[StatePrediction.State.OVERSTIMULATED] += float(analytics.overstimulated_percentage)
             sessions_with_state_data += 1
         else:
-            focus = round(counts[StatePrediction.State.FOCUSED] * 100 / len(predictions)) if predictions else 0
-            session_focused_seconds = round(duration * focus / 100)
+            focus = round(counts[StatePrediction.State.FOCUSED] * 100 / len(predictions)) if predictions else None
+            session_focused_seconds = round(duration * focus / 100) if focus is not None else 0
             if predictions:
                 for state, count in counts.items():
                     state_percentage_totals[state] += count * 100 / len(predictions)
                 sessions_with_state_data += 1
-        focus_percentages.append(focus)
+        if focus is not None:
+            focus_percentages.append(focus)
         focused_seconds += session_focused_seconds
         session_rows.append({
             "id": str(session.pk), "date": timezone.localtime(session.started_at).date(),
             "student": _profile_data(session.student), "duration_seconds": duration,
-            "focus_percentage": focus, "tasks_completed": session.activity_responses.count(),
+            "focus_percentage": focus, "tasks_completed": session.slide_exposures.filter(completed_at__isnull=False,
+                slide__lesson_id__in=[item['id'] for item in session.class_session.lesson_history] if session.class_session_id else [session.lesson_id]
+            ).filter(_required_lesson_rows('slide__activity')).values('slide_id').distinct().count(),
             "mode_changes": session.adaptation_events.filter(previous_mode='focus', new_mode='relax').count() + session.manual_overrides.filter(previous_presentation_mode='focus', new_presentation_mode='relax').count(),
         })
     distribution = percentages(state_percentage_totals, places=0)
-    return JsonResponse({
+    response = JsonResponse({
         "classes": [{"id": item.pk, "name": item.name} for item in class_items],
         "students": [{"id": item.pk, "name": item.display_name or item.user.username} for item in student_items],
         "selected_class_id": selected_class.pk if selected_class else None,
@@ -2810,7 +2840,7 @@ def _teacher_reports_response(request, profile):
         "summary": {
             "sessions": len(sessions),
             "participating_students": len({item.student_id for item in sessions}),
-            "average_focus_percentage": round(sum(focus_percentages) / len(focus_percentages)) if focus_percentages else 0,
+            "average_focus_percentage": round(sum(focus_percentages) / len(focus_percentages)) if focus_percentages else None,
             "focused_duration_seconds": focused_seconds,
             "total_duration_seconds": total_duration_seconds,
             "mode_changes": sum(item["mode_changes"] for item in session_rows),
@@ -2819,6 +2849,8 @@ def _teacher_reports_response(request, profile):
         "state_distribution": distribution,
         "sessions": session_rows,
     })
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @require_http_methods(["GET", "POST"])
@@ -3050,8 +3082,8 @@ def session_slide_exposure(request, session_id, slide_id):
             if session.class_session_id:
                 from .models import ClassSession
                 locked_group = ClassSession.objects.select_for_update().get(pk=session.class_session_id)
-                if locked_group.ended_at:
-                    return JsonResponse({'detail': 'The class session has ended.'}, status=409)
+                if locked_group.status != ClassSession.Status.ACTIVE:
+                    return JsonResponse({'detail': 'Wait for your teacher to resume the active lesson.'}, status=409)
             locked_session = LearningSession.objects.select_for_update().get(pk=session.pk)
             if locked_session.ended_at is not None:
                 return JsonResponse({"detail": "The session has already ended."}, status=409)
@@ -3067,8 +3099,8 @@ def session_slide_exposure(request, session_id, slide_id):
             if session.class_session_id:
                 from .models import ClassSession
                 group = ClassSession.objects.select_for_update().get(pk=session.class_session_id)
-                if group.ended_at:
-                    return JsonResponse({'detail': 'The class session has ended.'}, status=409)
+                if group.status != ClassSession.Status.ACTIVE:
+                    return JsonResponse({'detail': 'Wait for your teacher to resume the active lesson.'}, status=409)
             locked = LearningSession.objects.select_for_update().get(pk=session.pk)
             if locked.ended_at:
                 return JsonResponse({'detail': 'The session has already ended.'}, status=409)
@@ -3095,8 +3127,8 @@ def session_slide_exposure(request, session_id, slide_id):
         if session.class_session_id:
             from .models import ClassSession
             group = ClassSession.objects.select_for_update().get(pk=session.class_session_id)
-            if group.ended_at and action == "enter":
-                return JsonResponse({"detail": "The class session has ended."}, status=409)
+            if group.status != ClassSession.Status.ACTIVE and action == "enter":
+                return JsonResponse({"detail": "The class session has ended." if group.ended_at else "Wait for your teacher to start or resume this classroom."}, status=409)
         session = LearningSession.objects.select_for_update().get(pk=session.pk)
         now = timezone.now()
         active = session.slide_exposures.filter(exited_at__isnull=True).first()

@@ -19,12 +19,13 @@ test('shared activity instructions appear once in a responsive title row', async
   assert.match(playerCss, /\.actions \.next \{[^}]*grid-column: 3[^}]*justify-self: end/)
 })
 
-test('both lesson players apply the shared video layout and dot-aligned progress', async () => {
+test('both lesson players keep shared video layout and live progress counts every step', async () => {
   for (const name of ['PracticeLesson', 'LiveEEG']) {
     const source = await readFile(new URL(`../src/pages/student/${name}.tsx`, import.meta.url), 'utf8')
     assert.match(source, /videoSlide \? playerStyles.videoPlayer/)
     assert.match(source, /wideSlide \? playerStyles.widePlayer/)
-    assert.match(source, /Math\.max\(1, lesson\.slides\.length - 1\)/)
+    if (name === 'PracticeLesson') assert.match(source, /Math\.max\(1, lesson\.slides\.length - 1\)/)
+    else assert.match(source, /completed\.size \/ Math\.max\(1, lesson\.slides\.length\)/)
   }
   const css = await readFile(new URL('../src/pages/student/PracticeLesson.module.css', import.meta.url), 'utf8')
   assert.match(css, /\.videoPlayer \.stage \{ height: auto/)
@@ -35,17 +36,18 @@ test('both lesson players apply the shared video layout and dot-aligned progress
   assert.match(videoCss, /aspect-ratio: 16 \/ 9/)
 })
 
-test('EEG navigation requests sound before asynchronous saving', async () => {
+test('EEG success sound follows confirmed progress saving', async () => {
   const source = await readFile(new URL('../src/pages/student/LiveEEG.tsx', import.meta.url), 'utf8')
   const advance = source.slice(source.indexOf('async function advance('), source.indexOf('const controls ='))
-  assert.ok(advance.indexOf('playLessonSound(') < advance.indexOf('await trackStudentSlide('))
+  assert.ok(advance.indexOf('playLessonSound(') > advance.indexOf("await trackStudentSlide(sessionId, lesson.slides[position].id, 'complete')"))
 })
 
 test('headset signal loss does not cover or disable a started lesson', async () => {
   const source = await readFile(new URL('../src/pages/student/LiveEEG.tsx', import.meta.url), 'utf8')
   assert.match(source, /const isDevBypass = import\.meta\.env\.DEV && context\.devBypass === true/)
-  assert.doesNotMatch(source, /connectionInterrupted|Adjust your headset|Reconnecting to your headset/)
-  assert.match(source, /const calibrated = Boolean\(forcedState \|\| status === 'streaming'\)/)
+  assert.doesNotMatch(source, /inert=\{[^}]*signalReady|inert=\{[^}]*calibrated/)
+  assert.match(source, /phase === 'active' && !signalReady && !forcedState && <aside[^>]*role="status"/)
+  assert.match(source, /const calibrated = Boolean\(forcedState \|\| \(signalReady && baselineProgress >= 100\)\)/)
   assert.match(source, /inert=\{remotelyPaused\}/)
 })
 

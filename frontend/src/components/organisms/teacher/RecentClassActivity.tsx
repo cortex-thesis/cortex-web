@@ -12,15 +12,17 @@ type RecentBadge = ClassAnalyticsData['recent_badges'][number] & { classes?: Arr
 interface Props {
   sessions?: RecentSession[]
   badges?: RecentBadge[]
+  homepage?: boolean
+  error?: string
   classId?: string
 }
 
-export function RecentClassActivity({ sessions, badges, classId }: Props) {
+export function RecentClassActivity({ sessions, badges, classId, homepage = false, error }: Props) {
   return <div className={styles.recentGrid}>
     <section className={styles.recentCard}>
       <h2>Recent student sessions</h2>
       <div className={styles.recentList} tabIndex={0} role="region" aria-label="Recent student sessions">
-        {sessions?.map(item => <article key={item.id} className={styles.recentItem}>
+        {sessions?.map(item => <article key={item.id} className={`${styles.recentItem} ${homepage ? recentStyles.compactSession : ''}`}>
           <span className={styles.itemIcon} aria-hidden="true"><Avatar name={item.student.name} imageUrl={item.student.avatar} color="purple" size="md" /></span>
           <div className={styles.itemDetails}>
             <Link to={`/teacher/class/${item.class_id ?? classId}/student/${item.student.id}?session=${encodeURIComponent(item.id)}`}><strong>{item.student.name}</strong></Link>
@@ -29,7 +31,7 @@ export function RecentClassActivity({ sessions, badges, classId }: Props) {
           </div>
         </article>)}
         {sessions && !sessions.length && <p>No student sessions yet.</p>}
-        {!sessions && <p role="status">Loading sessions…</p>}
+        {!sessions && (error ? <p role="alert">Unable to load recent sessions. Retrying automatically.</p> : <p role="status">Loading sessions...</p>)}
       </div>
     </section>
     <section className={styles.recentCard}>
@@ -45,7 +47,7 @@ export function RecentClassActivity({ sessions, badges, classId }: Props) {
           </div>
         </article>)}
         {badges && !badges.length && <p>No badges earned yet.</p>}
-        {!badges && <p role="status">Loading badges…</p>}
+        {!badges && (error ? <p>Unable to load badges.</p> : <p role="status">Loading badges...</p>)}
       </div>
     </section>
   </div>

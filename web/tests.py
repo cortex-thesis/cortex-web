@@ -59,6 +59,13 @@ class WorkflowTests(TestCase):
         self.client.force_login(profile.user)
 
     def test_teacher_creates_class_and_enrolls_student(self):
+        from .models import SchoolYear
+        school = School.objects.create(name="Class creation school")
+        self.teacher.school = school
+        self.teacher.save(update_fields=["school"])
+        self.student.school = school
+        self.student.save(update_fields=["school"])
+        SchoolYear.objects.create(school=school, name="2031-2032", is_active=True)
         self._login(self.teacher)
         response = self.client.post("/api/classes/", data=json.dumps({"name": "Life Skills", "code": "LIFE1"}), content_type="application/json")
         self.assertEqual(response.status_code, 201)
